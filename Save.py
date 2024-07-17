@@ -1,0 +1,391 @@
+
+
+from scipy import interpolate
+import json
+import numpy as np
+import wx
+import os
+import pandas as pd
+import openpyxl
+
+
+
+
+
+def save_data(window, data):
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file path found in window.Data. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    file_path = window.Data['FilePath']
+    sheet_name = window.sheet_combobox.GetValue()
+
+    try:
+        # Save to Excel
+        save_to_excel(window, data, file_path, sheet_name)
+
+        # Save JSON file with entire window.Data
+        json_file_path = os.path.splitext(file_path)[0] + '.json'
+
+        # Create a copy of window.Data to modify
+        json_data = window.Data.copy()
+
+        # Convert numpy arrays and other non-serializable types to lists, and round floats
+        json_data = convert_to_serializable_and_round(json_data)
+
+        with open(json_file_path, 'w') as json_file:
+            json.dump(json_data, json_file, indent=2)
+
+        print("Data Saved")
+    except Exception as e:
+        wx.MessageBox(f"Error saving data: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+def convert_to_serializable_and_round(obj, decimal_places=2):
+    try:
+        if isinstance(obj, (float, np.float32, np.float64)):
+            return round(float(obj), decimal_places)
+        elif isinstance(obj, (int, np.int32, np.int64)):
+            return int(obj)
+        elif isinstance(obj, np.ndarray):
+            return [convert_to_serializable_and_round(item, decimal_places) for item in obj.tolist()]
+        elif isinstance(obj, list):
+            return [convert_to_serializable_and_round(item, decimal_places) for item in obj]
+        elif isinstance(obj, dict):
+            return {k: convert_to_serializable_and_round(v, decimal_places) for k, v in obj.items()}
+        elif isinstance(obj, wx.grid.Grid):
+            return {
+                "rows": obj.GetNumberRows(),
+                "cols": obj.GetNumberCols(),
+                "data": [[convert_to_serializable_and_round(obj.GetCellValue(row, col), decimal_places)
+                          for col in range(obj.GetNumberCols())]
+                         for row in range(obj.GetNumberRows())]
+            }
+        elif hasattr(obj, 'tolist'):  # This catches any object with a tolist method, like some lmfit results
+            return convert_to_serializable_and_round(obj.tolist(), decimal_places)
+        else:
+            return obj
+    except Exception as e:
+        return str(obj)  # Return a string representation as a fallback
+
+def convert_to_serializable(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: convert_to_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_serializable(v) for v in obj]
+    elif isinstance(obj, (np.int64, np.int32, np.float64, np.float32)):
+        return obj.item()
+    elif isinstance(obj, wx.grid.Grid):
+        return {
+            "rows": obj.GetNumberRows(),
+            "cols": obj.GetNumberCols(),
+            "data": [[obj.GetCellValue(row, col) for col in range(obj.GetNumberCols())]
+                     for row in range(obj.GetNumberRows())]
+        }
+    else:
+        return obj
+
+def save_to_excel(window, data, file_path, sheet_name):
+    existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
+
+    # Remove previously fitted data if it exists
+    if existing_df.shape[1] > 3:  # If there are more than 3 columns (BE, Raw Data, empty)
+        existing_df = existing_df.iloc[:, :3]  # Keep only the first 3 columns
+
+    # Ensure there's an empty column C
+    if existing_df.shape[1] < 3:
+        existing_df.insert(2, '', np.nan)
+
+    if 'x_values' in data and data['x_values'] is not None:
+        x_values = data['x_values'].to_numpy() if isinstance(data['x_values'], pd.Series) else data['x_values']
+        filtered_data = pd.DataFrame({
+            'BE': x_values
+        })
+
+        if data['background'] is not None and data['calculated_fit'] is not None:
+            mask = np.isin(data['x_values'], x_values)
+            y_values = data['y_values'][mask]
+
+            if len(y_values) == len(data['calculated_fit']):
+                residuals = y_values - data['calculated_fit']
+                filtered_data['Residuals'] = residuals
+            else:
+                filtered_data['Residuals'] = np.nan
+        else:
+            filtered_data['Residuals'] = np.nan
+
+        filtered_data['Background'] = data['background'] if data['background'] is not None else np.nan
+        filtered_data['Calculated Fit'] = data['calculated_fit'] if data['calculated_fit'] is not None else np.nan
+
+        if data['individual_peak_fits']:
+            num_rows = len(x_values)
+            num_peaks = data['peak_params_grid'].GetNumberRows() // 2
+            for i in range(num_peaks):
+                row = i * 2
+                peak_label = data['peak_params_grid'].GetCellValue(row, 1)  # Get the peak label
+                if i < len(data['individual_peak_fits']):
+                    reversed_peak = np.array(data['individual_peak_fits'][i])[::-1]
+                    trimmed_peak = reversed_peak[:num_rows]
+                    filtered_data[peak_label] = trimmed_peak  # Use peak label as column name
+
+        # Rename columns to avoid conflicts before inserting them
+        for i, col in enumerate(filtered_data.columns):
+            new_col_name = col
+            while new_col_name in existing_df.columns:
+                new_col_name += '_new'
+            existing_df.insert(3 + i, new_col_name, filtered_data[col])
+
+    # Pad with empty columns if necessary
+    while existing_df.shape[1] < 3 + window.num_fitted_columns:
+        existing_df[f'Empty_{existing_df.shape[1]}'] = np.nan
+
+    # Remove names from column C and empty columns
+    existing_df.columns = ['' if i == 2 or i >= 3 + len(filtered_data.columns) else col for i, col in
+                           enumerate(existing_df.columns)]
+
+    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        existing_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        # Remove border from first row
+        workbook = writer.book
+        worksheet = workbook[sheet_name]
+        for cell in worksheet[1]:
+            cell.border = openpyxl.styles.Border(
+                left=openpyxl.styles.Side(style=None),
+                right=openpyxl.styles.Side(style=None),
+                top=openpyxl.styles.Side(style=None),
+                bottom=openpyxl.styles.Side(style=None)
+            )
+
+
+def save_to_json(window, file_path):
+    json_file_path = os.path.splitext(file_path)[0] + '.json'
+
+    # Create a copy of window.Data to modify
+    data_to_save = window.Data.copy()
+
+    def convert_to_list(item):
+        if isinstance(item, np.ndarray):
+            return item.tolist()
+        elif isinstance(item, list):
+            return item
+        else:
+            return item  # Return as is if it's neither numpy array nor list
+
+    # Convert numpy arrays to lists for JSON serialization
+    for sheet_name, sheet_data in data_to_save['Core levels'].items():
+        sheet_data['B.E.'] = convert_to_list(sheet_data['B.E.'])
+        sheet_data['Raw Data'] = convert_to_list(sheet_data['Raw Data'])
+        sheet_data['Background']['Bkg Y'] = convert_to_list(sheet_data['Background']['Bkg Y'])
+
+        if 'Fitting' in sheet_data and 'Peaks' in sheet_data['Fitting']:
+            for peak_label, peak_data in sheet_data['Fitting']['Peaks'].items():
+                if 'Y' in peak_data:
+                    peak_data['Y'] = convert_to_list(peak_data['Y'])
+
+    with open(json_file_path, 'w') as json_file:
+        json.dump(data_to_save, json_file, indent=2)
+
+def save_data_ORI(window, data):
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file path found in window.Data. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    file_path = window.Data['FilePath']
+    sheet_name = window.sheet_combobox.GetValue()
+
+    try:
+        existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
+
+        # Remove previously fitted data if it exists
+        if existing_df.shape[1] > 3:  # If there are more than 3 columns (BE, Raw Data, empty)
+            existing_df = existing_df.iloc[:, :3]  # Keep only the first 3 columns
+
+        # Ensure there's an empty column C
+        if existing_df.shape[1] < 3:
+            existing_df.insert(2, '', np.nan)
+
+        if 'x_values' in data and data['x_values'] is not None:
+            x_values = data['x_values'].to_numpy() if isinstance(data['x_values'], pd.Series) else data['x_values']
+            filtered_data = pd.DataFrame({
+                'BE': x_values
+            })
+
+            if data['background'] is not None and data['calculated_fit'] is not None:
+                mask = np.isin(data['x_values'], x_values)
+                y_values = data['y_values'][mask]
+
+                if len(y_values) == len(data['calculated_fit']):
+                    residuals = y_values - data['calculated_fit']
+                    filtered_data['Residuals'] = residuals
+                else:
+                    filtered_data['Residuals'] = np.nan
+            else:
+                filtered_data['Residuals'] = np.nan
+
+            filtered_data['Background'] = data['background'] if data['background'] is not None else np.nan
+            filtered_data['Calculated Fit'] = data['calculated_fit'] if data['calculated_fit'] is not None else np.nan
+
+            if data['individual_peak_fits']:
+                num_rows = len(x_values)
+                num_peaks = data['peak_params_grid'].GetNumberRows() // 2
+                for i in range(num_peaks):
+                    row = i * 2
+                    peak_label = data['peak_params_grid'].GetCellValue(row, 1)  # Get the peak label
+                    if i < len(data['individual_peak_fits']):
+                        reversed_peak = np.array(data['individual_peak_fits'][i])[::-1]
+                        trimmed_peak = reversed_peak[:num_rows]
+                        filtered_data[peak_label] = trimmed_peak  # Use peak label as column name
+
+            # Rename columns to avoid conflicts before inserting them
+            for i, col in enumerate(filtered_data.columns):
+                new_col_name = col
+                while new_col_name in existing_df.columns:
+                    new_col_name += '_new'
+                existing_df.insert(3 + i, new_col_name, filtered_data[col])
+
+        # Pad with empty columns if necessary
+        while existing_df.shape[1] < 3 + window.num_fitted_columns:
+            existing_df[f'Empty_{existing_df.shape[1]}'] = np.nan
+
+        # Remove names from column C and empty columns
+        existing_df.columns = ['' if i == 2 or i >= 3 + len(filtered_data.columns) else col for i, col in
+                               enumerate(existing_df.columns)]
+
+        with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+            existing_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+            # Remove border from first row
+            workbook = writer.book
+            worksheet = workbook[sheet_name]
+            for cell in worksheet[1]:
+                cell.border = openpyxl.styles.Border(
+                    left=openpyxl.styles.Side(style=None),
+                    right=openpyxl.styles.Side(style=None),
+                    top=openpyxl.styles.Side(style=None),
+                    bottom=openpyxl.styles.Side(style=None)
+                )
+
+        txt_file_path = os.path.splitext(file_path)[0] + '.kfit'
+        with open(txt_file_path, 'w') as txt_file:
+            txt_file.write(f"Peak Fitting Properties for {os.path.basename(file_path)}\n")
+            txt_file.write(f"Sheet: {sheet_name}\n\n")
+
+            # Save background data
+            if 'x_values' in data and data['x_values'] is not None and data['background'] is not None:
+                txt_file.write("Background Data:\n")
+                txt_file.write("X: ")
+                txt_file.write(", ".join(map(str, data['x_values'])))
+                txt_file.write("\n")
+                txt_file.write("Y: ")
+                txt_file.write(", ".join(map(str, data['background'])))
+                txt_file.write("\n\n")
+
+            if data['peak_params_grid'] is not None:
+                txt_file.write("Peaks Parameters:\n")
+                num_peaks = data['peak_params_grid'].GetNumberRows() // 2
+                for i in range(num_peaks):
+                    row = i * 2
+                    peak_name = data['peak_params_grid'].GetCellValue(row, 1)
+                    position = data['peak_params_grid'].GetCellValue(row, 2)
+                    height = data['peak_params_grid'].GetCellValue(row, 3)
+                    fwhm = data['peak_params_grid'].GetCellValue(row, 4)
+                    lg_ratio = data['peak_params_grid'].GetCellValue(row, 5)
+
+                    # Get constraints
+                    position_constraint = data['peak_params_grid'].GetCellValue(row + 1, 2)
+                    height_constraint = data['peak_params_grid'].GetCellValue(row + 1, 3)
+                    fwhm_constraint = data['peak_params_grid'].GetCellValue(row + 1, 4)
+                    lg_ratio_constraint = data['peak_params_grid'].GetCellValue(row + 1, 5)
+
+                    txt_file.write(f"Peak {i + 1} ({peak_name}):\n")
+                    txt_file.write(f"  Position: {position}\n")
+                    txt_file.write(f"  Position Constraint: {position_constraint}\n")
+                    txt_file.write(f"  Height: {height}\n")
+                    txt_file.write(f"  Height Constraint: {height_constraint}\n")
+                    txt_file.write(f"  FWHM: {fwhm}\n")
+                    txt_file.write(f"  FWHM Constraint: {fwhm_constraint}\n")
+                    txt_file.write(f"  L/G Ratio: {lg_ratio}\n")
+                    txt_file.write(f"  L/G Ratio Constraint: {lg_ratio_constraint}\n")
+
+            if data['results_grid'] is not None:
+                txt_file.write("\nResults:\n")
+                # Get all column labels dynamically
+                num_cols = data['results_grid'].GetNumberCols()
+                labels = [data['results_grid'].GetColLabelValue(col) for col in range(num_cols)]
+
+                for row in range(data['results_grid'].GetNumberRows()):
+                    txt_file.write(f"Row {chr(65 + row)}:\n")  # A, B, C, etc.
+                    for col, label in enumerate(labels):
+                        if label != '':  # Skip empty column labels
+                            value = data['results_grid'].GetCellValue(row, col)
+                            txt_file.write(f"  {label}: {value}\n")
+                txt_file.write("\n")  # Add a blank line between peaks
+
+
+
+        print("Data Saved")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error saving data: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+
+# def create_peak(x, peak_data, model_type):
+#     # Implement this function based on your peak models
+#     # This is a placeholder and should be replaced with your actual implementation
+#     pass
+
+
+import io
+import openpyxl
+from openpyxl.drawing.image import Image
+import wx
+
+
+def save_plot_to_excel(window):
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    file_path = window.Data['FilePath']
+    sheet_name = window.sheet_combobox.GetValue()
+
+    try:
+        # Save the current figure to a bytes buffer
+        buf = io.BytesIO()
+        window.figure.savefig(buf, format='png', dpi=80, bbox_inches='tight')
+        buf.seek(0)
+
+        # Open the workbook and select the sheet
+        wb = openpyxl.load_workbook(file_path)
+
+        # Check if the sheet exists, if not create it
+        if sheet_name not in wb.sheetnames:
+            ws = wb.create_sheet(sheet_name)
+        else:
+            ws = wb[sheet_name]
+
+        # Remove existing images
+        for img in ws._images:
+            ws._images.remove(img)
+
+        # Create an image from the bytes buffer
+        img = Image(buf)
+
+        # Add the image to the worksheet
+        ws.add_image(img, 'A4')  # You can adjust the cell reference as needed
+
+        # Save the workbook
+        wb.save(file_path)
+
+        print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
+        wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
+                      wx.OK | wx.ICON_INFORMATION)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error saving plot to Excel: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
