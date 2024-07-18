@@ -318,14 +318,11 @@ class MyFrame(wx.Frame):
         # print(f"Final sash position: {self.splitter.GetSashPosition()}")
         # print(f"Is right panel hidden: {self.is_right_panel_hidden}")
 
-    def on_splitter_changed(self, event):
-        self.right_frame.Layout()
-        self.canvas.draw()
 
     def on_splitter_changed(self, event):
         self.right_frame.Layout()
         self.canvas.draw()
-    # END -----------------------------------------------------------------------
+
 
 
     # I DON'T THINK IT IS USED
@@ -339,7 +336,7 @@ class MyFrame(wx.Frame):
         if new_sheet_name:
             rename_sheet(self, new_sheet_name)
             wx.MessageBox(f'Sheet renamed to "{new_sheet_name}"', "Info", wx.OK | wx.ICON_INFORMATION)
-    # END -----------------------------------------------------------------------
+
 
     def resize_plot(self):
         current_ylim = self.ax.get_ylim()
@@ -489,7 +486,7 @@ class MyFrame(wx.Frame):
 
     def number_to_letter(n):
         return chr(65 + n)  # 65 is the ASCII value for 'A'
-    # END -----------------------------------------------------------------------
+
 
 
     import numpy as np
@@ -573,7 +570,6 @@ class MyFrame(wx.Frame):
             if peak["peak_checkbox"] == checkbox:
                 return i
         return None
-    # END -----------------------------------------------------------------------
 
     # Ensure the following methods exist to handle adding, removing, and dragging the cross
     def add_cross_to_peak(self, index):
@@ -614,6 +610,7 @@ class MyFrame(wx.Frame):
             print(f"Unexpected error adding cross to peak: {e}")
             # You might want to show an error message to the user here
 
+    # I am not too sure if the extra IF in the next def does something
     def remove_cross_from_peak2(self):
         if hasattr(self, 'cross'):
             self.cross.remove()
@@ -835,81 +832,6 @@ class MyFrame(wx.Frame):
 
 
 
-    def update_overall_fit_and_residuals2(self):
-        # Calculate the overall fit as the sum of all peaks
-        overall_fit = self.background.copy()
-        num_peaks = self.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-
-        for i in range(num_peaks):
-            row = i * 2  # Each peak uses two rows in the grid
-
-            # Get cell values
-            position_str = self.peak_params_grid.GetCellValue(row, 2)  # Position
-            height_str = self.peak_params_grid.GetCellValue(row, 3)  # Height
-            fwhm_str = self.peak_params_grid.GetCellValue(row, 4)  # FWHM
-            lg_ratio_str = self.peak_params_grid.GetCellValue(row, 5)  # L/G
-
-            # Check if any of the cells are empty
-            if not all([position_str, height_str, fwhm_str, lg_ratio_str]):
-                print(f"Warning: Incomplete data for peak {i + 1}. Skipping this peak.")
-                continue
-
-            try:
-                peak_x = float(position_str)
-                peak_y = float(height_str)
-                fwhm = float(fwhm_str)
-                lg_ratio = float(lg_ratio_str)
-            except ValueError:
-                print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
-                continue
-
-            sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-            gamma = lg_ratio * sigma
-            bkg_y = self.background[np.argmin(np.abs(self.x_values - peak_x))]
-
-            if self.selected_fitting_method == "Voigt":
-                peak_model = lmfit.models.VoigtModel()
-                params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, gamma=gamma)
-                params['amplitude'].value *= np.sqrt(3 * np.pi) * sigma  # Adjust amplitude for consistency
-            elif self.selected_fitting_method == "Pseudo-Voigt":
-                peak_model = lmfit.models.PseudoVoigtModel()
-                params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, fraction=lg_ratio)
-                params['amplitude'].value *= np.sqrt(2 * np.pi) * sigma  # Adjust amplitude for consistency
-            elif self.selected_fitting_method == "GL":
-                peak_model = lmfit.Model(gauss_lorentz)
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-            elif self.selected_fitting_method == "SGL":
-                peak_model = lmfit.Model(S_gauss_lorentz)
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-
-            peak_fit = peak_model.eval(params, x=self.x_values)
-            overall_fit += peak_fit
-
-        # Calculate residuals
-        residuals = self.y_values - overall_fit
-
-        # Determine the scaling factor
-        max_raw_data = max(self.y_values)
-        desired_max_residual = 0.1 * max_raw_data
-        actual_max_residual = max(abs(residuals))
-        scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
-
-        # Scale residuals
-        scaled_residuals = residuals * scaling_factor
-
-        # Remove old overall fit and residuals, keep background lines
-        for line in self.ax.get_lines():
-            if line.get_label() in ['Overall Fit', 'Residuals']:
-                line.remove()
-
-        # Plot the new overall fit and residuals
-        self.ax.plot(self.x_values, overall_fit, 'b-', alpha=0.3, label='Overall Fit')
-        self.ax.plot(self.x_values, scaled_residuals + 1.05 * max(self.y_values), 'g-', label='Residuals')
-
-        # Update the Y-axis label
-        self.ax.set_ylabel(f'Intensity (CTS), residual x {scaling_factor:.2f}')
-
-        self.canvas.draw_idle()
 
     def update_overall_fit_and_residuals(self):
         # Calculate the overall fit as the sum of all peaks
@@ -1142,54 +1064,6 @@ class MyFrame(wx.Frame):
 
 
 
-    def highlight_selected_peak2(self):
-        # print(f"Entering highlight_selected_peak. Selected peak index: {self.selected_peak_index}")
-
-        if self.selected_peak_index is not None:
-            num_peaks = self.peak_params_grid.GetNumberRows() // 2
-            # print(f"Number of peaks: {num_peaks}")
-
-            # Update the grid based on the selected peak index
-            for i in range(num_peaks):
-                row = i * 2
-                is_selected = (i == self.selected_peak_index)
-                self.peak_params_grid.SetCellBackgroundColour(row, 0, wx.LIGHT_GREY if is_selected else wx.WHITE)
-                self.peak_params_grid.SetCellBackgroundColour(row + 1, 0, wx.LIGHT_GREY if is_selected else wx.WHITE)
-
-            # Get selected peak data
-            row = self.selected_peak_index * 2
-            x_str = self.peak_params_grid.GetCellValue(row, 2)  # Position
-            y_str = self.peak_params_grid.GetCellValue(row, 3)  # Height
-
-            if x_str and y_str:
-                try:
-                    x = float(x_str)
-                    y = float(y_str)
-                    y += self.background[np.argmin(np.abs(self.x_values - x))]
-
-                    # Remove previous crosses and create new one
-                    self.remove_cross_from_peak()
-                    self.cross, = self.ax.plot(x, y, 'bx', markersize=15, markerfacecolor='none', picker=5)
-
-                    # Ensure the selected peak is highlighted in the grid
-                    self.peak_params_grid.ClearSelection()
-                    self.peak_params_grid.SelectRow(row, addToSelected=False)
-
-                    self.peak_params_grid.Refresh()
-                    self.canvas.draw_idle()
-
-                    # Bind cross drag events
-                    self.canvas.mpl_connect('motion_notify_event', self.on_cross_drag)
-                    self.canvas.mpl_connect('button_release_event', self.on_cross_release)
-                except ValueError as e:
-                    print(f"Warning: Invalid data for selected peak. Cannot highlight. Error: {e}")
-            else:
-                print(f"Warning: Empty data for selected peak. Cannot highlight.")
-
-            self.peak_params_grid.Refresh()
-        else:
-            print("No peak selected (selected_peak_index is None)")
-
     def highlight_selected_peak(self):
         if self.selected_peak_index is not None:
             num_peaks = self.peak_params_grid.GetNumberRows() // 2
@@ -1394,38 +1268,38 @@ class MyFrame(wx.Frame):
 
 
     # SHALL NOT BE USED
-    def on_radio_button(self, event):
-        radio_selected = event.GetEventObject()
-
-        if radio_selected == self.radio_bg_range:
-            if self.vline1 is not None:
-                self.vline1.set_visible(True)
-            if self.vline2 is not None:
-                self.vline2.set_visible(True)
-            if self.vline3 is not None:
-                self.vline3.set_visible(False)
-            if self.vline4 is not None:
-                self.vline4.set_visible(False)
-        elif radio_selected == self.radio_noise_range:
-            if self.vline1 is not None:
-                self.vline1.set_visible(False)
-            if self.vline2 is not None:
-                self.vline2.set_visible(False)
-            if self.vline3 is not None:
-                self.vline3.set_visible(True)
-            if self.vline4 is not None:
-                self.vline4.set_visible(True)
-        else:  # self.radio_none is selected
-            if self.vline1 is not None:
-                self.vline1.set_visible(False)
-            if self.vline2 is not None:
-                self.vline2.set_visible(False)
-            if self.vline3 is not None:
-                self.vline3.set_visible(False)
-            if self.vline4 is not None:
-                self.vline4.set_visible(False)
-
-        self.canvas.draw_idle()
+    # def on_radio_button(self, event):
+    #     radio_selected = event.GetEventObject()
+    #
+    #     if radio_selected == self.radio_bg_range:
+    #         if self.vline1 is not None:
+    #             self.vline1.set_visible(True)
+    #         if self.vline2 is not None:
+    #             self.vline2.set_visible(True)
+    #         if self.vline3 is not None:
+    #             self.vline3.set_visible(False)
+    #         if self.vline4 is not None:
+    #             self.vline4.set_visible(False)
+    #     elif radio_selected == self.radio_noise_range:
+    #         if self.vline1 is not None:
+    #             self.vline1.set_visible(False)
+    #         if self.vline2 is not None:
+    #             self.vline2.set_visible(False)
+    #         if self.vline3 is not None:
+    #             self.vline3.set_visible(True)
+    #         if self.vline4 is not None:
+    #             self.vline4.set_visible(True)
+    #     else:  # self.radio_none is selected
+    #         if self.vline1 is not None:
+    #             self.vline1.set_visible(False)
+    #         if self.vline2 is not None:
+    #             self.vline2.set_visible(False)
+    #         if self.vline3 is not None:
+    #             self.vline3.set_visible(False)
+    #         if self.vline4 is not None:
+    #             self.vline4.set_visible(False)
+    #
+    #     self.canvas.draw_idle()
 
 
     def adjust_plot_limits(self, axis, direction):
@@ -1516,6 +1390,7 @@ class MyFrame(wx.Frame):
             wx.MessageBox("Invalid value entered", "Error", wx.OK | wx.ICON_ERROR)
 
 
+    # Keep for now but I think it needs to be removed
     def update_atomic_percentages2(self):
         current_rows = self.results_grid.GetNumberRows()
         total_normalized_area = 0
@@ -1537,35 +1412,6 @@ class MyFrame(wx.Frame):
             normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(self.results_grid.GetCellValue(i, 8))
             atomic_percent = (normalized_area / total_normalized_area) * 100 if total_normalized_area > 0 else 0
             self.results_grid.SetCellValue(i, 6, f"{atomic_percent:.2f}")
-
-        self.results_grid.ForceRefresh()
-
-    def update_atomic_percentages3(self):
-        current_rows = self.results_grid.GetNumberRows()
-        total_normalized_area = 0
-        checked_indices = []
-
-        # Calculate total normalized area for checked elements
-        for i in range(current_rows):
-            if self.results_grid.GetCellValue(i, 7) == '1':  # Checkbox is ticked
-                normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(
-                    self.results_grid.GetCellValue(i, 8))
-                total_normalized_area += normalized_area
-                checked_indices.append(i)
-            else:
-                # Set the atomic percentage to 0 for unticked rows
-                self.results_grid.SetCellValue(i, 6, "0.00")
-
-        # Calculate and set atomic percentages for checked elements
-        for i in checked_indices:
-            normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(self.results_grid.GetCellValue(i, 8))
-            atomic_percent = (normalized_area / total_normalized_area) * 100 if total_normalized_area > 0 else 0
-            self.results_grid.SetCellValue(i, 6, f"{atomic_percent:.2f}")
-
-            # Update Bkg Low, Bkg High, and Sheetname for all rows
-            self.results_grid.SetCellValue(i, 13, f"{self.bg_min_energy:.2f}" if self.bg_min_energy is not None else "")
-            self.results_grid.SetCellValue(i, 14, f"{self.bg_max_energy:.2f}" if self.bg_max_energy is not None else "")
-            self.results_grid.SetCellValue(i, 15, self.sheet_combobox.GetValue())
 
         self.results_grid.ForceRefresh()
 
@@ -1628,29 +1474,8 @@ class MyFrame(wx.Frame):
             except ValueError:
                 wx.MessageBox("Invalid height value", "Error", wx.OK | wx.ICON_ERROR)
 
-    def update_atomic_percentages(self):
-        current_rows = self.results_grid.GetNumberRows()
-        total_normalized_area = 0
-        checked_indices = []
 
-        # Calculate total normalized area for checked elements
-        for i in range(current_rows):
-            if self.results_grid.GetCellValue(i, 7) == '1':  # Checkbox is ticked
-                normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(
-                    self.results_grid.GetCellValue(i, 8))
-                total_normalized_area += normalized_area
-                checked_indices.append(i)
-            else:
-                # Set the atomic percentage to 0 for unticked rows
-                self.results_grid.SetCellValue(i, 6, "0.00")
 
-        # Calculate and set atomic percentages for checked elements
-        for i in checked_indices:
-            normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(self.results_grid.GetCellValue(i, 8))
-            atomic_percent = (normalized_area / total_normalized_area) * 100 if total_normalized_area > 0 else 0
-            self.results_grid.SetCellValue(i, 6, f"{atomic_percent:.2f}")
-
-        self.results_grid.ForceRefresh()
 
     def on_peak_params_cell_changed2(self, event):
         row = event.GetRow()
