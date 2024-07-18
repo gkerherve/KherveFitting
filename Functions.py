@@ -146,31 +146,7 @@ def safe_delete_rows(grid, pos, num_rows):
         print("Error")
 
 
-def remove_peak2(window):
-    num_rows = window.peak_params_grid.GetNumberRows()
-    if num_rows > 0:
-        # Remove the last two rows from the peak_params_grid
-        if num_rows >= 2:
-            safe_delete_rows(window.peak_params_grid, num_rows - 2, 2)
-        elif num_rows == 1:
-            safe_delete_rows(window.peak_params_grid, num_rows - 1, 1)
-        else:
-            wx.MessageBox("No rows to delete.", "Information", wx.OK | wx.ICON_INFORMATION)
-            return
 
-        # Call the method to clear and replot everything
-        clear_and_replot(window)
-
-        # Decrease the peak count and reset the selected peak index
-        window.peak_count = num_rows // 2 - 1  # Update peak count based on remaining rows
-        window.selected_peak_index = None
-
-        # Layout the updated panel
-        window.panel.Layout()
-
-        window.canvas.draw_idle()
-    else:
-        wx.MessageBox("No peaks to remove.", "Information", wx.OK | wx.ICON_INFORMATION)
 
 
 def remove_peak(window):
@@ -435,76 +411,6 @@ def clear_plot(window):
 
 
 
-
-def clear_background2(window):
-    sheet_name = window.sheet_combobox.GetValue()  # Use GetValue for wx.ComboBox
-
-    if window.selected_files and len(window.selected_files) <= 10:
-        try:
-            skip_rows = int(window.skip_rows_spinbox.GetValue())
-            window.ax.clear()
-
-            all_x_values = []
-            all_y_values = []
-
-            for file_path in window.selected_files:
-                if sheet_name:
-                    df = pd.read_excel(file_path, sheet_name=sheet_name, skiprows=skip_rows)
-                else:
-                    df = pd.read_excel(file_path, skiprows=skip_rows)
-
-                x_values = df.iloc[:, 0]
-                y_values = df.iloc[:, 1]
-
-                all_x_values.extend(x_values)
-                all_y_values.extend(y_values)
-
-                # Plot the raw data with unfilled circle markers
-                window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black', label='Raw Data')
-
-            # Update window.x_values and window.y_values
-            window.x_values = np.array(all_x_values)
-            window.y_values = np.array(all_y_values)
-
-            # Initialize background to raw data
-            window.background = window.y_values.copy()
-
-            # Set x-axis limits to reverse the direction and match the min and max of the data
-            window.ax.set_xlim([max(window.x_values), min(window.x_values)])
-
-            window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-            window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-
-            window.ax.legend()
-
-            # Hide the cross if it exists
-            if hasattr(window, 'cross') and window.cross:
-                window.cross.set_visible(False)
-
-            # Switch to "None" ticked box and hide background lines
-            window.vline1 = None
-            window.vline2 = None
-            window.vline3 = None
-            window.vline4 = None
-            window.show_hide_vlines()
-
-            # Clear all peak data from the grid
-            num_rows = window.peak_params_grid.GetNumberRows()
-            if num_rows > 0:
-                window.peak_params_grid.DeleteRows(0, num_rows)
-
-            # Reset peak count and selected peak index
-            window.peak_count = 0
-            window.selected_peak_index = None
-
-            # Redraw the canvas
-            window.canvas.draw_idle()
-
-        except Exception as e:
-            wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
-    else:
-        wx.MessageBox("Select between 1 and 10 files to clear background", "Error", wx.OK | wx.ICON_ERROR)
-
 def clear_background(window):
     sheet_name = window.sheet_combobox.GetValue()
 
@@ -766,6 +672,8 @@ def update_sheet_names(window):
     else:
         wx.MessageBox("No files selected.", "Information", wx.OK | wx.ICON_INFORMATION)
 
+
+# I do not think it is necessary
 def rename_sheet(window, new_sheet_name):
     selected_indices = window.file_listbox.GetSelections()
     sheet_name = window.sheet_combobox.GetValue()
@@ -1012,68 +920,7 @@ import json
 from ConfigFile import Init_Measurement_Data, add_core_level_Data
 
 
-def open_xlsx_file2(window):
-    print("Starting open_xlsx_file function")
-    with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
-                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
-        if dlg.ShowModal() == wx.ID_OK:
-            file_path = dlg.GetPath()
-            window.SetStatusText(f"Selected File: {file_path}", 0)
 
-            try:
-                # Look for corresponding .json file
-                json_file = os.path.splitext(file_path)[0] + '.json'
-                if os.path.exists(json_file):
-                    print(f"Found corresponding .json file: {json_file}")
-                    with open(json_file, 'r') as f:
-                        loaded_data = json.load(f)
-
-                    # Convert data structure without changing types
-                    window.Data = convert_from_serializable(loaded_data)
-
-                    print("Loaded data from .json file")
-
-                    # Populate the results grid
-                    populate_results_grid(window)
-                else:
-                    print("No corresponding .json file found. Initializing new data.")
-                    # Initialize the measurement data
-                    window.Data = Init_Measurement_Data(window)
-
-                # Read the Excel file
-                excel_file = pd.ExcelFile(file_path)
-                sheet_names = excel_file.sheet_names
-                print(f"Number of sheets: {len(sheet_names)}")
-
-                # Update file path
-                window.Data['FilePath'] = file_path
-
-                # If we didn't load from json, populate the data from Excel
-                if 'Core levels' not in window.Data or not window.Data['Core levels']:
-                    window.Data['Number of Core levels'] = 0
-                    for sheet_name in sheet_names:
-                        window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
-
-                print(f"Final number of core levels: {window.Data['Number of Core levels']}")
-
-                # Update sheet names in the combobox
-                window.sheet_combobox.Clear()
-                window.sheet_combobox.AppendItems(sheet_names)
-
-                # Set the first sheet as the selected one
-                first_sheet = sheet_names[0]
-                window.sheet_combobox.SetValue(first_sheet)
-                on_sheet_selected()
-
-                # Plot the data for the first sheet
-                plot_data(window)
-
-                print("open_xlsx_file function completed successfully")
-            except Exception as e:
-                print(f"Error in open_xlsx_file: {str(e)}")
-                import traceback
-                traceback.print_exc()
-                wx.MessageBox(f"Error reading file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
 def open_xlsx_file(window):
@@ -1226,57 +1073,8 @@ import pandas as pd
 from vamas import Vamas
 from openpyxl import Workbook
 
-def open_xlsx_file_vamas2(window, file_path=None):
-    if file_path is None:
-        with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
-                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
-            if dlg.ShowModal() == wx.ID_CANCEL:
-                return
-            file_path = dlg.GetPath()
 
-    try:
-        window.SetStatusText(f"Selected File: {file_path}", 0)
 
-        # Initialize the measurement data
-        window.Data = Init_Measurement_Data(window)
-        window.Data['FilePath'] = file_path
-
-        excel_file = pd.ExcelFile(file_path)
-        sheet_names = excel_file.sheet_names
-
-        # Update number of core levels (sheets)
-        window.Data['Number of Core levels'] = 0  # Initialize to 0, we'll increment in add_core_level_Data
-
-        # Add core level data for each sheet
-        for sheet_name in sheet_names:
-            window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
-
-        print(f"Final number of core levels: {window.Data['Number of Core levels']}")
-
-        # Update sheet names in the combobox
-        window.sheet_combobox.Clear()
-        window.sheet_combobox.AppendItems(sheet_names)
-        window.sheet_combobox.SetValue(sheet_names[0])  # Set first sheet as default
-
-        # Update other necessary GUI elements or data structures
-        update_sheet_names(window)
-
-        # Plot the data for the first sheet
-        plot_data(window)
-
-        # Look for corresponding .kfit file
-        kfit_file = os.path.splitext(file_path)[0] + '.kfit'
-        if os.path.exists(kfit_file):
-            print(f"Found corresponding .kfit file: {kfit_file}")
-            # load_kfit_data(window, kfit_file)
-        else:
-            print("No corresponding .kfit file found")
-
-    except Exception as e:
-        print(f"Error in open_xlsx_file_vamas: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        wx.MessageBox(f"Error reading Excel file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 def open_vamas_file(window):
     with wx.FileDialog(window, "Open VAMAS file", wildcard="VAMAS files (*.vms)|*.vms",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
@@ -1335,8 +1133,6 @@ def open_vamas_file(window):
         wx.MessageBox(f"File not found: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
     except Exception as e:
         wx.MessageBox(f"Error processing VAMAS file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
-
-
 
 def open_xlsx_file_vamas(window, file_path):
     try:
