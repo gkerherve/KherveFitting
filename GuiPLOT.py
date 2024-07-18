@@ -949,23 +949,25 @@ class MyFrame(wx.Frame):
 
     def update_peak_fwhm(self, x):
         if self.initial_fwhm is not None and self.initial_x is not None:
-            row = self.selected_peak_index * 2  # Each peak uses two rows in the grid
-            peak_center = float(self.peak_params_grid.GetCellValue(row, 2))  # Position
+            row = self.selected_peak_index * 2
+            peak_center = float(self.peak_params_grid.GetCellValue(row, 2))
+            peak_label = self.peak_params_grid.GetCellValue(row, 1)
 
-            # Calculate the change in FWHM based on the difference in mouse position
             delta_x = x - self.initial_x
-            new_fwhm = self.initial_fwhm + delta_x * 1  # Adjust the sensitivity as needed
+            new_fwhm = max(self.initial_fwhm + delta_x * 1, 0.3)  # Ensure minimum FWHM of 0.3 eV
 
-            # Ensure minimum FWHM of 0.3 eV
-            if new_fwhm < 0.3:
-                new_fwhm = 0.3
+            self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")
 
-            # Update the FWHM in the grid
-            self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")  # FWHM
+            # Update FWHM in window.Data
+            sheet_name = self.sheet_combobox.GetValue()
+            if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
+                sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
+                peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+                if peak_label in peaks:
+                    peaks[peak_label]['FWHM'] = new_fwhm
 
-            # Get updated position and height from the grid
-            position = float(self.peak_params_grid.GetCellValue(row, 2))  # Position
-            height = float(self.peak_params_grid.GetCellValue(row, 3))  # Height
+            position = float(self.peak_params_grid.GetCellValue(row, 2))
+            height = float(self.peak_params_grid.GetCellValue(row, 3))
 
             self.update_peak_plot(position, height, remove_old_peaks=False)
 
