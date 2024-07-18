@@ -636,47 +636,43 @@ class MyFrame(wx.Frame):
         row = index * 2  # Assuming each peak uses two rows in the grid
         self.peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")  # Update FWHM
 
-
     def on_cross_drag(self, event):
         if event.inaxes and self.selected_peak_index is not None:
-            row = self.selected_peak_index * 2  # Each peak uses two rows in the grid
+            row = self.selected_peak_index * 2
             if event.button == 1:
                 try:
-                    if event.key == 'shift':  # SHIFT + left click drag for FWHM change
+                    if event.key == 'shift':
                         self.update_peak_fwhm(event.xdata)
-                    elif self.is_mouse_on_peak(event):  # Regular left click drag for peak position and height
-                        # Find the closest background value
+                    elif self.is_mouse_on_peak(event):
                         closest_index = np.argmin(np.abs(self.x_values - event.xdata))
                         bkg_y = self.background[closest_index]
 
                         new_x = event.xdata
-                        new_height = max(event.ydata - bkg_y, 0)  # Ensure height is not negative
+                        new_height = max(event.ydata - bkg_y, 0)
 
-                        # Update the peak grid
-                        self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")  # Position
-                        self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")  # Height
+                        # Update the grid
+                        self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")
+                        self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
 
                         # Remove old cross
                         if hasattr(self, 'cross'):
                             self.cross.remove()
 
-                        # Create new cross at updated position
+                        # Create new cross
                         self.cross, = self.ax.plot(new_x, event.ydata, 'bx', markersize=15, markerfacecolor='none',
                                                    picker=5)
 
+                        # Update the peak plot
                         self.update_peak_plot(new_x, new_height, remove_old_peaks=False)
 
-                        # Update the grid display
+                        # Use clear_and_replot to refresh the entire plot
+                        clear_and_replot(self)
+
                         self.peak_params_grid.ForceRefresh()
-
-                        # Redraw the canvas
                         self.canvas.draw_idle()
-
-                        # print(f"Peak updated: x={new_x:.2f}, height={new_height:.2f}")
 
                 except Exception as e:
                     print(f"Error during cross drag: {e}")
-                    # You might want to show an error message to the user here
 
     def on_cross_release2(self, event):
         if event.inaxes and self.selected_peak_index is not None:
