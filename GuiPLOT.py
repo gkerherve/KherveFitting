@@ -707,17 +707,22 @@ class MyFrame(wx.Frame):
     def on_cross_release(self, event):
         if event.inaxes and self.selected_peak_index is not None:
             if event.button == 1:  # Left button release
+                row = self.selected_peak_index * 2
+                peak_label = self.peak_params_grid.GetCellValue(row, 1)
+                sheet_name = self.sheet_combobox.GetValue()
+
                 if event.key == 'shift':  # SHIFT + left click release for FWHM change
-                    # Implement FWHM change logic here if needed
-                    pass
+                    # Store the current FWHM in window.Data
+                    current_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                    if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
+                        sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
+                        peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+                        if peak_label in peaks:
+                            peaks[peak_label]['FWHM'] = current_fwhm
                 else:
                     bkg_y = self.background[np.argmin(np.abs(self.x_values - event.xdata))]
                     x = event.xdata
                     y = max(event.ydata - bkg_y, 0)  # Ensure height is not negative
-
-                    # Get the current peak label
-                    row = self.selected_peak_index * 2
-                    peak_label = self.peak_params_grid.GetCellValue(row, 1)
 
                     self.update_peak_grid(self.selected_peak_index, x, y)
 
@@ -730,7 +735,6 @@ class MyFrame(wx.Frame):
                     self.update_peak_plot(x, y)
 
                     # Update the Data structure with the current label and new values
-                    sheet_name = self.sheet_combobox.GetValue()
                     if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
                         sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
                         peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
@@ -747,8 +751,14 @@ class MyFrame(wx.Frame):
                                 peaks[peak_label]['Height'] = y
 
             self.canvas.draw_idle()
+
+        # Safely disconnect event handlers
+        if hasattr(self, 'motion_cid'):
             self.canvas.mpl_disconnect(self.motion_cid)
+            delattr(self, 'motion_cid')
+        if hasattr(self, 'release_cid'):
             self.canvas.mpl_disconnect(self.release_cid)
+            delattr(self, 'release_cid')
 
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
