@@ -109,7 +109,7 @@ def clear_and_replot(window):
     num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
     for i in range(num_peaks):
         row = i * 2
-        window.peak_params_grid.SetCellValue(row, 1, f"{sheet_name} p{i + 1}")  # Update peak name
+        # window.peak_params_grid.SetCellValue(row, 1, f"{sheet_name} p{i + 1}")  # Update peak name
 
         position_str = window.peak_params_grid.GetCellValue(row, 2)
         height_str = window.peak_params_grid.GetCellValue(row, 3)
