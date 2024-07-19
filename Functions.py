@@ -1332,6 +1332,12 @@ def fit_peaks(window, peak_params_grid):
         return None
 
     sheet_name = window.sheet_combobox.GetValue()
+
+    if sheet_name not in window.plot_config.plot_limits:
+        window.plot_config.update_plot_limits(window, sheet_name)
+    limits = window.plot_config.plot_limits[sheet_name]
+
+
     if sheet_name not in window.Data['Core levels']:
         wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
         return None
@@ -1572,9 +1578,10 @@ def fit_peaks(window, peak_params_grid):
             window.ax.set_xlabel("Binding Energy (eV)")
             window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-            window.ax.set_xlim([max(x_values), min(x_values)])
-            current_ylim = window.ax.get_ylim()
-            window.ax.set_ylim(current_ylim[0], current_ylim[1])
+
+            # Use the stored limits from PlotConfig
+            window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+            window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
             # Add text annotations with fit results
             std_value_int = int(window.noise_std_value) if hasattr(window, 'noise_std_value') else "N/A"
