@@ -1162,7 +1162,7 @@ class MyFrame(wx.Frame):
     import wx.adv
 
     def show_popup_message(self, message):
-        popup = wx.adv.RichToolTip("Are trying to select a peak?", message)
+        popup = wx.adv.RichToolTip("Are you trying to select a peak?", message)
         popup.ShowFor(self)
 
     def change_selected_peak(self, direction):
