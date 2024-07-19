@@ -17,6 +17,7 @@ from Save import *
 from NoiseAnalysis import NoiseAnalysisWindow
 from ConfigFile import *
 from libraries.Export import export_results
+from libraries.PlotConfig import PlotConfig
 # END ---------------------------------------------------------------------------
 
 # MAIN WINDOW--------------------------------------------------------------------
@@ -56,7 +57,7 @@ class MyFrame(wx.Frame):
         self.peak_count = 0  # To keep track of the number of peaks
 
         # Dictionary for the X and Y limits
-        self.plot_limits = {}
+        self.plot_config = PlotConfig()
 
         self.is_right_panel_hidden = False
 
@@ -1717,6 +1718,12 @@ class MyFrame(wx.Frame):
 
     def set_offset_l(self, value):
         self.offset_l = value
+
+    def adjust_plot_limits(self, axis, direction):
+        self.plot_config.adjust_plot_limits(self, axis, direction)
+
+    def resize_plot(self):
+        self.plot_config.resize_plot(self)
 
 
     def get_data_for_save(self):
