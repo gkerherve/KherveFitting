@@ -32,6 +32,9 @@ def load_rsf_data(file_path):
 
 
 
+from matplotlib.ticker import ScalarFormatter
+
+
 def clear_and_replot(window):
     sheet_name = window.sheet_combobox.GetValue()
     if sheet_name not in window.Data['Core levels']:
@@ -51,7 +54,15 @@ def clear_and_replot(window):
     x_values = np.array(core_level_data['B.E.'])
     y_values = np.array(core_level_data['Raw Data'])
     window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black', label='Raw Data')
-    window.ax.set_xlim([max(x_values), min(x_values)])
+
+    # Get plot limits from PlotConfig
+    if sheet_name not in window.plot_config.plot_limits:
+        window.plot_config.update_plot_limits(window, sheet_name)
+    limits = window.plot_config.plot_limits[sheet_name]
+
+    # Set plot limits
+    window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+    window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
     # Plot the background if it exists
     if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
@@ -62,8 +73,6 @@ def clear_and_replot(window):
     num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
     for i in range(num_peaks):
         row = i * 2
-        # window.peak_params_grid.SetCellValue(row, 1, f"{sheet_name} p{i + 1}")  # Update peak name
-
         position_str = window.peak_params_grid.GetCellValue(row, 2)
         height_str = window.peak_params_grid.GetCellValue(row, 3)
 
@@ -1307,7 +1316,7 @@ def calculate_chi_square(y_true, y_pred):
 
 import numpy as np
 import lmfit
-import wx
+
 from matplotlib.ticker import ScalarFormatter
 import matplotlib.pyplot as plt
 
