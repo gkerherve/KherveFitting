@@ -1107,6 +1107,7 @@ class MyFrame(wx.Frame):
                     self.canvas.draw_idle()
 
                     # Update the Data structure with the current label
+
                     sheet_name = self.sheet_combobox.GetValue()
                     if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
                         sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
@@ -1144,20 +1145,25 @@ class MyFrame(wx.Frame):
 
     def on_key_press_global(self, event):
         keycode = event.GetKeyCode()
-        # print(f"on_key_press_global event. Keycode: {keycode}")
-
         if keycode == wx.WXK_TAB:
-            # print("TAB Global key pressed")
-            self.change_selected_peak(1)
+            if not self.peak_fitting_tab_selected:
+                self.show_popup_message("Open the Peak Fitting Tab to move or select a peak")
+            else:
+                self.change_selected_peak(1)  # Move to next peak
             return  # Prevent event from propagating
         elif keycode == ord('Q'):
-            # print("Q Global key pressed")
-            self.change_selected_peak(-1)
+            if not self.peak_fitting_tab_selected:
+                self.show_popup_message("Open the Peak Fitting Tab to move or select a peak")
+            else:
+                self.change_selected_peak(-1)  # Move to next peak
             return  # Prevent event from propagating
-
         event.Skip()  # Let other key events propagate normally
 
+    import wx.adv
 
+    def show_popup_message(self, message):
+        popup = wx.adv.RichToolTip("Are trying to select a peak?", message)
+        popup.ShowFor(self)
 
     def change_selected_peak(self, direction):
         # print(f"Entering change_selected_peak. Direction: {direction}")
