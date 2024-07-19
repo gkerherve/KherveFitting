@@ -30,54 +30,7 @@ def load_rsf_data(file_path):
     return rsf_dict
 
 
-def clear_and_replot2(window):
-    # Clear the plot
-    window.ax.clear()
-    window.ax.set_xlabel("Binding Energy (eV)")  # Set x-axis label
-    window.ax.set_ylabel("Intensity (CTS)")  # Set y-axis label
-    window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-    window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
-    # Plot the raw data
-    window.ax.scatter(window.x_values, window.y_values, facecolors='none', marker='o', s=10, edgecolors='black',
-                      label='Raw Data')
-    window.ax.set_xlim([max(window.x_values), min(window.x_values)])  # Set x-axis limits from high BE to low BE
-
-    # print("plot and replot")
-
-    # Plot the background if it exists
-    if hasattr(window, 'background'):
-        window.ax.plot(window.x_values, window.background, color='grey', linestyle='--', label='Background')
-        # window.ax.plot(window.x_values_filtered, window.background, color='grey', linestyle='--', label='Background')
-
-    # Replot all peaks and update indices
-    num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-    for i in range(num_peaks):
-        row = i * 2
-        window.peak_params_grid.SetCellValue(row, 1, f"{window.sheet_combobox.GetValue()} p{i + 1}")  # Update peak name
-
-        position_str = window.peak_params_grid.GetCellValue(row, 2)
-        height_str = window.peak_params_grid.GetCellValue(row, 3)
-
-        # Check if the cells are not empty before converting to float
-        if position_str and height_str:
-            try:
-                position = float(position_str)
-                height = float(height_str)
-                window.plot_peak(position, height, i)
-            except ValueError:
-                print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
-        else:
-            print(f"Warning: Empty data for peak {i + 1}. Skipping this peak.")
-
-    # Update overall fit and residuals
-    window.update_overall_fit_and_residuals()
-
-    # Update the legend
-    window.update_legend()
-
-    # Draw the canvas
-    window.canvas.draw_idle()
 
 def clear_and_replot(window):
     sheet_name = window.sheet_combobox.GetValue()
