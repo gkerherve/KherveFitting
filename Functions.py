@@ -267,8 +267,10 @@ def on_sheet_selected(window, event):
             # window.update_overall_fit_and_residuals()
             plot_data(window)
             clear_and_replot(window)
+            window.plot_config.update_plot_limits(window, selected_sheet)
         else:
             plot_data(window)
+            window.plot_config.update_plot_limits(window, selected_sheet)
 
         # Refresh the grid display
         window.peak_params_grid.ForceRefresh()
