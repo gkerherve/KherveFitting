@@ -1082,6 +1082,7 @@ class MyFrame(wx.Frame):
             for i in range(num_peaks):
                 row = i * 2
                 is_selected = (i == self.selected_peak_index)
+
                 self.peak_params_grid.SetCellBackgroundColour(row, 0, wx.LIGHT_GREY if is_selected else wx.WHITE)
                 self.peak_params_grid.SetCellBackgroundColour(row + 1, 0, wx.LIGHT_GREY if is_selected else wx.WHITE)
 
@@ -1173,7 +1174,9 @@ class MyFrame(wx.Frame):
         # print(f"New selected_peak_index: {self.selected_peak_index}")
 
         self.remove_cross_from_peak()
-        self.highlight_selected_peak()
+        if self.peak_fitting_tab_selected:
+            self.highlight_selected_peak()
+
         self.canvas.draw_idle()
 
         # print(f"Exiting change_selected_peak.")
