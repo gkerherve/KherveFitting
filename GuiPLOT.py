@@ -1330,7 +1330,7 @@ class MyFrame(wx.Frame):
     #     self.canvas.draw_idle()
 
 
-    def adjust_plot_limits(self, axis, direction):
+    def adjust_plot_limits2(self, axis, direction):
         if axis in ['high_be', 'low_be']:
             increment = 0.2  # Fixed BE increment of 0.2 eV
             current_xlim = self.ax.get_xlim()
@@ -1360,6 +1360,9 @@ class MyFrame(wx.Frame):
                 elif direction == 'decrease':
                     self.ax.set_ylim(max(current_ylim[0] - increment, 0), current_ylim[1])
         self.canvas.draw_idle()
+
+    def adjust_plot_limits(self, axis, direction):
+        self.plot_config.adjust_plot_limits(self, axis, direction)
 
 
     def export_results(self):
