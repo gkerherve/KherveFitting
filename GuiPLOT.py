@@ -1501,63 +1501,7 @@ class MyFrame(wx.Frame):
 
 
 
-    def on_peak_params_cell_changed2(self, event):
-        row = event.GetRow()
-        col = event.GetCol()
-        new_value = self.peak_params_grid.GetCellValue(row, col)
-        sheet_name = self.sheet_combobox.GetValue()
-        peak_index = row // 2
-        old_peak_label = self.peak_params_grid.GetCellValue(peak_index * 2, 1)  # Get the original label
 
-        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
-                self.Data['Core levels'][sheet_name]['Fitting']:
-            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-            if old_peak_label in peaks:
-                if row % 2 == 0:  # Main parameter row
-                    if col == 1:  # Label
-                        # Update the label in the Data structure
-                        peak_data = peaks.pop(old_peak_label)
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][new_value] = peak_data
-                        print(f"Updated peak label from {old_peak_label} to {new_value}")
-
-                        # Update the label in the grid
-                        self.peak_params_grid.SetCellValue(row, col, new_value)
-                    elif col == 2:  # Position
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][old_peak_label]['Position'] = float(
-                            new_value)
-                    elif col == 3:  # Height
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][old_peak_label]['Height'] = float(
-                            new_value)
-                    elif col == 4:  # FWHM
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][old_peak_label]['FWHM'] = float(
-                            new_value)
-                    elif col == 5:  # L/G
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][old_peak_label]['L/G'] = float(
-                            new_value)
-                else:  # Constraint row
-                    if col >= 2 and col <= 5:
-                        constraint_key = ['Position', 'Height', 'FWHM', 'L/G'][col - 2]
-                        if 'Constraints' not in self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][
-                            old_peak_label]:
-                            self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][old_peak_label]['Constraints'] = {}
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][old_peak_label]['Constraints'][
-                            constraint_key] = new_value
-
-        # Ensure numeric values are displayed with 2 decimal places
-        if col in [2, 3, 4, 5] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
-            try:
-                formatted_value = f"{float(new_value):.2f}"
-                self.peak_params_grid.SetCellValue(row, col, formatted_value)
-            except ValueError:
-                pass  # If it's not a valid float, leave it as is
-
-        print(f"Updated window.Data for sheet {sheet_name}, peak {old_peak_label}, column {col}")
-
-        # Debug print to check the updated Data structure
-        print("Updated Peaks structure:")
-        print(self.Data['Core levels'][sheet_name]['Fitting']['Peaks'])
-
-        event.Skip()
 
     def on_peak_params_cell_changed(self, event):
         row = event.GetRow()
@@ -1647,25 +1591,6 @@ class MyFrame(wx.Frame):
 
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
-
-    def refresh_peak_params_grid2(self):
-        sheet_name = self.sheet_combobox.GetValue()
-        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
-                self.Data['Core levels'][sheet_name]['Fitting']:
-            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-            for i, (peak_label, peak_data) in enumerate(peaks.items()):
-                row = i * 2
-                self.peak_params_grid.SetCellValue(row, 1, peak_label)
-                self.peak_params_grid.SetCellValue(row, 2, f"{peak_data['Position']:.2f}")
-                self.peak_params_grid.SetCellValue(row, 3, f"{peak_data['Height']:.2f}")
-                self.peak_params_grid.SetCellValue(row, 4, f"{peak_data['FWHM']:.2f}")
-                self.peak_params_grid.SetCellValue(row, 5, f"{peak_data['L/G']:.2f}")
-                if 'Constraints' in peak_data:
-                    self.peak_params_grid.SetCellValue(row + 1, 2, str(peak_data['Constraints'].get('Position', '')))
-                    self.peak_params_grid.SetCellValue(row + 1, 3, str(peak_data['Constraints'].get('Height', '')))
-                    self.peak_params_grid.SetCellValue(row + 1, 4, str(peak_data['Constraints'].get('FWHM', '')))
-                    self.peak_params_grid.SetCellValue(row + 1, 5, str(peak_data['Constraints'].get('L/G', '')))
-        self.peak_params_grid.ForceRefresh()
 
     def refresh_peak_params_grid(self):
         sheet_name = self.sheet_combobox.GetValue()
