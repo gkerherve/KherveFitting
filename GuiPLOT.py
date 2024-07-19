@@ -1499,94 +1499,53 @@ class MyFrame(wx.Frame):
                 wx.MessageBox("Invalid height value", "Error", wx.OK | wx.ICON_ERROR)
 
 
-
-
-
-
     def on_peak_params_cell_changed(self, event):
         row = event.GetRow()
         col = event.GetCol()
         new_value = self.peak_params_grid.GetCellValue(row, col)
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
-        old_peak_label = self.peak_params_grid.GetCellValue(peak_index * 2, 1)  # Get the original label
-
-        print(f"\n--- Cell Change Event ---")
-        print(f"Row: {row}, Column: {col}")
-        print(f"New Value: {new_value}")
-        print(f"Sheet Name: {sheet_name}")
-        print(f"Peak Index: {peak_index}")
-        print(f"Old Peak Label: {old_peak_label}")
 
         if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
                 self.Data['Core levels'][sheet_name]['Fitting']:
             peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-            print(f"Current Peaks: {list(peaks.keys())}")
+            peak_keys = list(peaks.keys())
 
-            # Find the correct peak key
-            correct_peak_key = None
-            for i, key in enumerate(peaks.keys()):
-                if i == peak_index:
-                    correct_peak_key = key
-                    break
+            if peak_index < len(peak_keys):
+                correct_peak_key = peak_keys[peak_index]
 
-            if correct_peak_key is not None:
-                print(f"Found correct peak key: {correct_peak_key}")
                 if row % 2 == 0:  # Main parameter row
                     if col == 1:  # Label
-                        print(f"Attempting to update label from {correct_peak_key} to {new_value}")
-                        # Update the label in the Data structure
-                        peak_data = peaks.pop(correct_peak_key)
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][new_value] = peak_data
-                        print(f"Updated peak label in Data structure")
-
-                        # Update the label in the grid
-                        self.peak_params_grid.SetCellValue(row, col, new_value)
-                        print(f"Updated peak label in grid")
+                        new_peaks = {}
+                        for i, (key, value) in enumerate(peaks.items()):
+                            if i == peak_index:
+                                new_peaks[new_value] = value
+                            else:
+                                new_peaks[key] = value
+                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = new_peaks
                     elif col == 2:  # Position
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][correct_peak_key]['Position'] = float(
-                            new_value)
-                        print(f"Updated Position to {new_value}")
+                        peaks[correct_peak_key]['Position'] = float(new_value)
                     elif col == 3:  # Height
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][correct_peak_key]['Height'] = float(
-                            new_value)
-                        print(f"Updated Height to {new_value}")
+                        peaks[correct_peak_key]['Height'] = float(new_value)
                     elif col == 4:  # FWHM
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][correct_peak_key]['FWHM'] = float(
-                            new_value)
-                        print(f"Updated FWHM to {new_value}")
+                        peaks[correct_peak_key]['FWHM'] = float(new_value)
                     elif col == 5:  # L/G
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][correct_peak_key]['L/G'] = float(
-                            new_value)
-                        print(f"Updated L/G to {new_value}")
+                        peaks[correct_peak_key]['L/G'] = float(new_value)
                 else:  # Constraint row
                     if col >= 2 and col <= 5:
                         constraint_key = ['Position', 'Height', 'FWHM', 'L/G'][col - 2]
-                        if 'Constraints' not in self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][
-                            correct_peak_key]:
-                            self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][correct_peak_key][
-                                'Constraints'] = {}
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][correct_peak_key]['Constraints'][
-                            constraint_key] = new_value
-                        print(f"Updated Constraint {constraint_key} to {new_value}")
-            else:
-                print(f"Warning: Correct peak key not found for index {peak_index}")
-        else:
-            print("Warning: Required data structure not found in self.Data")
+                        if 'Constraints' not in peaks[correct_peak_key]:
+                            peaks[correct_peak_key]['Constraints'] = {}
+                        peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 
         # Ensure numeric values are displayed with 2 decimal places
         if col in [2, 3, 4, 5] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
             try:
                 formatted_value = f"{float(new_value):.2f}"
                 self.peak_params_grid.SetCellValue(row, col, formatted_value)
-                print(f"Formatted numeric value to {formatted_value}")
             except ValueError:
-                print(f"Warning: Could not format {new_value} as float")
+                pass
 
-        print("\nUpdated Peaks structure:")
-        print(self.Data['Core levels'][sheet_name]['Fitting']['Peaks'])
-
-        print("--- End of Cell Change Event ---\n")
         event.Skip()
 
         # Refresh the grid to ensure it reflects the current state of self.Data
