@@ -539,23 +539,26 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellValue(row, col, 'fixed')
         event.Skip()
 
-
-
     def on_grid_select(self, event):
-        row = event.GetRow()
-        if row % 2 == 0:  # Assuming peak parameters are in even rows and constraints in odd rows
-           # Removing any cross that were there
-            self.selected_peak_index = None
-            clear_and_replot(self)
+        if self.peak_fitting_tab_selected:
+            row = event.GetRow()
+            if row % 2 == 0:  # Assuming peak parameters are in even rows and constraints in odd rows
+                # Removing any cross that were there
+                self.selected_peak_index = None
+                clear_and_replot(self)
 
-            peak_index = row // 2
-            self.selected_peak_index = peak_index
+                peak_index = row // 2
+                self.selected_peak_index = peak_index
 
-            self.remove_cross_from_peak()
-            self.highlight_selected_peak()  # Highlight the selected peak
+                self.remove_cross_from_peak()
+                self.highlight_selected_peak()  # Highlight the selected peak
+            else:
+                self.selected_peak_index = None
+                self.deselect_all_peaks()
         else:
+            # If peak fitting tab is not selected, don't allow peak selection
             self.selected_peak_index = None
-
+            self.deselect_all_peaks()
 
         event.Skip()  # Ensure the event is processed further
 
@@ -1016,6 +1019,7 @@ class MyFrame(wx.Frame):
                         self.motion_cid = self.canvas.mpl_connect('motion_notify_event', self.on_cross_drag)
                         self.release_cid = self.canvas.mpl_connect('button_release_event', self.on_cross_release)
                 elif self.background_tab_selected:  # Left click and background tab selected
+                    self.deselect_all_peaks()
                     sheet_name = self.sheet_combobox.GetValue()
                     if sheet_name in self.Data['Core levels']:
                         core_level_data = self.Data['Core levels'][sheet_name]
