@@ -291,6 +291,7 @@ def plot_data(window):
         return
 
     sheet_name = window.sheet_combobox.GetValue()
+    limits = window.plot_config.get_plot_limits(window, sheet_name)
     if sheet_name not in window.Data['Core levels']:
         wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
         return
@@ -317,7 +318,8 @@ def plot_data(window):
             window.Data['Core levels'][sheet_name]['Background']['Bkg X'] = window.x_values.tolist()
 
         # Set x-axis limits to reverse the direction and match the min and max of the data
-        window.ax.set_xlim([max(window.x_values), min(window.x_values)])
+        window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
         window.ax.set_ylabel("Intensity (CTS)")
         window.ax.set_xlabel("Binding Energy (eV)")
