@@ -1330,37 +1330,6 @@ class MyFrame(wx.Frame):
     #     self.canvas.draw_idle()
 
 
-    def adjust_plot_limits2(self, axis, direction):
-        if axis in ['high_be', 'low_be']:
-            increment = 0.2  # Fixed BE increment of 0.2 eV
-            current_xlim = self.ax.get_xlim()
-            if axis == 'high_be':
-                if direction == 'increase':
-                    self.ax.set_xlim(current_xlim[0] - increment, current_xlim[1])
-                elif direction == 'decrease':
-                    self.ax.set_xlim(current_xlim[0] + increment, current_xlim[1])
-            elif axis == 'low_be':
-                if direction == 'increase':
-                    self.ax.set_xlim(current_xlim[0], current_xlim[1] + increment)
-                elif direction == 'decrease':
-                    self.ax.set_xlim(current_xlim[0], current_xlim[1] - increment)
-        elif axis in ['high_int', 'low_int']:
-            max_intensity = max(self.y_values)  # Assuming self.y_values contains your y-axis data
-            current_ylim = self.ax.get_ylim()
-            if axis == 'high_int':
-                increment = 0.05 * max_intensity
-                if direction == 'increase':
-                    self.ax.set_ylim(current_ylim[0], current_ylim[1] + increment)
-                elif direction == 'decrease':
-                    self.ax.set_ylim(current_ylim[0], max(current_ylim[1] - increment, current_ylim[0]))
-            elif axis == 'low_int':
-                increment = 0.02 * max_intensity
-                if direction == 'increase':
-                    self.ax.set_ylim(min(current_ylim[0] + increment, current_ylim[1]), current_ylim[1])
-                elif direction == 'decrease':
-                    self.ax.set_ylim(max(current_ylim[0] - increment, 0), current_ylim[1])
-        self.canvas.draw_idle()
-
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)
 
