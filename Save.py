@@ -87,6 +87,78 @@ def convert_to_serializable(obj):
     else:
         return obj
 
+def save_to_excel2(window, data, file_path, sheet_name):
+    existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
+
+    # Remove previously fitted data if it exists
+    if existing_df.shape[1] > 3:  # If there are more than 3 columns (BE, Raw Data, empty)
+        existing_df = existing_df.iloc[:, :3]  # Keep only the first 3 columns
+
+    # Ensure there's an empty column C
+    if existing_df.shape[1] < 3:
+        existing_df.insert(2, '', np.nan)
+
+    if 'x_values' in data and data['x_values'] is not None:
+        x_values = data['x_values'].to_numpy() if isinstance(data['x_values'], pd.Series) else data['x_values']
+        filtered_data = pd.DataFrame({
+            'BE': x_values
+        })
+
+        if data['background'] is not None and data['calculated_fit'] is not None:
+            mask = np.isin(data['x_values'], x_values)
+            y_values = data['y_values'][mask]
+
+            if len(y_values) == len(data['calculated_fit']):
+                residuals = y_values - data['calculated_fit']
+                filtered_data['Residuals'] = residuals
+            else:
+                filtered_data['Residuals'] = np.nan
+        else:
+            filtered_data['Residuals'] = np.nan
+
+        filtered_data['Background'] = data['background'] if data['background'] is not None else np.nan
+        filtered_data['Calculated Fit'] = data['calculated_fit'] if data['calculated_fit'] is not None else np.nan
+
+        if data['individual_peak_fits']:
+            num_rows = len(x_values)
+            num_peaks = data['peak_params_grid'].GetNumberRows() // 2
+            for i in range(num_peaks):
+                row = i * 2
+                peak_label = data['peak_params_grid'].GetCellValue(row, 1)  # Get the peak label
+                if i < len(data['individual_peak_fits']):
+                    reversed_peak = np.array(data['individual_peak_fits'][i])[::-1]
+                    trimmed_peak = reversed_peak[:num_rows]
+                    filtered_data[peak_label] = trimmed_peak  # Use peak label as column name
+
+        # Rename columns to avoid conflicts before inserting them
+        for i, col in enumerate(filtered_data.columns):
+            new_col_name = col
+            while new_col_name in existing_df.columns:
+                new_col_name += '_new'
+            existing_df.insert(3 + i, new_col_name, filtered_data[col])
+
+    # Pad with empty columns if necessary
+    while existing_df.shape[1] < 3 + window.num_fitted_columns:
+        existing_df[f'Empty_{existing_df.shape[1]}'] = np.nan
+
+    # Remove names from column C and empty columns
+    existing_df.columns = ['' if i == 2 or i >= 3 + len(filtered_data.columns) else col for i, col in
+                           enumerate(existing_df.columns)]
+
+    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        existing_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        # Remove border from first row
+        workbook = writer.book
+        worksheet = workbook[sheet_name]
+        for cell in worksheet[1]:
+            cell.border = openpyxl.styles.Border(
+                left=openpyxl.styles.Side(style=None),
+                right=openpyxl.styles.Side(style=None),
+                top=openpyxl.styles.Side(style=None),
+                bottom=openpyxl.styles.Side(style=None)
+            )
+
 def save_to_excel(window, data, file_path, sheet_name):
     existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
@@ -158,6 +230,13 @@ def save_to_excel(window, data, file_path, sheet_name):
                 top=openpyxl.styles.Side(style=None),
                 bottom=openpyxl.styles.Side(style=None)
             )
+
+    # After saving to Excel, update the plot with the current limits
+    if hasattr(window, 'plot_config'):
+        limits = window.plot_config.get_plot_limits(window, sheet_name)
+        window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
+        window.canvas.draw_idle()
 
 
 def save_to_json(window, file_path):
