@@ -1132,8 +1132,11 @@ class MyFrame(wx.Frame):
             num_peaks = self.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
 
             if event.key == 'tab':
-                self.change_selected_peak(1)
-                # print("Local Key Tab")
+                if not self.peak_fitting_tab_selected:
+                    self.show_popup_message("Open the Peak Fitting Tab to move or select a peak")
+                else:
+                    self.change_selected_peak(1)  # Move to next peak
+                return  # Prevent event from propagating
             elif event.key == 'q':
                 # print("Local Key q")
                 # self.change_selected_peak(-1)
