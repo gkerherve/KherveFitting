@@ -55,6 +55,9 @@ class MyFrame(wx.Frame):
         self.peak_params = []  # Initialize
         self.peak_count = 0  # To keep track of the number of peaks
 
+        # Dictionary for the X and Y limits
+        self.plot_limits = {}
+
         self.is_right_panel_hidden = False
 
         # X axis correction from KE to BE
