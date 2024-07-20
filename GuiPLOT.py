@@ -1338,9 +1338,17 @@ class MyFrame(wx.Frame):
     def on_zoom_tool(self, event):
         self.zoom_mode = not self.zoom_mode
         if self.zoom_mode:
-            self.zoom_rect = widgets.RectangleSelector(self.ax, self.on_zoom_select, drawtype='box', useblit=True,
-                                                       button=[1], minspanx=5, minspany=5, spancoords='pixels',
-                                                       interactive=True)
+            self.zoom_rect = widgets.RectangleSelector(
+                self.ax,
+                self.on_zoom_select,
+                props=dict(facecolor='red', edgecolor='red', alpha=0.5, fill=True),
+                useblit=True,
+                button=[1],  # Left mouse button
+                minspanx=5,
+                minspany=5,
+                spancoords='pixels',
+                interactive=True
+            )
         else:
             if self.zoom_rect:
                 self.zoom_rect.set_active(False)

@@ -844,12 +844,12 @@ def create_vertical_toolbar(parent, frame):
     v_toolbar.AddSeparator()
 
     resize_plot_tool = v_toolbar.AddTool(wx.ID_ANY, 'Resize Plot',
-                                       wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG),
+                                       wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
                                        shortHelp="Resize Plot")
 
     # Add zoom tool
     zoom_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom',
-                                  wx.Bitmap(os.path.join(icon_path, "ZoomIN2.png"), wx.BITMAP_TYPE_PNG),
+                                  wx.Bitmap(os.path.join(icon_path, "ZoomIN.png"), wx.BITMAP_TYPE_PNG),
                                   shortHelp="Zoom")
 
     # Intensity increment spin control
