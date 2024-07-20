@@ -1343,12 +1343,12 @@ class MyFrame(wx.Frame):
                     self.ax,
                     self.on_zoom_select,
                     useblit=True,
-                    props=dict(facecolor='red', edgecolor='red', alpha=0.3, fill=True),
+                    props=dict(facecolor='green', edgecolor='green', alpha=0.3, fill=True),
                     button=[1],
                     minspanx=5,
                     minspany=5,
                     spancoords='pixels',
-                    interactive=True
+                    interactive=False  # Change this to False
                 )
         else:
             if self.zoom_rect:
@@ -1369,9 +1369,11 @@ class MyFrame(wx.Frame):
             self.ax.set_xlim(x_max, x_min)  # Reverse X-axis
             self.ax.set_ylim(y_min, y_max)
 
-            # Keep zoom mode active, but set the selector inactive
+            # Deactivate zoom mode and remove the rectangle
+            self.zoom_mode = False
             if self.zoom_rect:
                 self.zoom_rect.set_active(False)
+                self.zoom_rect = None
 
             self.canvas.draw_idle()
 
@@ -1381,6 +1383,7 @@ class MyFrame(wx.Frame):
         self.resize_plot()
         if self.zoom_rect:
             self.zoom_rect.set_active(False)
+            self.zoom_rect = None
         self.zoom_mode = False
         self.canvas.draw_idle()
 
