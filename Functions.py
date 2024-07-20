@@ -858,12 +858,11 @@ def create_vertical_toolbar(parent, frame):
                                       wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
                                       shortHelp="Zoom Out")
 
-    # Intensity increment spin control
-    # int_increment_label = wx.StaticText(v_toolbar, label="Int Increment:")
-    # v_toolbar.AddControl(int_increment_label)
-    # frame.int_increment_spin = wx.SpinCtrlDouble(v_toolbar, value='1000.0', min=1.0, max=100000.0, inc=100.0, size=(60, -1))
-    # v_toolbar.AddControl(frame.int_increment_spin)     # DO NOT ADD YET
 
+    # Add drag tool
+    drag_tool = v_toolbar.AddTool(wx.ID_ANY, 'Drag',
+                                  wx.Bitmap(os.path.join(icon_path, "drag-icon.png"), wx.BITMAP_TYPE_PNG),
+                                  shortHelp="Drag Plot")
 
     v_toolbar.Realize()
 
@@ -878,6 +877,7 @@ def create_vertical_toolbar(parent, frame):
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'decrease'), low_int_decrease_tool)
     frame.Bind(wx.EVT_TOOL, frame.on_zoom_in_tool, zoom_in_tool)
     frame.Bind(wx.EVT_TOOL, frame.on_zoom_out, zoom_out_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_drag_tool, drag_tool)
 
 
     return v_toolbar

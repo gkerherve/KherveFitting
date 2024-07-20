@@ -127,6 +127,13 @@ class PlotConfig:
         else:  # Ymin or Ymax
             return 0.05 * (limits['Ymax'] - limits['Ymin'])
 
+    def update_after_drag(self, window, sheet_name):
+        ax = window.ax
+        x_min, x_max = ax.get_xlim()
+        y_min, y_max = ax.get_ylim()
+        self.update_plot_limits(window, sheet_name, x_min, x_max, y_min, y_max)
+
+
 
 class CustomRectangleSelector(widgets.RectangleSelector):
     def __init__(self, *args, **kwargs):

@@ -96,6 +96,10 @@ class MyFrame(wx.Frame):
         self.zoom_mode = False
         self.zoom_rect = None
 
+        # Drag button initialisation
+        self.drag_mode = False
+        self.drag_tool = None
+
 
         # Initialize attributes for background and noise data
         self.background = None
@@ -1333,6 +1337,11 @@ class MyFrame(wx.Frame):
     #
     #     self.canvas.draw_idle()
 
+
+
+
+
+
     def on_zoom_in_tool(self, event):
         self.zoom_mode = not self.zoom_mode
         if self.zoom_mode:
@@ -1353,7 +1362,14 @@ class MyFrame(wx.Frame):
         else:
             if self.zoom_rect:
                 self.zoom_rect.set_active(False)
+
+        if self.drag_mode:
+            self.disable_drag()
+            self.drag_mode = False
+
         self.canvas.draw_idle()
+
+
 
     def on_zoom_select(self, eclick, erelease):
         if self.zoom_mode:
@@ -1386,6 +1402,28 @@ class MyFrame(wx.Frame):
             self.zoom_rect = None
         self.zoom_mode = False
         self.canvas.draw_idle()
+        if self.drag_mode:
+            self.disable_drag()
+            self.drag_mode = False
+
+    def on_drag_tool(self, event):
+        self.drag_mode = not self.drag_mode
+        if self.drag_mode:
+            self.enable_drag()
+        else:
+            self.disable_drag()
+
+    def enable_drag(self):
+        if self.drag_tool is None:
+            self.drag_tool = NavigationToolbar(self.canvas)
+        self.drag_tool.pan()
+        self.canvas.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
+    def disable_drag(self):
+        if self.drag_tool is not None:
+            self.drag_tool.pan()
+            self.drag_tool = None
+        self.canvas.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
 
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)
