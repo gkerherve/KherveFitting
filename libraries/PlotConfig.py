@@ -1,4 +1,7 @@
 # libraries/PlotConfig.py
+import matplotlib.widgets as widgets
+import matplotlib.pyplot as plt
+
 
 class PlotConfig:
     def __init__(self):
@@ -123,4 +126,19 @@ class PlotConfig:
             return 0.2  # Fixed BE increment of 0.2 eV
         else:  # Ymin or Ymax
             return 0.05 * (limits['Ymax'] - limits['Ymin'])
+
+
+class CustomRectangleSelector(widgets.RectangleSelector):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.background = None
+
+    def release(self, event):
+        super().release(event)
+        self.remove_rect()
+
+    def remove_rect(self):
+        if self.visible:
+            self.visible = False
+            self.ax.figure.canvas.draw_idle()
 
