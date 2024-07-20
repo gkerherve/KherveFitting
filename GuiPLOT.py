@@ -1333,31 +1333,26 @@ class MyFrame(wx.Frame):
     #
     #     self.canvas.draw_idle()
 
-
-
     def on_zoom_in_tool(self, event):
+        self.zoom_mode = not self.zoom_mode
         if self.zoom_mode:
-            # If already in zoom mode, deactivate it
-            self.zoom_mode = False
             if self.zoom_rect:
-                self.zoom_rect.remove_rect()
-                self.zoom_rect = None
+                self.zoom_rect.set_active(True)
+            else:
+                self.zoom_rect = widgets.RectangleSelector(
+                    self.ax,
+                    self.on_zoom_select,
+                    useblit=True,
+                    props=dict(facecolor='red', edgecolor='red', alpha=0.3, fill=True),
+                    button=[1],
+                    minspanx=5,
+                    minspany=5,
+                    spancoords='pixels',
+                    interactive=True
+                )
         else:
-            # Activate zoom mode
-            self.zoom_mode = True
             if self.zoom_rect:
-                self.zoom_rect.remove_rect()
-                self.zoom_rect = CustomRectangleSelector(
-                self.ax,
-                self.on_zoom_select,
-                props=dict(facecolor='red', edgecolor='red', alpha=0.5, fill=True),
-                useblit=True,
-                button=[1],  # Left mouse button
-                minspanx=5,
-                minspany=5,
-                spancoords='pixels',
-                interactive=True
-            )
+                self.zoom_rect.set_active(False)
         self.canvas.draw_idle()
 
     def on_zoom_select(self, eclick, erelease):
@@ -1374,11 +1369,9 @@ class MyFrame(wx.Frame):
             self.ax.set_xlim(x_max, x_min)  # Reverse X-axis
             self.ax.set_ylim(y_min, y_max)
 
-            # Deactivate zoom mode after selection
-            self.zoom_mode = False
+            # Keep zoom mode active, but set the selector inactive
             if self.zoom_rect:
-                self.zoom_rect.remove_rect()
-                self.zoom_rect = None
+                self.zoom_rect.set_active(False)
 
             self.canvas.draw_idle()
 
@@ -1386,6 +1379,10 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         self.plot_config.reset_plot_limits(self, sheet_name)
         self.resize_plot()
+        if self.zoom_rect:
+            self.zoom_rect.set_active(False)
+        self.zoom_mode = False
+        self.canvas.draw_idle()
 
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)
