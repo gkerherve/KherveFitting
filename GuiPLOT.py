@@ -10,6 +10,7 @@ matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.widgets as widgets
 from Functions import *
 from Fitting_Screen import *
 from AreaFit_Screen import *
@@ -91,6 +92,9 @@ class MyFrame(wx.Frame):
         self.selected_bkg_method  = "Shirley"
 
 
+        # Zoom initialisation variables
+        self.zoom_mode = False
+        self.zoom_rect = None
 
 
         # Initialize attributes for background and noise data
@@ -1329,6 +1333,39 @@ class MyFrame(wx.Frame):
     #
     #     self.canvas.draw_idle()
 
+
+
+    def on_zoom_tool(self, event):
+        self.zoom_mode = not self.zoom_mode
+        if self.zoom_mode:
+            self.zoom_rect = widgets.RectangleSelector(self.ax, self.on_zoom_select, drawtype='box', useblit=True,
+                                                       button=[1], minspanx=5, minspany=5, spancoords='pixels',
+                                                       interactive=True)
+        else:
+            if self.zoom_rect:
+                self.zoom_rect.set_active(False)
+                self.zoom_rect = None
+
+    def on_zoom_select(self, eclick, erelease):
+        if self.zoom_mode:
+            x1, y1 = eclick.xdata, eclick.ydata
+            x2, y2 = erelease.xdata, erelease.ydata
+
+            x_min, x_max = min(x1, x2), max(x1, x2)
+            y_min, y_max = min(y1, y2), max(y1, y2)
+
+            sheet_name = self.sheet_combobox.GetValue()
+            self.plot_config.update_plot_limits(self, sheet_name, x_min, x_max, y_min, y_max)
+
+            self.ax.set_xlim(x_max, x_min)  # Reverse X-axis
+            self.ax.set_ylim(y_min, y_max)
+            self.canvas.draw_idle()
+
+            # Deactivate zoom mode after selection
+            self.zoom_mode = False
+            if self.zoom_rect:
+                self.zoom_rect.set_active(False)
+                self.zoom_rect = None
 
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)

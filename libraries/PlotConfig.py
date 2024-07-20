@@ -4,7 +4,7 @@ class PlotConfig:
     def __init__(self):
         self.plot_limits = {}
 
-    def update_plot_limits(self, window, sheet_name=None):
+    def update_plot_limits2(self, window, sheet_name=None):
         if sheet_name is None:
             sheet_name = window.sheet_combobox.GetValue()
 
@@ -18,6 +18,31 @@ class PlotConfig:
                 'Ymin': min(y_values),
                 'Ymax': max(y_values) * 1.1  # Add 10% padding to the top
             }
+
+    def update_plot_limits(self, window, sheet_name, x_min=None, x_max=None, y_min=None, y_max=None):
+        if sheet_name not in self.plot_limits:
+            self.plot_limits[sheet_name] = {}
+
+        limits = self.plot_limits[sheet_name]
+
+        if x_min is not None:
+            limits['Xmin'] = x_min
+        if x_max is not None:
+            limits['Xmax'] = x_max
+        if y_min is not None:
+            limits['Ymin'] = y_min
+        if y_max is not None:
+            limits['Ymax'] = y_max
+
+        # If any limit is not set, use the data extremes
+        if 'Xmin' not in limits or 'Xmax' not in limits or 'Ymin' not in limits or 'Ymax' not in limits:
+            x_values = window.Data['Core levels'][sheet_name]['B.E.']
+            y_values = window.Data['Core levels'][sheet_name]['Raw Data']
+
+            limits['Xmin'] = limits.get('Xmin', min(x_values))
+            limits['Xmax'] = limits.get('Xmax', max(x_values))
+            limits['Ymin'] = limits.get('Ymin', min(y_values))
+            limits['Ymax'] = limits.get('Ymax', max(y_values) * 1.1)  # Add 10% padding to the top
 
     def adjust_plot_limits(self, window, axis, direction):
         sheet_name = window.sheet_combobox.GetValue()

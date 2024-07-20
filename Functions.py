@@ -37,6 +37,10 @@ from matplotlib.ticker import ScalarFormatter
 
 def clear_and_replot(window):
     sheet_name = window.sheet_combobox.GetValue()
+    limits = window.plot_config.get_plot_limits(window, sheet_name)
+
+    window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+    window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
     if sheet_name not in window.Data['Core levels']:
         wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
         return
@@ -807,6 +811,7 @@ def create_vertical_toolbar(parent, frame):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     icon_path = os.path.join(current_dir, "Icons")
 
+
     # BE adjustment tools
     high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path, "Right-Red-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
     high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path, "Left-Red-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High BE")
@@ -842,6 +847,11 @@ def create_vertical_toolbar(parent, frame):
                                        wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG),
                                        shortHelp="Resize Plot")
 
+    # Add zoom tool
+    zoom_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom',
+                                  wx.Bitmap(os.path.join(icon_path, "ZoomIN2.png"), wx.BITMAP_TYPE_PNG),
+                                  shortHelp="Zoom")
+
     # Intensity increment spin control
     # int_increment_label = wx.StaticText(v_toolbar, label="Int Increment:")
     # v_toolbar.AddControl(int_increment_label)
@@ -861,6 +871,7 @@ def create_vertical_toolbar(parent, frame):
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'increase'), low_int_increase_tool)
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'decrease'), low_int_decrease_tool)
     frame.Bind(wx.EVT_TOOL, lambda event: frame.resize_plot(), resize_plot_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_zoom_tool, zoom_tool)
 
 
     return v_toolbar
