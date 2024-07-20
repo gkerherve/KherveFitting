@@ -1335,7 +1335,7 @@ class MyFrame(wx.Frame):
 
 
 
-    def on_zoom_tool(self, event):
+    def on_zoom_in_tool(self, event):
         self.zoom_mode = not self.zoom_mode
         if self.zoom_mode:
             self.zoom_rect = widgets.RectangleSelector(
@@ -1374,6 +1374,11 @@ class MyFrame(wx.Frame):
             if self.zoom_rect:
                 self.zoom_rect.set_active(False)
                 self.zoom_rect = None
+
+    def on_zoom_out(self, event):
+        sheet_name = self.sheet_combobox.GetValue()
+        self.plot_config.reset_plot_limits(self, sheet_name)
+        self.resize_plot()
 
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)

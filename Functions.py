@@ -843,14 +843,20 @@ def create_vertical_toolbar(parent, frame):
 
     v_toolbar.AddSeparator()
 
-    resize_plot_tool = v_toolbar.AddTool(wx.ID_ANY, 'Resize Plot',
-                                       wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
-                                       shortHelp="Resize Plot")
+    # resize_plot_tool = v_toolbar.AddTool(wx.ID_ANY, 'Resize Plot',
+    #                                    wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
+    #                                    shortHelp="Resize Plot")
 
     # Add zoom tool
-    zoom_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom',
-                                  wx.Bitmap(os.path.join(icon_path, "ZoomIN.png"), wx.BITMAP_TYPE_PNG),
-                                  shortHelp="Zoom")
+    # Add zoom in tool
+    zoom_in_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom In',
+                                     wx.Bitmap(os.path.join(icon_path, "ZoomIN.png"), wx.BITMAP_TYPE_PNG),
+                                     shortHelp="Zoom In")
+
+    # Add zoom out tool (previously resize_plot)
+    zoom_out_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom Out',
+                                      wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
+                                      shortHelp="Zoom Out")
 
     # Intensity increment spin control
     # int_increment_label = wx.StaticText(v_toolbar, label="Int Increment:")
@@ -870,8 +876,8 @@ def create_vertical_toolbar(parent, frame):
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_int', 'decrease'), high_int_decrease_tool)
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'increase'), low_int_increase_tool)
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'decrease'), low_int_decrease_tool)
-    frame.Bind(wx.EVT_TOOL, lambda event: frame.resize_plot(), resize_plot_tool)
-    frame.Bind(wx.EVT_TOOL, frame.on_zoom_tool, zoom_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_zoom_in_tool, zoom_in_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_zoom_out, zoom_out_tool)
 
 
     return v_toolbar
