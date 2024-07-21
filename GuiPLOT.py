@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.widgets as widgets
 from Functions import *
@@ -1413,7 +1414,9 @@ class MyFrame(wx.Frame):
         else:
             self.disable_drag()
 
+
     def enable_drag(self):
+
         if self.drag_tool is None:
             self.drag_tool = NavigationToolbar(self.canvas)
         self.drag_tool.pan()
