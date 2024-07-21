@@ -17,6 +17,7 @@ from vamas import Vamas
 from openpyxl import Workbook
 from ConfigFile import *
 from Save import *
+from libraries.Sheet_Operations import on_sheet_selected
 
 # -------------------------------------------------------------------------------
 
@@ -791,7 +792,7 @@ def create_horizontal_toolbar(window):
     # Bind events (keeping the same bindings as before, except for BE adjustment tools)
     window.Bind(wx.EVT_TOOL, lambda event: open_xlsx_file(window), open_file_tool)
     # Update the binding for the refresh_folder_tool in the create_horizontal_toolbar function
-    window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window), refresh_folder_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected), refresh_folder_tool)
     window.Bind(wx.EVT_TOOL, lambda event: plot_data(window), plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: clear_plot(window), clear_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)

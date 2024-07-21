@@ -9,7 +9,7 @@ import pandas as pd
 import openpyxl
 from ConfigFile import add_core_level_Data
 from Functions import on_sheet_selected
-
+from libraries.Sheet_Operations import on_sheet_selected
 
 
 
@@ -240,7 +240,7 @@ def save_to_excel(window, data, file_path, sheet_name):
         window.canvas.draw_idle()
 
 
-def refresh_sheets(window):
+def refresh_sheets(window, on_sheet_selected_func):
     if 'FilePath' not in window.Data or not window.Data['FilePath']:
         wx.MessageBox("No file currently open. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
         return
@@ -286,11 +286,20 @@ def refresh_sheets(window):
         # Update the plot for the current sheet
         event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
         event.SetString(current_sheet)
-        on_sheet_selected(window, event)
+        on_sheet_selected_func(window, event)
+
+        # Update plot limits
+        window.plot_config.update_plot_limits(window, current_sheet)
+
+        # Refresh the plot
+        plot_data(window)
+        clear_and_replot(window)
 
         wx.MessageBox(f"Sheets refreshed. Total sheets: {len(sheet_names)}", "Success", wx.OK | wx.ICON_INFORMATION)
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         wx.MessageBox(f"Error refreshing sheets: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
