@@ -7,7 +7,8 @@ import wx
 import os
 import pandas as pd
 import openpyxl
-
+from ConfigFile import add_core_level_Data
+from Functions import on_sheet_selected
 
 
 
@@ -237,6 +238,60 @@ def save_to_excel(window, data, file_path, sheet_name):
         window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
         window.canvas.draw_idle()
+
+
+def refresh_sheets(window):
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file currently open. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    current_sheet = window.sheet_combobox.GetValue()
+    file_path = window.Data['FilePath']
+
+    try:
+        # Save current state to JSON
+        json_file_path = os.path.splitext(file_path)[0] + '.json'
+        json_data = convert_to_serializable_and_round(window.Data)
+        with open(json_file_path, 'w') as json_file:
+            json.dump(json_data, json_file, indent=2)
+
+        # Reopen the XLSX file
+        excel_file = pd.ExcelFile(file_path)
+        sheet_names = excel_file.sheet_names
+
+        # Update sheet names in the combobox
+        window.sheet_combobox.Clear()
+        window.sheet_combobox.AppendItems(sheet_names)
+
+        # Update window.Data with new sheet information
+        for sheet_name in sheet_names:
+            if sheet_name not in window.Data['Core levels']:
+                window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
+
+        # Remove any sheets from window.Data that no longer exist in the Excel file
+        sheets_to_remove = set(window.Data['Core levels'].keys()) - set(sheet_names)
+        for sheet_name in sheets_to_remove:
+            del window.Data['Core levels'][sheet_name]
+
+        # Update the number of core levels
+        window.Data['Number of Core levels'] = len(sheet_names)
+
+        # Set the current sheet as selected if it still exists, otherwise select the first sheet
+        if current_sheet in sheet_names:
+            window.sheet_combobox.SetValue(current_sheet)
+        elif sheet_names:
+            window.sheet_combobox.SetValue(sheet_names[0])
+            current_sheet = sheet_names[0]
+
+        # Update the plot for the current sheet
+        event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
+        event.SetString(current_sheet)
+        on_sheet_selected(window, event)
+
+        wx.MessageBox(f"Sheets refreshed. Total sheets: {len(sheet_names)}", "Success", wx.OK | wx.ICON_INFORMATION)
+
+    except Exception as e:
+        wx.MessageBox(f"Error refreshing sheets: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
 def save_to_json(window, file_path):

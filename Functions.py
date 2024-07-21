@@ -16,6 +16,7 @@ from Save import save_data
 from vamas import Vamas
 from openpyxl import Workbook
 from ConfigFile import *
+from Save import *
 
 # -------------------------------------------------------------------------------
 
@@ -605,27 +606,30 @@ def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, t
 
 
 # NOT SURE IF IT IS USED
-def open_file(window):
-    with DirDialog(window, "Open directory", style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST) as dlg:
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            window.entry.SetValue(path)
-            populate_listbox(window)
+# def open_file(window):
+#     with DirDialog(window, "Open directory", style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST) as dlg:
+#         if dlg.ShowModal() == wx.ID_OK:
+#             path = dlg.GetPath()
+#             window.entry.SetValue(path)
+#             populate_listbox(window)
 
 # NOT SURE IF IT IS USED
-def populate_listbox(window):
-    """Populates the file listbox with Excel files from the selected directory."""
-    window.file_listbox.Clear()  # Use Clear() to empty the ListBox in wxPython
-    directory = window.entry.GetValue()  # Use GetValue() for wx.TextCtrl
-    if os.path.isdir(directory):
-        for filename in os.listdir(directory):
-            if filename.endswith(".xlsx") or filename.endswith(".xls"):
-                window.file_listbox.Append(filename)  # Use Append() to add items in wxPython
-    else:
-        wx.MessageBox("Error", "Invalid directory path", style=wx.OK | wx.ICON_ERROR)
+# def populate_listbox(window):
+#     """Populates the file listbox with Excel files from the selected directory."""
+#     window.file_listbox.Clear()  # Use Clear() to empty the ListBox in wxPython
+#     directory = window.entry.GetValue()  # Use GetValue() for wx.TextCtrl
+#     if os.path.isdir(directory):
+#         for filename in os.listdir(directory):
+#             if filename.endswith(".xlsx") or filename.endswith(".xls"):
+#                 window.file_listbox.Append(filename)  # Use Append() to add items in wxPython
+#     else:
+#         wx.MessageBox("Error", "Invalid directory path", style=wx.OK | wx.ICON_ERROR)
+#
+#     # Bind selection event to update the sheet names
+#     window.file_listbox.Bind(wx.EVT_LISTBOX, lambda event: update_sheet_names(window))
 
-    # Bind selection event to update the sheet names
-    window.file_listbox.Bind(wx.EVT_LISTBOX, lambda event: update_sheet_names(window))
+
+
 
 
 
@@ -786,7 +790,8 @@ def create_horizontal_toolbar(window):
 
     # Bind events (keeping the same bindings as before, except for BE adjustment tools)
     window.Bind(wx.EVT_TOOL, lambda event: open_xlsx_file(window), open_file_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: populate_listbox(window), refresh_folder_tool)
+    # Update the binding for the refresh_folder_tool in the create_horizontal_toolbar function
+    window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window), refresh_folder_tool)
     window.Bind(wx.EVT_TOOL, lambda event: plot_data(window), plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: clear_plot(window), clear_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
@@ -820,7 +825,7 @@ def create_vertical_toolbar(parent, frame):
 
     # Add zoom out tool (previously resize_plot)
     zoom_out_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom Out',
-                                      wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
+                                      wx.Bitmap(os.path.join(icon_path, "ZoomOUT2.png"), wx.BITMAP_TYPE_PNG),
                                       shortHelp="Zoom Out")
 
 
