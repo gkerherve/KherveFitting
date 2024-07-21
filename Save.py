@@ -8,9 +8,9 @@ import os
 import pandas as pd
 import openpyxl
 from ConfigFile import add_core_level_Data
-from Functions import on_sheet_selected
+# from Functions import on_sheet_selected
 from libraries.Sheet_Operations import on_sheet_selected
-
+from libraries.Plot_Operations import plot_data, clear_and_replot
 
 
 def save_data(window, data):

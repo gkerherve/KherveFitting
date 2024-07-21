@@ -21,6 +21,7 @@ from ConfigFile import *
 from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig, CustomRectangleSelector
 from libraries.Sheet_Operations import on_sheet_selected
+from libraries.Utilities import _clear_peak_params_grid
 # END ---------------------------------------------------------------------------
 
 # MAIN WINDOW--------------------------------------------------------------------
