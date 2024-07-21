@@ -23,7 +23,7 @@ class PlotConfig:
             original['Xmin'] = min(x_values)
             original['Xmax'] = max(x_values)
             original['Ymin'] = min(y_values)
-            original['Ymax'] = max(y_values) * 1.1  # Add 10% padding to the top
+            original['Ymax'] = max(y_values) * 1.2  # Add 20% padding to the top
 
         # Update current limits
         if x_min is not None: limits['Xmin'] = x_min
