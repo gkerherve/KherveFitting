@@ -1416,17 +1416,25 @@ class MyFrame(wx.Frame):
 
 
     def enable_drag(self):
-
         if self.drag_tool is None:
             self.drag_tool = NavigationToolbar(self.canvas)
         self.drag_tool.pan()
         self.canvas.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.drag_release_cid = self.canvas.mpl_connect('button_release_event', self.on_drag_release)
 
     def disable_drag(self):
         if self.drag_tool is not None:
             self.drag_tool.pan()
             self.drag_tool = None
         self.canvas.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
+        if hasattr(self, 'drag_release_cid'):
+            self.canvas.mpl_disconnect(self.drag_release_cid)
+
+    def on_drag_release(self, event):
+        if self.drag_mode:
+            sheet_name = self.sheet_combobox.GetValue()
+            self.plot_config.update_after_drag(self, sheet_name)
+            self.canvas.draw_idle()  # Redraw the canvas to reflect the changes
 
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)

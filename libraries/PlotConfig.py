@@ -131,7 +131,24 @@ class PlotConfig:
         ax = window.ax
         x_min, x_max = ax.get_xlim()
         y_min, y_max = ax.get_ylim()
-        self.update_plot_limits(window, sheet_name, x_min, x_max, y_min, y_max)
+
+        # Ensure x_min is always less than x_max (because of reversed x-axis)
+        x_min, x_max = min(x_min, x_max), max(x_min, x_max)
+
+        if sheet_name not in self.plot_limits:
+            self.plot_limits[sheet_name] = {}
+
+        limits = self.plot_limits[sheet_name]
+        limits['Xmin'] = x_min
+        limits['Xmax'] = x_max
+        limits['Ymin'] = y_min
+        limits['Ymax'] = y_max
+
+        # Update the actual plot limits
+        window.ax.set_xlim(x_max, x_min)  # Reverse X-axis
+        window.ax.set_ylim(y_min, y_max)
+
+        print(f"Updated limits after drag: Xmin={x_min:.2f}, Xmax={x_max:.2f}, Ymin={y_min:.2f}, Ymax={y_max:.2f}")
 
 
 
