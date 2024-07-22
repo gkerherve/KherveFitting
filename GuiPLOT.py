@@ -1287,6 +1287,15 @@ class MyFrame(wx.Frame):
 
         self.selected_peak_index = None
 
+    def on_open_background_window(self):
+        self.background_tab_selected = True
+        dialog = BackgroundWindow(self)
+        dialog.Show()
+        dialog.Bind(wx.EVT_CLOSE, self.on_background_window_close)
+
+    def on_background_window_close(self, event):
+        self.background_tab_selected = False
+        event.Skip()  # Allow the window to close
 
     def enable_background_interaction(self):
         self.background_tab_selected = True
