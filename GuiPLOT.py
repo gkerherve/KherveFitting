@@ -1287,15 +1287,20 @@ class MyFrame(wx.Frame):
 
         self.selected_peak_index = None
 
+
+
     def on_open_background_window(self):
-        self.background_tab_selected = True
-        dialog = BackgroundWindow(self)
-        dialog.Show()
-        dialog.Bind(wx.EVT_CLOSE, self.on_background_window_close)
+        if not hasattr(self, 'background_window') or not self.background_window:
+            self.background_window = BackgroundWindow(self)
+            self.background_tab_selected = True
+            self.background_window.Bind(wx.EVT_CLOSE, self.on_background_window_close)
+        self.background_window.Show()
+        self.background_window.Raise()
 
     def on_background_window_close(self, event):
         self.background_tab_selected = False
-        event.Skip()  # Allow the window to close
+        self.background_window = None
+        event.Skip()
 
     def enable_background_interaction(self):
         self.background_tab_selected = True
@@ -1755,10 +1760,6 @@ class MyFrame(wx.Frame):
 
         self.fitting_window.Show()
         self.fitting_window.Raise()  # Bring the window to the front
-
-    def on_open_background_window(self):
-        dialog = BackgroundWindow(self)
-        dialog.Show()
 
     def on_open_noise_analysis_window(self, event):
         if self.noise_analysis_window is None or not self.noise_analysis_window:
