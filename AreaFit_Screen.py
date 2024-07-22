@@ -83,10 +83,23 @@ class BackgroundWindow(wx.Frame):
                 background = background[:min_length]
 
                 # Calculate the area
-                area = np.trapz(y_values - background, x_values)
+                area = abs(np.trapz(y_values - background, x_values))
 
-                # Print the result to the terminal
-                print(f"Area between data and background for {sheet_name}: {area:.2f}")
+                # Find the peak position and height
+                peak_index = np.argmax(y_values - background)
+                peak_position = x_values[peak_index]
+                peak_height = y_values[peak_index] - background[peak_index]
+
+                # Extract peak name from sheet_name (assuming sheet_name is in the format "ElementOrbital")
+                peak_name = ''.join(filter(str.isalpha, sheet_name))
+
+                # Print the results to the terminal
+                print(f"Results for {sheet_name}:")
+                print(f"Peak Name: {peak_name}")
+                print(f"Peak Position: {peak_position:.2f} eV")
+                print(f"Peak Height: {peak_height:.2f} counts")
+                print(f"Area between data and background: {area:.2f}")
+
         except Exception as e:
             print(f"Error calculating background: {str(e)}")
 
