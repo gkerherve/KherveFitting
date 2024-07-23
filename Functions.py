@@ -1432,73 +1432,104 @@ def fit_peaks(window, peak_params_grid):
             # Generate color palette for peaks
             colors = plt.cm.Set1(np.linspace(0, 1, len(individual_peaks)))
 
-            # Plotting
-            window.ax.clear()
-            window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black',
-                              label='Raw Data')
-            window.ax.plot(x_values, background, 'gray', linestyle='--', label='Background')
+            try:
+                # Store existing sheet name text
+                sheet_name_text = None
+                for txt in window.ax.texts:
+                    if getattr(txt, 'sheet_name_text', False):
+                        sheet_name_text = txt
+                        break
 
-            # Plot envelope
-            fitted_peak = y_values.copy()
-            fitted_peak[mask] = result.best_fit + background_filtered
-            window.ax.plot(x_values, fitted_peak, 'b', alpha=0.6, label='Envelope')
+                # Plotting
+                window.ax.clear()
+                window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black',
+                                  label='Raw Data')
+                window.ax.plot(x_values, background, 'gray', linestyle='--', label='Background')
 
-            # Scale and plot residuals
-            residuals = np.zeros_like(y_values)
-            residuals[mask] = y_values_subtracted - result.best_fit
-            max_raw_data = max(y_values)
-            desired_max_residual = 0.1 * max_raw_data
-            actual_max_residual = max(abs(residuals))
-            scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
-            scaled_residuals = residuals * scaling_factor + 1.01 * max(y_values)
-            residuals_line, = window.ax.plot(x_values, scaled_residuals, 'g', alpha=0.4, label='Residuals')
+                # Plot envelope
+                fitted_peak = y_values.copy()
+                fitted_peak[mask] = result.best_fit + background_filtered
+                window.ax.plot(x_values, fitted_peak, 'b', alpha=0.6, label='Envelope')
 
-            # Plot individual peaks
-            for i, (peak_model, color) in enumerate(zip(individual_peaks, colors)):
-                peak = np.zeros_like(y_values)
-                peak[mask] = peak_model.eval(result.params, x=x_values_filtered)
-                peak_name = peak_params_grid.GetCellValue(i * 2, 1)
-                window.ax.fill_between(x_values, background, peak + background, facecolor=color,
-                                       alpha=0.8, label=peak_name)
-                window.ax.plot(x_values, peak + background, 'black', alpha=0.4)
+                # Scale and plot residuals
+                residuals = np.zeros_like(y_values)
+                residuals[mask] = y_values_subtracted - result.best_fit
+                max_raw_data = max(y_values)
+                desired_max_residual = 0.1 * max_raw_data
+                actual_max_residual = max(abs(residuals))
+                scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
+                scaled_residuals = residuals * scaling_factor + 1.01 * max(y_values)
+                residuals_line, = window.ax.plot(x_values, scaled_residuals, 'g', alpha=0.4, label='Residuals')
 
-            # Set plot labels and formatting
-            window.ax.legend(loc='upper left')
-            window.ax.set_ylabel(f"Intensity (CTS), residual x {scaling_factor:.2f}")
-            window.ax.set_xlabel("Binding Energy (eV)")
-            window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-            window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+                # Plot individual peaks
+                for i, (peak_model, color) in enumerate(zip(individual_peaks, colors)):
+                    peak = np.zeros_like(y_values)
+                    peak[mask] = peak_model.eval(result.params, x=x_values_filtered)
+                    peak_name = peak_params_grid.GetCellValue(i * 2, 1)
+                    window.ax.fill_between(x_values, background, peak + background, facecolor=color,
+                                           alpha=0.8, label=peak_name)
+                    window.ax.plot(x_values, peak + background, 'black', alpha=0.4)
 
-            # Use the stored limits from PlotConfig
-            window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-            window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
+                # Set plot labels and formatting
+                window.ax.legend(loc='upper left')
+                window.ax.set_ylabel(f"Intensity (CTS), residual x {scaling_factor:.2f}")
+                window.ax.set_xlabel("Binding Energy (eV)")
+                window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+                window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
-            # Add text annotations with fit results
-            std_value_int = int(window.noise_std_value) if hasattr(window, 'noise_std_value') else "N/A"
-            nfev_used = result.nfev
-            fitting_results_text = window.ax.text(
-                0.02, 0.04,
-                f'Noise STD: {std_value_int} cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {nfev_used}',
-                transform=window.ax.transAxes,
-                fontsize=9,
-                verticalalignment='bottom',
-                horizontalalignment='left',
-                visible=False,
-                bbox=dict(facecolor='white', edgecolor='grey', alpha=0.7),
-            )
+                # Use the stored limits from PlotConfig
+                window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+                window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
-            window.fitting_results_text = fitting_results_text
-            window.residuals_line = residuals_line
+                # Add text annotations with fit results
+                std_value_int = int(window.noise_std_value) if hasattr(window, 'noise_std_value') else "N/A"
+                nfev_used = result.nfev
+                fitting_results_text = window.ax.text(
+                    0.02, 0.04,
+                    f'Noise STD: {std_value_int} cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {nfev_used}',
+                    transform=window.ax.transAxes,
+                    fontsize=9,
+                    verticalalignment='bottom',
+                    horizontalalignment='left',
+                    visible=False,
+                    bbox=dict(facecolor='white', edgecolor='grey', alpha=0.7),
+                )
 
-            window.canvas.draw()
+                window.fitting_results_text = fitting_results_text
+                window.residuals_line = residuals_line
 
-            # Reset vertical lines
-            window.vline1 = None
-            window.vline2 = None
-            window.vline3 = None
-            window.vline4 = None
+                # Restore or add sheet name text
+                if sheet_name_text is None:
+                    formatted_sheet_name = format_sheet_name2(sheet_name)
+                    sheet_name_text = window.ax.text(
+                        0.98, 0.98,  # Position (top-right corner)
+                        formatted_sheet_name,
+                        transform=window.ax.transAxes,
+                        fontsize=15,
+                        fontweight='bold',
+                        verticalalignment='top',
+                        horizontalalignment='right',
+                        bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+                    )
+                    sheet_name_text.sheet_name_text = True  # Mark this text object
+                else:
+                    window.ax.add_artist(sheet_name_text)
 
-            return r_squared, chi_square, red_chi_square
+                window.canvas.draw()
+
+                # Reset vertical lines
+                window.vline1 = None
+                window.vline2 = None
+                window.vline3 = None
+                window.vline4 = None
+
+                return r_squared, chi_square, red_chi_square
+
+            except Exception as e:
+                print(f"Error in fit_peaks: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
         else:
             raise ValueError("No data points found in the specified energy range for background subtraction")
@@ -1506,6 +1537,16 @@ def fit_peaks(window, peak_params_grid):
     else:
         raise ValueError("Invalid background energy range")
 
+import re
+
+def format_sheet_name2(sheet_name):
+    # Regular expression to separate element and electron shell
+    match = re.match(r'([A-Z][a-z]*)(\d+[spdfg])', sheet_name)
+    if match:
+        element, shell = match.groups()
+        return f"{element} {shell}"
+    else:
+        return sheet_name  # Return original if it doesn't match the expected format
 
 import lmfit
 
