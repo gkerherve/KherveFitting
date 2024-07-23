@@ -481,6 +481,12 @@ class MyFrame(wx.Frame):
             self.bg_min_energy = background_data.get('Bkg Low')
             self.bg_max_energy = background_data.get('Bkg High')
 
+        # Ensure bg_min_energy and bg_max_energy are not None
+        if self.bg_min_energy is None or self.bg_max_energy is None:
+            wx.MessageBox("Background range is not set. Please set the background first.", "Warning",
+                          wx.OK | wx.ICON_WARNING)
+            return
+
         if num_peaks == 0:
             residual = self.y_values - np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
             peak_y = residual[np.argmax(residual)]
@@ -532,7 +538,9 @@ class MyFrame(wx.Frame):
         for col in range(15):  # Assuming you have 15 columns in total
             self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
 
-        self.peak_params_grid.SetCellValue(row + 1, 2, "0,1e3")
+        # Set position constraint to background range
+        position_constraint = f"{self.bg_min_energy:.2f},{self.bg_max_energy:.2f}"
+        self.peak_params_grid.SetCellValue(row + 1, 2, position_constraint)
         self.peak_params_grid.SetCellValue(row + 1, 3, "0,1e7")
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "0,0.5")
@@ -560,13 +568,13 @@ class MyFrame(wx.Frame):
             'Bkg Offset Low': self.offset_l,
             'Bkg Offset High': self.offset_h,
             'Constraints': {
-                'Position': "0,1e3",
+                'Position': position_constraint,
                 'Height': "0,1e7",
                 'FWHM': "0.3,3.5",
                 'L/G': "0,0.5"
             }
         }
-        print(self.Data)
+        # print(self.Data)
         self.show_hide_vlines()
 
         # Call the method to clear and replot everything
