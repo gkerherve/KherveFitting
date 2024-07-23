@@ -167,6 +167,10 @@ class MyFrame(wx.Frame):
         plt.tight_layout()
         right_frame_sizer.Add(self.canvas, 1, wx.EXPAND | wx.ALL, 0)
 
+        # Create a single NavigationToolbar (hidden by default)
+        self.navigation_toolbar = NavigationToolbar(self.canvas)
+        self.navigation_toolbar.Hide()
+
         self.right_frame.SetSizer(right_frame_sizer)
 
         # Create a panel for grids
@@ -1559,18 +1563,13 @@ class MyFrame(wx.Frame):
         else:
             self.disable_drag()
 
-
     def enable_drag(self):
-        if self.drag_tool is None:
-            self.drag_tool = NavigationToolbar(self.canvas)
-        self.drag_tool.pan()
+        self.navigation_toolbar.pan()
         self.canvas.SetCursor(wx.Cursor(wx.CURSOR_HAND))
         self.drag_release_cid = self.canvas.mpl_connect('button_release_event', self.on_drag_release)
 
     def disable_drag(self):
-        if self.drag_tool is not None:
-            self.drag_tool.pan()
-            self.drag_tool = None
+        self.navigation_toolbar.pan()
         self.canvas.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
         if hasattr(self, 'drag_release_cid'):
             self.canvas.mpl_disconnect(self.drag_release_cid)
@@ -1579,7 +1578,7 @@ class MyFrame(wx.Frame):
         if self.drag_mode:
             sheet_name = self.sheet_combobox.GetValue()
             self.plot_config.update_after_drag(self, sheet_name)
-            self.canvas.draw_idle()  # Redraw the canvas to reflect the changes
+            self.canvas.draw_idle()
 
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)

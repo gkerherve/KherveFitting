@@ -687,7 +687,6 @@ def create_vertical_toolbar(parent, frame):
                                       wx.Bitmap(os.path.join(icon_path, "ZoomOUT2.png"), wx.BITMAP_TYPE_PNG),
                                       shortHelp="Zoom Out")
 
-
     # Add drag tool
     drag_tool = v_toolbar.AddTool(wx.ID_ANY, 'Drag',
                                   wx.Bitmap(os.path.join(icon_path, "drag2.png"), wx.BITMAP_TYPE_PNG),
