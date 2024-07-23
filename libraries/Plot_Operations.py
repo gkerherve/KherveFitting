@@ -194,7 +194,8 @@ def format_sheet_name(sheet_name):
     match = re.match(r'([A-Z][a-z]*)(\d+[spdfg])', sheet_name)
     if match:
         element, shell = match.groups()
-        return f"{element} $\\mathbf{{\\it{{{shell}}}}}$"
+        # return f"{element} $\\mathbf{{\\it{{{shell}}}}}$"
+        return f"{element} "+shell
     else:
         return sheet_name  # Return original if it doesn't match the expected format
 
