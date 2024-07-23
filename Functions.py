@@ -1467,13 +1467,14 @@ def fit_peaks(window, peak_params_grid):
             std_value_int = int(window.noise_std_value) if hasattr(window, 'noise_std_value') else "N/A"
             nfev_used = result.nfev
             fitting_results_text = window.ax.text(
-                0.02, 0.98,
+                0.02, 0.04,
                 f'Noise STD: {std_value_int} cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {nfev_used}',
                 transform=window.ax.transAxes,
                 fontsize=9,
                 verticalalignment='bottom',
                 horizontalalignment='left',
-                visible=False
+                visible=False,
+                bbox=dict(facecolor='white', edgecolor='grey', alpha=0.7),
             )
 
             window.fitting_results_text = fitting_results_text
