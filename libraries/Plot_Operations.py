@@ -62,6 +62,15 @@ def plot_data(window):
         window.vline4 = None
         window.show_hide_vlines()
 
+        # Remove any existing fit or residual lines
+        for line in window.ax.lines:
+            if line.get_label() in ['Envelope', 'Residuals', 'Background']:
+                line.remove()
+
+        for collection in window.ax.collections:
+            if collection.get_label().startswith(window.sheet_combobox.GetValue()):
+                collection.remove()
+
         window.ax.legend(loc='upper left')
 
         # Check if a peak is selected and add cross

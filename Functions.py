@@ -596,8 +596,9 @@ def create_horizontal_toolbar(window):
     toolbar.AddControl(separators[-1])
 
     # Plot operations
-    plot_tool = toolbar.AddTool(wx.ID_ANY, 'Plot', wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"), wx.BITMAP_TYPE_PNG), shortHelp="Plot Data")
-    # clear_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Clear Plot', wx.Bitmap(os.path.join(icon_path, "erase-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Clear Plot")
+    plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot',
+                                wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"),
+                                wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
 
     separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
     separators[-1].SetSize((2, 24))
@@ -638,10 +639,8 @@ def create_horizontal_toolbar(window):
 
     # Bind events (keeping the same bindings as before, except for BE adjustment tools)
     window.Bind(wx.EVT_TOOL, lambda event: open_xlsx_file(window), open_file_tool)
-    # Update the binding for the refresh_folder_tool in the create_horizontal_toolbar function
     window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected), refresh_folder_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: plot_data(window), plot_tool)
-    # window.Bind(wx.EVT_TOOL, lambda event: clear_plot(window), clear_plot_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: toggle_plot(window), plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
     window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
@@ -754,14 +753,21 @@ def on_exit(window, event):
     window.Close()
 
 
+def toggle_plot2(window):
+    window.show_fit = not window.show_fit
+    if window.show_fit:
+        on_sheet_selected(window, None)  # Pass None as event
+    else:
+        plot_data(window)
+    window.canvas.draw_idle()
 
+def toggle_plot(window):
+    window.show_fit = not window.show_fit
+    on_sheet_selected(window, None)  # Call on_sheet_selected with None as event
+    window.canvas.draw_idle()
 
 import json
 from ConfigFile import Init_Measurement_Data, add_core_level_Data
-
-
-
-
 
 def open_xlsx_file(window):
     print("Starting open_xlsx_file function")

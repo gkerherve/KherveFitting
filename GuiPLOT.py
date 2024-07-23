@@ -49,8 +49,8 @@ class MyFrame(wx.Frame):
         self.noise_analysis_window = None
         self.noise_tab_selected = False
 
-        self.noise_analysis_window = None
-        self.noise_tab_selected = False
+        # New attribute to track plot state for showing fit or not
+        self.show_fit = True
 
         # For FWHM calculation
         self.selected_peak_index = 0
