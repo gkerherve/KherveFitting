@@ -408,8 +408,8 @@ def plot_background(window):
 
 
 def calculate_linear_background(x, y, start_offset, end_offset):
-    y_start = y.iloc[0] + start_offset
-    y_end = y.iloc[-1] + end_offset
+    y_start = y[0] + start_offset
+    y_end = y[-1] + end_offset
     return np.linspace(y_start, y_end, len(y))
 
 def calculate_smart_background(x, y, offset_h, offset_l):
@@ -418,7 +418,7 @@ def calculate_smart_background(x, y, offset_h, offset_l):
     linear_bg = calculate_linear_background(x, y, offset_h, offset_l)
 
     # Choose the background type based on first and last y-values
-    if y.iloc[0] > y.iloc[-1]:
+    if y[0] > y[-1]:
         background = shirley_bg
     else:
         background = linear_bg
