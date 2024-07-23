@@ -98,7 +98,7 @@ class BackgroundWindow(wx.Frame):
                 # Default constraints
                 position_constraint = "0,1e3"
                 height_constraint = "0,1e7"
-                fwhm_constraint = "0.2,3.5"
+                fwhm_constraint = "0.3,3.5"
                 lg_constraint = "0,0.5"
 
                 # Update peak fitting parameter grid
@@ -115,9 +115,11 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(0, 4, f"{fwhm:.2f}")
                 grid.SetCellValue(0, 5, "0")  # L/G
                 grid.SetCellValue(0, 6, f"{area:.2f}")
-                grid.SetCellValue(0, 9, "GL")  # Fitting Model
+                grid.SetCellValue(0, 9, "Unfitted")  # Fitting Model
 
-                # Set constraints
+                # Set constraints and color
+                for col in range(grid.GetNumberCols()):
+                    grid.SetCellBackgroundColour(1, col, wx.Colour(230, 230, 230))
                 grid.SetCellValue(1, 2, position_constraint)
                 grid.SetCellValue(1, 3, height_constraint)
                 grid.SetCellValue(1, 4, fwhm_constraint)
@@ -135,7 +137,7 @@ class BackgroundWindow(wx.Frame):
                     'FWHM': fwhm,
                     'L/G': 0,
                     'Area': area,
-                    'Fitting Model': "GL",
+                    'Fitting Model': "Unfitted",
                     'Constraints': {
                         'Position': position_constraint,
                         'Height': height_constraint,

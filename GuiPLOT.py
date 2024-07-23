@@ -1299,6 +1299,7 @@ class MyFrame(wx.Frame):
 
     def on_background_window_close(self, event):
         self.background_tab_selected = False
+        self.show_hide_vlines()
         self.background_window = None
         event.Skip()
 
