@@ -926,7 +926,7 @@ class MyFrame(wx.Frame):
 
         # Plot the new overall fit and residuals
         self.ax.plot(self.x_values, overall_fit, 'b-', alpha=0.3, label='Overall Fit')
-        self.ax.plot(self.x_values, scaled_residuals + 1.05 * max(self.y_values), 'g-', label='Residuals')
+        self.ax.plot(self.x_values, scaled_residuals + 1.05 * max(self.y_values), 'g-', alpha=0.4, label='Residuals')
 
         # Update the Y-axis label
         self.ax.set_ylabel(f'Intensity (CTS), residual x {scaling_factor:.2f}')

@@ -597,7 +597,7 @@ def create_horizontal_toolbar(window):
 
     # Plot operations
     plot_tool = toolbar.AddTool(wx.ID_ANY, 'Plot', wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"), wx.BITMAP_TYPE_PNG), shortHelp="Plot Data")
-    clear_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Clear Plot', wx.Bitmap(os.path.join(icon_path, "erase-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Clear Plot")
+    # clear_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Clear Plot', wx.Bitmap(os.path.join(icon_path, "erase-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Clear Plot")
 
     separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
     separators[-1].SetSize((2, 24))
@@ -641,7 +641,7 @@ def create_horizontal_toolbar(window):
     # Update the binding for the refresh_folder_tool in the create_horizontal_toolbar function
     window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected), refresh_folder_tool)
     window.Bind(wx.EVT_TOOL, lambda event: plot_data(window), plot_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: clear_plot(window), clear_plot_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: clear_plot(window), clear_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
     window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
@@ -1435,7 +1435,7 @@ def fit_peaks(window, peak_params_grid):
             actual_max_residual = max(abs(residuals))
             scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
             scaled_residuals = residuals * scaling_factor + 1.01 * max(y_values)
-            residuals_line, = window.ax.plot(x_values, scaled_residuals, 'g', label='Residuals')
+            residuals_line, = window.ax.plot(x_values, scaled_residuals, 'g', alpha=0.4, label='Residuals')
 
             # Plot individual peaks
             for i, (peak_model, color) in enumerate(zip(individual_peaks, colors)):
@@ -1489,7 +1489,7 @@ def fit_peaks(window, peak_params_grid):
     else:
         raise ValueError("Invalid background energy range")
 
-import numpy as np
+
 import lmfit
 
 def get_pseudo_voigt_height(amplitude, sigma, fraction):
@@ -1527,10 +1527,6 @@ def voigt_fwhm(sigma, gamma):
     fg = 2 * sigma * np.sqrt(2 * np.log(2))
     fl = 2 * gamma
     return 0.5346 * fl + np.sqrt(0.2166 * fl ** 2 + fg ** 2)
-
-
-import numpy as np
-
 
 def pseudo_voigt_amplitude_to_height(amplitude, sigma, fraction):
     """
