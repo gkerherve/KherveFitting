@@ -114,6 +114,13 @@ def clear_and_replot(window):
 
     core_level_data = window.Data['Core levels'][sheet_name]
 
+    # Store existing sheet name text
+    sheet_name_text = None
+    for txt in window.ax.texts:
+        if getattr(txt, 'sheet_name_text', False):
+            sheet_name_text = txt
+            break
+
     # Clear the plot
     window.ax.clear()
     window.ax.set_xlabel("Binding Energy (eV)")
@@ -164,28 +171,25 @@ def clear_and_replot(window):
     # Update the legend
     window.update_legend()
 
-    # Remove any existing sheet name text
-    for txt in window.ax.texts:
-        if getattr(txt, 'sheet_name_text', False):
-            txt.remove()
-
-    # Format and add sheet name text
-    formatted_sheet_name = format_sheet_name(sheet_name)
-    sheet_name_text = window.ax.text(
-        0.98, 0.98,  # Position (top-right corner)
-        formatted_sheet_name,
-        transform=window.ax.transAxes,
-        fontsize=15,
-        fontweight='bold',
-        verticalalignment='top',
-        horizontalalignment='right',
-        bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
-    )
-    sheet_name_text.sheet_name_text = True  # Mark this text object
+    # Restore sheet name text or create new one if it doesn't exist
+    if sheet_name_text is None:
+        formatted_sheet_name = format_sheet_name(sheet_name)
+        sheet_name_text = window.ax.text(
+            0.98, 0.98,  # Position (top-right corner)
+            formatted_sheet_name,
+            transform=window.ax.transAxes,
+            fontsize=15,
+            fontweight='bold',
+            verticalalignment='top',
+            horizontalalignment='right',
+            bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+        )
+        sheet_name_text.sheet_name_text = True  # Mark this text object
+    else:
+        window.ax.add_artist(sheet_name_text)
 
     # Draw the canvas
     window.canvas.draw_idle()
-    pass
 
 import re
 
