@@ -365,7 +365,7 @@ class MyFrame(wx.Frame):
         self.canvas.draw_idle()
 
 
-    def add_peak_params(self):
+    def add_peak_params2(self):
         sheet_name = self.sheet_combobox.GetValue()
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
 
@@ -471,7 +471,133 @@ class MyFrame(wx.Frame):
         # Call the method to clear and replot everything
         clear_and_replot(self)
 
+    def add_peak_params(self):
+        sheet_name = self.sheet_combobox.GetValue()
+        num_peaks = self.peak_params_grid.GetNumberRows() // 2
 
+        if num_peaks == 0:
+            residual = self.y_values - np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+            peak_y = residual[np.argmax(residual)]
+        else:
+            overall_fit = np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y']).copy()
+            for i in range(num_peaks):
+                row = i * 2
+                peak_x = float(self.peak_params_grid.GetCellValue(row, 2))
+                peak_y = float(self.peak_params_grid.GetCellValue(row, 3))
+                fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
+                sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+                gamma = lg_ratio * sigma
+
+                # Use the current fitting method
+                peak_model = self.get_peak_model(peak_x, peak_y, fwhm, lg_ratio)
+                overall_fit += peak_model.eval(x=self.x_values)
+
+            residual = self.y_values - overall_fit
+
+        bkg_y_AtMax = self.Data['Core levels'][sheet_name]['Background']['Bkg Y'][np.argmax(residual)]
+        peak_x = self.x_values[np.argmax(residual)]
+        peak_y = residual.max()
+
+        self.peak_count += 1
+
+        # Add new rows to the grid
+        self.peak_params_grid.AppendRows(2)
+        row = self.peak_params_grid.GetNumberRows() - 2
+
+        # Assign letter IDs
+        letter_id = chr(64 + self.peak_count)
+
+        # Set values in the grid
+        self.peak_params_grid.SetCellValue(row, 0, letter_id)
+        self.peak_params_grid.SetReadOnly(row, 0)
+        self.peak_params_grid.SetCellValue(row, 1, f"{sheet_name} p{self.peak_count}")
+        self.peak_params_grid.SetCellValue(row, 2, f"{peak_x:.2f}")
+        self.peak_params_grid.SetCellValue(row, 3, f"{peak_y:.2f}")
+        self.peak_params_grid.SetCellValue(row, 4, "1.6")
+        self.peak_params_grid.SetCellValue(row, 5, "0.3")
+        self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
+        self.peak_params_grid.SetCellValue(row, 9, self.selected_fitting_method)  # Fitting Model
+        self.peak_params_grid.SetCellValue(row, 10, self.background_method)  # Bkg Type
+        self.peak_params_grid.SetCellValue(row, 11,
+                                           f"{self.bg_min_energy:.2f}" if self.bg_min_energy is not None else "")  # Bkg Low
+        self.peak_params_grid.SetCellValue(row, 12,
+                                           f"{self.bg_max_energy:.2f}" if self.bg_max_energy is not None else "")  # Bkg High
+        self.peak_params_grid.SetCellValue(row, 13, f"{self.offset_l:.2f}")  # Bkg Offset Low
+        self.peak_params_grid.SetCellValue(row, 14, f"{self.offset_h:.2f}")  # Bkg Offset High
+
+        # Set constraint values
+        self.peak_params_grid.SetReadOnly(row + 1, 0)
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 0, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 1, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 2, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 3, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 4, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 5, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 6, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 7, wx.Colour(230, 230, 230))
+        self.peak_params_grid.SetCellBackgroundColour(row + 1, 8, wx.Colour(230, 230, 230))
+
+        self.peak_params_grid.SetCellValue(row + 1, 2, "0,1e3")
+        self.peak_params_grid.SetCellValue(row + 1, 3, "0,1e7")
+        self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
+        self.peak_params_grid.SetCellValue(row + 1, 5, "0,0.5")
+        self.peak_params_grid.ForceRefresh()
+
+        # Set selected_peak_index to the index of the new peak
+        self.selected_peak_index = num_peaks
+
+        # Update the Data structure with the new peak information
+        if 'Fitting' not in self.Data['Core levels'][sheet_name]:
+            self.Data['Core levels'][sheet_name]['Fitting'] = {}
+        if 'Peaks' not in self.Data['Core levels'][sheet_name]['Fitting']:
+            self.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = {}
+
+        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][sheet_name + f" p{self.peak_count}"] = {
+            'Position': peak_x,
+            'Height': peak_y,
+            'FWHM': 1.6,
+            'L/G': 0.3,
+            'Area': '',
+            'Fitting Model': self.selected_fitting_method,
+            'Bkg Type': self.background_method,
+            'Bkg Low': self.bg_min_energy,
+            'Bkg High': self.bg_max_energy,
+            'Bkg Offset Low': self.offset_l,
+            'Bkg Offset High': self.offset_h,
+            'Constraints': {
+                'Position': "0,1e3",
+                'Height': "0,1e7",
+                'FWHM': "0.3,3.5",
+                'L/G': "0,0.5"
+            }
+        }
+        print(self.Data)
+        self.show_hide_vlines()
+
+        # Call the method to clear and replot everything
+        clear_and_replot(self)
+
+    def get_peak_model(self, peak_x, peak_y, fwhm, lg_ratio):
+        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        gamma = lg_ratio * sigma
+
+        if self.selected_fitting_method == "Voigt":
+            peak_model = lmfit.models.VoigtModel()
+            params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, gamma=gamma)
+        elif self.selected_fitting_method == "Pseudo-Voigt":
+            peak_model = lmfit.models.PseudoVoigtModel()
+            params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, fraction=lg_ratio)
+        elif self.selected_fitting_method == "GL":
+            peak_model = lmfit.Model(gauss_lorentz)
+            params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+        elif self.selected_fitting_method == "SGL":
+            peak_model = lmfit.Model(S_gauss_lorentz)
+            params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+        else:
+            raise ValueError(f"Unknown fitting method: {self.selected_fitting_method}")
+
+        return peak_model
 
     def update_legend(self):
         # Retrieve the current handles and labels
