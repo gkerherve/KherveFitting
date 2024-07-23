@@ -7,9 +7,9 @@ class BackgroundWindow(wx.Frame):
         super(BackgroundWindow, self).__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent
         self.SetTitle("Background Settings")
-        self.SetSize((250, 300))
-        self.SetMinSize((250, 300))
-        self.SetMaxSize((250, 300))
+        self.SetSize((270, 300))
+        self.SetMinSize((270, 300))
+        self.SetMaxSize((270, 300))
 
         panel = wx.Panel(self)
         panel.SetBackgroundColour(wx.Colour(255, 255, 255))
@@ -29,9 +29,11 @@ class BackgroundWindow(wx.Frame):
         self.offset_l_text.Bind(wx.EVT_TEXT, self.on_offset_changed)
 
         background_button = wx.Button(panel, label="Background")
+        background_button.SetMinSize((110, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
         clear_background_button = wx.Button(panel, label="Clear Background")
+        clear_background_button.SetMinSize((110, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
         # Layout with a GridBagSizer
@@ -162,7 +164,7 @@ class BackgroundWindow(wx.Frame):
 
     def on_clear_background(self, event):
         # Define the clear background behavior here
-        clear_background(self)
+        clear_background(self.parent)
 
     def on_offset_changed(self, event):
         try:
