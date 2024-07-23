@@ -685,7 +685,7 @@ def create_vertical_toolbar(parent, frame):
     v_toolbar.AddSeparator()
 
     # BE adjustment tools
-    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path, "Right-Red-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
+    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path, "Right-Red.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
     high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path, "Left-Red-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High BE")
 
     v_toolbar.AddSeparator()

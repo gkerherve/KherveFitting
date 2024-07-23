@@ -59,10 +59,6 @@ class BackgroundWindow(wx.Frame):
         self.parent.background_tab_selected = False
         self.Destroy()
 
-    def on_clear_background(self, event):
-        # Define the clear background behavior here
-        clear_background(self)
-
     def on_background(self, event):
         try:
             # Define the background behavior here
@@ -82,6 +78,9 @@ class BackgroundWindow(wx.Frame):
                 y_values = y_values[:min_length]
                 background = background[:min_length]
 
+                # Save background data
+                self.parent.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = background.tolist()
+
                 # Calculate the area
                 area = abs(np.trapz(y_values - background, x_values))
 
@@ -90,8 +89,37 @@ class BackgroundWindow(wx.Frame):
                 peak_position = x_values[peak_index]
                 peak_height = y_values[peak_index] - background[peak_index]
 
-                # Extract peak name from sheet_name (assuming sheet_name is in the format "ElementOrbital")
-                peak_name = ''.join(filter(str.isalpha, sheet_name))
+                # Use sheet_name as peak_name
+                peak_name = sheet_name
+
+                # Update peak fitting parameter grid
+                grid = self.parent.peak_params_grid
+                row = grid.GetNumberRows()
+                grid.AppendRows(2)  # Add two rows for the new peak
+
+                grid.SetCellValue(row, 0, chr(65 + row // 2))  # Set ID (A, B, C, ...)
+                grid.SetCellValue(row, 1, peak_name)
+                grid.SetCellValue(row, 2, f"{peak_position:.2f}")
+                grid.SetCellValue(row, 3, f"{peak_height:.2f}")
+                grid.SetCellValue(row, 4, "")  # FWHM (left empty)
+                grid.SetCellValue(row, 5, "")  # L/G (left empty)
+                grid.SetCellValue(row, 6, f"{area:.2f}")
+                grid.SetCellValue(row, 9, "Unfitted")  # Fitting Model
+
+                # Save peak data in window.Data
+                if 'Fitting' not in self.parent.Data['Core levels'][sheet_name]:
+                    self.parent.Data['Core levels'][sheet_name]['Fitting'] = {}
+                if 'Peaks' not in self.parent.Data['Core levels'][sheet_name]['Fitting']:
+                    self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = {}
+
+                self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks'][peak_name] = {
+                    'Position': peak_position,
+                    'Height': peak_height,
+                    'FWHM': "",
+                    'L/G': "",
+                    'Area': area,
+                    'Fitting Model': "Unfitted"
+                }
 
                 # Print the results to the terminal
                 print(f"Results for {sheet_name}:")
