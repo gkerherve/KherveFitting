@@ -77,6 +77,24 @@ def plot_data(window):
         if window.selected_peak_index is not None:
             window.add_cross_to_peak(window.selected_peak_index)
 
+        # Remove any existing sheet name text
+        for txt in window.ax.texts:
+            if getattr(txt, 'sheet_name_text', False):
+                txt.remove()
+
+        # Add sheet name text
+        sheet_name_text = window.ax.text(
+            0.98, 0.98,  # Position (top-right corner)
+            sheet_name,  # The text to display
+            transform=window.ax.transAxes,
+            fontsize=10,
+            fontweight='bold',
+            verticalalignment='top',
+            horizontalalignment='right',
+            # bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+        )
+        sheet_name_text.sheet_name_text = True  # Mark this text object
+
         window.canvas.draw()  # Update the plot
 
     except Exception as e:
@@ -144,6 +162,24 @@ def clear_and_replot(window):
 
     # Update the legend
     window.update_legend()
+
+    # Remove any existing sheet name text
+    for txt in window.ax.texts:
+        if getattr(txt, 'sheet_name_text', False):
+            txt.remove()
+
+    # Add sheet name text
+    sheet_name_text = window.ax.text(
+        0.98, 0.98,  # Position (top-right corner)
+        sheet_name,  # The text to display
+        transform=window.ax.transAxes,
+        fontsize=14,
+        fontweight='bold',
+        verticalalignment='top',
+        horizontalalignment='right',
+        bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+    )
+    sheet_name_text.sheet_name_text = True  # Mark this text object
 
     # Draw the canvas
     window.canvas.draw_idle()
