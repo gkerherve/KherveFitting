@@ -36,6 +36,10 @@ class BackgroundWindow(wx.Frame):
         clear_background_button.SetMinSize((110, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
+        export_button = wx.Button(panel, label="Export")
+        export_button.SetMinSize((60, 40))
+        export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
+
         # Layout with a GridBagSizer
         sizer = wx.GridBagSizer(hgap=5, vgap=5)
 
@@ -52,6 +56,10 @@ class BackgroundWindow(wx.Frame):
         # Third row: Background and Clear Background buttons
         sizer.Add(background_button, pos=(4, 0), flag=wx.ALL | wx.EXPAND, border=5)
         sizer.Add(clear_background_button, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+
+        # Fourth row: Export buttons
+        sizer.Add(export_button, pos=(5, 0), flag=wx.ALL | wx.EXPAND, border=5)
+
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
@@ -148,8 +156,17 @@ class BackgroundWindow(wx.Frame):
                     }
                 }
 
-                # Refresh the grid
+                # Fill the area between raw data and background
+                fill = self.parent.ax.fill_between(x_values, background, y_values,
+                                                   facecolor='lightgreen', alpha=0.5,
+                                                   label=f'{peak_name}')
+
+                # Update the legend
+                self.parent.ax.legend()
+
+                # Refresh the grid and plot
                 self.parent.peak_params_grid.ForceRefresh()
+                self.parent.canvas.draw_idle()
 
                 # Print the results to the terminal
                 print(f"Results for {sheet_name}:")
@@ -165,6 +182,9 @@ class BackgroundWindow(wx.Frame):
     def on_clear_background(self, event):
         # Define the clear background behavior here
         clear_background(self.parent)
+
+    def on_export_results(self, event):
+        self.parent.export_results()
 
     def on_offset_changed(self, event):
         try:
