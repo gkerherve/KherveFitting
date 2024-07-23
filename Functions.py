@@ -576,11 +576,11 @@ def create_horizontal_toolbar(window):
     save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel2.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level")
     save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
 
+    toolbar.AddSeparator()
 
-
-    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
-    separators[-1].SetSize((2, 24))
-    toolbar.AddControl(separators[-1])
+    # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    # separators[-1].SetSize((2, 24))
+    # toolbar.AddControl(separators[-1])
 
     # Sheet selection
     window.sheet_combobox = wx.ComboBox(toolbar, style=wx.CB_READONLY)
@@ -591,18 +591,35 @@ def create_horizontal_toolbar(window):
     window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
     toolbar.AddControl(window.skip_rows_spinbox)
 
-    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
-    separators[-1].SetSize((2, 24))
-    toolbar.AddControl(separators[-1])
+    # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    # separators[-1].SetSize((2, 24))
+    # toolbar.AddControl(separators[-1])
 
-    # Plot operations
+    toolbar.AddSeparator()
+
+    # Plot adjustment tools
     plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot',
                                 wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"),
                                 wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
 
+    # resize_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Resize Plot', wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Resize Plot")
+    toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend',
+                                         wx.Bitmap(os.path.join(icon_path, "Legend-100.png"), wx.BITMAP_TYPE_PNG),
+                                         shortHelp="Toggle Legend")
+    toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results',
+                                              wx.Bitmap(os.path.join(icon_path, "ToggleFit-100.png"),
+                                                        wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
+    toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
+                                            wx.Bitmap(os.path.join(icon_path, "Res-100.png"), wx.BITMAP_TYPE_PNG),
+                                            shortHelp="Toggle Residuals")
+
+    toolbar.AddSeparator()
+
     separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
     separators[-1].SetSize((2, 24))
     toolbar.AddControl(separators[-1])
+
+    toolbar.AddSeparator()
 
     # Analysis tools
     bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-100.png"), wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area under Peak")
@@ -610,15 +627,10 @@ def create_horizontal_toolbar(window):
     fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "STO-200.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window")
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
-    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
-    separators[-1].SetSize((2, 24))
-    toolbar.AddControl(separators[-1])
+    # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    # separators[-1].SetSize((2, 24))
+    # toolbar.AddControl(separators[-1])
 
-    # Plot adjustment tools
-    resize_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Resize Plot', wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Resize Plot")
-    toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend', wx.Bitmap(os.path.join(icon_path, "Legend-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Legend")
-    toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results', wx.Bitmap(os.path.join(icon_path, "ToggleFit-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
-    toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "Res-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Residuals")
 
     # Add a spacer to push the following items to the right
     toolbar.AddStretchableSpace()
@@ -644,7 +656,7 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
     window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.resize_plot(), resize_plot_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: window.resize_plot(), resize_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.toggle_legend(), toggle_legend_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.toggle_fitting_results(), toggle_fit_results_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.toggle_residuals(), toggle_residuals_tool)
