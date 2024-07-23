@@ -765,13 +765,6 @@ def on_exit(window, event):
     window.Close()
 
 
-def toggle_plot2(window):
-    window.show_fit = not window.show_fit
-    if window.show_fit:
-        on_sheet_selected(window, None)  # Pass None as event
-    else:
-        plot_data(window)
-    window.canvas.draw_idle()
 
 def toggle_plot(window):
     window.show_fit = not window.show_fit
@@ -1061,6 +1054,8 @@ def toggle_Col_1(window):
             window.results_grid.ShowCol(col)
 
     print(window.Data)
+
+    print("BKG min Energy: "+ str(window.bg_min_energy))
 
 
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):

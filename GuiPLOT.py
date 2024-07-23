@@ -475,6 +475,12 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
 
+        # Update bg_min_energy and bg_max_energy from window.Data
+        if sheet_name in self.Data['Core levels'] and 'Background' in self.Data['Core levels'][sheet_name]:
+            background_data = self.Data['Core levels'][sheet_name]['Background']
+            self.bg_min_energy = background_data.get('Bkg Low')
+            self.bg_max_energy = background_data.get('Bkg High')
+
         if num_peaks == 0:
             residual = self.y_values - np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
             peak_y = residual[np.argmax(residual)]
@@ -486,10 +492,6 @@ class MyFrame(wx.Frame):
                 peak_y = float(self.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
-                sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-                gamma = lg_ratio * sigma
-
-                # Use the current fitting method
                 peak_model = self.get_peak_model(peak_x, peak_y, fwhm, lg_ratio)
                 overall_fit += peak_model.eval(x=self.x_values)
 
@@ -528,15 +530,8 @@ class MyFrame(wx.Frame):
 
         # Set constraint values
         self.peak_params_grid.SetReadOnly(row + 1, 0)
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 0, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 1, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 2, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 3, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 4, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 5, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 6, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 7, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 8, wx.Colour(230, 230, 230))
+        for col in range(15):  # Assuming you have 15 columns in total
+            self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
 
         self.peak_params_grid.SetCellValue(row + 1, 2, "0,1e3")
         self.peak_params_grid.SetCellValue(row + 1, 3, "0,1e7")
