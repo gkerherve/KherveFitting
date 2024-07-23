@@ -768,7 +768,11 @@ def on_exit(window, event):
 
 def toggle_plot(window):
     window.show_fit = not window.show_fit
-    on_sheet_selected(window, None)  # Call on_sheet_selected with None as event
+    sheet_name = window.sheet_combobox.GetValue()
+    if window.show_fit:
+        clear_and_replot(window)
+    else:
+        plot_data(window)
     window.canvas.draw_idle()
 
 import json
