@@ -27,7 +27,7 @@ from libraries.Utilities import _clear_peak_params_grid
 # MAIN WINDOW--------------------------------------------------------------------
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(1200, 600))
+        super().__init__(parent, title=title, size=(1300, 600))
         self.SetMinSize((800, 600))
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white

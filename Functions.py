@@ -525,7 +525,7 @@ def create_menu(window):
     tools_menu = wx.Menu()
     help_menu = wx.Menu()
 
-    open_item = file_menu.Append(wx.ID_OPEN, "Open")
+    open_item = file_menu.Append(wx.ID_OPEN, "Open Excel File")
     window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
 
     open_vamas_item = file_menu.Append(wx.NewId(), "Open/Convert Vamas file to Excel")
@@ -537,18 +537,41 @@ def create_menu(window):
     save_plot_item = file_menu.Append(wx.NewId(), "Save plot to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
 
-    save_Table_item = file_menu.Append(wx.NewId(), "Save Table")
+    save_Table_item = file_menu.Append(wx.NewId(), "Save Table - TBD")
 
-    save_all_item = file_menu.Append(wx.NewId(), "Save all")
-
-
+    save_all_item = file_menu.Append(wx.NewId(), "Save all - TBD")
 
     file_menu.AppendSeparator()
     exit_item = file_menu.Append(wx.ID_EXIT, "Exit")
     window.Bind(wx.EVT_MENU, lambda event: on_exit(window, event), exit_item)  # Bind the on_exit function
 
+    Undo_item = edit_menu.Append(wx.NewId(), "Undo Fit - TBD")
+    Redo_item = edit_menu.Append(wx.NewId(), "Redo Fit - TBD")
+    edit_menu.AppendSeparator()
+    Config_item = edit_menu.Append(wx.NewId(), "Preference - TBD")
 
+    ToggleFitting_item = view_menu.Append(wx.NewId(), "Toggle Peak Fitting")
+    window.Bind(wx.EVT_MENU, lambda event: toggle_plot(window), ToggleFitting_item)
 
+    ToggleLegend_item = view_menu.Append(wx.NewId(), "Toggle Legend")
+    window.Bind(wx.EVT_MENU, lambda event: window.toggle_legend(), ToggleLegend_item)
+
+    ToggleFit_item = view_menu.Append(wx.NewId(), "Toggle Fit Results")
+    window.Bind(wx.EVT_MENU, lambda event: window.toggle_fitting_results(), ToggleFit_item)
+
+    ToggleRes_item = view_menu.Append(wx.NewId(), "Toggle Residuals")
+    window.Bind(wx.EVT_MENU, lambda event: window.toggle_residuals(), ToggleRes_item)
+
+    Area_item = tools_menu.Append(wx.NewId(), "Calculate Area")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
+
+    Fitting_item = tools_menu.Append(wx.NewId(), "Peak Fitting")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_fitting_window(), Fitting_item)
+
+    Noise_item = tools_menu.Append(wx.NewId(), "Noise Analysis")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_noise_analysis_window, Noise_item)
+
+    Manual_item = help_menu.Append(wx.NewId(), "Manual - TBD")
 
     menubar.Append(file_menu, "&File")
     menubar.Append(edit_menu, "&Edit")
@@ -556,9 +579,7 @@ def create_menu(window):
     menubar.Append(tools_menu, "&Tools")
     menubar.Append(help_menu, "&Help")
     window.SetMenuBar(menubar)
-# END ---------------------------------------------------------------------------
 
-# CREATE TOOLBAR ----------------------------------------------------------------
 
 def create_horizontal_toolbar(window):
     toolbar = window.CreateToolBar()
@@ -637,7 +658,7 @@ def create_horizontal_toolbar(window):
 
     # Hide columns in Peak Fitting Parameters
     toggle_Col_1_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
-                                            wx.Bitmap(os.path.join(icon_path, "Res-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
+                                            wx.Bitmap(os.path.join(icon_path, "HideColumn.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
 
     # Add toggle button for the right panel
     window.toggle_right_panel_tool = window.add_toggle_tool(toolbar, "Toggle Right Panel",
@@ -1056,9 +1077,8 @@ def toggle_Col_1(window):
         for col in columns2:
             window.results_grid.ShowCol(col)
 
-    print(window.Data)
+    # print(window.Data)
 
-    print("BKG min Energy: "+ str(window.bg_min_energy))
 
 
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
