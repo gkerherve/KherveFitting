@@ -82,16 +82,17 @@ def plot_data(window):
             if getattr(txt, 'sheet_name_text', False):
                 txt.remove()
 
-        # Add sheet name text
+        # Format and add sheet name text
+        formatted_sheet_name = format_sheet_name(sheet_name)
         sheet_name_text = window.ax.text(
             0.98, 0.98,  # Position (top-right corner)
-            sheet_name,  # The text to display
+            formatted_sheet_name,
             transform=window.ax.transAxes,
-            fontsize=10,
+            fontsize=15,
             fontweight='bold',
             verticalalignment='top',
             horizontalalignment='right',
-            # bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+            bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
         )
         sheet_name_text.sheet_name_text = True  # Mark this text object
 
@@ -168,12 +169,13 @@ def clear_and_replot(window):
         if getattr(txt, 'sheet_name_text', False):
             txt.remove()
 
-    # Add sheet name text
+    # Format and add sheet name text
+    formatted_sheet_name = format_sheet_name(sheet_name)
     sheet_name_text = window.ax.text(
         0.98, 0.98,  # Position (top-right corner)
-        sheet_name,  # The text to display
+        formatted_sheet_name,
         transform=window.ax.transAxes,
-        fontsize=14,
+        fontsize=15,
         fontweight='bold',
         verticalalignment='top',
         horizontalalignment='right',
@@ -184,5 +186,16 @@ def clear_and_replot(window):
     # Draw the canvas
     window.canvas.draw_idle()
     pass
+
+import re
+
+def format_sheet_name(sheet_name):
+    # Regular expression to separate element and electron shell
+    match = re.match(r'([A-Z][a-z]*)(\d+[spdfg])', sheet_name)
+    if match:
+        element, shell = match.groups()
+        return f"{element} $\\mathbf{{\\it{{{shell}}}}}$"
+    else:
+        return sheet_name  # Return original if it doesn't match the expected format
 
 
