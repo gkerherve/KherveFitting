@@ -484,6 +484,7 @@ class MyFrame(wx.Frame):
         if num_peaks == 0:
             residual = self.y_values - np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
             peak_y = residual[np.argmax(residual)]
+            peak_x = self.x_values[np.argmax(residual)]
         else:
             overall_fit = np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y']).copy()
             for i in range(num_peaks):
@@ -492,14 +493,12 @@ class MyFrame(wx.Frame):
                 peak_y = float(self.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
-                peak_model = self.get_peak_model(peak_x, peak_y, fwhm, lg_ratio)
-                overall_fit += peak_model.eval(x=self.x_values)
+                peak_model, params = self.get_peak_model(peak_x, peak_y, fwhm, lg_ratio)
+                overall_fit += peak_model.eval(params, x=self.x_values)
 
             residual = self.y_values - overall_fit
-
-        bkg_y_AtMax = self.Data['Core levels'][sheet_name]['Background']['Bkg Y'][np.argmax(residual)]
-        peak_x = self.x_values[np.argmax(residual)]
-        peak_y = residual.max()
+            peak_y = residual.max()
+            peak_x = self.x_values[np.argmax(residual)]
 
         self.peak_count += 1
 
@@ -592,7 +591,7 @@ class MyFrame(wx.Frame):
         else:
             raise ValueError(f"Unknown fitting method: {self.selected_fitting_method}")
 
-        return peak_model
+        return peak_model, params
 
     def update_legend(self):
         # Retrieve the current handles and labels
