@@ -1471,7 +1471,7 @@ def fit_peaks(window, peak_params_grid):
                 f'Noise STD: {std_value_int} cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {nfev_used}',
                 transform=window.ax.transAxes,
                 fontsize=9,
-                verticalalignment='top',
+                verticalalignment='bottom',
                 horizontalalignment='left',
                 visible=False
             )
