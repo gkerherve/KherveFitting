@@ -92,19 +92,36 @@ class BackgroundWindow(wx.Frame):
                 # Use sheet_name as peak_name
                 peak_name = sheet_name
 
+                # Calculate FWHM for a Gaussian peak (L/G = 0)
+                fwhm = 2 * np.sqrt(2 * np.log(2)) * area / (peak_height * np.sqrt(2 * np.pi))
+
+                # Default constraints
+                position_constraint = "0,1e3"
+                height_constraint = "0,1e7"
+                fwhm_constraint = "0.2,3.5"
+                lg_constraint = "0,0.5"
+
                 # Update peak fitting parameter grid
                 grid = self.parent.peak_params_grid
-                row = grid.GetNumberRows()
+                grid.ClearGrid()
+                if grid.GetNumberRows() > 0:
+                    grid.DeleteRows(0, grid.GetNumberRows())
                 grid.AppendRows(2)  # Add two rows for the new peak
 
-                grid.SetCellValue(row, 0, chr(65 + row // 2))  # Set ID (A, B, C, ...)
-                grid.SetCellValue(row, 1, peak_name)
-                grid.SetCellValue(row, 2, f"{peak_position:.2f}")
-                grid.SetCellValue(row, 3, f"{peak_height:.2f}")
-                grid.SetCellValue(row, 4, "")  # FWHM (left empty)
-                grid.SetCellValue(row, 5, "")  # L/G (left empty)
-                grid.SetCellValue(row, 6, f"{area:.2f}")
-                grid.SetCellValue(row, 9, "Unfitted")  # Fitting Model
+                grid.SetCellValue(0, 0, "A")  # Set ID
+                grid.SetCellValue(0, 1, peak_name)
+                grid.SetCellValue(0, 2, f"{peak_position:.2f}")
+                grid.SetCellValue(0, 3, f"{peak_height:.2f}")
+                grid.SetCellValue(0, 4, f"{fwhm:.2f}")
+                grid.SetCellValue(0, 5, "0")  # L/G
+                grid.SetCellValue(0, 6, f"{area:.2f}")
+                grid.SetCellValue(0, 9, "GL")  # Fitting Model
+
+                # Set constraints
+                grid.SetCellValue(1, 2, position_constraint)
+                grid.SetCellValue(1, 3, height_constraint)
+                grid.SetCellValue(1, 4, fwhm_constraint)
+                grid.SetCellValue(1, 5, lg_constraint)
 
                 # Save peak data in window.Data
                 if 'Fitting' not in self.parent.Data['Core levels'][sheet_name]:
@@ -115,18 +132,28 @@ class BackgroundWindow(wx.Frame):
                 self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks'][peak_name] = {
                     'Position': peak_position,
                     'Height': peak_height,
-                    'FWHM': "",
-                    'L/G': "",
+                    'FWHM': fwhm,
+                    'L/G': 0,
                     'Area': area,
-                    'Fitting Model': "Unfitted"
+                    'Fitting Model': "GL",
+                    'Constraints': {
+                        'Position': position_constraint,
+                        'Height': height_constraint,
+                        'FWHM': fwhm_constraint,
+                        'L/G': lg_constraint
+                    }
                 }
+
+                # Refresh the grid
+                self.parent.peak_params_grid.ForceRefresh()
 
                 # Print the results to the terminal
                 print(f"Results for {sheet_name}:")
                 print(f"Peak Name: {peak_name}")
                 print(f"Peak Position: {peak_position:.2f} eV")
                 print(f"Peak Height: {peak_height:.2f} counts")
-                print(f"Area between data and background: {area:.2f}")
+                print(f"FWHM: {fwhm:.2f} eV")
+                print(f"Area: {area:.2f}")
 
         except Exception as e:
             print(f"Error calculating background: {str(e)}")
