@@ -796,6 +796,7 @@ class MyFrame(wx.Frame):
                 try:
                     if event.key == 'shift':
                         self.update_peak_fwhm(event.xdata)
+
                     elif self.is_mouse_on_peak(event):
                         closest_index = np.argmin(np.abs(self.x_values - event.xdata))
                         bkg_y = self.background[closest_index]
@@ -804,21 +805,9 @@ class MyFrame(wx.Frame):
                         new_height = max(event.ydata - bkg_y, 0)
 
                         # Update the grid
-                        self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")
-                        self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
+                        self.peak_params_grid.SetCellValue(row, 2, f"{new_x}")
+                        self.peak_params_grid.SetCellValue(row, 3, f"{new_height}")
 
-                        # Remove old cross
-                        if hasattr(self, 'cross'):
-                            self.cross.remove()
-
-                        # Create new cross
-                        self.cross, = self.ax.plot(new_x, event.ydata, 'bx', markersize=15, markerfacecolor='none',
-                                                   picker=5)
-
-                        # Update the peak plot
-                        self.update_peak_plot(new_x, new_height, remove_old_peaks=False)
-
-                        # Use clear_and_replot to refresh the entire plot
                         clear_and_replot(self)
 
                         self.peak_params_grid.ForceRefresh()
@@ -842,6 +831,18 @@ class MyFrame(wx.Frame):
                         peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
                         if peak_label in peaks:
                             peaks[peak_label]['FWHM'] = current_fwhm
+
+                    # # Remove old cross
+                    # self.remove_cross_from_peak()
+                    #
+                    # # Create new cross at final position
+                    # self.cross, = self.ax.plot(peaks[peak_label]['Position'], peaks[peak_label]['Height'], 'bx', markersize=15, markerfacecolor='none',
+                    #                            picker=5)
+                    #
+                    # self.update_peak_plot(peaks[peak_label]['Position'], peaks[peak_label]['Height'])
+                    #
+                    # print("ON CROSS RELEASE")
+
                 else:
                     bkg_y = self.background[np.argmin(np.abs(self.x_values - event.xdata))]
                     x = event.xdata
@@ -855,7 +856,7 @@ class MyFrame(wx.Frame):
                     # Create new cross at final position
                     self.cross, = self.ax.plot(x, event.ydata, 'bx', markersize=15, markerfacecolor='none', picker=5)
 
-                    self.update_peak_plot(x, y)
+                    # self.update_peak_plot(x, y)
 
                     # Update the Data structure with the current label and new values
                     if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
