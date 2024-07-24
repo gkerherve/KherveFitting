@@ -69,7 +69,7 @@ class PlotManager:
             x_values = window.Data['Core levels'][sheet_name]['B.E.']
             y_values = window.Data['Core levels'][sheet_name]['Raw Data']
 
-            self.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black',
+            self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black',
                             label='Raw Data')
 
             # Update window.x_values and window.y_values
@@ -187,10 +187,6 @@ class PlotManager:
         self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
-        # Plot the background if it exists
-        if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
-            self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color='grey', linestyle='--',
-                         label='Background')
 
         # Replot all peaks and update indices
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
@@ -210,7 +206,12 @@ class PlotManager:
             else:
                 print(f"Warning: Empty data for peak {i + 1}. Skipping this peak.")
 
-        self.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black', label='Raw Data')
+        self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black', label='Raw Data')
+
+        # Plot the background if it exists
+        if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
+            self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color='grey', linestyle='--',
+                         label='Background')
 
         # Update overall fit and residuals
         window.update_overall_fit_and_residuals()
@@ -315,6 +316,83 @@ class PlotManager:
             window.peak_params_grid.SetCellValue(row, 5, f"{lg_ratio:.2f}")  # L/G ratio
 
             self.canvas.draw_idle()
+
+    def update_overall_fit_and_residuals(self, window):
+        # Calculate the overall fit as the sum of all peaks
+        overall_fit = window.background.copy()
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
+
+        for i in range(num_peaks):
+            row = i * 2  # Each peak uses two rows in the grid
+
+            # Get cell values
+            position_str = window.peak_params_grid.GetCellValue(row, 2)  # Position
+            height_str = window.peak_params_grid.GetCellValue(row, 3)  # Height
+            fwhm_str = window.peak_params_grid.GetCellValue(row, 4)  # FWHM
+            lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)  # L/G
+
+            # Check if any of the cells are empty
+            if not all([position_str, height_str, fwhm_str, lg_ratio_str]):
+                print(f"Warning: Incomplete data for peak {i + 1}. Skipping this peak.")
+                continue
+
+            try:
+                peak_x = float(position_str)
+                peak_y = float(height_str)
+                fwhm = float(fwhm_str)
+                lg_ratio = float(lg_ratio_str)
+            except ValueError:
+                print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
+                continue
+
+            sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+            gamma = lg_ratio * sigma
+            bkg_y = window.background[np.argmin(np.abs(window.x_values - peak_x))]
+
+            if window.selected_fitting_method == "Voigt":
+                peak_model = lmfit.models.VoigtModel()
+                amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
+                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
+            elif window.selected_fitting_method == "Pseudo-Voigt":
+                peak_model = lmfit.models.PseudoVoigtModel()
+                amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
+                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
+            elif window.selected_fitting_method == "GL":
+                peak_model = lmfit.Model(gauss_lorentz)
+                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+            elif window.selected_fitting_method == "SGL":
+                peak_model = lmfit.Model(S_gauss_lorentz)
+                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+
+            peak_fit = peak_model.eval(params, x=window.x_values)
+            overall_fit += peak_fit
+
+        # Calculate residuals
+        residuals = window.y_values - overall_fit
+
+        # Determine the scaling factor
+        max_raw_data = max(window.y_values)
+        desired_max_residual = 0.1 * max_raw_data
+        actual_max_residual = max(abs(residuals))
+        scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
+
+        # Scale residuals
+        scaled_residuals = residuals * scaling_factor
+
+        # Remove old overall fit and residuals, keep background lines
+        for line in self.ax.get_lines():
+            if line.get_label() in ['Overall Fit', 'Residuals']:
+                line.remove()
+
+        # Plot the new overall fit and residuals
+        self.ax.plot(window.x_values, overall_fit, 'b-', alpha=0.3, label='Overall Fit')
+        self.ax.plot(window.x_values, scaled_residuals + 1.05 * max(window.y_values), 'g-', alpha=0.4,
+                     label='Residuals')
+
+        # Update the Y-axis label
+        self.ax.set_ylabel(f'Intensity (CTS), residual x {scaling_factor:.2f}')
+
+        self.canvas.draw_idle()
 
     @staticmethod
     def format_sheet_name(sheet_name):

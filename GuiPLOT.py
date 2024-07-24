@@ -764,7 +764,7 @@ class MyFrame(wx.Frame):
         self.plot_manager.update_peak_plot(self, x, y, remove_old_peaks)
 
 
-    def update_overall_fit_and_residuals(self):
+    def update_overall_fit_and_residuals2(self):
         # Calculate the overall fit as the sum of all peaks
         overall_fit = self.background.copy()
         num_peaks = self.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
@@ -839,6 +839,9 @@ class MyFrame(wx.Frame):
         self.ax.set_ylabel(f'Intensity (CTS), residual x {scaling_factor:.2f}')
 
         self.canvas.draw_idle()
+
+    def update_overall_fit_and_residuals(self):
+        self.plot_manager.update_overall_fit_and_residuals(self)
 
     def show_hide_vlines(self):
         background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected

@@ -48,7 +48,7 @@ def load_rsf_data(file_path):
 from matplotlib.ticker import ScalarFormatter
 
 
-def clear_and_replot(window):
+def clear_and_replot2(window):
     sheet_name = window.sheet_combobox.GetValue()
     limits = window.plot_config.get_plot_limits(window, sheet_name)
 
@@ -253,7 +253,7 @@ def clear_background(window):
         y_values = window.Data['Core levels'][sheet_name]['Raw Data']
 
         # Plot the raw data with unfilled circle markers
-        window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black', label='Raw Data')
+        window.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black', label='Raw Data')
 
         # Update window.x_values and window.y_values
         window.x_values = np.array(x_values)
@@ -1458,9 +1458,8 @@ def fit_peaks(window, peak_params_grid):
 
                 # Plotting
                 window.ax.clear()
-                window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black',
-                                  label='Raw Data')
-                window.ax.plot(x_values, background, 'gray', linestyle='--', label='Background')
+
+
 
                 # Plot envelope
                 fitted_peak = y_values.copy()
@@ -1488,6 +1487,11 @@ def fit_peaks(window, peak_params_grid):
                     window.ax.plot(x_values, peak + background)
                     window.ax.fill_between(x_values, background, peak + background,
                                               alpha=0.3, label=peak_name)
+
+                window.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black',
+                                  label='Raw Data')
+
+                window.ax.plot(x_values, background, 'gray', linestyle='--', label='Background')
 
                 # Set plot labels and formatting
                 window.ax.legend(loc='upper left')
