@@ -1486,9 +1486,12 @@ def fit_peaks(window, peak_params_grid):
                     peak = np.zeros_like(y_values)
                     peak[mask] = peak_model.eval(result.params, x=x_values_filtered)
                     peak_name = peak_params_grid.GetCellValue(i * 2, 1)
-                    window.ax.fill_between(x_values, background, peak + background, facecolor=color,
-                                           alpha=0.8, label=peak_name)
-                    window.ax.plot(x_values, peak + background, 'black', alpha=0.4)
+                    # window.ax.fill_between(x_values, background, peak + background, facecolor=color,
+                    #                        alpha=0.8, label=peak_name)
+                    # window.ax.plot(x_values, peak + background, 'black', alpha=0.4)
+                    window.ax.plot(x_values, peak + background)
+                    window.ax.fill_between(x_values, background, peak + background,
+                                              alpha=0.3, label=peak_name)
 
                 # Set plot labels and formatting
                 window.ax.legend(loc='upper left')

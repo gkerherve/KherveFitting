@@ -675,10 +675,10 @@ class MyFrame(wx.Frame):
         peak_label = self.peak_params_grid.GetCellValue(row, 1)
 
         # Plot the peak with the updated label
-        self.ax.plot(self.x_values, peak_y, label=peak_label)
+        self.ax.plot(self.x_values, peak_y)
         # Uncomment the following line if you want to fill the area under the peak
-        # self.ax.fill_between(self.x_values, self.background, peak_y,
-        #                      alpha=0.6, label=peak_label)
+        self.ax.fill_between(self.x_values, self.background, peak_y,
+                              alpha=0.3, label=peak_label)
 
     def update_constraint(self, event):
         row = event.GetRow()
@@ -1454,45 +1454,6 @@ class MyFrame(wx.Frame):
     def on_radio_box(self, event):
         # Function to handle radio box selection change
         self.canvas.draw_idle()
-
-
-    # SHALL NOT BE USED
-    # def on_radio_button(self, event):
-    #     radio_selected = event.GetEventObject()
-    #
-    #     if radio_selected == self.radio_bg_range:
-    #         if self.vline1 is not None:
-    #             self.vline1.set_visible(True)
-    #         if self.vline2 is not None:
-    #             self.vline2.set_visible(True)
-    #         if self.vline3 is not None:
-    #             self.vline3.set_visible(False)
-    #         if self.vline4 is not None:
-    #             self.vline4.set_visible(False)
-    #     elif radio_selected == self.radio_noise_range:
-    #         if self.vline1 is not None:
-    #             self.vline1.set_visible(False)
-    #         if self.vline2 is not None:
-    #             self.vline2.set_visible(False)
-    #         if self.vline3 is not None:
-    #             self.vline3.set_visible(True)
-    #         if self.vline4 is not None:
-    #             self.vline4.set_visible(True)
-    #     else:  # self.radio_none is selected
-    #         if self.vline1 is not None:
-    #             self.vline1.set_visible(False)
-    #         if self.vline2 is not None:
-    #             self.vline2.set_visible(False)
-    #         if self.vline3 is not None:
-    #             self.vline3.set_visible(False)
-    #         if self.vline4 is not None:
-    #             self.vline4.set_visible(False)
-    #
-    #     self.canvas.draw_idle()
-
-
-
-
 
 
     def on_zoom_in_tool(self, event):
