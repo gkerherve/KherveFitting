@@ -5,6 +5,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 
+import lmfit
+from Functions import gauss_lorentz, S_gauss_lorentz
+
+
+class PlotManager:
+    def __init__(self, ax, canvas):
+        self.ax = ax
+        self.canvas = canvas
+
+    def plot_peak(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
+        row = peak_params['row']
+        fwhm = peak_params['fwhm']
+        lg_ratio = peak_params['lg_ratio']
+        x = peak_params['position']
+        y = peak_params['height']
+
+        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        gamma = lg_ratio * sigma
+        bkg_y = background[np.argmin(np.abs(x_values - x))]
+
+        if selected_fitting_method == "Voigt":
+            peak_model = lmfit.models.VoigtModel()
+            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
+            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
+        elif selected_fitting_method == "Pseudo-Voigt":
+            peak_model = lmfit.models.PseudoVoigtModel()
+            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
+            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
+        elif selected_fitting_method == "GL":
+            peak_model = lmfit.Model(gauss_lorentz)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+        elif selected_fitting_method == "SGL":
+            peak_model = lmfit.Model(S_gauss_lorentz)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+
+        peak_y = peak_model.eval(params, x=x_values) + background
+
+        peak_label = f"{sheet_name} p{row // 2 + 1}"
+
+        self.ax.plot(x_values, peak_y)
+        self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=peak_label)
+
+        self.canvas.draw_idle()
+
+        return peak_y
+
 
 
 def plot_data(window):

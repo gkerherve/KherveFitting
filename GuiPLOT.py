@@ -22,6 +22,7 @@ from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig, CustomRectangleSelector
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Utilities import _clear_peak_params_grid
+from libraries.Plot_Operations import PlotManager
 # END ---------------------------------------------------------------------------
 
 # MAIN WINDOW--------------------------------------------------------------------
@@ -640,7 +641,7 @@ class MyFrame(wx.Frame):
     import lmfit
     from Functions import gauss_lorentz, S_gauss_lorentz
 
-    def plot_peak(self, x, y, index):
+    def plot_peak2(self, x, y, index):
         row = index * 2  # Each peak uses two rows in the grid
         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))  # FWHM
         lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))  # L/G
@@ -679,6 +680,27 @@ class MyFrame(wx.Frame):
         # Uncomment the following line if you want to fill the area under the peak
         self.ax.fill_between(self.x_values, self.background, peak_y,
                               alpha=0.3, label=peak_label)
+
+    def plot_peak(self, x, y, index):
+        row = index * 2
+        fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+        lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
+
+        peak_params = {
+            'row': row,
+            'fwhm': fwhm,
+            'lg_ratio': lg_ratio,
+            'position': x,
+            'height': y
+        }
+
+        self.plot_manager.plot_peak(
+            self.x_values,
+            self.background,
+            self.selected_fitting_method,
+            peak_params,
+            self.sheet_combobox.GetValue()
+        )
 
     def update_constraint(self, event):
         row = event.GetRow()
