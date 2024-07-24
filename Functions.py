@@ -18,7 +18,7 @@ from openpyxl import Workbook
 from ConfigFile import *
 from Save import refresh_sheets
 # from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Plot_Operations import clear_and_replot, clear_plots, PlotManager
+from libraries.Plot_Operations import clear_and_replot, PlotManager
 from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 
 

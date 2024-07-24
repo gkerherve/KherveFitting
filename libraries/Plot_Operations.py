@@ -164,36 +164,6 @@ class PlotManager:
 
 
 
-def clear_plots(window):
-    # Remove all lines
-    while window.ax.lines:
-        window.ax.lines.pop(0).remove()
-
-    # Remove all scatter plots and other collections
-    for collection in window.ax.collections[:]:
-        collection.remove()
-
-    # Remove all patches (like filled areas)
-    for patch in window.ax.patches[:]:
-        patch.remove()
-
-    # Clear the legend
-    if window.ax.get_legend():
-        window.ax.get_legend().remove()
-
-    # Clear texts (except for the sheet name text)
-    for text in window.ax.texts[:]:
-        if not getattr(text, 'sheet_name_text', False):
-            text.remove()
-
-    # Clear images
-    for im in window.ax.images[:]:
-        im.remove()
-
-    # Reset the axis limits
-    window.ax.relim()
-    window.ax.autoscale_view()
-
 def clear_and_replot(window):
     sheet_name = window.sheet_combobox.GetValue()
     limits = window.plot_config.get_plot_limits(window, sheet_name)
