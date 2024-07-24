@@ -1,31 +1,31 @@
 # GuiPLOT------------------------------------------------------------------------
 # Fitting program create with chatGPT 4o-----------------------------------------
 
-# LIBRARIES----------------------------------------------------------------------
-import wx
-import wx.grid
-import wx.grid as gridlib
 import matplotlib
+import matplotlib.widgets as widgets
+# LIBRARIES----------------------------------------------------------------------
+import wx.grid
+
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
-from matplotlib.figure import Figure
-import matplotlib.widgets as widgets
-from Functions import *
+from matplotlib.ticker import ScalarFormatter
+# from Functions import *
+
+import lmfit
 from Fitting_Screen import *
 from AreaFit_Screen import *
 from Save import *
 from NoiseAnalysis import NoiseAnalysisWindow
 from ConfigFile import *
 from libraries.Export import export_results
-from libraries.PlotConfig import PlotConfig, CustomRectangleSelector
-from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Utilities import _clear_peak_params_grid
+from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
-# END ---------------------------------------------------------------------------
+from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
+from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 
-# MAIN WINDOW--------------------------------------------------------------------
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
         super().__init__(parent, title=title, size=(1300, 600))
@@ -124,6 +124,8 @@ class MyFrame(wx.Frame):
         self.moving_vline = None  # Initialize moving_vline attribute
         self.selected_peak_index = None  # Add this attribute to track selected peak index
 
+
+
         # Number of column to remove from the excel file
         self.num_fitted_columns = 15
 
@@ -167,6 +169,9 @@ class MyFrame(wx.Frame):
         self.canvas.mpl_connect("button_press_event", self.on_click)
         plt.tight_layout()
         right_frame_sizer.Add(self.canvas, 1, wx.EXPAND | wx.ALL, 0)
+
+        # Initialize plot_manager after self.ax and self.canvas are created
+        self.plot_manager = PlotManager(self.ax, self.canvas)
 
         # Create a single NavigationToolbar (hidden by default)
         self.navigation_toolbar = NavigationToolbar(self.canvas)
@@ -634,12 +639,6 @@ class MyFrame(wx.Frame):
 
     def number_to_letter(n):
         return chr(65 + n)  # 65 is the ASCII value for 'A'
-
-
-
-    import numpy as np
-    import lmfit
-    from Functions import gauss_lorentz, S_gauss_lorentz
 
     def plot_peak2(self, x, y, index):
         row = index * 2  # Each peak uses two rows in the grid
@@ -1311,8 +1310,6 @@ class MyFrame(wx.Frame):
                 self.change_selected_peak(-1)  # Move to next peak
             return  # Prevent event from propagating
         event.Skip()  # Let other key events propagate normally
-
-    import wx.adv
 
     def show_popup_message(self, message):
         popup = wx.adv.RichToolTip("Are you trying to select a peak?", message)

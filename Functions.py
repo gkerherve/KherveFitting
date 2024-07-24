@@ -16,12 +16,21 @@ from Save import save_data
 from vamas import Vamas
 from openpyxl import Workbook
 from ConfigFile import *
-from Save import *
-from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Plot_Operations import plot_data, clear_and_replot, clear_plots
+from Save import refresh_sheets
+# from libraries.Sheet_Operations import on_sheet_selected
+from libraries.Plot_Operations import clear_and_replot, clear_plots, PlotManager
+from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 
 
 # -------------------------------------------------------------------------------
+
+def save_data_wrapper(window, data):
+    from Save import save_data
+    save_data(window, data)
+
+def on_sheet_selected_wrapper(window, event):
+    from libraries.Sheet_Operations import on_sheet_selected
+    on_sheet_selected(window, event)
 
 def load_rsf_data(file_path):
     rsf_dict = {}
@@ -672,7 +681,7 @@ def create_horizontal_toolbar(window):
 
     # Bind events (keeping the same bindings as before, except for BE adjustment tools)
     window.Bind(wx.EVT_TOOL, lambda event: open_xlsx_file(window), open_file_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected), refresh_folder_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected_wrapper), refresh_folder_tool)
     window.Bind(wx.EVT_TOOL, lambda event: toggle_plot(window), plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
@@ -681,7 +690,7 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, lambda event: window.toggle_legend(), toggle_legend_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.toggle_fitting_results(), toggle_fit_results_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.toggle_residuals(), toggle_residuals_tool)
-    window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected(window, event))
+    window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
     window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
     window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: toggle_Col_1(window), toggle_Col_1_tool)
@@ -792,7 +801,7 @@ def toggle_plot(window):
     if window.show_fit:
         clear_and_replot(window)
     else:
-        plot_data(window)
+        window.plot_manager.plot_data(window)
     window.canvas.draw_idle()
 
 import json
@@ -858,7 +867,7 @@ def open_xlsx_file(window):
                 # Use on_sheet_selected to update peak parameter grid and plot
                 event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
                 event.SetString(first_sheet)
-                on_sheet_selected(window,event)
+                on_sheet_selected_wrapper(window,event)
 
                 print("open_xlsx_file function completed successfully")
             except Exception as e:
@@ -1038,7 +1047,7 @@ def open_xlsx_file_vamas(window, file_path):
         update_sheet_names(window)
 
         # Plot the data for the first sheet
-        plot_data(window)
+        window.plot_manager.plot_data(window)
 
     except Exception as e:
         print(f"Error in open_xlsx_file_vamas: {str(e)}")
@@ -1103,19 +1112,9 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
         except ValueError:
             raise ValueError(f"Invalid constraint format: {constraint_str}")
 
-def gaussian(x, E, F, m):
-    return np.exp(-4 * np.log(2) * (1 - m / 100) * ((x - E) / F)**2)
 
-def lorentzian(x, E, F, m):             # E= position, F width, m : percent G like 40 / 100
-    return 1 / (1 + 4 * m / 100 * ((x - E) / F)**2)
 
-def gauss_lorentz(x, center , fwhm , fraction, amplitude):                   # x, E, F, m
-    return amplitude * (
-            gaussian(x, center, fwhm, fraction*100) * lorentzian(x, center, fwhm, fraction*100))
 
-def S_gauss_lorentz(x, center , fwhm , fraction, amplitude):                   # x, E, F, m
-    return amplitude * (
-        (1-fraction)*gaussian(x, center, fwhm, 0) + fraction * lorentzian(x, center, fwhm, 100))
 
 
 import numpy as np
@@ -1223,9 +1222,6 @@ def calculate_chi_square(y_true, y_pred):
     return np.sum((y_true - y_pred) ** 2 / y_pred)
 
 
-
-import numpy as np
-import lmfit
 
 from matplotlib.ticker import ScalarFormatter
 import matplotlib.pyplot as plt

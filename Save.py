@@ -9,8 +9,8 @@ import pandas as pd
 import openpyxl
 from ConfigFile import add_core_level_Data
 # from Functions import on_sheet_selected
-from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Plot_Operations import plot_data, clear_and_replot
+# from libraries.Sheet_Operations import on_sheet_selected
+from libraries.Plot_Operations import clear_and_replot
 
 
 def save_data(window, data):
@@ -292,7 +292,7 @@ def refresh_sheets(window, on_sheet_selected_func):
         window.plot_config.update_plot_limits(window, current_sheet)
 
         # Refresh the plot
-        plot_data(window)
+        window.plot_manager.plot_data(window)
         clear_and_replot(window)
 
         wx.MessageBox(f"Sheets refreshed. Total sheets: {len(sheet_names)}", "Success", wx.OK | wx.ICON_INFORMATION)

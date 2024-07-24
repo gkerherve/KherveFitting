@@ -2,7 +2,7 @@
 
 import wx
 import wx.grid
-from libraries.Plot_Operations import plot_data, clear_and_replot
+from libraries.Plot_Operations import clear_and_replot
 from libraries.Utilities import _clear_peak_params_grid
 
 def on_sheet_selected(window, event):
@@ -84,7 +84,7 @@ def on_sheet_selected(window, event):
             _clear_peak_params_grid(window)
 
         # Update the plot
-        plot_data(window)  # Always plot raw data first
+        window.plot_manager.plot_data(window)  # Always plot raw data first
         if window.show_fit and window.peak_params_grid.GetNumberRows() > 0:
             clear_and_replot(window)  # Add fit and residuals if show_fit is True
 
