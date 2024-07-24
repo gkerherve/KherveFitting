@@ -131,7 +131,7 @@ def clear_and_replot(window):
     # Plot the raw data
     x_values = np.array(core_level_data['B.E.'])
     y_values = np.array(core_level_data['Raw Data'])
-    window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black', label='Raw Data')
+
 
     # Get plot limits from PlotConfig
     if sheet_name not in window.plot_config.plot_limits:
@@ -164,6 +164,8 @@ def clear_and_replot(window):
                 print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
         else:
             print(f"Warning: Empty data for peak {i + 1}. Skipping this peak.")
+
+    window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black', label='Raw Data')
 
     # Update overall fit and residuals
     window.update_overall_fit_and_residuals()
