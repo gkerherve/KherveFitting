@@ -161,7 +161,7 @@ def remove_peak(window):
         window.selected_peak_index = None
 
         # Call the method to clear and replot everything
-        clear_and_replot(window)
+        window.clear_and_replot()
 
         # Layout the updated panel
         window.panel.Layout()
@@ -399,7 +399,7 @@ def plot_background(window):
         # Check if peak 1 exists and tick/untick it
         if window.peak_params_grid.GetNumberRows() > 0:
             # Call the method to clear and replot everything
-            clear_and_replot(window)
+            window.clear_and_replot()
 
             # Update the legend
             window.update_legend()
@@ -799,7 +799,7 @@ def toggle_plot(window):
     window.show_fit = not window.show_fit
     sheet_name = window.sheet_combobox.GetValue()
     if window.show_fit:
-        clear_and_replot(window)
+        window.clear_and_replot()
     else:
         window.plot_manager.plot_data(window)
     window.canvas.draw_idle()

@@ -206,7 +206,7 @@ class PlotManager:
             else:
                 print(f"Warning: Empty data for peak {i + 1}. Skipping this peak.")
 
-        self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black', label='Raw Data')
+        self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=15, edgecolors='black', label='Raw Data')
 
         # Plot the background if it exists
         if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
