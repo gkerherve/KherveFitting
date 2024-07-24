@@ -671,11 +671,14 @@ class MyFrame(wx.Frame):
 
         colors = plt.cm.Set1(np.linspace(0, 1, 12))
 
+        # Get the peak label from the grid
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+
         # Plot the peak with the updated label
-        self.ax.plot(self.x_values, peak_y, label=f'{sheet_name} p{index + 1}')
+        self.ax.plot(self.x_values, peak_y, label=peak_label)
         # Uncomment the following line if you want to fill the area under the peak
         # self.ax.fill_between(self.x_values, self.background, peak_y,
-        #                      alpha=0.6, label=f'{sheet_name} p{index + 1}')
+        #                      alpha=0.6, label=peak_label)
 
     def update_constraint(self, event):
         row = event.GetRow()
