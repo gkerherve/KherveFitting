@@ -642,13 +642,7 @@ class MyFrame(wx.Frame):
             print(f"Unexpected error adding cross to peak: {e}")
             # You might want to show an error message to the user here
 
-    # I am not too sure if the extra IF in the next def does something
-    def remove_cross_from_peak2(self):
-        if hasattr(self, 'cross'):
-            self.cross.remove()
-            del self.cross
-        self.canvas.mpl_disconnect('motion_notify_event')
-        self.canvas.mpl_disconnect('button_release_event')
+
 
     def remove_cross_from_peak(self):
         if hasattr(self, 'cross'):
@@ -767,83 +761,7 @@ class MyFrame(wx.Frame):
         self.refresh_peak_params_grid()
 
     def update_peak_plot(self, x, y, remove_old_peaks=True):
-        if self.x_values is None or self.background is None:
-            print("Error: x_values or background is None. Cannot update peak plot.")
-            return
-
-        if x is None or y is None:
-            print("Error: x or y is None. Cannot update peak plot.")
-            return
-        if len(self.x_values) != len(self.background):
-            print(f"Warning: x_values and background have different lengths. "
-                  f"x: {len(self.x_values)}, background: {len(self.background)}")
-
-        if self.selected_peak_index is not None and 0 <= self.selected_peak_index < self.peak_params_grid.GetNumberRows() // 2:
-            row = self.selected_peak_index * 2
-            peak_label = self.peak_params_grid.GetCellValue(row, 1)  # Get the current label
-
-            # Get peak parameters from the grid
-            fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
-            lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
-            sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-            gamma = lg_ratio * sigma
-            bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
-
-            # Ensure height is not negative
-            y = max(y, 0)
-
-            # Create the selected peak using updated position and height
-            if self.selected_fitting_method == "Voigt":
-                peak_model = lmfit.models.VoigtModel()
-                amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
-                params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif self.selected_fitting_method == "Pseudo-Voigt":
-                peak_model = lmfit.models.PseudoVoigtModel()
-                amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
-                params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-            elif self.selected_fitting_method == "GL":
-                peak_model = lmfit.Model(gauss_lorentz)
-                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-            elif self.selected_fitting_method == "SGL":
-                peak_model = lmfit.Model(S_gauss_lorentz)
-                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-            else:  # Add GL which is the safe bet
-                peak_model = lmfit.Model(gauss_lorentz)
-                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-
-            peak_y = peak_model.eval(params, x=self.x_values) + self.background
-
-            # Update overall fit and residuals
-            self.update_overall_fit_and_residuals()
-
-            peak_label = self.peak_params_grid.GetCellValue(row, 1)  # Get peak label from grid
-
-            # Update the selected peak plot line
-            for line in self.ax.get_lines():
-                if line.get_label() == peak_label:
-                    line.set_ydata(peak_y)
-                    break
-            else:
-                self.ax.plot(self.x_values, peak_y, label=peak_label)
-
-            # Remove previous squares
-            for line in self.ax.get_lines():
-                if 'Selected Peak Center' in line.get_label():
-                    line.remove()
-
-            # Plot the new red square at the top center of the selected peak
-            self.ax.plot(x, y + bkg_y, 'bx', label=f'Selected Peak Center {self.selected_peak_index}', markersize=15,
-                         markerfacecolor='none')
-
-            # Update the grid with new values
-            self.peak_params_grid.SetCellValue(row, 2, f"{x:.2f}")  # Position
-            self.peak_params_grid.SetCellValue(row, 3, f"{y:.2f}")  # Height
-            self.peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")  # FWHM
-            self.peak_params_grid.SetCellValue(row, 5, f"{lg_ratio:.2f}")  # L/G ratio
-
-            self.canvas.draw_idle()
-
-
+        self.plot_manager.update_peak_plot(self, x, y, remove_old_peaks)
 
 
     def update_overall_fit_and_residuals(self):
@@ -976,6 +894,7 @@ class MyFrame(wx.Frame):
             height = float(self.peak_params_grid.GetCellValue(row, 3))
 
             self.update_peak_plot(position, height, remove_old_peaks=False)
+
 
 
 

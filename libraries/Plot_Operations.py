@@ -239,6 +239,83 @@ class PlotManager:
         # Draw the canvas
         self.canvas.draw_idle()
 
+    def update_peak_plot(self, window, x, y, remove_old_peaks=True):
+        if window.x_values is None or window.background is None:
+            print("Error: x_values or background is None. Cannot update peak plot.")
+            return
+
+        if x is None or y is None:
+            print("Error: x or y is None. Cannot update peak plot.")
+            return
+        if len(window.x_values) != len(window.background):
+            print(f"Warning: x_values and background have different lengths. "
+                  f"x: {len(window.x_values)}, background: {len(window.background)}")
+
+        if window.selected_peak_index is not None and 0 <= window.selected_peak_index < window.peak_params_grid.GetNumberRows() // 2:
+            row = window.selected_peak_index * 2
+            peak_label = window.peak_params_grid.GetCellValue(row, 1)  # Get the current label
+
+            # Get peak parameters from the grid
+            fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
+            lg_ratio = float(window.peak_params_grid.GetCellValue(row, 5))
+            sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+            gamma = lg_ratio * sigma
+            bkg_y = window.background[np.argmin(np.abs(window.x_values - x))]
+
+            # Ensure height is not negative
+            y = max(y, 0)
+
+            # Create the selected peak using updated position and height
+            if window.selected_fitting_method == "Voigt":
+                peak_model = lmfit.models.VoigtModel()
+                amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
+                params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
+            elif window.selected_fitting_method == "Pseudo-Voigt":
+                peak_model = lmfit.models.PseudoVoigtModel()
+                amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
+                params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
+            elif window.selected_fitting_method == "GL":
+                peak_model = lmfit.Model(gauss_lorentz)
+                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+            elif window.selected_fitting_method == "SGL":
+                peak_model = lmfit.Model(S_gauss_lorentz)
+                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+            else:  # Add GL which is the safe bet
+                peak_model = lmfit.Model(gauss_lorentz)
+                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+
+            peak_y = peak_model.eval(params, x=window.x_values) + window.background
+
+            # Update overall fit and residuals
+            window.update_overall_fit_and_residuals()
+
+            peak_label = window.peak_params_grid.GetCellValue(row, 1)  # Get peak label from grid
+
+            # Update the selected peak plot line
+            for line in self.ax.get_lines():
+                if line.get_label() == peak_label:
+                    line.set_ydata(peak_y)
+                    break
+            else:
+                self.ax.plot(window.x_values, peak_y, label=peak_label)
+
+            # Remove previous squares
+            for line in self.ax.get_lines():
+                if 'Selected Peak Center' in line.get_label():
+                    line.remove()
+
+            # Plot the new red square at the top center of the selected peak
+            self.ax.plot(x, y + bkg_y, 'bx', label=f'Selected Peak Center {window.selected_peak_index}', markersize=15,
+                         markerfacecolor='none')
+
+            # Update the grid with new values
+            window.peak_params_grid.SetCellValue(row, 2, f"{x:.2f}")  # Position
+            window.peak_params_grid.SetCellValue(row, 3, f"{y:.2f}")  # Height
+            window.peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")  # FWHM
+            window.peak_params_grid.SetCellValue(row, 5, f"{lg_ratio:.2f}")  # L/G ratio
+
+            self.canvas.draw_idle()
+
     @staticmethod
     def format_sheet_name(sheet_name):
         import re
