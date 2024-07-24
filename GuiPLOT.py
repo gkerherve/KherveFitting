@@ -1515,11 +1515,13 @@ class MyFrame(wx.Frame):
         self.canvas.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
         if hasattr(self, 'drag_release_cid'):
             self.canvas.mpl_disconnect(self.drag_release_cid)
+        self.drag_mode = False  # Ensure drag_mode is set to False
 
     def on_drag_release(self, event):
         if self.drag_mode:
             sheet_name = self.sheet_combobox.GetValue()
             self.plot_config.update_after_drag(self, sheet_name)
+            self.disable_drag()
             self.canvas.draw_idle()
 
     def adjust_plot_limits(self, axis, direction):
