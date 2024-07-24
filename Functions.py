@@ -18,7 +18,7 @@ from openpyxl import Workbook
 from ConfigFile import *
 from Save import *
 from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Plot_Operations import plot_data, clear_and_replot
+from libraries.Plot_Operations import plot_data, clear_and_replot, clear_plots
 
 
 # -------------------------------------------------------------------------------

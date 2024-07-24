@@ -102,17 +102,53 @@ def plot_data(window):
         wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
     pass
 
+
+def clear_plots(window):
+    # Remove all lines
+    while window.ax.lines:
+        window.ax.lines.pop(0).remove()
+
+    # Remove all scatter plots and other collections
+    for collection in window.ax.collections[:]:
+        collection.remove()
+
+    # Remove all patches (like filled areas)
+    for patch in window.ax.patches[:]:
+        patch.remove()
+
+    # Clear the legend
+    if window.ax.get_legend():
+        window.ax.get_legend().remove()
+
+    # Clear texts (except for the sheet name text)
+    for text in window.ax.texts[:]:
+        if not getattr(text, 'sheet_name_text', False):
+            text.remove()
+
+    # Clear images
+    for im in window.ax.images[:]:
+        im.remove()
+
+    # Reset the axis limits
+    window.ax.relim()
+    window.ax.autoscale_view()
+
 def clear_and_replot(window):
     sheet_name = window.sheet_combobox.GetValue()
     limits = window.plot_config.get_plot_limits(window, sheet_name)
 
-    window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-    window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
+
     if sheet_name not in window.Data['Core levels']:
         wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
         return
 
     core_level_data = window.Data['Core levels'][sheet_name]
+
+    # Clear existing plots
+    # clear_plots(window)
+
+    window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+    window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
     # Store existing sheet name text
     sheet_name_text = None
@@ -127,6 +163,7 @@ def clear_and_replot(window):
     window.ax.set_ylabel("Intensity (CTS)")
     window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
     window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
 
     # Plot the raw data
     x_values = np.array(core_level_data['B.E.'])
@@ -170,8 +207,9 @@ def clear_and_replot(window):
     # Update overall fit and residuals
     window.update_overall_fit_and_residuals()
 
-    # Update the legend
-    window.update_legend()
+    # Update the legend only if necessary
+    if window.ax.get_legend() is None or len(window.ax.get_legend().texts) != len(window.ax.lines):
+        window.update_legend()
 
     # Restore sheet name text or create new one if it doesn't exist
     if sheet_name_text is None:
