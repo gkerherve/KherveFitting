@@ -827,32 +827,6 @@ class MyFrame(wx.Frame):
                 except Exception as e:
                     print(f"Error during cross drag: {e}")
 
-    def on_cross_release2(self, event):
-        if event.inaxes and self.selected_peak_index is not None:
-            if event.button == 1:  # Left button release
-                if event.key == 'shift':  # SHIFT + left click release for FWHM change
-                    # Implement FWHM change logic here if needed
-                    pass
-                else:
-                    bkg_y = self.background[np.argmin(np.abs(self.x_values - event.xdata))]
-                    x = event.xdata
-                    y = max(event.ydata - bkg_y, 0)  # Ensure height is not negative
-
-
-                    self.update_peak_grid(self.selected_peak_index, x, y)
-
-                    # Remove old cross
-                    self.remove_cross_from_peak()
-
-                    # Create new cross at final position
-                    self.cross, = self.ax.plot(x, event.ydata, 'bx', markersize=15, markerfacecolor='none', picker=5)
-
-                    self.update_peak_plot(x, y)
-
-            self.canvas.draw_idle()
-            self.canvas.mpl_disconnect(self.motion_cid)
-            self.canvas.mpl_disconnect(self.release_cid)
-
     def on_cross_release(self, event):
         if event.inaxes and self.selected_peak_index is not None:
             if event.button == 1:  # Left button release
@@ -1087,13 +1061,16 @@ class MyFrame(wx.Frame):
 
     def is_mouse_on_peak(self, event):
         if self.selected_peak_index is not None:
+            '''
             row = self.selected_peak_index * 2
             x_peak = float(self.peak_params_grid.GetCellValue(row, 2))  # Position
             y_peak = float(self.peak_params_grid.GetCellValue(row, 3))  # Height
             bkg_y = self.background[np.argmin(np.abs(self.x_values - x_peak))]
             y_peak += bkg_y
-            distance = np.sqrt((event.xdata - x_peak) ** 2 + (event.ydata - y_peak) ** 2)
+            distance = np.sqrt((event.xdata - x_peak) ** 2 + (event.ydata - y_peak) ** 2)            
             return distance < 3000  # Smaller tolerance for more precise detection
+            '''
+            return True
         return False
 
     def update_peak_fwhm(self, x):
