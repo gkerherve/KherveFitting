@@ -369,117 +369,9 @@ class MyFrame(wx.Frame):
         self.ax.set_xlim([max(self.x_values), min(self.x_values)])
         self.ax.set_ylim([current_ylim[0], 1.11*max(self.y_values)])
 
-
-
         # Redraw the canvas
         self.canvas.draw_idle()
 
-
-    def add_peak_params2(self):
-        sheet_name = self.sheet_combobox.GetValue()
-        num_peaks = self.peak_params_grid.GetNumberRows() // 2
-
-        if num_peaks == 0:
-            residual = self.y_values - np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
-            print("Max peak = " + str(residual[np.argmax(residual)]))
-        else:
-            overall_fit = np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y']).copy()
-            for i in range(num_peaks):
-                row = i * 2
-                peak_x = float(self.peak_params_grid.GetCellValue(row, 2))
-                peak_y = float(self.peak_params_grid.GetCellValue(row, 3))
-                fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
-                lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
-                sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-                gamma = lg_ratio * sigma
-
-                if self.selected_fitting_method == "Voigt":
-                    peak_model = lmfit.models.VoigtModel()
-                    amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
-                    params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-                elif self.selected_fitting_method == "Pseudo-Voigt":
-                    peak_model = lmfit.models.PseudoVoigtModel()
-                    amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
-                    params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-                elif self.selected_fitting_method == "GL":
-                    peak_model = lmfit.Model(gauss_lorentz)
-                    params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-                elif self.selected_fitting_method == "SGL":
-                    peak_model = lmfit.Model(S_gauss_lorentz)
-                    params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-
-                overall_fit += peak_model.eval(params, x=self.x_values)
-
-            residual = self.y_values - overall_fit
-
-        bkg_y_AtMax = self.Data['Core levels'][sheet_name]['Background']['Bkg Y'][np.argmax(residual)]
-        peak_x = self.x_values[np.argmax(residual)]
-        peak_y = residual.max()
-
-        self.peak_count += 1
-
-        # Add new rows to the grid
-        self.peak_params_grid.AppendRows(2)
-        row = self.peak_params_grid.GetNumberRows() - 2
-
-        # Assign letter IDs
-        letter_id = chr(64 + self.peak_count)
-
-        # Set values in the grid
-        self.peak_params_grid.SetCellValue(row, 0, letter_id)
-        self.peak_params_grid.SetReadOnly(row, 0)
-        self.peak_params_grid.SetCellValue(row, 1, f"{sheet_name} p{self.peak_count}")
-        self.peak_params_grid.SetCellValue(row, 2, f"{peak_x:.2f}")
-        self.peak_params_grid.SetCellValue(row, 3, f"{peak_y:.2f}")
-        self.peak_params_grid.SetCellValue(row, 4, "1.6")
-        self.peak_params_grid.SetCellValue(row, 5, "0.3")
-        self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
-
-        # Set constraint values
-        self.peak_params_grid.SetReadOnly(row + 1, 0)
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 0, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 1, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 2, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 3, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 4, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 5, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 6, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 7, wx.Colour(230, 230, 230))
-        self.peak_params_grid.SetCellBackgroundColour(row + 1, 8, wx.Colour(230, 230, 230))
-
-        self.peak_params_grid.SetCellValue(row + 1, 2, "0,1e3")
-        self.peak_params_grid.SetCellValue(row + 1, 3, "0,1e7")
-        self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
-        self.peak_params_grid.SetCellValue(row + 1, 5, "0,0.5")
-        self.peak_params_grid.ForceRefresh()
-
-        # Set selected_peak_index to the index of the new peak
-        self.selected_peak_index = num_peaks
-
-        # Update the Data structure with the new peak information
-        if 'Fitting' not in self.Data['Core levels'][sheet_name]:
-            self.Data['Core levels'][sheet_name]['Fitting'] = {}
-        if 'Peaks' not in self.Data['Core levels'][sheet_name]['Fitting']:
-            self.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = {}
-
-        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][sheet_name + f" p{self.peak_count}"] = {
-            'Position': peak_x,
-            'Height': peak_y,
-            'FWHM': 1.6,
-            'L/G': 0.3,
-            'Area': '',
-            'Constraints': {
-                'Position': "0,1e3",
-                'Height': "0,1e7",
-                'FWHM': "0,5",
-                'L/G': "0,1"
-            }
-        }
-        print(self.Data)
-        self.show_hide_vlines()
-
-        # Call the method to clear and replot everything
-        clear_and_replot(self)
 
     def add_peak_params(self):
         sheet_name = self.sheet_combobox.GetValue()
@@ -588,7 +480,7 @@ class MyFrame(wx.Frame):
         self.show_hide_vlines()
 
         # Call the method to clear and replot everything
-        clear_and_replot(self)
+        self.clear_and_replot()
 
     def get_peak_model(self, peak_x, peak_y, fwhm, lg_ratio):
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
@@ -640,46 +532,6 @@ class MyFrame(wx.Frame):
     def number_to_letter(n):
         return chr(65 + n)  # 65 is the ASCII value for 'A'
 
-    def plot_peak2(self, x, y, index):
-        row = index * 2  # Each peak uses two rows in the grid
-        fwhm = float(self.peak_params_grid.GetCellValue(row, 4))  # FWHM
-        lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))  # L/G
-        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-        gamma = lg_ratio * sigma
-        bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
-
-        # Create the peak using updated position and height
-        if self.selected_fitting_method == "Voigt":
-            peak_model = lmfit.models.VoigtModel()
-            # Convert height to amplitude
-            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
-            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-        elif self.selected_fitting_method == "Pseudo-Voigt":
-            peak_model = lmfit.models.PseudoVoigtModel()
-            # Convert height to amplitude
-            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
-            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-        elif self.selected_fitting_method == "GL":
-            peak_model = lmfit.Model(gauss_lorentz)
-            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-        elif self.selected_fitting_method == "SGL":
-            peak_model = lmfit.Model(S_gauss_lorentz)
-            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-
-        peak_y = peak_model.eval(params, x=self.x_values) + self.background
-        sheet_name = self.sheet_combobox.GetValue()
-
-        colors = plt.cm.Set1(np.linspace(0, 1, 12))
-
-        # Get the peak label from the grid
-        peak_label = self.peak_params_grid.GetCellValue(row, 1)
-
-        # Plot the peak with the updated label
-        self.ax.plot(self.x_values, peak_y)
-        # Uncomment the following line if you want to fill the area under the peak
-        self.ax.fill_between(self.x_values, self.background, peak_y,
-                              alpha=0.3, label=peak_label)
-
     def plot_peak(self, x, y, index):
         row = index * 2
         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
@@ -701,6 +553,12 @@ class MyFrame(wx.Frame):
             self.sheet_combobox.GetValue()
         )
 
+    def clear_and_replot(self):
+        self.plot_manager.clear_and_replot(self)
+
+    def plot_data(self):
+        self.plot_manager.plot_data(self)
+
     def update_constraint(self, event):
         row = event.GetRow()
         col = event.GetCol()
@@ -716,7 +574,7 @@ class MyFrame(wx.Frame):
             if row % 2 == 0:  # Assuming peak parameters are in even rows and constraints in odd rows
                 # Removing any cross that were there
                 self.selected_peak_index = None
-                clear_and_replot(self)
+                self.clear_and_replot()
 
                 peak_index = row // 2
                 self.selected_peak_index = peak_index
@@ -736,14 +594,14 @@ class MyFrame(wx.Frame):
     # END -----------------------------------------------------------------------
 
     # Ensure the following method exists to get the peak index from a checkbox
-    def get_peak_index_from_checkbox(self, checkbox):
-        for i, peak in enumerate(self.peak_params):
-            #NOT TOO SURE IF IT REQUIRED
-            # row = i * 2  # Assuming each peak has 2 rows (peak and constraints)
-            # if peak["peak_checkbox"].GetValue() or self.peak_params_grid.IsInSelection(row, 0):
-            if peak["peak_checkbox"] == checkbox:
-                return i
-        return None
+    # def get_peak_index_from_checkbox(self, checkbox):
+    #     for i, peak in enumerate(self.peak_params):
+    #         #NOT TOO SURE IF IT REQUIRED
+    #         # row = i * 2  # Assuming each peak has 2 rows (peak and constraints)
+    #         # if peak["peak_checkbox"].GetValue() or self.peak_params_grid.IsInSelection(row, 0):
+    #         if peak["peak_checkbox"] == checkbox:
+    #             return i
+    #     return None
 
     # Ensure the following methods exist to handle adding, removing, and dragging the cross
     def add_cross_to_peak(self, index):
@@ -829,7 +687,7 @@ class MyFrame(wx.Frame):
                         self.peak_params_grid.SetCellValue(row, 2, f"{new_x}")
                         self.peak_params_grid.SetCellValue(row, 3, f"{new_height}")
 
-                        clear_and_replot(self)
+                        self.clear_and_replot()
 
                         self.peak_params_grid.ForceRefresh()
                         self.canvas.draw_idle()
@@ -1292,7 +1150,7 @@ class MyFrame(wx.Frame):
                 pass
 
             self.highlight_selected_peak()
-            clear_and_replot(self)
+            self.clear_and_replot()
             self.canvas.draw_idle()
 
     def on_key_press_global(self, event):

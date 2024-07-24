@@ -10,7 +10,7 @@ import openpyxl
 from ConfigFile import add_core_level_Data
 # from Functions import on_sheet_selected
 # from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Plot_Operations import clear_and_replot
+
 
 
 def save_data(window, data):
@@ -293,7 +293,7 @@ def refresh_sheets(window, on_sheet_selected_func):
 
         # Refresh the plot
         window.plot_manager.plot_data(window)
-        clear_and_replot(window)
+        window.clear_and_replot()
 
         wx.MessageBox(f"Sheets refreshed. Total sheets: {len(sheet_names)}", "Success", wx.OK | wx.ICON_INFORMATION)
 
