@@ -1483,19 +1483,7 @@ class MyFrame(wx.Frame):
                 selected_rows.append(row)
         return selected_rows
 
-    def toggle_legend(self):
-        legend = self.ax.get_legend()
-        if legend:
-            legend.set_visible(not legend.get_visible())
-        self.canvas.draw_idle()
 
-
-
-    def toggle_fitting_results2(self):
-        if hasattr(self, 'fitting_results_text'):
-            self.fitting_results_visible = not self.fitting_results_visible
-            self.fitting_results_text.set_visible(self.fitting_results_visible)
-            self.canvas.draw_idle()
 
 
 

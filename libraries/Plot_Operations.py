@@ -516,6 +516,12 @@ class PlotManager:
         )
         self.fitting_results_text.set_visible(self.fitting_results_visible)
 
+    def toggle_legend(self):
+        legend = self.ax.get_legend()
+        if legend:
+            legend.set_visible(not legend.get_visible())
+        self.canvas.draw_idle()
+
     # Used by the defs above
     @staticmethod
     def format_sheet_name(sheet_name):

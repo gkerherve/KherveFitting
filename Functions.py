@@ -563,7 +563,7 @@ def create_menu(window):
     window.Bind(wx.EVT_MENU, lambda event: toggle_plot(window), ToggleFitting_item)
 
     ToggleLegend_item = view_menu.Append(wx.NewId(), "Toggle Legend")
-    window.Bind(wx.EVT_MENU, lambda event: window.toggle_legend(), ToggleLegend_item)
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_legend(), ToggleLegend_item)
 
     ToggleFit_item = view_menu.Append(wx.NewId(), "Toggle Fit Results")
     window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_fitting_results(), ToggleFit_item)
@@ -687,7 +687,7 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
     window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
     # window.Bind(wx.EVT_TOOL, lambda event: window.resize_plot(), resize_plot_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.toggle_legend(), toggle_legend_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_legend(), toggle_legend_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_fitting_results(), toggle_fit_results_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(), toggle_residuals_tool)
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
