@@ -566,10 +566,10 @@ def create_menu(window):
     window.Bind(wx.EVT_MENU, lambda event: window.toggle_legend(), ToggleLegend_item)
 
     ToggleFit_item = view_menu.Append(wx.NewId(), "Toggle Fit Results")
-    window.Bind(wx.EVT_MENU, lambda event: window.toggle_fitting_results(), ToggleFit_item)
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_fitting_results(), ToggleFit_item)
 
     ToggleRes_item = view_menu.Append(wx.NewId(), "Toggle Residuals")
-    window.Bind(wx.EVT_MENU, lambda event: window.toggle_residuals(), ToggleRes_item)
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_residuals(), ToggleRes_item)
 
     Area_item = tools_menu.Append(wx.NewId(), "Calculate Area")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
@@ -688,8 +688,8 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
     # window.Bind(wx.EVT_TOOL, lambda event: window.resize_plot(), resize_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.toggle_legend(), toggle_legend_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.toggle_fitting_results(), toggle_fit_results_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.toggle_residuals(), toggle_residuals_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_fitting_results(), toggle_fit_results_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(), toggle_residuals_tool)
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
     window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
     window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
@@ -1507,18 +1507,9 @@ def fit_peaks(window, peak_params_grid):
                 # Add text annotations with fit results
                 std_value_int = int(window.noise_std_value) if hasattr(window, 'noise_std_value') else "N/A"
                 nfev_used = result.nfev
-                fitting_results_text = window.ax.text(
-                    0.02, 0.04,
-                    f'Noise STD: {std_value_int} cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {nfev_used}',
-                    transform=window.ax.transAxes,
-                    fontsize=9,
-                    verticalalignment='bottom',
-                    horizontalalignment='left',
-                    visible=False,
-                    bbox=dict(facecolor='white', edgecolor='grey', alpha=0.7),
-                )
 
-                window.fitting_results_text = fitting_results_text
+                window.plot_manager.set_fitting_results_text(f'Noise STD: {std_value_int}'
+                                                             f' cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {nfev_used}')
                 window.residuals_line = residuals_line
 
                 # Restore or add sheet name text

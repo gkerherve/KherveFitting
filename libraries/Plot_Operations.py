@@ -15,6 +15,8 @@ class PlotManager:
         self.ax = ax
         self.canvas = canvas
         self.cross = None
+        self.fitting_results_text = None
+        self.fitting_results_visible = False
 
     def plot_peak(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
         row = peak_params['row']
@@ -480,6 +482,39 @@ class PlotManager:
         except Exception as e:
             print(f"Unexpected error adding cross to peak: {e}")
             # You might want to show an error message to the user here
+
+    def resize_plot(self, window):
+        sheet_name = window.sheet_combobox.GetValue()
+        limits = window.plot_config.get_plot_limits(window, sheet_name)
+        self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
+        self.canvas.draw_idle()
+
+    def toggle_residuals(self):
+        for line in self.ax.get_lines():
+            if line.get_label().startswith('Residuals'):
+                line.set_visible(not line.get_visible())
+        self.canvas.draw_idle()
+
+    def toggle_fitting_results(self):
+        if self.fitting_results_text:
+            self.fitting_results_visible = not self.fitting_results_visible
+            self.fitting_results_text.set_visible(self.fitting_results_visible)
+            self.canvas.draw_idle()
+
+    def set_fitting_results_text(self, text):
+        # Method to set or update the fitting results text
+        if self.fitting_results_text:
+            self.fitting_results_text.remove()
+        self.fitting_results_text = self.ax.text(
+            0.02, 0.04, text,
+            transform=self.ax.transAxes,
+            fontsize=9,
+            verticalalignment='bottom',
+            horizontalalignment='left',
+            bbox=dict(facecolor='white', edgecolor='grey', alpha=0.7),
+        )
+        self.fitting_results_text.set_visible(self.fitting_results_visible)
 
     # Used by the defs above
     @staticmethod

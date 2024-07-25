@@ -86,7 +86,7 @@ class MyFrame(wx.Frame):
         # Initial fitting method
         self.selected_fitting_method = "GL"
 
-        self.fitting_results_visible = False
+        # self.fitting_results_visible = False
 
         self.background_method = "Shirley"
         self.offset_h = 0
@@ -363,14 +363,7 @@ class MyFrame(wx.Frame):
             wx.MessageBox(f'Sheet renamed to "{new_sheet_name}"', "Info", wx.OK | wx.ICON_INFORMATION)
 
 
-    def resize_plot(self):
-        current_ylim = self.ax.get_ylim()
 
-        self.ax.set_xlim([max(self.x_values), min(self.x_values)])
-        self.ax.set_ylim([current_ylim[0], 1.11*max(self.y_values)])
-
-        # Redraw the canvas
-        self.canvas.draw_idle()
 
 
     def add_peak_params(self):
@@ -813,11 +806,6 @@ class MyFrame(wx.Frame):
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
 
-
-
-
-
-
     def show_hide_vlines(self):
         background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected
         noise_lines_visible = self.noise_analysis_window is not None and self.noise_tab_selected
@@ -848,10 +836,6 @@ class MyFrame(wx.Frame):
             '''
             return True
         return False
-
-
-
-
 
 
     # GET PEAK INDEX ------------------------------------------------------------
@@ -1216,7 +1200,7 @@ class MyFrame(wx.Frame):
     def on_zoom_out(self, event):
         sheet_name = self.sheet_combobox.GetValue()
         self.plot_config.reset_plot_limits(self, sheet_name)
-        self.resize_plot()
+        self.plot_manager.resize_plot(self)
         if self.zoom_rect:
             self.zoom_rect.set_active(False)
             self.zoom_rect = None
@@ -1507,17 +1491,12 @@ class MyFrame(wx.Frame):
 
 
 
-    def toggle_fitting_results(self):
+    def toggle_fitting_results2(self):
         if hasattr(self, 'fitting_results_text'):
             self.fitting_results_visible = not self.fitting_results_visible
             self.fitting_results_text.set_visible(self.fitting_results_visible)
             self.canvas.draw_idle()
 
-    def toggle_residuals(self):
-        for line in self.ax.get_lines():
-            if line.get_label().startswith('Residuals'):
-                line.set_visible(not line.get_visible())
-        self.canvas.draw_idle()
 
 
     def deselect_all_peaks(self):
@@ -1557,15 +1536,8 @@ class MyFrame(wx.Frame):
     def set_offset_l(self, value):
         self.offset_l = value
 
-    def adjust_plot_limits(self, axis, direction):
-        self.plot_config.adjust_plot_limits(self, axis, direction)
 
-    def resize_plot(self):
-        sheet_name = self.sheet_combobox.GetValue()
-        limits = self.plot_config.get_plot_limits(self, sheet_name)
-        self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-        self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-        self.canvas.draw_idle()
+
 
 
     def get_data_for_save(self):

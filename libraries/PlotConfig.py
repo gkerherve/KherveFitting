@@ -81,6 +81,7 @@ class PlotConfig:
         window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
         window.canvas.draw_idle()
 
+    # This def is also in PLotManager
     def resize_plot(self, window):
         sheet_name = window.sheet_combobox.GetValue()
         if sheet_name not in self.plot_limits:
