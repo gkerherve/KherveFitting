@@ -503,34 +503,106 @@ class MyFrame(wx.Frame):
 
         return peak_model, params
 
-    def update_legend(self):
-        # Retrieve the current handles and labels
-        handles, labels = self.ax.get_legend_handles_labels()
 
-        # Define the desired order of legend entries
-        legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
-
-        # Collect peak labels
-        sheet_name = self.sheet_combobox.GetValue()
-        num_peaks = self.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-        peak_labels = [f"{sheet_name} p{i + 1}" for i in range(num_peaks)]
-
-        # Ensure peaks are added to the end of the order
-        legend_order += peak_labels
-
-        # Create a list of (handle, label) tuples in the desired order
-        ordered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in legend_order]
-        ordered_handles_labels.sort(
-            key=lambda x: legend_order.index(x[1]) if x[1] in legend_order else len(legend_order))
-        handles, labels = zip(*ordered_handles_labels) if ordered_handles_labels else ([], [])
-
-        # Update the legend
-        self.ax.legend(handles, labels)
-        self.ax.legend(loc='upper left')
-        self.canvas.draw_idle()
 
     def number_to_letter(n):
         return chr(65 + n)  # 65 is the ASCII value for 'A'
+
+    # --------------------------------------------------------------------------------------------------
+    # OPEN WINDOW --------------------------------------------------------------------------------------
+    def on_open_background_window(self):
+        if not hasattr(self, 'background_window') or not self.background_window:
+            self.background_window = BackgroundWindow(self)
+            self.background_tab_selected = True
+            self.background_window.Bind(wx.EVT_CLOSE, self.on_background_window_close)
+        self.background_window.Show()
+        self.background_window.Raise()
+
+    def on_background_window_close(self, event):
+        self.background_tab_selected = False
+        self.show_hide_vlines()
+        self.background_window = None
+        event.Skip()
+
+    def enable_background_interaction(self):
+        self.background_tab_selected = True
+        self.show_hide_vlines()
+
+    def disable_background_interaction(self):
+        self.vline1 = None
+        self.vline2 = None
+        self.vline3 = None
+        self.vline4 = None
+        self.background_tab_selected = False
+        self.show_hide_vlines()
+
+    def on_open_fitting_window(self):
+        if self.fitting_window is None or not self.fitting_window:
+            self.fitting_window = FittingWindow(self)
+            self.background_tab_selected = True
+            self.peak_fitting_tab_selected = False
+
+            # Set the position of the fitting window relative to the main window
+            main_pos = self.GetPosition()
+            main_size = self.GetSize()
+            fitting_size = self.fitting_window.GetSize()
+
+            # Calculate the position to center the fitting window on the main window
+            x = main_pos.x + (main_size.width - fitting_size.width) // 2
+            y = main_pos.y + (main_size.height - fitting_size.height) // 2
+
+            self.fitting_window.SetPosition((x, y))
+
+            self.show_hide_vlines()
+            self.deselect_all_peaks()
+
+        self.fitting_window.Show()
+        self.fitting_window.Raise()  # Bring the window to the front
+
+    def on_open_noise_analysis_window(self, event):
+        if self.noise_analysis_window is None or not self.noise_analysis_window:
+            self.noise_analysis_window = NoiseAnalysisWindow(self)
+            self.noise_tab_selected = True
+            self.show_hide_vlines()
+
+        # Get the position and size of the main window
+        main_pos = self.GetPosition()
+        main_size = self.GetSize()
+
+        # Get the size of the noise analysis windo
+        noise_size = self.noise_analysis_window.GetSize()
+
+        # Calculate the position to center the noise analysis window on the main windo
+        x = main_pos.x + (main_size.width - noise_size.width) // 2
+        y = main_pos.y + (main_size.height - noise_size.height) // 2
+
+        # Set the position of the noise analysis window
+        self.noise_analysis_window.SetPosition((x, y))
+
+        self.noise_analysis_window.Show()
+        self.noise_analysis_window.Raise()
+
+        # Ensure the noise window stays on top
+        self.noise_analysis_window.SetWindowStyle(self.noise_analysis_window.GetWindowStyle() | wx.STAY_ON_TOP)
+
+    def noise_window_closed(self):
+        self.noise_tab_selected = False
+        self.show_hide_vlines()
+
+
+    # END OPEN WINDOW ----------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------------------------------
+    # MOVE TO PLOT OPERATIONS --------------------------------------------------------------------------
+    def clear_and_replot(self):
+        self.plot_manager.clear_and_replot(self)
+
+    def plot_data(self):
+        self.plot_manager.plot_data(self)
+
+    def update_overall_fit_and_residuals(self):
+        self.plot_manager.update_overall_fit_and_residuals(self)
 
     def plot_peak(self, x, y, index):
         row = index * 2
@@ -553,11 +625,31 @@ class MyFrame(wx.Frame):
             self.sheet_combobox.GetValue()
         )
 
-    def clear_and_replot(self):
-        self.plot_manager.clear_and_replot(self)
+    def update_peak_plot(self, x, y, remove_old_peaks=True):
+        self.plot_manager.update_peak_plot(self, x, y, remove_old_peaks)
 
-    def plot_data(self):
-        self.plot_manager.plot_data(self)
+    def update_peak_fwhm(self, x):
+        self.plot_manager.update_peak_fwhm(self, x)
+
+    def update_legend(self):
+        self.plot_manager.update_legend(self)
+
+    # END MOVE TO PLOT OPERATIONS ----------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------
+
+
+
+    # --------------------------------------------------------------------------------------------------
+    # MOVE TO PLOT CONFIG-------------------------------------------------------------------------------
+
+    def adjust_plot_limits(self, axis, direction):
+        self.plot_config.adjust_plot_limits(self, axis, direction)
+
+
+    # END MOVE TO PLOT CONFIG --------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------------------------
+
+
 
     def update_constraint(self, event):
         row = event.GetRow()
@@ -760,12 +852,10 @@ class MyFrame(wx.Frame):
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
 
-    def update_peak_plot(self, x, y, remove_old_peaks=True):
-        self.plot_manager.update_peak_plot(self, x, y, remove_old_peaks)
 
 
-    def update_overall_fit_and_residuals(self):
-        self.plot_manager.update_overall_fit_and_residuals(self)
+
+
 
     def show_hide_vlines(self):
         background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected
@@ -798,29 +888,7 @@ class MyFrame(wx.Frame):
             return True
         return False
 
-    def update_peak_fwhm(self, x):
-        if self.initial_fwhm is not None and self.initial_x is not None:
-            row = self.selected_peak_index * 2
-            peak_center = float(self.peak_params_grid.GetCellValue(row, 2))
-            peak_label = self.peak_params_grid.GetCellValue(row, 1)
 
-            delta_x = x - self.initial_x
-            new_fwhm = max(self.initial_fwhm + delta_x * 1, 0.3)  # Ensure minimum FWHM of 0.3 eV
-
-            self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")
-
-            # Update FWHM in window.Data
-            sheet_name = self.sheet_combobox.GetValue()
-            if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
-                sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
-                peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-                if peak_label in peaks:
-                    peaks[peak_label]['FWHM'] = new_fwhm
-
-            position = float(self.peak_params_grid.GetCellValue(row, 2))
-            height = float(self.peak_params_grid.GetCellValue(row, 3))
-
-            self.update_peak_plot(position, height, remove_old_peaks=False)
 
 
 
@@ -1125,36 +1193,12 @@ class MyFrame(wx.Frame):
 
 
 
-    def on_open_background_window(self):
-        if not hasattr(self, 'background_window') or not self.background_window:
-            self.background_window = BackgroundWindow(self)
-            self.background_tab_selected = True
-            self.background_window.Bind(wx.EVT_CLOSE, self.on_background_window_close)
-        self.background_window.Show()
-        self.background_window.Raise()
 
-    def on_background_window_close(self, event):
-        self.background_tab_selected = False
-        self.show_hide_vlines()
-        self.background_window = None
-        event.Skip()
-
-    def enable_background_interaction(self):
-        self.background_tab_selected = True
-        self.show_hide_vlines()
-
-    def disable_background_interaction(self):
-        self.vline1 = None
-        self.vline2 = None
-        self.vline3 = None
-        self.vline4 = None
-        self.background_tab_selected = False
-        self.show_hide_vlines()
 
     # SHALL NOT BE USED
-    def on_radio_box(self, event):
-        # Function to handle radio box selection change
-        self.canvas.draw_idle()
+    # def on_radio_box(self, event):
+    #     # Function to handle radio box selection change
+    #     self.canvas.draw_idle()
 
 
     def on_zoom_in_tool(self, event):
@@ -1247,8 +1291,7 @@ class MyFrame(wx.Frame):
             self.disable_drag()
             self.canvas.draw_idle()
 
-    def adjust_plot_limits(self, axis, direction):
-        self.plot_config.adjust_plot_limits(self, axis, direction)
+
 
 
     def export_results(self):
@@ -1533,58 +1576,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.ForceRefresh()
         self.results_grid.ForceRefresh()
 
-    def on_open_fitting_window(self):
-        if self.fitting_window is None or not self.fitting_window:
-            self.fitting_window = FittingWindow(self)
-            self.background_tab_selected = True
-            self.peak_fitting_tab_selected = False
 
-            # Set the position of the fitting window relative to the main window
-            main_pos = self.GetPosition()
-            main_size = self.GetSize()
-            fitting_size = self.fitting_window.GetSize()
-
-            # Calculate the position to center the fitting window on the main window
-            x = main_pos.x + (main_size.width - fitting_size.width) // 2
-            y = main_pos.y + (main_size.height - fitting_size.height) // 2
-
-            self.fitting_window.SetPosition((x, y))
-
-            self.show_hide_vlines()
-            self.deselect_all_peaks()
-
-        self.fitting_window.Show()
-        self.fitting_window.Raise()  # Bring the window to the front
-
-    def on_open_noise_analysis_window(self, event):
-        if self.noise_analysis_window is None or not self.noise_analysis_window:
-            self.noise_analysis_window = NoiseAnalysisWindow(self)
-            self.noise_tab_selected = True
-            self.show_hide_vlines()
-
-        # Get the position and size of the main window
-        main_pos = self.GetPosition()
-        main_size = self.GetSize()
-
-        # Get the size of the noise analysis windo
-        noise_size = self.noise_analysis_window.GetSize()
-
-        # Calculate the position to center the noise analysis window on the main windo
-        x = main_pos.x + (main_size.width - noise_size.width) // 2
-        y = main_pos.y + (main_size.height - noise_size.height) // 2
-
-        # Set the position of the noise analysis window
-        self.noise_analysis_window.SetPosition((x, y))
-
-        self.noise_analysis_window.Show()
-        self.noise_analysis_window.Raise()
-
-        # Ensure the noise window stays on top
-        self.noise_analysis_window.SetWindowStyle(self.noise_analysis_window.GetWindowStyle() | wx.STAY_ON_TOP)
-
-    def noise_window_closed(self):
-        self.noise_tab_selected = False
-        self.show_hide_vlines()
 
     def set_max_iterations(self, value):
         self.max_iterations = value
