@@ -108,7 +108,7 @@ def clear_and_replot2(window):
     window.update_overall_fit_and_residuals()
 
     # Update the legend
-    window.update_legend()
+    window.plot_manager.update_legend()
 
     # Draw the canvas
     window.canvas.draw_idle()
@@ -402,7 +402,7 @@ def plot_background(window):
             window.clear_and_replot()
 
             # Update the legend
-            window.update_legend()
+            window.plot_manager.update_legend()
 
         window.ax.legend(loc='upper left')
         window.canvas.draw()
@@ -867,6 +867,7 @@ def open_xlsx_file(window):
                 # Use on_sheet_selected to update peak parameter grid and plot
                 event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
                 event.SetString(first_sheet)
+                window.plot_config.plot_limits.clear()
                 on_sheet_selected_wrapper(window,event)
 
                 print("open_xlsx_file function completed successfully")

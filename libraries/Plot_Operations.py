@@ -221,7 +221,7 @@ class PlotManager:
 
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
-            window.update_legend()
+            window.plot_manager.update_legend(window)
 
         # Restore sheet name text or create new one if it doesn't exist
         if sheet_name_text is None:
@@ -421,32 +421,6 @@ class PlotManager:
 
             self.update_peak_plot(window, position, height, remove_old_peaks=False)
 
-    def update_legend(self, window):
-        # Retrieve the current handles and labels
-        handles, labels = self.ax.get_legend_handles_labels()
-
-        # Define the desired order of legend entries
-        legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
-
-        # Collect peak labels
-        sheet_name = window.sheet_combobox.GetValue()
-        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-        peak_labels = [f"{sheet_name} p{i + 1}" for i in range(num_peaks)]
-
-        # Ensure peaks are added to the end of the order
-        legend_order += peak_labels
-
-        # Create a list of (handle, label) tuples in the desired order
-        ordered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in legend_order]
-        ordered_handles_labels.sort(
-            key=lambda x: legend_order.index(x[1]) if x[1] in legend_order else len(legend_order))
-        handles, labels = zip(*ordered_handles_labels) if ordered_handles_labels else ([], [])
-
-        # Update the legend
-        self.ax.legend(handles, labels)
-        self.ax.legend(loc='upper left')
-        self.canvas.draw_idle()
-
     def add_cross_to_peak(self, window, index):
         try:
             row = index * 2  # Each peak uses two rows in the grid
@@ -483,12 +457,12 @@ class PlotManager:
             print(f"Unexpected error adding cross to peak: {e}")
             # You might want to show an error message to the user here
 
-    def resize_plot(self, window):
-        sheet_name = window.sheet_combobox.GetValue()
-        limits = window.plot_config.get_plot_limits(window, sheet_name)
-        self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-        self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-        self.canvas.draw_idle()
+    # def resize_plot(self, window):
+    #     sheet_name = window.sheet_combobox.GetValue()
+    #     limits = window.plot_config.get_plot_limits(window, sheet_name)
+    #     self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+    #     self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
+    #     self.canvas.draw_idle()
 
     def toggle_residuals(self):
         for line in self.ax.get_lines():
@@ -520,6 +494,32 @@ class PlotManager:
         legend = self.ax.get_legend()
         if legend:
             legend.set_visible(not legend.get_visible())
+        self.canvas.draw_idle()
+
+    def update_legend(self, window):
+        # Retrieve the current handles and labels
+        handles, labels = self.ax.get_legend_handles_labels()
+
+        # Define the desired order of legend entries
+        legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
+
+        # Collect peak labels
+        sheet_name = window.sheet_combobox.GetValue()
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
+        peak_labels = [f"{sheet_name} p{i + 1}" for i in range(num_peaks)]
+
+        # Ensure peaks are added to the end of the order
+        legend_order += peak_labels
+
+        # Create a list of (handle, label) tuples in the desired order
+        ordered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in legend_order]
+        ordered_handles_labels.sort(
+            key=lambda x: legend_order.index(x[1]) if x[1] in legend_order else len(legend_order))
+        handles, labels = zip(*ordered_handles_labels) if ordered_handles_labels else ([], [])
+
+        # Update the legend
+        self.ax.legend(handles, labels)
+        self.ax.legend(loc='upper left')
         self.canvas.draw_idle()
 
     # Used by the defs above

@@ -624,8 +624,6 @@ class MyFrame(wx.Frame):
     def update_peak_fwhm(self, x):
         self.plot_manager.update_peak_fwhm(self, x)
 
-    def update_legend(self):
-        self.plot_manager.update_legend(self)
 
     # END MOVE TO PLOT OPERATIONS ----------------------------------------------------------------------
     # --------------------------------------------------------------------------------------------------
@@ -1200,7 +1198,7 @@ class MyFrame(wx.Frame):
     def on_zoom_out(self, event):
         sheet_name = self.sheet_combobox.GetValue()
         self.plot_config.reset_plot_limits(self, sheet_name)
-        self.plot_manager.resize_plot(self)
+        self.plot_config.resize_plot(self)
         if self.zoom_rect:
             self.zoom_rect.set_active(False)
             self.zoom_rect = None
