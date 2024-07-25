@@ -696,45 +696,6 @@ class MyFrame(wx.Frame):
     #     return None
 
     # Ensure the following methods exist to handle adding, removing, and dragging the cross
-    def add_cross_to_peak(self, index):
-        try:
-            row = index * 2  # Each peak uses two rows in the grid
-            peak_x = float(self.peak_params_grid.GetCellValue(row, 2))  # Position
-            peak_y = float(self.peak_params_grid.GetCellValue(row, 3))  # Height
-
-            # Find the closest background value
-            closest_index = np.argmin(np.abs(self.x_values - peak_x))
-            bkg_y = self.background[closest_index]
-
-            # Add background to peak height
-            peak_y += bkg_y
-
-            # print(f"CROSS: x={peak_x:.2f}, y={peak_y:.2f}, background={bkg_y:.2f}")
-
-            # Remove existing cross if it exists
-            if hasattr(self, 'cross'):
-                self.cross.remove()
-
-            # Plot new cross
-            self.cross, = self.ax.plot(peak_x, peak_y, 'bx', markersize=15, markerfacecolor='none', picker=5)
-
-            # Connect event handlers
-            self.canvas.mpl_disconnect('motion_notify_event')  # Disconnect existing handlers
-            self.canvas.mpl_disconnect('button_release_event')
-            self.motion_notify_id = self.canvas.mpl_connect('motion_notify_event', self.on_cross_drag)
-            self.button_release_id = self.canvas.mpl_connect('button_release_event', self.on_cross_release)
-
-            # Redraw canvas
-            self.canvas.draw_idle()
-
-        except ValueError as e:
-            print(f"Error adding cross to peak: {e}")
-            # You might want to show an error message to the user here
-        except Exception as e:
-            print(f"Unexpected error adding cross to peak: {e}")
-            # You might want to show an error message to the user here
-
-
 
     def remove_cross_from_peak(self):
         if hasattr(self, 'cross'):

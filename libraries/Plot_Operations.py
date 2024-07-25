@@ -14,6 +14,7 @@ class PlotManager:
     def __init__(self, ax, canvas):
         self.ax = ax
         self.canvas = canvas
+        self.cross = None
 
     def plot_peak(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
         row = peak_params['row']
@@ -121,7 +122,7 @@ class PlotManager:
 
             # Check if a peak is selected and add cross
             if window.selected_peak_index is not None:
-                window.add_cross_to_peak(window.selected_peak_index)
+                window.plot_manager.add_cross_to_peak(window, window.selected_peak_index)
 
             # Remove any existing sheet name text
             for txt in self.ax.texts:
@@ -443,6 +444,42 @@ class PlotManager:
         self.ax.legend(handles, labels)
         self.ax.legend(loc='upper left')
         self.canvas.draw_idle()
+
+    def add_cross_to_peak(self, window, index):
+        try:
+            row = index * 2  # Each peak uses two rows in the grid
+            peak_x = float(window.peak_params_grid.GetCellValue(row, 2))  # Position
+            peak_y = float(window.peak_params_grid.GetCellValue(row, 3))  # Height
+
+            # Find the closest background value
+            closest_index = np.argmin(np.abs(window.x_values - peak_x))
+            bkg_y = window.background[closest_index]
+
+            # Add background to peak height
+            peak_y += bkg_y
+
+            # Remove existing cross if it exists
+            if self.cross:
+                self.cross.remove()
+
+            # Plot new cross
+            self.cross, = self.ax.plot(peak_x, peak_y, 'bx', markersize=15, markerfacecolor='none', picker=5)
+
+            # Connect event handlers
+            self.canvas.mpl_disconnect('motion_notify_event')  # Disconnect existing handlers
+            self.canvas.mpl_disconnect('button_release_event')
+            self.motion_notify_id = self.canvas.mpl_connect('motion_notify_event', window.on_cross_drag)
+            self.button_release_id = self.canvas.mpl_connect('button_release_event', window.on_cross_release)
+
+            # Redraw canvas
+            self.canvas.draw_idle()
+
+        except ValueError as e:
+            print(f"Error adding cross to peak: {e}")
+            # You might want to show an error message to the user here
+        except Exception as e:
+            print(f"Unexpected error adding cross to peak: {e}")
+            # You might want to show an error message to the user here
 
     # Used by the defs above
     @staticmethod
