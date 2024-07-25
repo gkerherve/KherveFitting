@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import lmfit
 import os
+import sys
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 from scipy.stats import linregress
@@ -19,7 +20,8 @@ from ConfigFile import *
 from Save import refresh_sheets
 # from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Plot_Operations import PlotManager
-from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+from libraries.Peak_Functions import PeakFunctions
+# from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 
 
 # -------------------------------------------------------------------------------
@@ -595,8 +597,18 @@ def create_horizontal_toolbar(window):
     toolbar.SetBackgroundColour(wx.Colour(200, 200, 200))
     toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    icon_path = os.path.join(current_dir, "Icons")
+    # current_dir = os.path.dirname(os.path.abspath(__file__))
+    # icon_path = os.path.join(current_dir, "Icons")
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle, use the bundle's directory
+        application_path = sys._MEIPASS
+    else:
+        # If the application is run as a script, use the script's directory
+        application_path = os.path.dirname(os.path.abspath(__file__))
+
+    icon_path = os.path.join(application_path, "Icons")
+
+
 
     separators = []
 
@@ -751,7 +763,11 @@ def create_vertical_toolbar(parent, frame):
     v_toolbar.AddSeparator()
 
     low_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int +', wx.Bitmap(os.path.join(icon_path, "Up-Blue-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase Low Intensity")
-    low_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int -', wx.Bitmap(os.path.join(icon_path, "Down-Blue-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease Low Intensity")
+    low_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY,
+                                              'Low Int -',
+                                              wx.Bitmap(os.path.join(icon_path, "Down-Blue-100.png"),
+                                              wx.BITMAP_TYPE_PNG),
+                                              shortHelp="Decrease Low Intensity")
 
     v_toolbar.AddSeparator()
 
@@ -1118,99 +1134,6 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
 
 
 
-import numpy as np
-
-
-def pseudo_voigt_2(x, center, amplitude, sigma, fraction):
-    """
-    Custom Pseudo-Voigt function.
-
-    Parameters:
-    x : array
-        The x values
-    center : float
-        The peak center
-    amplitude : float
-        The peak height
-    sigma : float
-        The peak width (standard deviation for Gaussian component)
-    fraction : float
-        The fraction of Lorentzian component (0 to 1)
-
-    Returns:
-    array : The y values of the Pseudo-Voigt function
-    """
-    sigma2 = sigma ** 2
-    gamma = sigma * np.sqrt(2 * np.log(2))
-
-    gaussian = (1 - fraction) * np.exp(-((x - center) ** 2) / (2 * sigma2))
-    lorentzian = fraction * (gamma ** 2 / ((x - center) ** 2 + gamma ** 2))
-
-    return amplitude * (gaussian + lorentzian)
-
-
-import numpy as np
-
-
-def pseudo_voigt_1_2(x, center, amplitude, fwhm, fraction):
-    """
-    Custom Pseudo-Voigt function using FWHM.
-
-    Parameters:
-    x : array
-        The x values
-    center : float
-        The peak center
-    amplitude : float
-        The peak height
-    fwhm : float
-        Full Width at Half Maximum of the peak
-    fraction : float
-        The fraction of Lorentzian component (0 to 1)
-
-    Returns:
-    array : The y values of the Pseudo-Voigt function
-    """
-    sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))  # Convert FWHM to sigma for Gaussian
-    gamma = fwhm / 2  # Convert FWHM to gamma for Lorentzian
-
-    z = (x - center) / sigma
-
-    gaussian = (1 - fraction) * np.exp(-z ** 2 / 2) / (sigma * np.sqrt(2 * np.pi))
-    lorentzian = fraction * gamma / (np.pi * (gamma ** 2 + (x - center) ** 2))
-
-    return amplitude * (gaussian + lorentzian) * sigma * np.sqrt(2 * np.pi)
-
-def pseudo_voigt_1(x, center, amplitude, fwhm, fraction):
-    """
-    Corrected Pseudo-Voigt function ensuring the amplitude parameter represents peak height.
-
-    Parameters:
-    x : array
-        The x values
-    center : float
-        The peak center
-    amplitude : float
-        The peak height
-    fwhm : float
-        Full Width at Half Maximum of the peak
-    fraction : float
-        The fraction of Lorentzian component (0 to 1)
-
-    Returns:
-    array : The y values of the Pseudo-Voigt function
-    """
-    sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-    gamma = fwhm / 2
-
-    z = (x - center) / sigma
-
-    gaussian = (1 - fraction) * np.exp(-z ** 2 / 2) / (sigma * np.sqrt(2 * np.pi))
-    lorentzian = fraction / (np.pi * gamma * (1 + ((x - center) / gamma) ** 2))
-
-    return amplitude * (gaussian + lorentzian) / (gaussian.max() + lorentzian.max())
-
-
 def calculate_r2(y_true, y_pred):
     """Calculate the coefficient of determination (R²)"""
     ss_res = np.sum((y_true - y_pred) ** 2)
@@ -1349,14 +1272,14 @@ def fit_peaks(window, peak_params_grid):
                 #     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
                 #                vary=lg_ratio_vary)
                 elif model_choice == "GL":
-                    peak_model = lmfit.Model(gauss_lorentz, prefix=prefix)
+                    peak_model = lmfit.Model(PeakFunctions.gauss_lorentz, prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
                                vary=lg_ratio_vary)
                 elif model_choice == "SGL":
-                    peak_model = lmfit.Model(S_gauss_lorentz, prefix=prefix)
+                    peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz, prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
@@ -1404,8 +1327,8 @@ def fit_peaks(window, peak_params_grid):
                         sigma = result.params[f'{prefix}sigma'].value
                         gamma = result.params[f'{prefix}gamma'].value
                         # Calculate height directly using the model
-                        height = get_voigt_height(amplitude, sigma, gamma)
-                        fwhm = voigt_fwhm(sigma, gamma)
+                        height = PeakFunctions.get_voigt_height(amplitude, sigma, gamma)
+                        fwhm = PeakFunctions.voigt_fwhm(sigma, gamma)
                         fraction = gamma / (sigma * np.sqrt(2 * np.log(2)))
                     elif model_choice == "Pseudo-Voigt":
                         amplitude = result.params[f'{prefix}amplitude'].value
@@ -1413,7 +1336,7 @@ def fit_peaks(window, peak_params_grid):
                         fraction = result.params[f'{prefix}fraction'].value
                         fwhm = sigma * 2.355
                         # Calculate height directly using the model
-                        height = get_pseudo_voigt_height(amplitude, sigma, fraction)
+                        height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
                     else:
                         # For all other models, amplitude is treated as height
                         height = result.params[f'{prefix}amplitude'].value
@@ -1563,118 +1486,8 @@ def format_sheet_name2(sheet_name):
     else:
         return sheet_name  # Return original if it doesn't match the expected format
 
-import lmfit
-
-def get_pseudo_voigt_height(amplitude, sigma, fraction):
-    """
-    Calculate the height of a Pseudo-Voigt profile directly using the lmfit model.
-    """
-    model = lmfit.models.PseudoVoigtModel()
-    params = model.make_params(amplitude=amplitude, center=0, sigma=sigma, fraction=fraction)
-    return model.eval(params, x=0)
-
-def get_voigt_height(amplitude, sigma, gamma):
-    """
-    Calculate the height of a Voigt profile directly using the lmfit model.
-    """
-    model = lmfit.models.VoigtModel()
-    params = model.make_params(amplitude=amplitude, center=0, sigma=sigma, gamma=gamma)
-    return model.eval(params, x=0)
 
 
-def voigt_fwhm(sigma, gamma):
-    """
-    Approximate the FWHM of a Voigt profile.
-
-    This uses an approximation that is accurate to within a few percent.
-
-    Parameters:
-    sigma : float
-        The sigma parameter of the Gaussian component
-    gamma : float
-        The gamma parameter of the Lorentzian component
-
-    Returns:
-    float : The approximate FWHM of the Voigt profile
-    """
-    fg = 2 * sigma * np.sqrt(2 * np.log(2))
-    fl = 2 * gamma
-    return 0.5346 * fl + np.sqrt(0.2166 * fl ** 2 + fg ** 2)
-
-def pseudo_voigt_amplitude_to_height(amplitude, sigma, fraction):
-    """
-    Convert amplitude to height for a Pseudo-Voigt profile.
-
-    Parameters:
-    amplitude : float
-        The amplitude of the Pseudo-Voigt profile
-    sigma : float
-        The sigma parameter of the profile (related to FWHM)
-    fraction : float
-        The fraction of Lorentzian component (0 to 1)
-
-    Returns:
-    float : The height of the Pseudo-Voigt profile
-    """
-    # Constants
-    sqrt2pi = np.sqrt(2 * np.pi)
-    sqrt2ln2 = np.sqrt(2 * np.log(2))
-
-    # Gaussian component height
-    gaussian_height = amplitude / (sigma * sqrt2pi)
-
-    # Lorentzian component height
-    lorentzian_height = 2 * amplitude / (np.pi * sigma * 2 * sqrt2ln2)
-
-    # Combine using the fraction
-    height = (1 - fraction) * gaussian_height + fraction * lorentzian_height
-
-    return height
-
-
-def pseudo_voigt_height_to_amplitude(height, sigma, fraction):
-    """
-    Convert height to amplitude for a Pseudo-Voigt profile.
-
-    Parameters:
-    height : float
-        The height of the Pseudo-Voigt profile
-    sigma : float
-        The sigma parameter of the profile (related to FWHM)
-    fraction : float
-        The fraction of Lorentzian component (0 to 1)
-
-    Returns:
-    float : The amplitude of the Pseudo-Voigt profile
-    """
-    # Constants
-    sqrt2pi = np.sqrt(2 * np.pi)
-    sqrt2ln2 = np.sqrt(2 * np.log(2))
-
-    # Gaussian component amplitude
-    gaussian_amplitude = height * sigma * sqrt2pi
-
-    # Lorentzian component amplitude
-    lorentzian_amplitude = height * np.pi * sigma * 2 * sqrt2ln2 / 2
-
-    # Combine using the fraction
-    amplitude = (1 - fraction) * gaussian_amplitude + fraction * lorentzian_amplitude
-
-    return amplitude
-
-import numpy as np
-
-def pseudo_voigt_2_height_to_amplitude(height, sigma, fraction):
-    """
-    Convert height to amplitude for Pseudo-Voigt_2 profile.
-    """
-    return height * (sigma * np.sqrt(2 * np.pi) * (1 - fraction) + np.pi * sigma * fraction)
-
-def pseudo_voigt_2_amplitude_to_height(amplitude, sigma, fraction):
-    """
-    Convert amplitude to height for Pseudo-Voigt_2 profile.
-    """
-    return amplitude / (sigma * np.sqrt(2 * np.pi) * (1 - fraction) + np.pi * sigma * fraction)
 
 
 

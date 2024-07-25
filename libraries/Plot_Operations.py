@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 
 import lmfit
-from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+# from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+from libraries.Peak_Functions import PeakFunctions
 
 
 class PlotManager:
@@ -38,10 +39,10 @@ class PlotManager:
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
         elif selected_fitting_method == "GL":
-            peak_model = lmfit.Model(gauss_lorentz)
+            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif selected_fitting_method == "SGL":
-            peak_model = lmfit.Model(S_gauss_lorentz)
+            peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
 
         peak_y = peak_model.eval(params, x=x_values) + background
@@ -279,13 +280,13 @@ class PlotManager:
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
                 params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
             elif window.selected_fitting_method == "GL":
-                peak_model = lmfit.Model(gauss_lorentz)
+                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
             elif window.selected_fitting_method == "SGL":
-                peak_model = lmfit.Model(S_gauss_lorentz)
+                peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
             else:  # Add GL which is the safe bet
-                peak_model = lmfit.Model(gauss_lorentz)
+                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
 
             peak_y = peak_model.eval(params, x=window.x_values) + window.background
@@ -361,10 +362,10 @@ class PlotManager:
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
             elif window.selected_fitting_method == "GL":
-                peak_model = lmfit.Model(gauss_lorentz)
+                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
             elif window.selected_fitting_method == "SGL":
-                peak_model = lmfit.Model(S_gauss_lorentz)
+                peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
 
             peak_fit = peak_model.eval(params, x=window.x_values)

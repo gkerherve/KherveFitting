@@ -22,7 +22,8 @@ from ConfigFile import *
 from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
-from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+from libraries.Peak_Functions import PeakFunctions
+# from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 
@@ -486,10 +487,10 @@ class MyFrame(wx.Frame):
             peak_model = lmfit.models.PseudoVoigtModel()
             params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, fraction=lg_ratio)
         elif self.selected_fitting_method == "GL":
-            peak_model = lmfit.Model(gauss_lorentz)
+            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
         elif self.selected_fitting_method == "SGL":
-            peak_model = lmfit.Model(S_gauss_lorentz)
+            peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
             params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
         else:
             raise ValueError(f"Unknown fitting method: {self.selected_fitting_method}")
