@@ -1487,10 +1487,8 @@ class MyFrame(wx.Frame):
             event.Skip()
 
         # Call on_peak_params_cell_changed to update the data structure
-        fake_event = wx.grid.GridEvent(wx.grid.EVT_GRID_CELL_CHANGED.typeId, self.peak_params_grid.GetId())
-        fake_event.SetRow(row)
-        fake_event.SetCol(col)
-        self.on_peak_params_cell_changed(fake_event)
+        self.on_peak_params_cell_changed(
+            wx.grid.GridEvent(self.peak_params_grid.GetId(), wx.grid.EVT_GRID_CELL_CHANGED.typeId, self, row, col))
 
     def refresh_peak_params_grid(self):
         sheet_name = self.sheet_combobox.GetValue()
