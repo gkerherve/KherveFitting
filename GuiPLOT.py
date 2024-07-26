@@ -145,6 +145,8 @@ class MyFrame(wx.Frame):
         # self.add_cross_to_peak(self.selected_peak_index)
 
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_peak_params_cell_changed)
+        self.peak_params_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGING, self.on_peak_params_cell_changed)
+        self.peak_params_grid.Bind(wx.EVT_KEY_DOWN, self.on_grid_key)
 
 
     def create_widgets(self):
@@ -1388,6 +1390,19 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
 
+        # Convert lowercase letters to uppercase
+        if new_value.lower() in 'abcdefghij':
+            new_value = new_value.upper()+ '*1'
+            self.peak_params_grid.SetCellValue(row, col, new_value)
+
+        # Convert lowercase to uppercase in expressions like a*0.5
+        if '*' in new_value or '+' in new_value:
+            parts = new_value.split('*' if '*' in new_value else '+')
+            if len(parts) == 2 and parts[0].lower() in 'abcdefghij':
+                parts[0] = parts[0].upper()
+                new_value = ('*' if '*' in new_value else '+').join(parts)
+                self.peak_params_grid.SetCellValue(row, col, new_value)
+
         if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
                 self.Data['Core levels'][sheet_name]['Fitting']:
             peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
@@ -1419,9 +1434,16 @@ class MyFrame(wx.Frame):
                         if 'Constraints' not in peaks[correct_peak_key]:
                             peaks[correct_peak_key]['Constraints'] = {}
 
-                        # Handle single letter inputs
-                        if new_value.lower() in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']:
-                            new_value = new_value.upper() + '*1'
+                        # Set default constraints if cell is empty
+                        if not new_value:
+                            default_constraints = {
+                                'Position': '0,1000',
+                                'Height': '0,1e7',
+                                'FWHM': '0.3,3.5',
+                                'L/G': '0,0.5'
+                            }
+                            new_value = default_constraints[constraint_key]
+                            self.peak_params_grid.SetCellValue(row, col, new_value)
 
                         peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 
@@ -1437,6 +1459,38 @@ class MyFrame(wx.Frame):
 
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
+
+    def on_grid_key(self, event):
+        keycode = event.GetKeyCode()
+        row = self.peak_params_grid.GetGridCursorRow()
+        col = self.peak_params_grid.GetGridCursorCol()
+        value = self.peak_params_grid.GetCellValue(row, col)
+
+        if keycode in range(ord('A'), ord('J') + 1) or keycode in range(ord('a'), ord('j') + 1):
+            # Convert to uppercase
+            letter = chr(keycode).upper()
+            self.peak_params_grid.SetCellValue(row, col, letter)
+            event.Skip()
+        elif keycode == wx.WXK_RIGHT:
+            if value.upper() in 'ABCDEFGHIJ':
+                # Update the cell with A*1 (or B*1, C*1, etc.)
+                self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
+                # Move to the next cell
+                self.peak_params_grid.MoveCursorRight(False)
+            else:
+                event.Skip()
+        elif keycode in [wx.WXK_LEFT, wx.WXK_UP, wx.WXK_DOWN]:
+            if value.upper() in 'ABCDEFGHIJ':
+                self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
+            event.Skip()
+        else:
+            event.Skip()
+
+        # Call on_peak_params_cell_changed to update the data structure
+        fake_event = wx.grid.GridEvent(wx.grid.EVT_GRID_CELL_CHANGED.typeId, self.peak_params_grid.GetId())
+        fake_event.SetRow(row)
+        fake_event.SetCol(col)
+        self.on_peak_params_cell_changed(fake_event)
 
     def refresh_peak_params_grid(self):
         sheet_name = self.sheet_combobox.GetValue()
