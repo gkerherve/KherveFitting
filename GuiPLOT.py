@@ -221,11 +221,11 @@ class MyFrame(wx.Frame):
 
         # Adjust individual column sizes
         self.peak_params_grid.SetColSize(0, 20)
-        self.peak_params_grid.SetColSize(1, 80)
-        self.peak_params_grid.SetColSize(2, 60)
-        self.peak_params_grid.SetColSize(3, 60)
-        self.peak_params_grid.SetColSize(4, 50)
-        self.peak_params_grid.SetColSize(5, 30)
+        self.peak_params_grid.SetColSize(1, 90)
+        self.peak_params_grid.SetColSize(2, 80)
+        self.peak_params_grid.SetColSize(3, 80)
+        self.peak_params_grid.SetColSize(4, 80)
+        self.peak_params_grid.SetColSize(5, 50)
         self.peak_params_grid.SetColSize(7, 50)
         self.peak_params_grid.SetColSize(8, 50)
         self.peak_params_grid.SetColSize(9, 100)
@@ -1381,7 +1381,6 @@ class MyFrame(wx.Frame):
             except ValueError:
                 wx.MessageBox("Invalid height value", "Error", wx.OK | wx.ICON_ERROR)
 
-
     def on_peak_params_cell_changed(self, event):
         row = event.GetRow()
         col = event.GetCol()
@@ -1419,6 +1418,11 @@ class MyFrame(wx.Frame):
                         constraint_key = ['Position', 'Height', 'FWHM', 'L/G'][col - 2]
                         if 'Constraints' not in peaks[correct_peak_key]:
                             peaks[correct_peak_key]['Constraints'] = {}
+
+                        # Handle single letter inputs
+                        if new_value.lower() in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']:
+                            new_value = new_value.upper() + '*1'
+
                         peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 
         # Ensure numeric values are displayed with 2 decimal places

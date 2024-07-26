@@ -1106,22 +1106,33 @@ def toggle_Col_1(window):
     # print(window.Data)
 
 
-
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
     if constraint_str.lower() in ['f', 'fixed']:
         return current_value - 0.1, current_value + 0.1, False
-    elif constraint_str.lower().startswith('p'):
-        ref_peak_index = int(constraint_str[1:]) - 1
-        num_peaks = peak_params_grid.GetNumberRows() // 2
-        if 0 <= ref_peak_index < num_peaks:
-            param_column = {'Position': 2, 'Height': 3, 'FWHM': 4, 'L/G': 5}.get(param_name)
-            if param_column is not None:
-                ref_value = float(peak_params_grid.GetCellValue(ref_peak_index * 2, param_column))
-                return ref_value - 0.001, ref_value + 0.001, True
-            else:
-                raise ValueError(f"Invalid parameter name: {param_name}")
-        else:
-            raise ValueError(f"Invalid peak reference: {constraint_str}")
+    elif constraint_str.lower() in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']:
+        # Convert single letter to ID*1
+        return parse_constraints(constraint_str.upper() + '*1', current_value, peak_params_grid, peak_index, param_name)
+    elif '*' in constraint_str or '+' in constraint_str:
+        parts = constraint_str.split('*' if '*' in constraint_str else '+')
+        if len(parts) != 2:
+            raise ValueError(f"Invalid constraint format: {constraint_str}")
+
+        ref_peak_id = parts[0].strip().upper()
+        factor = float(parts[1].strip())
+
+        for i in range(peak_params_grid.GetNumberRows()):
+            if peak_params_grid.GetCellValue(i, 0) == ref_peak_id:
+                param_column = {'Position': 2, 'Height': 3, 'FWHM': 4, 'L/G': 5}.get(param_name)
+                if param_column is not None:
+                    ref_value = float(peak_params_grid.GetCellValue(i, param_column))
+                    if '*' in constraint_str:
+                        new_value = ref_value * factor
+                    else:  # '+' in constraint_str
+                        new_value = ref_value + factor
+                    return new_value - 0.001, new_value + 0.001, True
+                else:
+                    raise ValueError(f"Invalid parameter name: {param_name}")
+        raise ValueError(f"Invalid peak reference: {ref_peak_id}")
     else:
         try:
             min_val, max_val = map(float, constraint_str.split(','))
@@ -1405,7 +1416,7 @@ def fit_peaks(window, peak_params_grid):
                 desired_max_residual = 0.1 * max_raw_data
                 actual_max_residual = max(abs(residuals))
                 scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
-                scaled_residuals = residuals * scaling_factor + 1.01 * max(y_values)
+                scaled_residuals = residuals * scaling_factor + 1.05 * max(y_values)
                 residuals_line, = window.ax.plot(x_values, scaled_residuals, 'g', alpha=0.4, label='Residuals')
 
                 # Plot individual peaks
