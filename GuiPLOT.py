@@ -146,7 +146,7 @@ class MyFrame(wx.Frame):
 
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_peak_params_cell_changed)
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGING, self.on_peak_params_cell_changed)
-        self.peak_params_grid.Bind(wx.EVT_KEY_DOWN, self.on_grid_key)
+        # self.peak_params_grid.Bind(wx.EVT_KEY_DOWN, self.on_grid_key)
 
 
     def create_widgets(self):
@@ -1460,35 +1460,35 @@ class MyFrame(wx.Frame):
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
 
-    def on_grid_key(self, event):
-        keycode = event.GetKeyCode()
-        row = self.peak_params_grid.GetGridCursorRow()
-        col = self.peak_params_grid.GetGridCursorCol()
-        value = self.peak_params_grid.GetCellValue(row, col)
-
-        if keycode in range(ord('A'), ord('J') + 1) or keycode in range(ord('a'), ord('j') + 1):
-            # Convert to uppercase
-            letter = chr(keycode).upper()
-            self.peak_params_grid.SetCellValue(row, col, letter)
-            event.Skip()
-        elif keycode == wx.WXK_RIGHT:
-            if value.upper() in 'ABCDEFGHIJ':
-                # Update the cell with A*1 (or B*1, C*1, etc.)
-                self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
-                # Move to the next cell
-                self.peak_params_grid.MoveCursorRight(False)
-            else:
-                event.Skip()
-        elif keycode in [wx.WXK_LEFT, wx.WXK_UP, wx.WXK_DOWN]:
-            if value.upper() in 'ABCDEFGHIJ':
-                self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
-            event.Skip()
-        else:
-            event.Skip()
-
-        # Call on_peak_params_cell_changed to update the data structure
-        self.on_peak_params_cell_changed(
-            wx.grid.GridEvent(self.peak_params_grid.GetId(), wx.grid.EVT_GRID_CELL_CHANGED.typeId, self, row, col))
+    # def on_grid_key(self, event):
+    #     keycode = event.GetKeyCode()
+    #     row = self.peak_params_grid.GetGridCursorRow()
+    #     col = self.peak_params_grid.GetGridCursorCol()
+    #     value = self.peak_params_grid.GetCellValue(row, col)
+    #
+    #     if keycode in range(ord('A'), ord('J') + 1) or keycode in range(ord('a'), ord('j') + 1):
+    #         # Convert to uppercase
+    #         letter = chr(keycode).upper()
+    #         self.peak_params_grid.SetCellValue(row, col, letter)
+    #         event.Skip()
+    #     elif keycode == wx.WXK_RIGHT:
+    #         if value.upper() in 'ABCDEFGHIJ':
+    #             # Update the cell with A*1 (or B*1, C*1, etc.)
+    #             self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
+    #             # Move to the next cell
+    #             self.peak_params_grid.MoveCursorRight(False)
+    #         else:
+    #             event.Skip()
+    #     elif keycode in [wx.WXK_LEFT, wx.WXK_UP, wx.WXK_DOWN]:
+    #         if value.upper() in 'ABCDEFGHIJ':
+    #             self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
+    #         event.Skip()
+    #     else:
+    #         event.Skip()
+    #
+    #     # Call on_peak_params_cell_changed to update the data structure
+    #     self.on_peak_params_cell_changed(
+    #         wx.grid.GridEvent(self.peak_params_grid.GetId(), wx.grid.EVT_GRID_CELL_CHANGED.typeId, self, row, col))
 
     def refresh_peak_params_grid(self):
         sheet_name = self.sheet_combobox.GetValue()
