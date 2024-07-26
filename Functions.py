@@ -1106,39 +1106,71 @@ def toggle_Col_1(window):
     # print(window.Data)
 
 
+import re
+
+import re
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+import re
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
-    if constraint_str.lower() in ['f', 'fixed']:
+    logging.debug(f"Parsing constraint: {constraint_str}")
+
+    constraint_str = constraint_str.strip()  # Remove any leading/trailing whitespace
+
+    if constraint_str.lower() in ['fi', 'fixed']:
         return current_value - 0.1, current_value + 0.1, False
-    elif constraint_str.lower() in ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']:
-        # Convert single letter to ID*1
-        return parse_constraints(constraint_str.upper() + '*1', current_value, peak_params_grid, peak_index, param_name)
-    elif '*' in constraint_str or '+' in constraint_str:
-        parts = constraint_str.split('*' if '*' in constraint_str else '+')
-        if len(parts) != 2:
-            raise ValueError(f"Invalid constraint format: {constraint_str}")
 
-        ref_peak_id = parts[0].strip().upper()
-        factor = float(parts[1].strip())
+    # New constraint pattern
+    constraint_pattern = r'^([A-J]?)([+*]?)(\d*\.?\d*)(\(([+-]\d+\.?\d*)\))?$'
+    match = re.match(constraint_pattern, constraint_str)
 
-        for i in range(peak_params_grid.GetNumberRows()):
-            if peak_params_grid.GetCellValue(i, 0) == ref_peak_id:
-                param_column = {'Position': 2, 'Height': 3, 'FWHM': 4, 'L/G': 5}.get(param_name)
-                if param_column is not None:
-                    ref_value = float(peak_params_grid.GetCellValue(i, param_column))
-                    if '*' in constraint_str:
-                        new_value = ref_value * factor
-                    else:  # '+' in constraint_str
-                        new_value = ref_value + factor
-                    return new_value - 0.001, new_value + 0.001, True
-                else:
-                    raise ValueError(f"Invalid parameter name: {param_name}")
-        raise ValueError(f"Invalid peak reference: {ref_peak_id}")
-    else:
+    if match:
+        logging.debug(f"Matched groups: {match.groups()}")
+        ref_peak, operator, value, _, delta = match.groups()
+        logging.debug(f"Parsed: ref_peak={ref_peak}, operator={operator}, value={value}, delta={delta}")
+
+        if delta:
+            delta = float(delta)
+            if operator == '+':
+                base_value = float(value) if value else 0
+                return f"{ref_peak}+{base_value - abs(delta):.2f}", f"{ref_peak}+{base_value + abs(delta):.2f}", True
+            elif operator == '*':
+                factor = float(value) if value else 1
+                return f"{ref_peak}*{factor - abs(delta):.2f}", f"{ref_peak}*{factor + abs(delta):.2f}", True
+            else:
+                return f"{ref_peak}-{abs(delta):.2f}", f"{ref_peak}+{abs(delta):.2f}", True
+        elif ref_peak:
+            # Handle cases like 'A+1.5' without parentheses
+            if operator == '+':
+                offset = float(value) if value else 0
+                return f"{ref_peak}+{offset - 0.1:.2f}", f"{ref_peak}+{offset + 0.1:.2f}", True
+            elif operator == '*':
+                factor = float(value) if value else 1
+                return f"{ref_peak}*{factor * 0.9:.2f}", f"{ref_peak}*{factor * 1.1:.2f}", True
+            else:
+                return f"{ref_peak}-0.1", f"{ref_peak}+0.1", True
+        else:
+            # Simple numeric constraint
+            value = float(value) if value else current_value
+            return value - 0.1, value + 0.1, True
+
+    # Original parsing for comma-separated values
+    if ',' in constraint_str:
         try:
             min_val, max_val = map(float, constraint_str.split(','))
             return min_val, max_val, True
         except ValueError:
-            raise ValueError(f"Invalid constraint format: {constraint_str}")
+            logging.debug("Failed to parse comma-separated values")
+
+    logging.error(f"Invalid constraint format: {constraint_str}")
+    raise ValueError(f"Invalid constraint format: {constraint_str}")
 
 
 

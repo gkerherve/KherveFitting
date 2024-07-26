@@ -12,7 +12,7 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib.ticker import ScalarFormatter
 # from Functions import *
-
+import re
 import lmfit
 from Fitting_Screen import *
 from AreaFit_Screen import *
@@ -1383,6 +1383,8 @@ class MyFrame(wx.Frame):
             except ValueError:
                 wx.MessageBox("Invalid height value", "Error", wx.OK | wx.ICON_ERROR)
 
+
+
     def on_peak_params_cell_changed(self, event):
         row = event.GetRow()
         col = event.GetCol()
@@ -1392,7 +1394,7 @@ class MyFrame(wx.Frame):
 
         # Convert lowercase letters to uppercase
         if new_value.lower() in 'abcdefghij':
-            new_value = new_value.upper()+ '*1'
+            new_value = new_value.upper() + '*1'
             self.peak_params_grid.SetCellValue(row, col, new_value)
 
         # Convert lowercase to uppercase in expressions like a*0.5
@@ -1402,6 +1404,35 @@ class MyFrame(wx.Frame):
                 parts[0] = parts[0].upper()
                 new_value = ('*' if '*' in new_value else '+').join(parts)
                 self.peak_params_grid.SetCellValue(row, col, new_value)
+
+        # Handle new constraint format
+        constraint_pattern = r'(([A-J]?[+*]?\d*\.?\d*)\(([+-]\d+\.?\d*)\))|([+-]\d+\.?\d*)'
+        match = re.match(constraint_pattern, new_value)
+        if match:
+            if match.group(4):  # Simple +-X format
+                base_value = float(self.peak_params_grid.GetCellValue(row - 1, col))
+                delta = float(match.group(4))
+                min_val = base_value - abs(delta)
+                max_val = base_value + abs(delta)
+                new_value = f"{min_val:.2f},{max_val:.2f}"
+            else:  # A+X(+-Y) or A*X(+-Y) format
+                base_expr = match.group(2)
+                delta = float(match.group(3))
+                if '*' in base_expr:
+                    parts = base_expr.split('*')
+                    ref_peak = parts[0]
+                    factor = float(parts[1])
+                    min_factor = factor - abs(delta)
+                    max_factor = factor + abs(delta)
+                    new_value = f"{ref_peak}*{min_factor:.2f},{ref_peak}*{max_factor:.2f}"
+                elif '+' in base_expr:
+                    parts = base_expr.split('+')
+                    ref_peak = parts[0]
+                    offset = float(parts[1])
+                    min_offset = offset - abs(delta)
+                    max_offset = offset + abs(delta)
+                    new_value = f"{ref_peak}+{min_offset:.2f},{ref_peak}+{max_offset:.2f}"
+            self.peak_params_grid.SetCellValue(row, col, new_value)
 
         if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
                 self.Data['Core levels'][sheet_name]['Fitting']:
@@ -1460,35 +1491,6 @@ class MyFrame(wx.Frame):
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
 
-    # def on_grid_key(self, event):
-    #     keycode = event.GetKeyCode()
-    #     row = self.peak_params_grid.GetGridCursorRow()
-    #     col = self.peak_params_grid.GetGridCursorCol()
-    #     value = self.peak_params_grid.GetCellValue(row, col)
-    #
-    #     if keycode in range(ord('A'), ord('J') + 1) or keycode in range(ord('a'), ord('j') + 1):
-    #         # Convert to uppercase
-    #         letter = chr(keycode).upper()
-    #         self.peak_params_grid.SetCellValue(row, col, letter)
-    #         event.Skip()
-    #     elif keycode == wx.WXK_RIGHT:
-    #         if value.upper() in 'ABCDEFGHIJ':
-    #             # Update the cell with A*1 (or B*1, C*1, etc.)
-    #             self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
-    #             # Move to the next cell
-    #             self.peak_params_grid.MoveCursorRight(False)
-    #         else:
-    #             event.Skip()
-    #     elif keycode in [wx.WXK_LEFT, wx.WXK_UP, wx.WXK_DOWN]:
-    #         if value.upper() in 'ABCDEFGHIJ':
-    #             self.peak_params_grid.SetCellValue(row, col, f"{value.upper()}*1")
-    #         event.Skip()
-    #     else:
-    #         event.Skip()
-    #
-    #     # Call on_peak_params_cell_changed to update the data structure
-    #     self.on_peak_params_cell_changed(
-    #         wx.grid.GridEvent(self.peak_params_grid.GetId(), wx.grid.EVT_GRID_CELL_CHANGED.typeId, self, row, col))
 
     def refresh_peak_params_grid(self):
         sheet_name = self.sheet_combobox.GetValue()
