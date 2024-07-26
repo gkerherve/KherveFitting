@@ -83,14 +83,15 @@ def on_sheet_selected(window, event):
             # If no data for this sheet, ensure the grid is empty
             _clear_peak_params_grid(window)
 
+        # Refresh the grid display
+        window.peak_params_grid.ForceRefresh()
+
         # Update the plot
         window.plot_manager.plot_data(window)  # Always plot raw data first
         if window.show_fit and window.peak_params_grid.GetNumberRows() > 0:
             window.clear_and_replot()  # Add fit and residuals if show_fit is True
 
         window.plot_config.update_plot_limits(window, selected_sheet)
-
-        # Refresh the grid display
-        window.peak_params_grid.ForceRefresh()
+        window.plot_manager.update_legend(window)
 
         print(f"Selected sheet: {selected_sheet}, Peak count: {window.peak_count}, Show fit: {window.show_fit}")

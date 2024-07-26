@@ -1248,6 +1248,14 @@ def fit_peaks(window, peak_params_grid):
                 elif model_choice == "Pseudo-Voigt":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     sigma = fwhm / 2.355
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}amplitude', value=height * sigma * np.sqrt(2 * np.pi), min=0)
+                    params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
+                               max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=0, max=1, vary=lg_ratio_vary)
+                elif model_choice == "Pseudo-Voigt2":
+                    peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
+                    sigma = fwhm / 2.355
                     # Use the current height as initial guess, let the model handle the conversion
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)

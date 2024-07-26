@@ -411,6 +411,7 @@ class MyFrame(wx.Frame):
         # Assign letter IDs
         letter_id = chr(64 + self.peak_count)
 
+
         # Set values in the grid
         self.peak_params_grid.SetCellValue(row, 0, letter_id)
         self.peak_params_grid.SetReadOnly(row, 0)
@@ -1518,10 +1519,16 @@ class MyFrame(wx.Frame):
 
     # Method to update Offset (H)
     def set_offset_h(self, value):
-        self.offset_h = value
+        try:
+            self.offset_h = float(value)
+        except ValueError:
+            self.offset_h = 0
 
     def set_offset_l(self, value):
-        self.offset_l = value
+        try:
+            self.offset_l = float(value)
+        except ValueError:
+            self.offset_l = 0
 
 
 

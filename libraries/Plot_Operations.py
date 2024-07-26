@@ -222,7 +222,8 @@ class PlotManager:
 
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
-            window.plot_manager.update_legend(window)
+            self.update_legend(window)
+        # else: self.update_legend(window)
 
         # Restore sheet name text or create new one if it doesn't exist
         if sheet_name_text is None:
@@ -505,13 +506,16 @@ class PlotManager:
         legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
 
         # Collect peak labels
-        sheet_name = window.sheet_combobox.GetValue()
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-        peak_labels = [f"{sheet_name} p{i + 1}" for i in range(num_peaks)]
+        peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
 
         # Ensure peaks are added to the end of the order
+        print(legend_order)
         legend_order += peak_labels
-
+        print(legend_order)
+        print(peak_labels)
+        print(labels)
+        self.ax.legend(handles, peak_labels)
         # Create a list of (handle, label) tuples in the desired order
         ordered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in legend_order]
         ordered_handles_labels.sort(
@@ -519,7 +523,7 @@ class PlotManager:
         handles, labels = zip(*ordered_handles_labels) if ordered_handles_labels else ([], [])
 
         # Update the legend
-        self.ax.legend(handles, labels)
+        # self.ax.legend(handles, labels)
         self.ax.legend(loc='upper left')
         self.canvas.draw_idle()
 
