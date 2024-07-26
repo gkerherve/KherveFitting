@@ -603,13 +603,15 @@ class MyFrame(wx.Frame):
         row = index * 2
         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
         lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
+        label = self.peak_params_grid.GetCellValue(row, 1)  # Get the label from the grid
 
         peak_params = {
             'row': row,
             'fwhm': fwhm,
             'lg_ratio': lg_ratio,
             'position': x,
-            'height': y
+            'height': y,
+            'label': label  # Include the label in peak_params
         }
 
         self.plot_manager.plot_peak(

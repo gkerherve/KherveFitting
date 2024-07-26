@@ -47,7 +47,8 @@ class PlotManager:
 
         peak_y = peak_model.eval(params, x=x_values) + background
 
-        peak_label = f"{sheet_name} p{row // 2 + 1}"
+        peak_label = peak_params['label'] if 'label' in peak_params else f"{sheet_name} p{row // 2 + 1}"
+
 
         self.ax.plot(x_values, peak_y)
         self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=peak_label)
@@ -198,6 +199,7 @@ class PlotManager:
             row = i * 2
             position_str = window.peak_params_grid.GetCellValue(row, 2)
             height_str = window.peak_params_grid.GetCellValue(row, 3)
+            label = window.peak_params_grid.GetCellValue(row, 1)
 
             # Check if the cells are not empty before converting to float
             if position_str and height_str:
@@ -510,20 +512,18 @@ class PlotManager:
         peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
 
         # Ensure peaks are added to the end of the order
-        print(legend_order)
         legend_order += peak_labels
-        print(legend_order)
-        print(peak_labels)
-        print(labels)
-        self.ax.legend(handles, peak_labels)
+
         # Create a list of (handle, label) tuples in the desired order
-        ordered_handles_labels = [(h, l) for h, l in zip(handles, labels) if l in legend_order]
-        ordered_handles_labels.sort(
-            key=lambda x: legend_order.index(x[1]) if x[1] in legend_order else len(legend_order))
-        handles, labels = zip(*ordered_handles_labels) if ordered_handles_labels else ([], [])
+        ordered_handles_labels = []
+        for l in legend_order:
+            matching_labels = [label for label in labels if label == l or label.startswith(l)]
+            for match in matching_labels:
+                index = labels.index(match)
+                ordered_handles_labels.append((handles[index], match))
 
         # Update the legend
-        # self.ax.legend(handles, labels)
+        self.ax.legend([h for h, l in ordered_handles_labels], [l for h, l in ordered_handles_labels])
         self.ax.legend(loc='upper left')
         self.canvas.draw_idle()
 
