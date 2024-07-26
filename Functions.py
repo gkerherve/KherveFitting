@@ -1108,69 +1108,41 @@ def toggle_Col_1(window):
 
 import re
 
-import re
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
-import re
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
-
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
-    logging.debug(f"Parsing constraint: {constraint_str}")
+    constraint_str = constraint_str.strip()
 
-    constraint_str = constraint_str.strip()  # Remove any leading/trailing whitespace
+    if constraint_str.lower() in ['f', 'fixed']:
+        return current_value, current_value, False
 
-    if constraint_str.lower() in ['fi', 'fixed']:
-        return current_value - 0.1, current_value + 0.1, False
-
-    # New constraint pattern
-    constraint_pattern = r'^([A-J]?)([+*]?)(\d*\.?\d*)(\(([+-]\d+\.?\d*)\))?$'
-    match = re.match(constraint_pattern, constraint_str)
+    pattern = r'^([A-J])([+*])(\d+\.?\d*)(\(([+-]\d+\.?\d*)\))?$'
+    match = re.match(pattern, constraint_str)
 
     if match:
-        logging.debug(f"Matched groups: {match.groups()}")
         ref_peak, operator, value, _, delta = match.groups()
-        logging.debug(f"Parsed: ref_peak={ref_peak}, operator={operator}, value={value}, delta={delta}")
+        value = float(value)
+        delta = float(delta) if delta else 0.1  # Default delta if not specified
 
-        if delta:
-            delta = float(delta)
-            if operator == '+':
-                base_value = float(value) if value else 0
-                return f"{ref_peak}+{base_value - abs(delta):.2f}", f"{ref_peak}+{base_value + abs(delta):.2f}", True
-            elif operator == '*':
-                factor = float(value) if value else 1
-                return f"{ref_peak}*{factor - abs(delta):.2f}", f"{ref_peak}*{factor + abs(delta):.2f}", True
-            else:
-                return f"{ref_peak}-{abs(delta):.2f}", f"{ref_peak}+{abs(delta):.2f}", True
-        elif ref_peak:
-            # Handle cases like 'A+1.5' without parentheses
-            if operator == '+':
-                offset = float(value) if value else 0
-                return f"{ref_peak}+{offset - 0.1:.2f}", f"{ref_peak}+{offset + 0.1:.2f}", True
-            elif operator == '*':
-                factor = float(value) if value else 1
-                return f"{ref_peak}*{factor * 0.9:.2f}", f"{ref_peak}*{factor * 1.1:.2f}", True
-            else:
-                return f"{ref_peak}-0.1", f"{ref_peak}+0.1", True
-        else:
-            # Simple numeric constraint
-            value = float(value) if value else current_value
-            return value - 0.1, value + 0.1, True
+        if operator == '+':
+            return f"{ref_peak}+{value - delta}", f"{ref_peak}+{value + delta}", True
+        elif operator == '*':
+            return f"{ref_peak}*{value - delta}", f"{ref_peak}*{value + delta}", True
 
-    # Original parsing for comma-separated values
+    # If it's a simple number or range
     if ',' in constraint_str:
-        try:
-            min_val, max_val = map(float, constraint_str.split(','))
-            return min_val, max_val, True
-        except ValueError:
-            logging.debug("Failed to parse comma-separated values")
+        min_val, max_val = map(float, constraint_str.split(','))
+        return min_val, max_val, True
+    elif constraint_str.startswith('+-'):
+        delta = float(constraint_str[2:])
+        return current_value - delta, current_value + delta, True
 
-    logging.error(f"Invalid constraint format: {constraint_str}")
-    raise ValueError(f"Invalid constraint format: {constraint_str}")
+    try:
+        value = float(constraint_str)
+        return value - 0.1, value + 0.1, True
+    except ValueError:
+        pass
+
+    # If we can't parse it, return the current value with a small range
+    return current_value - 0.1, current_value + 0.1, True
 
 
 
@@ -1267,17 +1239,41 @@ def fit_peaks(window, peak_params_grid):
                 # Parse constraints for each parameter
                 center_min, center_max, center_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 2),
                                                                         center, peak_params_grid, i, "Position")
+                # center_min = evaluate_constraint(center_min, peak_params_grid, 'center')
+                # center_max = evaluate_constraint(center_max, peak_params_grid, 'center')
+
                 height_min, height_max, height_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 3),
                                                                         height, peak_params_grid, i, "Height")
                 fwhm_min, fwhm_max, fwhm_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 4),
                                                                   fwhm, peak_params_grid, i, "FWHM")
+                # fwhm_min = evaluate_constraint(fwhm_min, peak_params_grid, 'fwhm')
+                # fwhm_max = evaluate_constraint(fwhm_max, peak_params_grid, 'fwhm')
+
                 lg_ratio_min, lg_ratio_max, lg_ratio_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 5),
                                                                               lg_ratio, peak_params_grid, i, "L/G")
+                # lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio')
+                # lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio')
 
-                sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary else None
-                sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary else None
-                gamma_min = lg_ratio_min * sigma_min if lg_ratio_vary else None
-                gamma_max = lg_ratio_max * sigma_max if lg_ratio_vary else None
+                # Evaluate constraints
+                center_min = evaluate_constraint(center_min, peak_params_grid, 'center', center)
+                center_max = evaluate_constraint(center_max, peak_params_grid, 'center', center)
+                height_min = evaluate_constraint(height_min, peak_params_grid, 'height', height)
+                height_max = evaluate_constraint(height_max, peak_params_grid, 'height', height)
+                fwhm_min = evaluate_constraint(fwhm_min, peak_params_grid, 'fwhm', fwhm)
+                fwhm_max = evaluate_constraint(fwhm_max, peak_params_grid, 'fwhm', fwhm)
+                lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
+                lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio)
+
+                print("Center Min: "+ str(center_min))
+                # sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary else None
+                # sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary else None
+                # gamma_min = lg_ratio_min * sigma_min if lg_ratio_vary else None
+                # gamma_max = lg_ratio_max * sigma_max if lg_ratio_vary else None
+
+                sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
+                sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
+                gamma_min = lg_ratio_min * sigma_min if lg_ratio_min is not None and sigma_min is not None else None
+                gamma_max = lg_ratio_max * sigma_max if lg_ratio_max is not None and sigma_max is not None else None
 
                 prefix = f'peak{i}_'
 
@@ -1526,7 +1522,35 @@ def fit_peaks(window, peak_params_grid):
     else:
         raise ValueError("Invalid background energy range")
 
-import re
+
+def get_peak_value(peak_params_grid, peak_name, param_name):
+    for i in range(peak_params_grid.GetNumberRows()):
+        if peak_params_grid.GetCellValue(i, 0) == peak_name:
+            if param_name == 'center':
+                return float(peak_params_grid.GetCellValue(i, 2))
+            elif param_name == 'height':
+                return float(peak_params_grid.GetCellValue(i, 3))
+            elif param_name == 'fwhm':
+                return float(peak_params_grid.GetCellValue(i, 4))
+            elif param_name == 'lg_ratio':
+                return float(peak_params_grid.GetCellValue(i, 5))
+    return None
+
+def evaluate_constraint(constraint, peak_params_grid, param_name, current_value):
+    if isinstance(constraint, (int, float)):
+        return constraint
+    if constraint is None:
+        return None
+    match = re.match(r'([A-J])([+*])(.+)', constraint)
+    if match:
+        peak, op, value = match.groups()
+        peak_value = get_peak_value(peak_params_grid, peak, param_name)
+        if peak_value is not None:
+            return eval(f"{peak_value}{op}{value}")
+    try:
+        return float(constraint)
+    except ValueError:
+        return current_value
 
 def format_sheet_name2(sheet_name):
     # Regular expression to separate element and electron shell
