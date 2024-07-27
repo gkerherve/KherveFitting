@@ -1503,23 +1503,37 @@ import re
 
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
     constraint_str = constraint_str.strip()
+    small_error = 0.05
 
-    if constraint_str.lower() in ['f', 'fixed']:
-        return current_value, current_value, False
+    if constraint_str.lower() in ['fi','fix','fixe', 'fixed']:
+        return current_value - small_error, current_value +small_error, False
 
     # Pattern to match A+1.5#0.5 format
     pattern = r'^([A-J])([+*])(\d+\.?\d*)#([\d\.]+)$'
     match = re.match(pattern, constraint_str)
 
+    # Pattern for A+2 or A*2 format
+    pattern_simple = r'^([A-J])([+*])(\d+\.?\d*)$'
+    match_simple = re.match(pattern_simple, constraint_str)
+
     if match:
         ref_peak, operator, value, delta = match.groups()
         value = float(value)
         delta = float(delta)
-
+        print("MATCH1 Value " +str(value) + " delta  "+str(delta))
         if operator == '+':
             return f"{ref_peak}+{value - delta}", f"{ref_peak}+{value + delta}", True
         elif operator == '*':
             return f"{ref_peak}*{value - delta}", f"{ref_peak}*{value + delta}", True
+
+    elif match_simple:
+        ref_peak, operator, value = match_simple.groups()
+        value = float(value)
+        print("MATCH2 Value " + str(value) + " operator  " + str(operator))
+        if operator == '+':
+            return f"{ref_peak}+{value - small_error}", f"{ref_peak}+{value + small_error}", True
+        elif operator == '*':
+            return f"{ref_peak}*{value - small_error}", f"{ref_peak}*{value + small_error}", True
 
     # If it's a simple number or range
     if ',' in constraint_str:
