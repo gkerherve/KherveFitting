@@ -23,6 +23,7 @@ from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
+from libraries.Sheet_Operations import on_sheet_selected
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
@@ -960,8 +961,12 @@ class MyFrame(wx.Frame):
             self.sheet_combobox.SetSelection(new_index)
             new_sheet = self.sheet_combobox.GetString(new_index)
 
-            # Call on_sheet_selected directly
-            self.on_sheet_selected(new_sheet)
+            # Create a mock event to pass to on_sheet_selected
+            mock_event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId, self.sheet_combobox.GetId())
+            mock_event.SetString(new_sheet)
+
+            # Call on_sheet_selected with the mock event
+            on_sheet_selected(self, mock_event)
 
 
     def highlight_selected_peak(self):
