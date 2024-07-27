@@ -946,11 +946,11 @@ class MyFrame(wx.Frame):
     #     pass  # Do nothing
 
     def on_mouse_wheel(self, event):
-        if event.GetWheelRotation() != 0:
+        if event.step != 0:
             current_index = self.sheet_combobox.GetSelection()
             num_sheets = self.sheet_combobox.GetCount()
 
-            if event.GetWheelRotation() > 0:
+            if event.step > 0:
                 # Scroll up, move to previous sheet
                 new_index = (current_index - 1) % num_sheets
             else:
