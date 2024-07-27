@@ -50,71 +50,6 @@ def load_rsf_data(file_path):
 from matplotlib.ticker import ScalarFormatter
 
 
-def clear_and_replot2(window):
-    sheet_name = window.sheet_combobox.GetValue()
-    limits = window.plot_config.get_plot_limits(window, sheet_name)
-
-    window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-    window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-    if sheet_name not in window.Data['Core levels']:
-        wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
-        return
-
-    core_level_data = window.Data['Core levels'][sheet_name]
-
-    # Clear the plot
-    window.ax.clear()
-    window.ax.set_xlabel("Binding Energy (eV)")
-    window.ax.set_ylabel("Intensity (CTS)")
-    window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-    window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-
-    # Plot the raw data
-    x_values = np.array(core_level_data['B.E.'])
-    y_values = np.array(core_level_data['Raw Data'])
-    window.ax.scatter(x_values, y_values, facecolors='none', marker='o', s=10, edgecolors='black', label='Raw Data')
-
-    # Get plot limits from PlotConfig
-    if sheet_name not in window.plot_config.plot_limits:
-        window.plot_config.update_plot_limits(window, sheet_name)
-    limits = window.plot_config.plot_limits[sheet_name]
-
-    # Set plot limits
-    window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-    window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-
-    # Plot the background if it exists
-    if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
-        window.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color='grey', linestyle='--',
-                       label='Background')
-
-    # Replot all peaks and update indices
-    num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-    for i in range(num_peaks):
-        row = i * 2
-        position_str = window.peak_params_grid.GetCellValue(row, 2)
-        height_str = window.peak_params_grid.GetCellValue(row, 3)
-
-        # Check if the cells are not empty before converting to float
-        if position_str and height_str:
-            try:
-                position = float(position_str)
-                height = float(height_str)
-                window.plot_peak(position, height, i)
-            except ValueError:
-                print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
-        else:
-            print(f"Warning: Empty data for peak {i + 1}. Skipping this peak.")
-
-    # Update overall fit and residuals
-    window.update_overall_fit_and_residuals()
-
-    # Update the legend
-    window.plot_manager.update_legend()
-
-    # Draw the canvas
-    window.canvas.draw_idle()
-
 
 def safe_delete_rows(grid, pos, num_rows):
     try:
@@ -310,8 +245,6 @@ def clear_background(window):
 
         # Layout the updated panel
         window.panel.Layout()
-
-        print(window.Data)
 
     except Exception as e:
         wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
@@ -1152,13 +1085,6 @@ def fit_peaks(window, peak_params_grid):
 
     # Log peak information for debugging
     num_peaks = peak_params_grid.GetNumberRows() // 2
-    print(f"Number of peaks: {num_peaks}")
-    for i in range(num_peaks):
-        row = i * 2
-        print(f"Peak {i + 1}: Position={peak_params_grid.GetCellValue(row, 2)}, "
-              f"Height={peak_params_grid.GetCellValue(row, 3)}, "
-              f"FWHM={peak_params_grid.GetCellValue(row, 4)}, "
-              f"L/G={peak_params_grid.GetCellValue(row, 5)}")
 
     # Get background energy range
     bg_min_energy = core_level_data['Background'].get('Bkg Low')
@@ -1203,11 +1129,6 @@ def fit_peaks(window, peak_params_grid):
                 lg_ratio_min, lg_ratio_max, lg_ratio_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 5),
                                                                               lg_ratio, peak_params_grid, i, "L/G")
 
-                print(f"Peak {i + 1} constraints:")
-                print(f"Center: {center_min} to {center_max}")
-                print(f"Height: {height_min} to {height_max}")
-                print(f"FWHM: {fwhm_min} to {fwhm_max}")
-                print(f"L/G ratio: {lg_ratio_min} to {lg_ratio_max}")
 
                 # Evaluate constraints
                 center_min = evaluate_constraint(center_min, peak_params_grid, 'center', center)
@@ -1218,13 +1139,6 @@ def fit_peaks(window, peak_params_grid):
                 fwhm_max = evaluate_constraint(fwhm_max, peak_params_grid, 'fwhm', fwhm)
                 lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
                 lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio)
-
-                print("Center Min: "+ str(center_min)+ "   Center Max: "+ str(center_max))
-                print(f"Evaluated constraints:")
-                print(f"Center: {center_min} to {center_max}")
-                print(f"Height: {height_min} to {height_max}")
-                print(f"FWHM: {fwhm_min} to {fwhm_max}")
-                print(f"L/G ratio: {lg_ratio_min} to {lg_ratio_max}")
 
 
                 sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
@@ -1496,11 +1410,6 @@ def get_peak_value(peak_params_grid, peak_name, param_name):
 
 import re
 
-
-import re
-
-import re
-
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
     constraint_str = constraint_str.strip()
     small_error = 0.05
@@ -1514,14 +1423,12 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
     match_simple = re.match(pattern_simple, constraint_str)
 
     if constraint_str in ['Fixed']:
-        print('It is Fixed')
         small_error3=0.001
         return current_value - small_error3, current_value +small_error3, False
     elif match:
         ref_peak, operator, value, delta = match.groups()
         value = float(value)
         delta = float(delta)
-        print("MATCH1 Value " +str(value) + " delta  "+str(delta))
         if operator == '+':
             return f"{ref_peak}+{value - delta}", f"{ref_peak}+{value + delta}", True
         elif operator == '*':
@@ -1530,7 +1437,6 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
     elif match_simple:
         ref_peak, operator, value = match_simple.groups()
         value = float(value)
-        print("MATCH2 Value " + str(value) + " operator  " + str(operator))
         if operator == '+':
             return f"{ref_peak}+{value - small_error}", f"{ref_peak}+{value + small_error}", True
         elif operator == '*':

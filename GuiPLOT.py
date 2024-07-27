@@ -1039,18 +1039,17 @@ class MyFrame(wx.Frame):
         popup.ShowFor(self)
 
     def change_selected_peak(self, direction):
-        # print(f"Entering change_selected_peak. Direction: {direction}")
-        # print(f"Initial selected_peak_index: {self.selected_peak_index}")
+
 
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
-        # print(f"Number of peaks: {num_peaks}")
+
 
         if self.selected_peak_index is None:
             self.selected_peak_index = 0 if direction > 0 else num_peaks - 1
         else:
             self.selected_peak_index = (self.selected_peak_index + direction) % num_peaks
 
-        # print(f"New selected_peak_index: {self.selected_peak_index}")
+
 
         self.remove_cross_from_peak()
         if self.peak_fitting_tab_selected:
@@ -1058,8 +1057,7 @@ class MyFrame(wx.Frame):
 
         self.canvas.draw_idle()
 
-        # print(f"Exiting change_selected_peak.")
-        # print("-" * 50)
+
 
 
 
