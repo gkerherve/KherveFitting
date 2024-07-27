@@ -1541,9 +1541,10 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
     if ',' in constraint_str:
         min_val, max_val = map(float, constraint_str.split(','))
         return min_val, max_val, True
-    elif constraint_str.startswith('#'):
-        delta = float(constraint_str[2:])
-        return current_value - delta, current_value + delta, True
+    if ':' in constraint_str:
+        min_val, max_val = map(float, constraint_str.split(','))
+        return min_val, max_val, True
+
 
     try:
         value = float(constraint_str)

@@ -1032,6 +1032,8 @@ class MyFrame(wx.Frame):
             return  # Prevent event from propagating
         event.Skip()  # Let other key events propagate normally
 
+    import wx.adv
+
     def show_popup_message(self, message):
         popup = wx.adv.RichToolTip("Are you trying to select a peak?", message)
         popup.ShowFor(self)
@@ -1392,8 +1394,13 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
 
-        if new_value.lower() == 'F' or 'fi' or 'Fi' or 'fix' or 'Fix' or 'fixe' or 'Fixe' or 'fixed':
+        if new_value.lower() in ['fi', 'fix', 'fixe', 'fixed']:
             new_value = 'Fixed'
+        elif new_value == 'F':
+            new_value = 'Fixed'
+        elif new_value.startswith('#'):
+            peak_value = float(self.peak_params_grid.GetCellValue(row-1, col))
+            new_value = str(round(peak_value-float(new_value[1:]),2))+':'+str(round(peak_value+float(new_value[1:]),2))
         # Convert lowercase letters to uppercase
         elif new_value.lower() in 'abcdefghijklmnop':
             new_value = new_value.upper() + '*1'
@@ -1407,34 +1414,7 @@ class MyFrame(wx.Frame):
                 new_value = ('*' if '*' in new_value else '+').join(parts)
                 self.peak_params_grid.SetCellValue(row, col, new_value)
 
-        # Handle new constraint format
-        # constraint_pattern = r'(([A-J]?[+*]?\d*\.?\d*)\(([+-]\d+\.?\d*)\))|([+-]\d+\.?\d*)'
-        # match = re.match(constraint_pattern, new_value)
-        # if match:
-        #     if match.group(4):  # Simple +-X format
-        #         base_value = float(self.peak_params_grid.GetCellValue(row - 1, col))
-        #         delta = float(match.group(4))
-        #         min_val = base_value - abs(delta)
-        #         max_val = base_value + abs(delta)
-        #         new_value = f"{min_val:.2f},{max_val:.2f}"
-        #     else:  # A+X(+-Y) or A*X(+-Y) format
-        #         base_expr = match.group(2)
-        #         delta = float(match.group(3))
-        #         if '*' in base_expr:
-        #             parts = base_expr.split('*')
-        #             ref_peak = parts[0]
-        #             factor = float(parts[1])
-        #             min_factor = factor - abs(delta)
-        #             max_factor = factor + abs(delta)
-        #             new_value = f"{ref_peak}*{min_factor:.2f},{ref_peak}*{max_factor:.2f}"
-        #         elif '+' in base_expr:
-        #             parts = base_expr.split('+')
-        #             ref_peak = parts[0]
-        #             offset = float(parts[1])
-        #             min_offset = offset - abs(delta)
-        #             max_offset = offset + abs(delta)
-        #             new_value = f"{ref_peak}+{min_offset:.2f},{ref_peak}+{max_offset:.2f}"
-        #     self.peak_params_grid.SetCellValue(row, col, new_value)
+
 
         if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
                 self.Data['Core levels'][sheet_name]['Fitting']:
