@@ -140,6 +140,7 @@ class MyFrame(wx.Frame):
         self.canvas.mpl_connect("button_press_event", self.on_click)
         self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.mpl_connect('key_press_event', self.on_key_press)
+        self.canvas.mpl_connect('scroll_event', self.on_mouse_wheel)
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press_global)
         # self.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
         # self.add_cross_to_peak(self.selected_peak_index)
@@ -941,9 +942,26 @@ class MyFrame(wx.Frame):
             self.show_hide_vlines()
             self.canvas.draw()
 
-    def on_scroll(self, event):
-        pass  # Do nothing
+    # def on_scroll(self, event):
+    #     pass  # Do nothing
 
+    def on_mouse_wheel(self, event):
+        if event.GetWheelRotation() != 0:
+            current_index = self.sheet_combobox.GetSelection()
+            num_sheets = self.sheet_combobox.GetCount()
+
+            if event.GetWheelRotation() > 0:
+                # Scroll up, move to previous sheet
+                new_index = (current_index - 1) % num_sheets
+            else:
+                # Scroll down, move to next sheet
+                new_index = (current_index + 1) % num_sheets
+
+            self.sheet_combobox.SetSelection(new_index)
+            new_sheet = self.sheet_combobox.GetString(new_index)
+
+            # Call on_sheet_selected directly
+            self.on_sheet_selected(new_sheet)
 
 
     def highlight_selected_peak(self):

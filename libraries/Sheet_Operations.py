@@ -6,7 +6,10 @@ import wx.grid
 from libraries.Utilities import _clear_peak_params_grid
 
 def on_sheet_selected(window, event):
-    selected_sheet = window.sheet_combobox.GetValue()
+    if isinstance(event, str):
+        selected_sheet = event
+    else:
+        selected_sheet = window.sheet_combobox.GetValue()
     if selected_sheet:
         # Reinitialize peak count
         window.peak_count = 0
@@ -95,3 +98,8 @@ def on_sheet_selected(window, event):
         window.plot_manager.update_legend(window)
 
         print(f"Selected sheet: {selected_sheet}, Peak count: {window.peak_count}, Show fit: {window.show_fit}")
+
+    # Update the combobox selection if a string was passed directly
+    if isinstance(event, str):
+        window.sheet_combobox.SetValue(selected_sheet)
+
