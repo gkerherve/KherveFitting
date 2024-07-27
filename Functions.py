@@ -1494,32 +1494,32 @@ def get_peak_value(peak_params_grid, peak_name, param_name):
     return None
 
 
+import re
+
+
+import re
+
+import re
+
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
     constraint_str = constraint_str.strip()
 
     if constraint_str.lower() in ['f', 'fixed']:
         return current_value, current_value, False
 
-    # New pattern to match A+2[+-0.2] format
-    pattern = r'^([A-J])([+*])(\d+\.?\d*)(?:\[([+-])(\d+\.?\d*)\])?$'
+    # Pattern to match A+1.5#0.5 format
+    pattern = r'^([A-J])([+*])(\d+\.?\d*)#([\d\.]+)$'
     match = re.match(pattern, constraint_str)
-    print("MATCH  "+str(match))
 
     if match:
-        ref_peak, operator, value, delta_op, delta = match.groups()
+        ref_peak, operator, value, delta = match.groups()
         value = float(value)
-        delta = float(delta) if delta else 0.1  # Default delta if not specified
+        delta = float(delta)
 
         if operator == '+':
-            if delta_op == '+' or delta_op is None:
-                return f"{ref_peak}+{value - delta}", f"{ref_peak}+{value + delta}", True
-            else:  # delta_op is '-'
-                return f"{ref_peak}+{value}", f"{ref_peak}+{value + delta}", True
+            return f"{ref_peak}+{value - delta}", f"{ref_peak}+{value + delta}", True
         elif operator == '*':
-            if delta_op == '+' or delta_op is None:
-                return f"{ref_peak}*{value - delta}", f"{ref_peak}*{value + delta}", True
-            else:  # delta_op is '-'
-                return f"{ref_peak}*{value}", f"{ref_peak}*{value + delta}", True
+            return f"{ref_peak}*{value - delta}", f"{ref_peak}*{value + delta}", True
 
     # If it's a simple number or range
     if ',' in constraint_str:
@@ -1537,22 +1537,6 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
 
     # If we can't parse it, return the current value with a small range
     return current_value - 0.1, current_value + 0.1, True
-
-    print(f"Constraint: {constraint_str}")
-    print(f"Match: {match.groups() if match else 'No match'}")
-    print(f"Result: min={min_val}, max={max_val}, vary={vary}")
-
-    return min_val, max_val, vary
-
-
-# print('-----------------')
-# print(peak)
-# print(op)
-# print(value)
-# print(delta)
-# print('-----------------')
-#
-# print("MATCH "+ str(base_value)+"+-"+str(delta))
 
 
 def evaluate_constraint(constraint, peak_params_grid, param_name, current_value):
@@ -1579,10 +1563,6 @@ def evaluate_constraint(constraint, peak_params_grid, param_name, current_value)
     except ValueError:
         return current_value
 
-    print(f"Constraint: {constraint}")
-    print(f"Result: {result}")
-
-    return result
 
 def format_sheet_name2(sheet_name):
     # Regular expression to separate element and electron shell
