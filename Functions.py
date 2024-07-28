@@ -1229,24 +1229,24 @@ def fit_peaks(window, peak_params_grid):
                 peak_model_choice = peak_params_grid.GetCellValue(row, 9)
 
                 if peak_label in existing_peaks:
-                    center = result.params[f'{prefix}center'].value
+                    center = round(result.params[f'{prefix}center'].value, 2)
                     if peak_model_choice == "Voigt":
                         amplitude = result.params[f'{prefix}amplitude'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         gamma = result.params[f'{prefix}gamma'].value
-                        height = PeakFunctions.get_voigt_height(amplitude, sigma, gamma)
-                        fwhm = PeakFunctions.voigt_fwhm(sigma, gamma)
-                        fraction = gamma / (sigma * np.sqrt(2 * np.log(2)))
+                        height = round(PeakFunctions.get_voigt_height(amplitude, sigma, gamma), 2)
+                        fwhm = round(PeakFunctions.voigt_fwhm(sigma, gamma), 2)
+                        fraction = round(gamma / (sigma * np.sqrt(2 * np.log(2))), 2)
                     elif peak_model_choice == "Pseudo-Voigt":
                         amplitude = result.params[f'{prefix}amplitude'].value
                         sigma = result.params[f'{prefix}sigma'].value
-                        fraction = result.params[f'{prefix}fraction'].value
-                        fwhm = sigma * 2.355
-                        height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
+                        fraction = round(result.params[f'{prefix}fraction'].value, 2)
+                        fwhm = round(sigma * 2.355, 2)
+                        height = round(PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction), 2)
                     elif peak_model_choice in ["GL", "SGL"]:
-                        height = result.params[f'{prefix}amplitude'].value
-                        fwhm = result.params[f'{prefix}fwhm'].value
-                        fraction = result.params[f'{prefix}fraction'].value
+                        height = round(result.params[f'{prefix}amplitude'].value, 2)
+                        fwhm = round(result.params[f'{prefix}fwhm'].value, 2)
+                        fraction = round(result.params[f'{prefix}fraction'].value, 2)
                     else:
                         raise ValueError(f"Unknown fitting model: {peak_model_choice} for peak {peak_label}")
 
@@ -1256,13 +1256,16 @@ def fit_peaks(window, peak_params_grid):
                     peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")
                     peak_params_grid.SetCellValue(row, 5, f"{fraction:.2f}")
 
+                    # Calculate area and round it
+                    area = round(height * fwhm * (np.sqrt(2 * np.pi) / 2.355), 2)
+
                     # Update existing peak in window.Data
                     existing_peaks[peak_label].update({
                         'Position': center,
                         'Height': height,
                         'FWHM': fwhm,
                         'L/G': fraction,
-                        'Area': height * fwhm * (np.sqrt(2 * np.pi) / 2.355),
+                        'Area': area,
                         'Fitting Model': peak_model_choice
                     })
                 else:
