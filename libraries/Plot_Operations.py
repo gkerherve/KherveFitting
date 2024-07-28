@@ -246,21 +246,28 @@ class PlotManager:
             # Check if the cells are not empty before converting to float
             if all([position_str, height_str, fwhm_str, lg_ratio_str]):
                 try:
-                    position = float(position_str)
-                    height = float(height_str)
-                    fwhm = float(fwhm_str)
-                    lg_ratio = float(lg_ratio_str)
+                    if fitting_model == "Unfitted":
+                        # For unfitted peaks, fill between background and raw data
+                        mask = (x_values >= position - fwhm / 2) & (x_values <= position + fwhm / 2)
+                        self.ax.fill_between(x_values[mask], window.background[mask], y_values[mask],
+                                             facecolor='lightgreen', alpha=0.5, label=label)
+                    else:
 
-                    peak_params = {
-                        'row': row,
-                        'position': position,
-                        'height': height,
-                        'fwhm': fwhm,
-                        'lg_ratio': lg_ratio,
-                        'label': label,
-                        'fitting_model': fitting_model
-                    }
-                    self.plot_peak(window.x_values, window.background, peak_params, sheet_name)
+                        position = float(position_str)
+                        height = float(height_str)
+                        fwhm = float(fwhm_str)
+                        lg_ratio = float(lg_ratio_str)
+
+                        peak_params = {
+                            'row': row,
+                            'position': position,
+                            'height': height,
+                            'fwhm': fwhm,
+                            'lg_ratio': lg_ratio,
+                            'label': label,
+                            'fitting_model': fitting_model
+                        }
+                        self.plot_peak(window.x_values, window.background, peak_params, sheet_name)
                 except ValueError:
                     print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
             else:
@@ -518,13 +525,6 @@ class PlotManager:
         except Exception as e:
             print(f"Unexpected error adding cross to peak: {e}")
             # You might want to show an error message to the user here
-
-    # def resize_plot(self, window):
-    #     sheet_name = window.sheet_combobox.GetValue()
-    #     limits = window.plot_config.get_plot_limits(window, sheet_name)
-    #     self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-    #     self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-    #     self.canvas.draw_idle()
 
     def toggle_residuals(self):
         for line in self.ax.get_lines():
