@@ -1116,6 +1116,7 @@ def fit_peaks(window, peak_params_grid):
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
+                peak_model_choice = peak_params_grid.GetCellValue(row, 9)  # Assuming column 9 is the Fitting Model
                 sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                 gamma = lg_ratio * sigma
 
@@ -1149,13 +1150,13 @@ def fit_peaks(window, peak_params_grid):
                 prefix = f'peak{i}_'
 
                 # Create the appropriate peak model based on the selected fitting method
-                if model_choice == "Voigt":
+                if peak_model_choice == "Voigt":
                     peak_model = lmfit.models.VoigtModel(prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=fwhm_vary)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=lg_ratio_vary)
-                elif model_choice == "Pseudo-Voigt":
+                elif peak_model_choice == "Pseudo-Voigt":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     sigma = fwhm / 2.355
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
@@ -1163,7 +1164,7 @@ def fit_peaks(window, peak_params_grid):
                     params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
                                max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=0, max=1, vary=lg_ratio_vary)
-                elif model_choice == "Pseudo-Voigt2":
+                elif peak_model_choice == "Pseudo-Voigt2":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     sigma = fwhm / 2.355
                     # Use the current height as initial guess, let the model handle the conversion
@@ -1175,34 +1176,22 @@ def fit_peaks(window, peak_params_grid):
                                vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
                                vary=lg_ratio_vary)
-                # elif model_choice == "Pseudo-Voigt":
-                #     peak_model = lmfit.Model(pseudo_voigt_2, prefix=prefix)
-                #     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
-                #     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
-                #     params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=fwhm_vary)
-                #     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
-                #                vary=lg_ratio_vary)
-                # elif model_choice == "Pseudo-Voigt_3":
-                #     peak_model = lmfit.Model(pseudo_voigt_1, prefix=prefix)
-                #     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
-                #     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
-                #     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
-                #     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
-                #                vary=lg_ratio_vary)
-                elif model_choice == "GL":
+                elif peak_model_choice == "GL":
                     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz, prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
                                vary=lg_ratio_vary)
-                elif model_choice == "SGL":
+                elif peak_model_choice == "SGL":
                     peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz, prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
                                vary=lg_ratio_vary)
+                else:
+                    raise ValueError(f"Unknown fitting model: {peak_model_choice} for peak {i}")
 
                 # Add the peak model to the overall model
                 if model is None:
@@ -1237,32 +1226,29 @@ def fit_peaks(window, peak_params_grid):
                 row = i * 2
                 prefix = f'peak{i}_'
                 peak_label = peak_params_grid.GetCellValue(row, 1)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 9)
 
                 if peak_label in existing_peaks:
                     center = result.params[f'{prefix}center'].value
-                    if model_choice == "Voigt":
+                    if peak_model_choice == "Voigt":
                         amplitude = result.params[f'{prefix}amplitude'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         gamma = result.params[f'{prefix}gamma'].value
-                        # Calculate height directly using the model
                         height = PeakFunctions.get_voigt_height(amplitude, sigma, gamma)
                         fwhm = PeakFunctions.voigt_fwhm(sigma, gamma)
                         fraction = gamma / (sigma * np.sqrt(2 * np.log(2)))
-                    elif model_choice == "Pseudo-Voigt":
+                    elif peak_model_choice == "Pseudo-Voigt":
                         amplitude = result.params[f'{prefix}amplitude'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         fraction = result.params[f'{prefix}fraction'].value
                         fwhm = sigma * 2.355
-                        # Calculate height directly using the model
                         height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
-                    else:
-                        # For all other models, amplitude is treated as height
+                    elif peak_model_choice in ["GL", "SGL"]:
                         height = result.params[f'{prefix}amplitude'].value
-                        fwhm = result.params[f'{prefix}fwhm'].value if f'{prefix}fwhm' in result.params else 2.355 * \
-                                                                                                             result.params[
-                                                                                                                 f'{prefix}sigma'].value
-                        fraction = result.params[f'{prefix}fraction'].value if f'{prefix}fraction' in result.params else \
-                        result.params[f'{prefix}gamma'].value / result.params[f'{prefix}sigma'].value
+                        fwhm = result.params[f'{prefix}fwhm'].value
+                        fraction = result.params[f'{prefix}fraction'].value
+                    else:
+                        raise ValueError(f"Unknown fitting model: {peak_model_choice} for peak {peak_label}")
 
                     # Update peak_params_grid
                     peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
@@ -1277,7 +1263,7 @@ def fit_peaks(window, peak_params_grid):
                         'FWHM': fwhm,
                         'L/G': fraction,
                         'Area': height * fwhm * (np.sqrt(2 * np.pi) / 2.355),
-                        # Consistent area calculation for all models
+                        'Fitting Model': peak_model_choice
                     })
                 else:
                     print(f"Warning: Peak {peak_label} not found in existing data. Skipping update for this peak.")
