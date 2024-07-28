@@ -1087,9 +1087,6 @@ class MyFrame(wx.Frame):
         self.canvas.draw_idle()
 
 
-
-
-
     def on_motion(self, event):
         if event.inaxes and self.moving_vline is not None:
             x_click = event.xdata
@@ -1412,7 +1409,21 @@ class MyFrame(wx.Frame):
             except ValueError:
                 wx.MessageBox("Invalid height value", "Error", wx.OK | wx.ICON_ERROR)
 
-
+    def calculate_peak_area(self, model, height, fwhm, fraction):
+        if model == "Voigt":
+            sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+            gamma = fraction * sigma
+            amplitude = height / PeakFunctions.get_voigt_height(1, sigma, gamma)
+            area = amplitude * (sigma * np.sqrt(2 * np.pi))
+        elif model == "Pseudo-Voigt":
+            sigma = fwhm / 2.355
+            amplitude = height / PeakFunctions.get_pseudo_voigt_height(1, sigma, fraction)
+            area = amplitude
+        elif model in ["GL", "SGL", "Unfitted"]:
+            area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+        else:
+            raise ValueError(f"Unknown fitting model: {model}")
+        return round(area, 2)
 
     def on_peak_params_cell_changed(self, event):
         row = event.GetRow()
@@ -1450,24 +1461,34 @@ class MyFrame(wx.Frame):
                 correct_peak_key = peak_keys[peak_index]
 
                 if row % 2 == 0:  # Main parameter row
-                    if col == 1:  # Label
-                        new_peaks = {}
-                        for i, (key, value) in enumerate(peaks.items()):
-                            if i == peak_index:
-                                new_peaks[new_value] = value
-                            else:
-                                new_peaks[key] = value
-                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = new_peaks
-                    elif col == 2:  # Position
-                        peaks[correct_peak_key]['Position'] = float(new_value)
-                    elif col == 3:  # Height
-                        peaks[correct_peak_key]['Height'] = float(new_value)
-                    elif col == 4:  # FWHM
-                        peaks[correct_peak_key]['FWHM'] = float(new_value)
-                    elif col == 5:  # L/G
-                        peaks[correct_peak_key]['L/G'] = float(new_value)
-                    elif col == 9:  # Fitting Model
+                    if col in [3, 4, 5]:  # Height, FWHM, or L/G changed
+                        height = float(self.peak_params_grid.GetCellValue(row, 3))
+                        fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                        fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+                        model = peaks[correct_peak_key]['Fitting Model']
+
+                        # Recalculate area
+                        area = self.calculate_peak_area(model, height, fwhm, fraction)
+
+                        # Update grid and data
+                        self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+                        peaks[correct_peak_key].update({
+                            'Height': round(height, 2),
+                            'FWHM': round(fwhm, 2),
+                            'L/G': round(fraction, 2),
+                            'Area': area
+                        })
+                    elif col == 9:  # Fitting Model changed
                         peaks[correct_peak_key]['Fitting Model'] = new_value
+
+                        # Recalculate area with new model
+                        height = float(self.peak_params_grid.GetCellValue(row, 3))
+                        fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                        fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+                        area = self.calculate_peak_area(new_value, height, fwhm, fraction)
+
+                        self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+                        peaks[correct_peak_key]['Area'] = area
                 else:  # Constraint row
                     if col >= 2 and col <= 5:
                         constraint_key = ['Position', 'Height', 'FWHM', 'L/G'][col - 2]
