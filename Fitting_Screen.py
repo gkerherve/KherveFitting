@@ -2,6 +2,7 @@
 
 import wx
 from Functions import fit_peaks, remove_peak, plot_background, clear_background
+import re
 
 class FittingWindow(wx.Frame):
     def __init__(self, parent, *args, **kw):
@@ -17,6 +18,7 @@ class FittingWindow(wx.Frame):
         self.init_ui()
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.doublet_splittings = self.load_doublet_splittings("DS.txt")
 
     def init_ui(self):
         """Initialize the user interface components."""
@@ -118,9 +120,9 @@ class FittingWindow(wx.Frame):
         fit_button.SetMinSize((110, 40))
         fit_button.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
 
-        stop_button = wx.Button(fitting_panel, label="Stop")
-        stop_button.SetMinSize((60, 40))
-        stop_button.Bind(wx.EVT_BUTTON, self.on_stop)
+        add_doublet_button = wx.Button(fitting_panel, label="Add Doublet")
+        add_doublet_button.SetMinSize((110, 40))
+        add_doublet_button.Bind(wx.EVT_BUTTON, self.on_add_doublet)
 
         export_button = wx.Button(fitting_panel, label="Export")
         export_button.SetMinSize((60, 40))
@@ -145,7 +147,7 @@ class FittingWindow(wx.Frame):
         fitting_sizer.Add(remove_peak_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         fitting_sizer.Add(fit_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(stop_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_doublet_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         fitting_sizer.Add(export_button, pos=(7, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
 
@@ -186,9 +188,50 @@ class FittingWindow(wx.Frame):
     def on_export_results(self, event):
         self.parent.export_results()
 
-    def on_stop(self, event):
-        # Define the stop behavior here
-        pass
+    def load_doublet_splittings(self, filename):
+        splittings = {}
+        with open(filename, 'r') as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) == 2:
+                    splittings[parts[0]] = float(parts[1])
+        return splittings
+
+    def on_add_doublet(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        orbital = re.search(r'[spdf]', sheet_name)
+
+        if not orbital:
+            wx.MessageBox("Invalid sheet name. Cannot determine orbital type.", "Error", wx.OK | wx.ICON_ERROR)
+            return
+
+        orbital = orbital.group()
+
+        if orbital == 's':
+            self.parent.add_peak_params()
+        else:
+            first_peak = self.parent.add_peak_params()
+            second_peak = self.parent.add_peak_params()
+
+            # Set constraints for the second peak
+            row1 = first_peak * 2
+            row2 = second_peak * 2
+
+            # L/G ratio constraint
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 5, f"{chr(65 + first_peak)}*1")
+
+            # FWHM constraint
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 4, f"{chr(65 + first_peak)}*1")
+
+            # Height constraint
+            height_factor = {'p': 0.5, 'd': 0.667, 'f': 0.75}
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.1")
+
+            # Position constraint
+            splitting = self.doublet_splittings.get(sheet_name, 0)
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, f"{chr(65 + first_peak)}+{splitting}#0.2")
+
+        self.parent.clear_and_replot()
 
     def on_background(self, event):
         plot_background(self.parent)

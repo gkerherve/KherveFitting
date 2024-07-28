@@ -481,6 +481,8 @@ class MyFrame(wx.Frame):
         # Call the method to clear and replot everything
         self.clear_and_replot()
 
+        return self.peak_count - 1  # Return the index of the added peak
+
     def get_peak_model(self, peak_x, peak_y, fwhm, lg_ratio):
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = lg_ratio * sigma
