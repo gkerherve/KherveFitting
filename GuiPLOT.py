@@ -1067,7 +1067,7 @@ class MyFrame(wx.Frame):
         popup = wx.adv.RichToolTip(message1, message2)
         popup.ShowFor(self)
 
-    def change_selected_peak2(self, direction):
+    def change_selected_peak(self, direction):
 
 
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
@@ -1441,8 +1441,6 @@ class MyFrame(wx.Frame):
                 new_value = ('*' if '*' in new_value else '+').join(parts)
                 self.peak_params_grid.SetCellValue(row, col, new_value)
 
-
-
         if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
                 self.Data['Core levels'][sheet_name]['Fitting']:
             peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
@@ -1468,6 +1466,8 @@ class MyFrame(wx.Frame):
                         peaks[correct_peak_key]['FWHM'] = float(new_value)
                     elif col == 5:  # L/G
                         peaks[correct_peak_key]['L/G'] = float(new_value)
+                    elif col == 9:  # Fitting Model
+                        peaks[correct_peak_key]['Fitting Model'] = new_value
                 else:  # Constraint row
                     if col >= 2 and col <= 5:
                         constraint_key = ['Position', 'Height', 'FWHM', 'L/G'][col - 2]
@@ -1487,7 +1487,7 @@ class MyFrame(wx.Frame):
 
                         peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 
-        # Ensure numeric values are displayed with 2 decimal places
+            # Ensure numeric values are displayed with 2 decimal places
         if col in [2, 3, 4, 5] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
             try:
                 formatted_value = f"{float(new_value):.2f}"
@@ -1499,6 +1499,9 @@ class MyFrame(wx.Frame):
 
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
+
+        # Replot the peaks with updated parameters
+        self.clear_and_replot()
 
 
     def refresh_peak_params_grid(self):

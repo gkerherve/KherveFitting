@@ -337,7 +337,7 @@ def plot_background(window):
             window.clear_and_replot()
 
             # Update the legend
-            window.plot_manager.update_legend()
+            window.plot_manager.update_legend(window)
 
         window.ax.legend(loc='upper left')
         window.canvas.draw()

@@ -19,7 +19,7 @@ class PlotManager:
         self.fitting_results_text = None
         self.fitting_results_visible = False
 
-    def plot_peak(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
+    def plot_peak2(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
         lg_ratio = peak_params['lg_ratio']
@@ -49,6 +49,45 @@ class PlotManager:
 
         peak_label = peak_params['label'] if 'label' in peak_params else f"{sheet_name} p{row // 2 + 1}"
 
+
+        self.ax.plot(x_values, peak_y)
+        self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=peak_label)
+
+        self.canvas.draw_idle()
+
+        return peak_y
+
+    def plot_peak(self, x_values, background, peak_params, sheet_name):
+        row = peak_params['row']
+        fwhm = peak_params['fwhm']
+        lg_ratio = peak_params['lg_ratio']
+        x = peak_params['position']
+        y = peak_params['height']
+        peak_label = peak_params['label']
+
+        # Get the fitting model for this specific peak
+        fitting_model = peak_params.get('fitting_model', "GL")  # Default to GL if not specified
+
+        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        gamma = lg_ratio * sigma
+        bkg_y = background[np.argmin(np.abs(x_values - x))]
+
+        if fitting_model == "Voigt":
+            peak_model = lmfit.models.VoigtModel()
+            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
+            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
+        elif fitting_model == "Pseudo-Voigt":
+            peak_model = lmfit.models.PseudoVoigtModel()
+            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
+            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
+        elif fitting_model == "GL":
+            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+        elif fitting_model == "SGL":
+            peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+
+        peak_y = peak_model.eval(params, x=x_values) + background
 
         self.ax.plot(x_values, peak_y)
         self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=peak_label)
@@ -199,14 +238,29 @@ class PlotManager:
             row = i * 2
             position_str = window.peak_params_grid.GetCellValue(row, 2)
             height_str = window.peak_params_grid.GetCellValue(row, 3)
+            fwhm_str = window.peak_params_grid.GetCellValue(row, 4)
+            lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)
             label = window.peak_params_grid.GetCellValue(row, 1)
+            fitting_model = window.peak_params_grid.GetCellValue(row, 9)  # Assuming column 9 is the Fitting Model
 
             # Check if the cells are not empty before converting to float
-            if position_str and height_str:
+            if all([position_str, height_str, fwhm_str, lg_ratio_str]):
                 try:
                     position = float(position_str)
                     height = float(height_str)
-                    window.plot_peak(position, height, i)
+                    fwhm = float(fwhm_str)
+                    lg_ratio = float(lg_ratio_str)
+
+                    peak_params = {
+                        'row': row,
+                        'position': position,
+                        'height': height,
+                        'fwhm': fwhm,
+                        'lg_ratio': lg_ratio,
+                        'label': label,
+                        'fitting_model': fitting_model
+                    }
+                    self.plot_peak(window.x_values, window.background, peak_params, sheet_name)
                 except ValueError:
                     print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
             else:
