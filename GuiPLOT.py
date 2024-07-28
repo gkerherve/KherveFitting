@@ -5,7 +5,7 @@ import matplotlib
 import matplotlib.widgets as widgets
 # LIBRARIES----------------------------------------------------------------------
 import wx.grid
-
+import wx.adv
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -1061,7 +1061,11 @@ class MyFrame(wx.Frame):
         popup = wx.adv.RichToolTip("Are you trying to select a peak?", message)
         popup.ShowFor(self)
 
-    def change_selected_peak(self, direction):
+    def show_popup_message2(self, message1, message2):
+        popup = wx.adv.RichToolTip(message1, message2)
+        popup.ShowFor(self)
+
+    def change_selected_peak2(self, direction):
 
 
         num_peaks = self.peak_params_grid.GetNumberRows() // 2

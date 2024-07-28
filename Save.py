@@ -526,8 +526,10 @@ def save_plot_to_excel(window):
         wb.save(file_path)
 
         print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
-        wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
-                      wx.OK | wx.ICON_INFORMATION)
+        # wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
+        #               wx.OK | wx.ICON_INFORMATION)
+        window.show_popup_message2("Plot saved into Excel file", f"Under sheet: {sheet_name}")
+
     except Exception as e:
         import traceback
         traceback.print_exc()
