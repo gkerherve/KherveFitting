@@ -391,9 +391,10 @@ class PlotManager:
             height_str = window.peak_params_grid.GetCellValue(row, 3)  # Height
             fwhm_str = window.peak_params_grid.GetCellValue(row, 4)  # FWHM
             lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)  # L/G
+            fitting_model = window.peak_params_grid.GetCellValue(row, 9)  # Fitting Model
 
             # Check if any of the cells are empty
-            if not all([position_str, height_str, fwhm_str, lg_ratio_str]):
+            if not all([position_str, height_str, fwhm_str, lg_ratio_str, fitting_model]):
                 print(f"Warning: Incomplete data for peak {i + 1}. Skipping this peak.")
                 continue
 
@@ -410,20 +411,23 @@ class PlotManager:
             gamma = lg_ratio * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - peak_x))]
 
-            if window.selected_fitting_method == "Voigt":
+            if fitting_model == "Voigt":
                 peak_model = lmfit.models.VoigtModel()
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif window.selected_fitting_method == "Pseudo-Voigt":
+            elif fitting_model == "Pseudo-Voigt":
                 peak_model = lmfit.models.PseudoVoigtModel()
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-            elif window.selected_fitting_method == "GL":
+            elif fitting_model == "GL":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-            elif window.selected_fitting_method == "SGL":
+            elif fitting_model == "SGL":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+            else:
+                print(f"Warning: Unknown fitting model '{fitting_model}' for peak {i + 1}. Skipping this peak.")
+                continue
 
             peak_fit = peak_model.eval(params, x=window.x_values)
             overall_fit += peak_fit
