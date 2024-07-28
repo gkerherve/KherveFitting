@@ -1440,7 +1440,7 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
         if operator == '+':
             return f"{ref_peak}+{value - small_error}", f"{ref_peak}+{value + small_error}", True
         elif operator == '*':
-            small_error2 = 0.01
+            small_error2 = 0.0001
             return f"{ref_peak}*{value - small_error2}", f"{ref_peak}*{value + small_error2}", True
 
     # If it's a simple number or range

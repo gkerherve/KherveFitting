@@ -218,18 +218,39 @@ class FittingWindow(wx.Frame):
             row2 = second_peak * 2
 
             # L/G ratio constraint
-            self.parent.peak_params_grid.SetCellValue(row2 + 1, 5, f"{chr(65 + first_peak)}*1")
+            lg_constraint = f"{chr(65 + first_peak)}*1"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 5, lg_constraint)
 
             # FWHM constraint
-            self.parent.peak_params_grid.SetCellValue(row2 + 1, 4, f"{chr(65 + first_peak)}*1")
+            fwhm_constraint = f"{chr(65 + first_peak)}*1"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 4, fwhm_constraint)
 
             # Height constraint
             height_factor = {'p': 0.5, 'd': 0.667, 'f': 0.75}
-            self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.1")
+            height_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.1"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, height_constraint)
 
             # Position constraint
             splitting = self.doublet_splittings.get(sheet_name, 0)
-            self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, f"{chr(65 + first_peak)}+{splitting}#0.2")
+            position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
+
+            # Update window.Data with new constraints
+            if 'Fitting' in self.parent.Data['Core levels'][sheet_name] and 'Peaks' in \
+                    self.parent.Data['Core levels'][sheet_name]['Fitting']:
+                peaks = self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+                peak_keys = list(peaks.keys())
+                if second_peak < len(peak_keys):
+                    second_peak_key = peak_keys[second_peak]
+                    if 'Constraints' not in peaks[second_peak_key]:
+                        peaks[second_peak_key]['Constraints'] = {}
+
+                    peaks[second_peak_key]['Constraints'].update({
+                        'Position': position_constraint,
+                        'Height': height_constraint,
+                        'FWHM': fwhm_constraint,
+                        'L/G': lg_constraint
+                    })
 
         self.parent.clear_and_replot()
 
