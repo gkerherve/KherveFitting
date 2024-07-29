@@ -236,42 +236,37 @@ class PlotManager:
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
         for i in range(num_peaks):
             row = i * 2
-            position_str = window.peak_params_grid.GetCellValue(row, 2)
-            height_str = window.peak_params_grid.GetCellValue(row, 3)
-            fwhm_str = window.peak_params_grid.GetCellValue(row, 4)
-            lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)
-            label = window.peak_params_grid.GetCellValue(row, 1)
-            fitting_model = window.peak_params_grid.GetCellValue(row, 9)  # Assuming column 9 is the Fitting Model
 
-            # Check if the cells are not empty before converting to float
-            if all([position_str, height_str, fwhm_str, lg_ratio_str]):
-                try:
-                    if fitting_model == "Unfitted":
-                        # For unfitted peaks, fill between background and raw data
-                        mask = (x_values >= position - fwhm / 2) & (x_values <= position + fwhm / 2)
-                        self.ax.fill_between(x_values[mask], window.background[mask], y_values[mask],
-                                             facecolor='lightgreen', alpha=0.5, label=label)
-                    else:
+            # Get all necessary values, with error checking
+            try:
+                position = float(window.peak_params_grid.GetCellValue(row, 2))
+                height = float(window.peak_params_grid.GetCellValue(row, 3))
+                fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
+                fraction = float(window.peak_params_grid.GetCellValue(row, 5))
+                label = window.peak_params_grid.GetCellValue(row, 1)
+                fitting_model = window.peak_params_grid.GetCellValue(row, 9)
+            except ValueError:
+                print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
+                continue
 
-                        position = float(position_str)
-                        height = float(height_str)
-                        fwhm = float(fwhm_str)
-                        lg_ratio = float(lg_ratio_str)
-
-                        peak_params = {
-                            'row': row,
-                            'position': position,
-                            'height': height,
-                            'fwhm': fwhm,
-                            'lg_ratio': lg_ratio,
-                            'label': label,
-                            'fitting_model': fitting_model
-                        }
-                        self.plot_peak(window.x_values, window.background, peak_params, sheet_name)
-                except ValueError:
-                    print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
+            if fitting_model == "Unfitted":
+                # For unfitted peaks, fill between background and raw data
+                mask = (x_values >= position - fwhm / 2) & (x_values <= position + fwhm / 2)
+                self.ax.fill_between(x_values, window.background, y_values,
+                                     facecolor='lightgreen', alpha=0.5, label=label)
             else:
-                print(f"Warning: Empty data for peak {i + 1}. Skipping this peak.")
+                # For fitted peaks, use the existing plot_peak method
+                peak_params = {
+                    'row': row,
+                    'position': position,
+                    'height': height,
+                    'fwhm': fwhm,
+                    'lg_ratio': fraction,
+                    'label': label,
+                    'fitting_model': fitting_model
+                }
+                self.plot_peak(window.x_values, window.background, peak_params, sheet_name)
+
 
         self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=15, edgecolors='black', label='Raw Data')
 
@@ -281,7 +276,10 @@ class PlotManager:
                          label='Background')
 
         # Update overall fit and residuals
-        window.update_overall_fit_and_residuals()
+        if fitting_model == "Unfitted":
+            pass
+        else:
+            window.update_overall_fit_and_residuals()
 
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
