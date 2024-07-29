@@ -35,8 +35,6 @@ def export_results(window):
     # Initialize variables for atomic percent calculations
     peak_data = []
 
-    # Get the selected fitting model and sheet name
-    fitting_model = window.selected_fitting_method
     sheet_name = window.sheet_combobox.GetValue()
 
     # Clear existing results
@@ -50,8 +48,11 @@ def export_results(window):
         # Extract peak parameters
         peak_params = _extract_peak_parameters(window, row, rsf_dict)
 
+        # Get the fitting model for this specific peak
+        fitting_model = window.peak_params_grid.GetCellValue(row, 9)  # Assuming column 9 is the Fitting Model
+
         # Calculate area and related values
-        area, normalized_area, rel_area = _calculate_peak_areas(peak_params)
+        area, normalized_area, rel_area = _calculate_peak_areas(peak_params, fitting_model)
 
         # Store peak data for atomic percent calculation
         peak_data.append((peak_params['name'], peak_params['position'], peak_params['height'],
@@ -100,12 +101,28 @@ def _extract_peak_parameters(window, row, rsf_dict):
     }
 
 
-def _calculate_peak_areas(peak_params):
+def _calculate_peak_areas(peak_params, fitting_model):
     """Calculate area, normalized area, and relative area for a peak."""
-    area = peak_params['height'] * peak_params['fwhm'] * (np.sqrt(2 * np.pi) / 2.355)
-    normalized_area = area * peak_params['rsf']
+    height = peak_params['height']
+    fwhm = peak_params['fwhm']
+
+    if fitting_model == "Voigt":
+        # Area calculation for Voigt profile
+        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        area = height * sigma * np.sqrt(2 * np.pi)
+    elif fitting_model == "Pseudo-Voigt":
+        # Area calculation for Pseudo-Voigt profile
+        area = height * fwhm * np.pi / 2
+    elif fitting_model in ["GL", "SGL", "Unfitted"]:
+        # Area calculation for Gaussian-Lorentzian profiles
+        area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+    else:
+        raise ValueError(f"Unknown fitting model: {fitting_model}")
+
+    normalized_area = area / peak_params['rsf']
     rel_area = area / peak_params['rsf']
-    return area, normalized_area, rel_area
+
+    return round(area, 2), round(normalized_area, 2), round(rel_area, 2)
 
 
 def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model):
