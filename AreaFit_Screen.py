@@ -6,7 +6,7 @@ class BackgroundWindow(wx.Frame):
     def __init__(self, parent, *args, **kw):
         super(BackgroundWindow, self).__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent
-        self.SetTitle("Background Settings")
+        self.SetTitle("Measure Area between the range cursors")
         self.SetSize((270, 300))
         self.SetMinSize((270, 300))
         self.SetMaxSize((270, 300))

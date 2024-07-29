@@ -551,6 +551,7 @@ def create_horizontal_toolbar(window):
     save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level")
     save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
 
+
     toolbar.AddSeparator()
 
     # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
@@ -597,7 +598,7 @@ def create_horizontal_toolbar(window):
     toolbar.AddSeparator()
 
     # Analysis tools
-    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-64.png"), wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area under Peak")
+    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-64.png"), wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area between the range cursor")
     # bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(wx.Bitmap(os.path.join(icon_path, "Plot_Area.ico")), wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area under Peak")
     fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "STO-200.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window")
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
@@ -609,6 +610,11 @@ def create_horizontal_toolbar(window):
 
     # Add a spacer to push the following items to the right
     toolbar.AddStretchableSpace()
+
+    # Add export button
+    export_tool = toolbar.AddTool(wx.ID_ANY, 'Export Results',
+                                  wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR),
+                                  shortHelp="Export to Results Grid")
 
     # Hide columns in Peak Fitting Parameters
     toggle_Col_1_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
@@ -639,6 +645,7 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
     window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: toggle_Col_1(window), toggle_Col_1_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.export_results(), export_tool)
 
     return toolbar
 
@@ -670,13 +677,13 @@ def create_vertical_toolbar(parent, frame):
     v_toolbar.AddSeparator()
 
     # BE adjustment tools
-    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path, "Right-Red.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
-    high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path, "Left-Red-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High BE")
+    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path, "Right-Red-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
+    high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path, "Left-Red-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High BE")
 
     v_toolbar.AddSeparator()
 
-    low_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE +', wx.Bitmap(os.path.join(icon_path, "Left-Blue-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase Low BE")
-    low_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE -', wx.Bitmap(os.path.join(icon_path, "Right-Blue-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease Low BE")
+    low_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE +', wx.Bitmap(os.path.join(icon_path, "Left-Blue-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase Low BE")
+    low_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE -', wx.Bitmap(os.path.join(icon_path, "Right-Blue-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease Low BE")
 
     # v_toolbar.AddSeparator()
 
@@ -690,15 +697,15 @@ def create_vertical_toolbar(parent, frame):
     v_toolbar.AddSeparator()
 
     # Intensity adjustment tools
-    high_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int +', wx.Bitmap(os.path.join(icon_path, "Up-Red-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High Intensity")
-    high_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int -', wx.Bitmap(os.path.join(icon_path, "Down-Red-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High Intensity")
+    high_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int +', wx.Bitmap(os.path.join(icon_path, "Up-Red-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High Intensity")
+    high_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int -', wx.Bitmap(os.path.join(icon_path, "Down-Red-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High Intensity")
 
     v_toolbar.AddSeparator()
 
-    low_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int +', wx.Bitmap(os.path.join(icon_path, "Up-Blue-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase Low Intensity")
+    low_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int +', wx.Bitmap(os.path.join(icon_path, "Up-Blue-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase Low Intensity")
     low_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY,
                                               'Low Int -',
-                                              wx.Bitmap(os.path.join(icon_path, "Down-Blue-100.png"),
+                                              wx.Bitmap(os.path.join(icon_path, "Down-Blue-64.png"),
                                               wx.BITMAP_TYPE_PNG),
                                               shortHelp="Decrease Low Intensity")
 
