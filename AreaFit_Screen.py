@@ -92,18 +92,18 @@ class BackgroundWindow(wx.Frame):
                 self.parent.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = background.tolist()
 
                 # Calculate the area
-                area = abs(np.trapz(y_values - background, x_values))
+                area = round(abs(np.trapz(y_values - background, x_values)), 2)
 
                 # Find the peak position and height
                 peak_index = np.argmax(y_values - background)
-                peak_position = x_values[peak_index]
-                peak_height = y_values[peak_index] - background[peak_index]
+                peak_position = round(x_values[peak_index], 2)
+                peak_height = round(y_values[peak_index] - background[peak_index], 2)
 
                 # Use sheet_name as peak_name
                 peak_name = sheet_name
 
                 # Calculate FWHM for a Gaussian peak (L/G = 0)
-                fwhm = 2 * np.sqrt(2 * np.log(2)) * area / (peak_height * np.sqrt(2 * np.pi))
+                fwhm = round(2 * np.sqrt(2 * np.log(2)) * area / (peak_height * np.sqrt(2 * np.pi)), 2)
 
                 # Default constraints
                 position_constraint = "0,1e3"
@@ -123,7 +123,7 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(0, 2, f"{peak_position:.2f}")
                 grid.SetCellValue(0, 3, f"{peak_height:.2f}")
                 grid.SetCellValue(0, 4, f"{fwhm:.2f}")
-                grid.SetCellValue(0, 5, "0")  # L/G
+                grid.SetCellValue(0, 5, "0.00")  # L/G
                 grid.SetCellValue(0, 6, f"{area:.2f}")
                 grid.SetCellValue(0, 9, "Unfitted")  # Fitting Model
 
@@ -145,7 +145,7 @@ class BackgroundWindow(wx.Frame):
                     'Position': peak_position,
                     'Height': peak_height,
                     'FWHM': fwhm,
-                    'L/G': 0,
+                    'L/G': 0.00,
                     'Area': area,
                     'Fitting Model': "Unfitted",
                     'Constraints': {
