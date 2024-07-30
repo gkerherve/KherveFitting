@@ -196,6 +196,7 @@ class PlotManager:
     def clear_and_replot(self, window):
         sheet_name = window.sheet_combobox.GetValue()
         limits = window.plot_config.get_plot_limits(window, sheet_name)
+        cst_unfit = ""
 
         if sheet_name not in window.Data['Core levels']:
             wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
@@ -253,7 +254,7 @@ class PlotManager:
 
             if fitting_model == "Unfitted":
                 # For unfitted peaks, fill between background and raw data
-                mask = (x_values >= position - fwhm / 2) & (x_values <= position + fwhm / 2)
+                cst_unfit = "Unfitted"
                 self.ax.fill_between(x_values, window.background, y_values,
                                      facecolor='lightgreen', alpha=0.5, label=label)
             else:
@@ -278,7 +279,8 @@ class PlotManager:
                          label='Background', alpha=0.5)
 
         # Update overall fit and residuals
-        if fitting_model == "Unfitted":
+        print("CST_unfit:  "+str(cst_unfit))
+        if cst_unfit == "Unfitted":
             pass
         else:
             window.update_overall_fit_and_residuals()

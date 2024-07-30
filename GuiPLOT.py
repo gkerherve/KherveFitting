@@ -759,23 +759,20 @@ class MyFrame(wx.Frame):
                         if peak_label in peaks:
                             peaks[peak_label]['FWHM'] = current_fwhm
 
-                    # # Remove old cross
-                    # self.remove_cross_from_peak()
-                    #
-                    # # Create new cross at final position
-                    # self.cross, = self.ax.plot(peaks[peak_label]['Position'], peaks[peak_label]['Height'], 'bx', markersize=15, markerfacecolor='none',
-                    #                            picker=5)
-                    #
-                    # self.update_peak_plot(peaks[peak_label]['Position'], peaks[peak_label]['Height'])
-                    #
-                    # print("ON CROSS RELEASE")
-
                 else:
                     bkg_y = self.background[np.argmin(np.abs(self.x_values - event.xdata))]
                     x = event.xdata
                     y = max(event.ydata - bkg_y, 0)  # Ensure height is not negative
 
                     self.update_peak_grid(self.selected_peak_index, x, y)
+
+                    # Recalculate the area
+                    height = float(self.peak_params_grid.GetCellValue(row, 3))
+                    fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                    fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+                    model = self.peak_params_grid.GetCellValue(row, 9)
+                    area = self.calculate_peak_area(model, height, fwhm, fraction)
+                    self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
 
                     # Remove old cross
                     self.remove_cross_from_peak()
@@ -813,6 +810,8 @@ class MyFrame(wx.Frame):
 
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
+
+
 
     def show_hide_vlines(self):
         background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected
