@@ -72,8 +72,9 @@ def on_sheet_selected(window, event):
                         window.peak_params_grid.SetCellValue(row + 1, 5, str(constraints.get('L/G', 'N/A')))
 
                     # Set background color for constraint rows
-                    for col in range(window.peak_params_grid.GetNumberCols()):
-                        window.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
+                    for col in range(window.peak_params_grid.GetNumberCols()+1):
+                        # window.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
+                        window.peak_params_grid.SetCellBackgroundColour(row + 1, col-1, wx.Colour(135,230,164))
 
                 # Update background information if available
                 if 'Background' in core_level_data:

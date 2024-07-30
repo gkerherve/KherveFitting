@@ -527,7 +527,7 @@ def create_menu(window):
 
 def create_horizontal_toolbar(window):
     toolbar = window.CreateToolBar()
-    toolbar.SetBackgroundColour(wx.Colour(200, 200, 200))
+    toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
     toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
     # current_dir = os.path.dirname(os.path.abspath(__file__))

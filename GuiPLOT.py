@@ -437,7 +437,8 @@ class MyFrame(wx.Frame):
         # Set constraint values
         self.peak_params_grid.SetReadOnly(row + 1, 0)
         for col in range(15):  # Assuming you have 15 columns in total
-            self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
+            # self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
+            self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(135,230,164))
 
         # Set position constraint to background range
         position_constraint = f"{self.bg_min_energy:.2f},{self.bg_max_energy:.2f}"
