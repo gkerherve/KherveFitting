@@ -126,7 +126,7 @@ class MyFrame(wx.Frame):
         self.moving_vline = None  # Initialize moving_vline attribute
         self.selected_peak_index = None  # Add this attribute to track selected peak index
 
-
+        self.be_correction = 0.00
 
         # Number of column to remove from the excel file
         self.num_fitted_columns = 15
@@ -1659,6 +1659,57 @@ class MyFrame(wx.Frame):
                         data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
 
         return data
+
+    def on_be_correction_change(self, event):
+        new_correction = self.be_correction_spinbox.GetValue()
+        self.apply_be_correction(new_correction)
+
+    def on_auto_be(self, event):
+        c1s_correction = self.calculate_c1s_correction()
+        if c1s_correction is not None:
+            self.be_correction_spinbox.SetValue(c1s_correction)
+            self.apply_be_correction(c1s_correction)
+
+    def apply_be_correction(self, correction):
+        delta_correction = correction - self.be_correction
+        self.be_correction = correction
+
+        # Update window.Data
+        self.Data['BEcorrection'] = correction
+
+        # Update all sheets
+        for sheet_name, sheet_data in self.Data['Core levels'].items():
+            # Update B.E. values
+            sheet_data['B.E.'] = [be + delta_correction for be in sheet_data['B.E.']]
+
+        # Update peak fitting parameters
+        for row in range(0, self.peak_params_grid.GetNumberRows(), 2):
+            current_position = float(self.peak_params_grid.GetCellValue(row, 2))
+            new_position = current_position + delta_correction
+            self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
+
+        # Update results grid
+        for row in range(self.results_grid.GetNumberRows()):
+            current_position = float(self.results_grid.GetCellValue(row, 1))
+            new_position = current_position + delta_correction
+            self.results_grid.SetCellValue(row, 1, f"{new_position:.2f}")
+
+        # Update plots
+        self.plot_manager.update_plots_be_correction(self, delta_correction)
+
+    def calculate_c1s_correction(self):
+        c1s_sheet = next((sheet for sheet in self.Data['Core levels'] if sheet.startswith('C1s')), None)
+        if c1s_sheet:
+            c1s_peaks = self.Data['Core levels'][c1s_sheet]['Fitting']['Peaks']
+            c_c_peak = next((peak for label, peak in c1s_peaks.items() if 'C-C' in label), None)
+            if c_c_peak:
+                return 284.8 - c_c_peak['Position']
+        return None
+
+    def load_be_correction(self):
+        if 'BEcorrection' in self.Data:
+            self.be_correction = self.Data['BEcorrection']
+            self.be_correction_spinbox.SetValue(self.be_correction)
 
 
 if __name__ == '__main__':

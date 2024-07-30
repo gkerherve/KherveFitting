@@ -594,6 +594,18 @@ class PlotManager:
         else:
             return sheet_name
 
+    def update_plots_be_correction(self, window, delta_correction):
+        sheet_name = window.sheet_combobox.GetValue()
+        limits = window.plot_config.get_plot_limits(window, sheet_name)
+
+        # Update x-axis limits
+        limits['Xmin'] += delta_correction
+        limits['Xmax'] += delta_correction
+
+        # Update plot
+        window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        window.canvas.draw_idle()
+
 
 
 

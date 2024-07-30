@@ -573,6 +573,21 @@ def create_horizontal_toolbar(window):
 
     toolbar.AddSeparator()
 
+
+    # Add BE correction spinbox
+    be_correction_label = wx.StaticText(toolbar, label="BE Correction:")
+    toolbar.AddControl(be_correction_label)
+    window.be_correction_spinbox = wx.SpinCtrlDouble(toolbar, value='0.00', min=-20.00, max=20.00, inc=0.01, size=(70, -1))
+    window.be_correction_spinbox.SetDigits(2)
+    toolbar.AddControl(window.be_correction_spinbox)
+
+    # Add Auto BE button
+    auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE',
+                                     wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"), wx.BITMAP_TYPE_PNG),
+                                     shortHelp="Automatic binding energy correction")
+
+    toolbar.AddSeparator()
+
     # Plot adjustment tools
     plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot',
                                 wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"),
@@ -646,6 +661,8 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: toggle_Col_1(window), toggle_Col_1_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.export_results(), export_tool)
+    window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
+    window.Bind(wx.EVT_TOOL, window.on_auto_be, auto_be_button)
 
     return toolbar
 
@@ -811,6 +828,9 @@ def open_xlsx_file(window):
                         window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
 
                 print(f"Final number of core levels: {window.Data['Number of Core levels']}")
+
+                # Load BE correction
+                window.load_be_correction()
 
                 # Update sheet names in the combobox
                 window.sheet_combobox.Clear()
