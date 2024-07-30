@@ -558,14 +558,16 @@ def create_horizontal_toolbar(window):
     # separators[-1].SetSize((2, 24))
     # toolbar.AddControl(separators[-1])
 
+    window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
+    window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
+    toolbar.AddControl(window.skip_rows_spinbox)
+
     # Sheet selection
     window.sheet_combobox = wx.ComboBox(toolbar, style=wx.CB_READONLY)
     window.sheet_combobox.SetToolTip("Select Sheet")
     toolbar.AddControl(window.sheet_combobox)
 
-    window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
-    window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
-    toolbar.AddControl(window.skip_rows_spinbox)
+
 
     # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
     # separators[-1].SetSize((2, 24))
@@ -573,18 +575,29 @@ def create_horizontal_toolbar(window):
 
     toolbar.AddSeparator()
 
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
+
+    toolbar.AddSeparator()
+
 
     # Add BE correction spinbox
-    be_correction_label = wx.StaticText(toolbar, label="BE Correction:")
-    toolbar.AddControl(be_correction_label)
     window.be_correction_spinbox = wx.SpinCtrlDouble(toolbar, value='0.00', min=-20.00, max=20.00, inc=0.01, size=(70, -1))
     window.be_correction_spinbox.SetDigits(2)
+    window.be_correction_spinbox.SetToolTip("BE Correction")
     toolbar.AddControl(window.be_correction_spinbox)
 
     # Add Auto BE button
     auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE',
                                      wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"), wx.BITMAP_TYPE_PNG),
                                      shortHelp="Automatic binding energy correction")
+
+    toolbar.AddSeparator()
+
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
 
     toolbar.AddSeparator()
 

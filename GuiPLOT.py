@@ -1682,20 +1682,56 @@ class MyFrame(wx.Frame):
             # Update B.E. values
             sheet_data['B.E.'] = [be + delta_correction for be in sheet_data['B.E.']]
 
-        # Update peak fitting parameters
+            # Update Background Low and High if they exist
+            if 'Background' in sheet_data:
+                if 'Bkg Low' in sheet_data['Background']:
+                    sheet_data['Background']['Bkg Low'] += delta_correction
+                if 'Bkg High' in sheet_data['Background']:
+                    sheet_data['Background']['Bkg High'] += delta_correction
+
+            # Update peak positions in Fitting data
+            if 'Fitting' in sheet_data and 'Peaks' in sheet_data['Fitting']:
+                for peak in sheet_data['Fitting']['Peaks'].values():
+                    peak['Position'] += delta_correction
+
+        # Update peak fitting parameters grid
         for row in range(0, self.peak_params_grid.GetNumberRows(), 2):
-            current_position = float(self.peak_params_grid.GetCellValue(row, 2))
-            new_position = current_position + delta_correction
-            self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
+            try:
+                current_position = float(self.peak_params_grid.GetCellValue(row, 2))
+                new_position = current_position + delta_correction
+                self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
+            except ValueError:
+                pass  # Skip if cell value is not a valid float
 
         # Update results grid
         for row in range(self.results_grid.GetNumberRows()):
-            current_position = float(self.results_grid.GetCellValue(row, 1))
-            new_position = current_position + delta_correction
-            self.results_grid.SetCellValue(row, 1, f"{new_position:.2f}")
+            try:
+                current_position = float(self.results_grid.GetCellValue(row, 1))
+                new_position = current_position + delta_correction
+                self.results_grid.SetCellValue(row, 1, f"{new_position:.2f}")
+            except ValueError:
+                pass  # Skip if cell value is not a valid float
+
+        # Update current sheet display
+        current_sheet = self.sheet_combobox.GetValue()
+        on_sheet_selected(self, current_sheet)
+
+        # Update plot limits
+        for sheet_name in self.Data['Core levels']:
+            if sheet_name in self.plot_config.plot_limits:
+                limits = self.plot_config.plot_limits[sheet_name]
+                limits['Xmin'] += delta_correction
+                limits['Xmax'] += delta_correction
 
         # Update plots
         self.plot_manager.update_plots_be_correction(self, delta_correction)
+
+        # Refresh grids and canvas
+        self.peak_params_grid.ForceRefresh()
+        self.results_grid.ForceRefresh()
+        self.canvas.draw_idle()
+
+        print(f"Applied BE correction of {correction:.2f} eV")
 
     def calculate_c1s_correction(self):
         c1s_sheet = next((sheet for sheet in self.Data['Core levels'] if sheet.startswith('C1s')), None)
