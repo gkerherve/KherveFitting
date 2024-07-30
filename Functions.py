@@ -613,7 +613,7 @@ def create_horizontal_toolbar(window):
 
     # Add export button
     export_tool = toolbar.AddTool(wx.ID_ANY, 'Export Results',
-                                  wx.ArtProvider.GetBitmap(wx.ART_GO_DOWN, wx.ART_TOOLBAR),
+                                  wx.Bitmap(os.path.join(icon_path, "Export-64.png"), wx.BITMAP_TYPE_PNG),
                                   shortHelp="Export to Results Grid")
 
     # Hide columns in Peak Fitting Parameters
