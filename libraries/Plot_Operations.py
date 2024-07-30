@@ -89,7 +89,7 @@ class PlotManager:
 
         peak_y = peak_model.eval(params, x=x_values) + background
 
-        self.ax.plot(x_values, peak_y)
+        self.ax.plot(x_values, peak_y, alpha=0.5)
         self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=peak_label)
 
         self.canvas.draw_idle()
@@ -113,8 +113,7 @@ class PlotManager:
             x_values = window.Data['Core levels'][sheet_name]['B.E.']
             y_values = window.Data['Core levels'][sheet_name]['Raw Data']
 
-            self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black',
-                            label='Raw Data')
+
 
             # Update window.x_values and window.y_values
             window.x_values = np.array(x_values)
@@ -140,6 +139,9 @@ class PlotManager:
 
             self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
+            self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black',
+                            label='Raw Data')
 
             # Hide the cross if it exists
             if hasattr(window, 'cross') and window.cross:
@@ -268,18 +270,20 @@ class PlotManager:
                 self.plot_peak(window.x_values, window.background, peak_params, sheet_name)
 
 
-        self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=15, edgecolors='black', label='Raw Data')
+
 
         # Plot the background if it exists
         if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
             self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color='grey', linestyle='--',
-                         label='Background')
+                         label='Background', alpha=0.5)
 
         # Update overall fit and residuals
         if fitting_model == "Unfitted":
             pass
         else:
             window.update_overall_fit_and_residuals()
+
+        self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black', label='Raw Data')
 
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):

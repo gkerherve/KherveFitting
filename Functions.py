@@ -190,7 +190,7 @@ def clear_background(window):
         y_values = window.Data['Core levels'][sheet_name]['Raw Data']
 
         # Plot the raw data with unfilled circle markers
-        window.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black', label='Raw Data')
+        window.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=15, edgecolors='black', label='Raw Data')
 
         # Update window.x_values and window.y_values
         window.x_values = np.array(x_values)
@@ -1363,14 +1363,14 @@ def fit_peaks(window, peak_params_grid):
                     # window.ax.fill_between(x_values, background, peak + background, facecolor=color,
                     #                        alpha=0.8, label=peak_name)
                     # window.ax.plot(x_values, peak + background, 'black', alpha=0.4)
-                    window.ax.plot(x_values, peak + background)
+                    window.ax.plot(x_values, peak + background, alpha = 0.5)
                     window.ax.fill_between(x_values, background, peak + background,
                                               alpha=0.3, label=peak_name)
 
-                window.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=10, edgecolors='black',
-                                  label='Raw Data')
+                window.ax.plot(x_values, background, 'gray', linestyle='--', label='Background',alpha=0.7)
 
-                window.ax.plot(x_values, background, 'gray', linestyle='--', label='Background')
+                window.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black',
+                                  label='Raw Data')
 
                 # Set plot labels and formatting
                 window.ax.legend(loc='upper left')
