@@ -47,10 +47,10 @@ def on_sheet_selected(window, event):
                     window.peak_params_grid.SetCellValue(row, 0, chr(65 + i))  # A, B, C, etc.
                     window.peak_params_grid.SetCellValue(row, 1, peak_label)
 
-                    # window.peak_params_grid.SetCellValue(row, 2, f"{peak_data.get('Position', 'N/A')}")
-                    # Apply BE correction to position
-                    corrected_position = peak_data.get('Position', 0) + window.be_correction
-                    window.peak_params_grid.SetCellValue(row, 2, f"{corrected_position:.2f}")
+                    # corrected_position = peak_data.get('Position', 0) + window.be_correction
+                    # window.peak_params_grid.SetCellValue(row, 2, f"{corrected_position:.2f}")
+                    # Use the position directly from peak_data, which is already corrected
+                    window.peak_params_grid.SetCellValue(row, 2, f"{peak_data.get('Position', 'N/A'):.2f}")
 
                     window.peak_params_grid.SetCellValue(row, 3, f"{peak_data.get('Height', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 4, f"{peak_data.get('FWHM', 'N/A')}")

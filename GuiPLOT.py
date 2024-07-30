@@ -1694,28 +1694,6 @@ class MyFrame(wx.Frame):
                 for peak in sheet_data['Fitting']['Peaks'].values():
                     peak['Position'] += delta_correction
 
-        # Update peak fitting parameters grid
-        for row in range(0, self.peak_params_grid.GetNumberRows(), 2):
-            try:
-                current_position = float(self.peak_params_grid.GetCellValue(row, 2))
-                new_position = current_position + delta_correction
-                self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
-            except ValueError:
-                pass  # Skip if cell value is not a valid float
-
-        # Update results grid
-        for row in range(self.results_grid.GetNumberRows()):
-            try:
-                current_position = float(self.results_grid.GetCellValue(row, 1))
-                new_position = current_position + delta_correction
-                self.results_grid.SetCellValue(row, 1, f"{new_position:.2f}")
-            except ValueError:
-                pass  # Skip if cell value is not a valid float
-
-        # Update current sheet display
-        current_sheet = self.sheet_combobox.GetValue()
-        on_sheet_selected(self, current_sheet)
-
         # Update plot limits
         for sheet_name in self.Data['Core levels']:
             if sheet_name in self.plot_config.plot_limits:
@@ -1723,13 +1701,12 @@ class MyFrame(wx.Frame):
                 limits['Xmin'] += delta_correction
                 limits['Xmax'] += delta_correction
 
+        # Update current sheet display
+        current_sheet = self.sheet_combobox.GetValue()
+        on_sheet_selected(self, current_sheet)
+
         # Update plots
         self.plot_manager.update_plots_be_correction(self, delta_correction)
-
-        # Refresh grids and canvas
-        self.peak_params_grid.ForceRefresh()
-        self.results_grid.ForceRefresh()
-        self.canvas.draw_idle()
 
         print(f"Applied BE correction of {correction:.2f} eV")
 
