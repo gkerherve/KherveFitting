@@ -1461,7 +1461,18 @@ class MyFrame(wx.Frame):
                 correct_peak_key = peak_keys[peak_index]
 
                 if row % 2 == 0:  # Main parameter row
-                    if col in [3, 4, 5]:  # Height, FWHM, or L/G changed
+                    if col == 1:  # Label
+                        # Update the label while preserving order
+                        new_peaks = {}
+                        for i, (key, value) in enumerate(peaks.items()):
+                            if i == peak_index:
+                                new_peaks[new_value] = value
+                            else:
+                                new_peaks[key] = value
+                        self.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = new_peaks
+                    elif col == 2:  # Position
+                        peaks[correct_peak_key]['Position'] = float(new_value)
+                    elif col in [3, 4, 5]:  # Height, FWHM, or L/G changed
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
