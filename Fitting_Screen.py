@@ -235,13 +235,29 @@ class FittingWindow(wx.Frame):
             position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
 
-            # Update window.Data with new constraints
+            # Set peak names
+            if orbital == 'p':
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}3/2 p1")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}1/2 p2")
+            elif orbital == 'd':
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}5/2 p1")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}3/2 p2")
+            elif orbital == 'f':
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}7/2 p1")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}5/2 p2")
+
+            # Update window.Data with new constraints and names
             if 'Fitting' in self.parent.Data['Core levels'][sheet_name] and 'Peaks' in \
                     self.parent.Data['Core levels'][sheet_name]['Fitting']:
                 peaks = self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks']
                 peak_keys = list(peaks.keys())
                 if second_peak < len(peak_keys):
+                    first_peak_key = peak_keys[first_peak]
                     second_peak_key = peak_keys[second_peak]
+
+                    peaks[first_peak_key]['Name'] = self.parent.peak_params_grid.GetCellValue(row1, 1)
+                    peaks[second_peak_key]['Name'] = self.parent.peak_params_grid.GetCellValue(row2, 1)
+
                     if 'Constraints' not in peaks[second_peak_key]:
                         peaks[second_peak_key]['Constraints'] = {}
 
