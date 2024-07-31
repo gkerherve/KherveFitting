@@ -628,7 +628,7 @@ def create_horizontal_toolbar(window):
     # Analysis tools
     bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-64.png"), wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area between the range cursor")
     # bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(wx.Bitmap(os.path.join(icon_path, "Plot_Area.ico")), wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area under Peak")
-    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "STO-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window")
+    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window")
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
     # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
