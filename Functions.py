@@ -253,7 +253,7 @@ def clear_background(window):
 
 
 
-def plot_background(window):
+def plot_background2(window):
     sheet_name = window.sheet_combobox.GetValue()
     if sheet_name not in window.Data['Core levels']:
         wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
@@ -352,6 +352,79 @@ def plot_background(window):
         wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
 
+def plot_background(window):
+    sheet_name = window.sheet_combobox.GetValue()
+    if sheet_name not in window.Data['Core levels']:
+        wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    try:
+        x_values = np.array(window.Data['Core levels'][sheet_name]['B.E.'])
+        y_values = np.array(window.Data['Core levels'][sheet_name]['Raw Data'])
+
+        bg_min_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg Low')
+        bg_max_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg High')
+
+        if bg_min_energy is not None and bg_max_energy is not None and bg_min_energy <= bg_max_energy:
+            mask = (x_values >= bg_min_energy) & (x_values <= bg_max_energy)
+            x_values_filtered = x_values[mask]
+            y_values_filtered = y_values[mask]
+
+            method = window.background_method
+            offset_h = float(window.offset_h)
+            offset_l = float(window.offset_l)
+
+            if method == "Adaptive Smart":
+                if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or \
+                        len(window.Data['Core levels'][sheet_name]['Background']['Bkg Y']) == 0:
+                    # Initialize with Smart background if it's the first time
+                    previous_background = calculate_smart_background(x_values, y_values, offset_h, offset_l)
+                else:
+                    previous_background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+
+                background_filtered = calculate_adaptive_smart_background(
+                    x_values, y_values,
+                    (bg_min_energy, bg_max_energy),
+                    previous_background, offset_h, offset_l
+                )
+                label = 'Background (Adaptive Smart)'
+            elif method == "Shirley":
+                background_filtered = calculate_shirley_background(x_values_filtered, y_values_filtered, offset_h,
+                                                                   offset_l)
+                label = 'Background (Shirley)'
+            elif method == "Linear":
+                background_filtered = calculate_linear_background(x_values_filtered, y_values_filtered, offset_h,
+                                                                  offset_l)
+                label = 'Background (Linear)'
+            elif method == "Smart":
+                background_filtered = calculate_smart_background(x_values_filtered, y_values_filtered, offset_h,
+                                                                 offset_l)
+                label = 'Background (Smart)'
+            else:
+                raise ValueError(f"Unknown background method: {method}")
+
+            # Update the background in window.Data
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = background_filtered.tolist()
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Type'] = method
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = bg_min_energy
+            window.Data['Core levels'][sheet_name]['Background']['Bkg High'] = bg_max_energy
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Offset Low'] = offset_l
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Offset High'] = offset_h
+            window.Data['Core levels'][sheet_name]['Background']['Bkg X'] = x_values.tolist()
+
+            # Plot the background
+            window.ax.plot(x_values, background_filtered, color='grey', linestyle='--', label=label)
+
+            # Update the plot
+            window.canvas.draw()
+        else:
+            wx.MessageBox("Invalid energy range selected.", "Warning", wx.OK | wx.ICON_INFORMATION)
+
+    except Exception as e:
+        print("Error in plot_background:", str(e))
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
 
 def calculate_linear_background(x, y, start_offset, end_offset):
@@ -412,6 +485,26 @@ def calculate_smart2_background(x, y, threshold=0.01):
     # return dy_smooth + 1.1*max(y)
     return background
 
+
+def calculate_adaptive_smart_background(x, y, x_range, previous_background, offset_h, offset_l):
+    # Ensure previous_background is numpy array
+    previous_background = np.array(previous_background)
+
+    # Create mask for the selected range
+    mask = (x >= x_range[0]) & (x <= x_range[1])
+
+    # Calculate new background for selected range
+    new_background = np.copy(previous_background)
+    x_selected = x[mask]
+    y_selected = y[mask]
+
+    # Determine if we should use Shirley or Linear in the selected range
+    if y_selected[0] > y_selected[-1]:
+        new_background[mask] = calculate_shirley_background(x_selected, y_selected, offset_h, offset_l)
+    else:
+        new_background[mask] = calculate_linear_background(x_selected, y_selected, offset_h, offset_l)
+
+    return new_background
 
 def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, tol=1e-6, padding_factor=0.01):
     x = np.asarray(x)

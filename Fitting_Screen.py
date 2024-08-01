@@ -50,7 +50,7 @@ class FittingWindow(wx.Frame):
         background_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
         method_label = wx.StaticText(background_panel, label="Method:")
-        self.method_combobox = wx.ComboBox(background_panel, choices=["Shirley", "Linear", "Smart", "Smart2"],
+        self.method_combobox = wx.ComboBox(background_panel, choices=["Shirley", "Linear", "Smart", "Smart2", "Adaptive Smart"],
                                            style=wx.CB_READONLY)
         method_index = self.method_combobox.FindString(self.parent.background_method)
         self.method_combobox.SetSelection(method_index)
