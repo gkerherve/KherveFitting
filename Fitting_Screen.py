@@ -258,24 +258,23 @@ class FittingWindow(wx.Frame):
             if 'Fitting' in self.parent.Data['Core levels'][sheet_name] and 'Peaks' in \
                     self.parent.Data['Core levels'][sheet_name]['Fitting']:
                 peaks = self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-                peak_keys = list(peaks.keys())
-                if second_peak < len(peak_keys):
-                    first_peak_key = peak_keys[first_peak]
-                    second_peak_key = peak_keys[second_peak]
-
-                    peaks[first_peak_key]['Name'] = peak1_name
-                    print("peak1_name: "+ str(peak1_name))
-                    peaks[second_peak_key]['Name'] = peak2_name
-
-                    if 'Constraints' not in peaks[second_peak_key]:
-                        peaks[second_peak_key]['Constraints'] = {}
-
-                    peaks[second_peak_key]['Constraints'].update({
-                        'Position': position_constraint,
-                        'Height': height_constraint,
-                        'FWHM': fwhm_constraint,
-                        'L/G': lg_constraint
-                    })
+                new_peaks = {}
+                for i, (key, value) in enumerate(peaks.items()):
+                    if i == first_peak:
+                        new_peaks[peak1_name] = value
+                        new_peaks[peak1_name]['Name'] = peak1_name
+                    elif i == second_peak:
+                        new_peaks[peak2_name] = value
+                        new_peaks[peak2_name]['Name'] = peak2_name
+                        new_peaks[peak2_name]['Constraints'] = {
+                            'Position': position_constraint,
+                            'Height': height_constraint,
+                            'FWHM': fwhm_constraint,
+                            'L/G': lg_constraint
+                        }
+                    else:
+                        new_peaks[key] = value
+                self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = new_peaks
 
         self.parent.clear_and_replot()
 
