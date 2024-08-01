@@ -445,7 +445,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 2, position_constraint)
         self.peak_params_grid.SetCellValue(row + 1, 3, "100,1e7")
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
-        self.peak_params_grid.SetCellValue(row + 1, 5, "0,0.5")
+        self.peak_params_grid.SetCellValue(row + 1, 5, "0.05,0.8")
         self.peak_params_grid.ForceRefresh()
 
         # Set selected_peak_index to the index of the new peak
@@ -471,9 +471,9 @@ class MyFrame(wx.Frame):
             'Bkg Offset High': self.offset_h,
             'Constraints': {
                 'Position': position_constraint,
-                'Height': "0,1e7",
+                'Height': "100,1e7",
                 'FWHM': "0.3,3.5",
-                'L/G': "0,0.5"
+                'L/G': "0.05,0.8"
             }
         }
         # print(self.Data)
