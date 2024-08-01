@@ -199,7 +199,8 @@ class FittingWindow(wx.Frame):
 
     def on_add_doublet(self, event):
         sheet_name = self.parent.sheet_combobox.GetValue()
-        orbital = re.search(r'[spdf]', sheet_name)
+        first_word = sheet_name.split()[0]  # Get the first word of the sheet name
+        orbital = re.search(r'[spdf]', first_word)
 
         if not orbital:
             wx.MessageBox("Invalid sheet name. Cannot determine orbital type.", "Error", wx.OK | wx.ICON_ERROR)
@@ -231,7 +232,7 @@ class FittingWindow(wx.Frame):
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, height_constraint)
 
             # Position constraint
-            splitting = self.doublet_splittings.get(sheet_name, 0)
+            splitting = self.doublet_splittings.get(first_word, 0)  # Use first_word for comparison
             position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
 
@@ -241,14 +242,14 @@ class FittingWindow(wx.Frame):
 
             # Set peak names
             if orbital == 'p':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}3/2 p{peak_number1}")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}1/2 p{peak_number2}")
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{first_word}3/2 p{peak_number1}")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{first_word}1/2 p{peak_number2}")
             elif orbital == 'd':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}5/2 p{peak_number1}")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}3/2 p{peak_number2}")
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{first_word}5/2 p{peak_number1}")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{first_word}3/2 p{peak_number2}")
             elif orbital == 'f':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}7/2 p{peak_number1}")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}5/2 p{peak_number2}")
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{first_word}7/2 p{peak_number1}")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{first_word}5/2 p{peak_number2}")
 
             # Update window.Data with new constraints and names
             if 'Fitting' in self.parent.Data['Core levels'][sheet_name] and 'Peaks' in \
