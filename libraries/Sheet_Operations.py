@@ -74,7 +74,7 @@ def on_sheet_selected(window, event):
                     # Set background color for constraint rows
                     for col in range(window.peak_params_grid.GetNumberCols()+1):
                         # window.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
-                        window.peak_params_grid.SetCellBackgroundColour(row + 1, col-1, wx.Colour(28,204,170))
+                        window.peak_params_grid.SetCellBackgroundColour(row + 1, col-1, wx.Colour(200,245,228))
 
                 # Update background information if available
                 if 'Background' in core_level_data:
