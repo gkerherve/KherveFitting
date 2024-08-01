@@ -305,6 +305,9 @@ def plot_background(window):
                     background_filtered = calculate_smart_background(x_values_filtered, y_values_filtered,
                                                                      offset_h, offset_l)
                     label = 'Background (Smart)'
+                elif method == "Smart2":
+                    background_filtered = calculate_smart2_background(x_values_filtered, y_values_filtered)
+                    label = 'Background (Smart2)'
                 else:
                     raise ValueError(f"Unknown background method: {method}")
 
@@ -372,7 +375,45 @@ def calculate_smart_background(x, y, offset_h, offset_l):
 
     return background
 
-def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, tol=1e-6, padding_factor=0.1):
+from scipy.signal import savgol_filter
+
+def calculate_smart2_background(x, y, threshold=0.01):
+    # Calculate the derivative
+    dy = np.gradient(y, x)
+
+    threshold = 0.001*(max(y)-min(y))
+
+
+    # Smooth the derivative (optional, but often helpful)
+    dy_smooth = savgol_filter(dy, window_length=30, polyorder=3)
+
+    # Initialize the background array
+    background = np.zeros_like(y)
+
+    # Determine flat regions (where derivative is close to zero)
+    flat_mask = np.abs(dy_smooth) < threshold
+    # flat_mask = np.abs(dy) < threshold
+
+    # Set background to raw data in flat regions
+    background[flat_mask] = y[flat_mask]
+
+    # For non-flat regions, decide between linear and Shirley
+    for i in range(1, len(y)):
+        if not flat_mask[i]:
+            if y[i] < y[i - 1]:  # Data going down
+                # Linear interpolation
+                background[i] = background[i - 1] + (y[i] - y[i - 1])
+            else:  # Data going up
+                # Use Shirley method (simplified for this example)
+                A = np.trapz(y[:i + 1] - background[:i + 1], x[:i + 1])
+                B = np.trapz(y[i:] - background[i:], x[i:])
+                background[i] = y[-1] + (y[0] - y[-1]) * B / (A + B)
+
+    # return dy_smooth + 1.1*max(y)
+    return background
+
+
+def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, tol=1e-6, padding_factor=0.01):
     x = np.asarray(x)
     y = np.asarray(y)
 

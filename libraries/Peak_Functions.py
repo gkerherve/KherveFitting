@@ -5,6 +5,7 @@ import lmfit
 
 import numpy as np
 
+
 class PeakFunctions:
     @staticmethod
     def gauss_lorentz(x, center, fwhm, fraction, amplitude):
