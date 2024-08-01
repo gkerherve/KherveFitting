@@ -264,6 +264,7 @@ class FittingWindow(wx.Frame):
                     second_peak_key = peak_keys[second_peak]
 
                     peaks[first_peak_key]['Name'] = peak1_name
+                    print("peak1_name: "+ str(peak1_name))
                     peaks[second_peak_key]['Name'] = peak2_name
 
                     if 'Constraints' not in peaks[second_peak_key]:

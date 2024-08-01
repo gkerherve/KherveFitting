@@ -279,7 +279,6 @@ class PlotManager:
                          label='Background', alpha=0.5)
 
         # Update overall fit and residuals
-        print("CST_unfit:  "+str(cst_unfit))
         if cst_unfit == "Unfitted":
             pass
         else:
