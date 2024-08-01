@@ -254,6 +254,11 @@ class FittingWindow(wx.Frame):
             self.parent.peak_params_grid.SetCellValue(row1, 1, peak1_name)
             self.parent.peak_params_grid.SetCellValue(row2, 1, peak2_name)
 
+            # Position the second peak
+            first_peak_position = float(self.parent.peak_params_grid.GetCellValue(row1, 2))
+            second_peak_position = first_peak_position + splitting
+            self.parent.peak_params_grid.SetCellValue(row2, 2, f"{second_peak_position:.2f}")
+
             # Update window.Data with new constraints and names
             if 'Fitting' in self.parent.Data['Core levels'][sheet_name] and 'Peaks' in \
                     self.parent.Data['Core levels'][sheet_name]['Fitting']:
@@ -266,6 +271,7 @@ class FittingWindow(wx.Frame):
                     elif i == second_peak:
                         new_peaks[peak2_name] = value
                         new_peaks[peak2_name]['Name'] = peak2_name
+                        new_peaks[peak2_name]['Position'] = second_peak_position
                         new_peaks[peak2_name]['Constraints'] = {
                             'Position': position_constraint,
                             'Height': height_constraint,
