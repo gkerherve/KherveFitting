@@ -232,7 +232,7 @@ class FittingWindow(wx.Frame):
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, height_constraint)
 
             # Position constraint
-            splitting = self.doublet_splittings.get(first_word, 0)  # Use first_word for comparison
+            splitting = self.doublet_splittings.get(first_word, 0)
             position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
 
@@ -242,14 +242,17 @@ class FittingWindow(wx.Frame):
 
             # Set peak names
             if orbital == 'p':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{first_word}3/2 p{peak_number1}")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{first_word}1/2 p{peak_number2}")
+                peak1_name = f"{first_word}3/2 p{peak_number1}"
+                peak2_name = f"{first_word}1/2 p{peak_number2}"
             elif orbital == 'd':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{first_word}5/2 p{peak_number1}")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{first_word}3/2 p{peak_number2}")
+                peak1_name = f"{first_word}5/2 p{peak_number1}"
+                peak2_name = f"{first_word}3/2 p{peak_number2}"
             elif orbital == 'f':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{first_word}7/2 p{peak_number1}")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{first_word}5/2 p{peak_number2}")
+                peak1_name = f"{first_word}7/2 p{peak_number1}"
+                peak2_name = f"{first_word}5/2 p{peak_number2}"
+
+            self.parent.peak_params_grid.SetCellValue(row1, 1, peak1_name)
+            self.parent.peak_params_grid.SetCellValue(row2, 1, peak2_name)
 
             # Update window.Data with new constraints and names
             if 'Fitting' in self.parent.Data['Core levels'][sheet_name] and 'Peaks' in \
@@ -260,8 +263,8 @@ class FittingWindow(wx.Frame):
                     first_peak_key = peak_keys[first_peak]
                     second_peak_key = peak_keys[second_peak]
 
-                    peaks[first_peak_key]['Name'] = self.parent.peak_params_grid.GetCellValue(row1, 1)
-                    peaks[second_peak_key]['Name'] = self.parent.peak_params_grid.GetCellValue(row2, 1)
+                    peaks[first_peak_key]['Name'] = peak1_name
+                    peaks[second_peak_key]['Name'] = peak2_name
 
                     if 'Constraints' not in peaks[second_peak_key]:
                         peaks[second_peak_key]['Constraints'] = {}
