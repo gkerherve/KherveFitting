@@ -235,16 +235,20 @@ class FittingWindow(wx.Frame):
             position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
 
+            # Calculate peak numbers
+            peak_number1 = first_peak + 1
+            peak_number2 = second_peak + 1
+
             # Set peak names
             if orbital == 'p':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}3/2 p1")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}1/2 p2")
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}3/2 p{peak_number1}")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}1/2 p{peak_number2}")
             elif orbital == 'd':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}5/2 p1")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}3/2 p2")
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}5/2 p{peak_number1}")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}3/2 p{peak_number2}")
             elif orbital == 'f':
-                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}7/2 p1")
-                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}5/2 p2")
+                self.parent.peak_params_grid.SetCellValue(row1, 1, f"{sheet_name}7/2 p{peak_number1}")
+                self.parent.peak_params_grid.SetCellValue(row2, 1, f"{sheet_name}5/2 p{peak_number2}")
 
             # Update window.Data with new constraints and names
             if 'Fitting' in self.parent.Data['Core levels'][sheet_name] and 'Peaks' in \
