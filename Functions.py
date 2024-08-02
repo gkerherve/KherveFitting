@@ -379,6 +379,8 @@ def plot_background(window):
         if method == "Adaptive Smart":
             bg_min_energy = min(x_values)
             bg_max_energy = max(x_values)
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = bg_min_energy
+            window.Data['Core levels'][sheet_name]['Background']['Bkg High'] = bg_max_energy
             mask = slice(None)  # Full range
             x_values_filtered = x_values
             y_values_filtered = y_values
