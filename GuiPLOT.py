@@ -75,6 +75,10 @@ class MyFrame(wx.Frame):
         # Initialize variables for vertical lines and background energy
         self.vline1 = None
         self.vline2 = None
+        self.active_vline = None
+        self.vline_drag_threshold = 5  # pixels
+
+
         self.vline3 = None  # For noise range
         self.vline4 = None  # For noise range
         self.some_threshold = 0.1
@@ -171,7 +175,7 @@ class MyFrame(wx.Frame):
 
         # Create the FigureCanvas
         self.canvas = FigureCanvas(self.right_frame, -1, self.figure)
-        self.canvas.mpl_connect("button_press_event", self.on_click)
+        # self.canvas.mpl_connect("button_press_event", self.on_click)
         plt.tight_layout()
         right_frame_sizer.Add(self.canvas, 1, wx.EXPAND | wx.ALL, 0)
 
@@ -879,7 +883,6 @@ class MyFrame(wx.Frame):
             x, y = event.xdata, event.ydata
             self.SetStatusText(f"BE: {x:.1f} eV, I: {int(y)} CTS", 1)
 
-
     def on_click(self, event):
         if event.inaxes:
             x_click = event.xdata
@@ -897,6 +900,24 @@ class MyFrame(wx.Frame):
                     sheet_name = self.sheet_combobox.GetValue()
                     if sheet_name in self.Data['Core levels']:
                         core_level_data = self.Data['Core levels'][sheet_name]
+                        if self.background_method == "Adaptive Smart":
+                            if self.vline1 is not None and self.vline2 is not None:
+                                vline1_x = self.vline1.get_xdata()[0]
+                                vline2_x = self.vline2.get_xdata()[0]
+                                dist1 = abs(x_click - vline1_x)
+                                dist2 = abs(x_click - vline2_x)
+                                if dist1 < dist2 and dist1 < self.some_threshold:
+                                    self.moving_vline = self.vline1
+                                elif dist2 < self.some_threshold:
+                                    self.moving_vline = self.vline2
+                                else:
+                                    self.moving_vline = None
+                                if self.moving_vline is not None:
+                                    self.motion_cid = self.canvas.mpl_connect('motion_notify_event', self.on_motion)
+                                    self.release_cid = self.canvas.mpl_connect('button_release_event', self.on_release)
+                                    return  # Exit to avoid creating new vlines
+
+                        # Existing vline creation logic
                         if self.vline1 is None:
                             self.vline1 = self.ax.axvline(x_click, color='r', linestyle='--')
                             core_level_data['Background']['Bkg Low'] = float(x_click)
@@ -1086,7 +1107,6 @@ class MyFrame(wx.Frame):
 
         self.canvas.draw_idle()
 
-
     def on_motion(self, event):
         if event.inaxes and self.moving_vline is not None:
             x_click = event.xdata
@@ -1108,6 +1128,10 @@ class MyFrame(wx.Frame):
                     core_level_data['Background']['Bkg Low'] = min(bkg_low, bkg_high)
                     core_level_data['Background']['Bkg High'] = max(bkg_low, bkg_high)
 
+                    # If in Adaptive Smart mode, update the background in real-time
+                    if self.background_method == "Adaptive Smart":
+                        plot_background(self)
+
                 elif self.moving_vline in [self.vline3, self.vline4]:
                     if self.moving_vline == self.vline3:
                         self.noise_min_energy = float(x_click)
@@ -1119,7 +1143,6 @@ class MyFrame(wx.Frame):
                         [self.noise_min_energy, self.noise_max_energy])
 
             self.canvas.draw_idle()
-
 
     def on_release(self, event):
         if self.moving_vline is not None:
@@ -1138,7 +1161,9 @@ class MyFrame(wx.Frame):
                         core_level_data['Background']['Bkg Low'] = min(bg_low, bg_high)
                         core_level_data['Background']['Bkg High'] = max(bg_low, bg_high)
 
-            # self.show_hide_vlines()
+            # If in Adaptive Smart mode, update the background
+            if self.background_method == "Adaptive Smart":
+                plot_background(self)
 
         # If a peak is being moved, update its position and height
         if self.selected_peak_index is not None:
@@ -1165,9 +1190,22 @@ class MyFrame(wx.Frame):
                 }
 
         self.selected_peak_index = None
+        self.canvas.draw_idle()
 
+    def on_vline_drag(self, event):
+        if event.inaxes and self.active_vline is not None:
+            self.active_vline.set_xdata([event.xdata, event.xdata])
+            self.canvas.draw_idle()
 
+    def on_vline_release(self, event):
+        if self.active_vline is not None:
+            self.active_vline = None
+            self.canvas.mpl_disconnect(self.motion_cid)
+            self.canvas.mpl_disconnect(self.release_cid)
 
+            # Update background if in Adaptive Smart mode
+            if self.background_method == "Adaptive Smart":
+                plot_background(self)
 
 
     # SHALL NOT BE USED
