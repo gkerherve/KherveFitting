@@ -1,5 +1,6 @@
 import wx
 import numpy as np
+import re
 from Functions import load_rsf_data
 
 
@@ -82,28 +83,38 @@ def _ensure_results_grid_columns(window):
 
 
 def _extract_peak_parameters(window, row, rsf_dict):
-    """Extract peak parameters from the peak_params_grid."""
     peak_name = window.peak_params_grid.GetCellValue(row, 1)  # Label
-    core_level = ''.join(filter(str.isalnum, peak_name.split()[0]))
 
-    # Remove spin-orbit coupling designation for RSF lookup
-    base_core_level = core_level.rstrip('1234567890/')
+    # Use regex to extract element and orbital information
+    match = re.match(r'([A-Z][a-z]*)(\d+[spdf])(?:(\d+/\d+))?', peak_name)
+    if match:
+        element, orbital, suborbital = match.groups()
+        core_level = element + orbital
+    else:
+        core_level = ''.join(filter(str.isalnum, peak_name.split()[0]))
 
-    rsf = rsf_dict.get(base_core_level, 1.0)
+    rsf = rsf_dict.get(core_level, 1.0)
 
     # Adjust RSF for doublets
-    if '3d5/2' in peak_name:
-        rsf *= 6 / 10
-    elif '3d3/2' in peak_name:
-        rsf *= 4 / 10
-    elif '2p3/2' in peak_name:
-        rsf *= 4 / 6
-    elif '2p1/2' in peak_name:
-        rsf *= 2 / 6
-    elif '4f7/2' in peak_name:
-        rsf *= 8 / 14
-    elif '4f5/2' in peak_name:
-        rsf *= 6 / 14
+    if suborbital:
+        if orbital.endswith('p'):
+            total_electrons = 6
+            if suborbital == '3/2':
+                rsf *= 4 / total_electrons
+            elif suborbital == '1/2':
+                rsf *= 2 / total_electrons
+        elif orbital.endswith('d'):
+            total_electrons = 10
+            if suborbital == '5/2':
+                rsf *= 6 / total_electrons
+            elif suborbital == '3/2':
+                rsf *= 4 / total_electrons
+        elif orbital.endswith('f'):
+            total_electrons = 14
+            if suborbital == '7/2':
+                rsf *= 8 / total_electrons
+            elif suborbital == '5/2':
+                rsf *= 6 / total_electrons
 
     return {
         'name': peak_name,
@@ -111,7 +122,7 @@ def _extract_peak_parameters(window, row, rsf_dict):
         'height': float(window.peak_params_grid.GetCellValue(row, 3)),
         'fwhm': float(window.peak_params_grid.GetCellValue(row, 4)),
         'lg_ratio': float(window.peak_params_grid.GetCellValue(row, 5)),
-        'rsf': rsf_dict.get(core_level, 1.0),
+        'rsf': rsf,
         'constraints': {
             'position': window.peak_params_grid.GetCellValue(row + 1, 2),
             'height': window.peak_params_grid.GetCellValue(row + 1, 3),
