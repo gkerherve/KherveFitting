@@ -1538,6 +1538,7 @@ class MyFrame(wx.Frame):
 
                         # Recalculate area
                         area = self.calculate_peak_area(model, height, fwhm, fraction)
+                        self.update_ratios()
 
                         # Update grid and data
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
@@ -1568,9 +1569,9 @@ class MyFrame(wx.Frame):
                         if not new_value:
                             default_constraints = {
                                 'Position': '0,1000',
-                                'Height': '0,1e7',
+                                'Height': '100,1e7',
                                 'FWHM': '0.3,3.5',
-                                'L/G': '0,0.5'
+                                'L/G': '0.05,0.8'
                             }
                             new_value = default_constraints[constraint_key]
                             self.peak_params_grid.SetCellValue(row, col, new_value)
@@ -1593,6 +1594,29 @@ class MyFrame(wx.Frame):
         # Replot the peaks with updated parameters
         self.clear_and_replot()
 
+    def update_ratios(self):
+        num_peaks = self.peak_params_grid.GetNumberRows() // 2
+        if num_peaks < 2:
+            return  # No ratios to calculate with less than 2 peaks
+
+        # Get first peak's height and area
+        first_height = float(self.peak_params_grid.GetCellValue(0, 3))
+        first_area = float(self.peak_params_grid.GetCellValue(0, 6))
+
+        for i in range(1, num_peaks):
+            row = i * 2
+            height = float(self.peak_params_grid.GetCellValue(row, 3))
+            area = float(self.peak_params_grid.GetCellValue(row, 6))
+
+            # Calculate ratios
+            i_ratio = height / first_height if first_height != 0 else 0
+            a_ratio = area / first_area if first_area != 0 else 0
+
+            # Update grid
+            self.peak_params_grid.SetCellValue(row, 9, f"{i_ratio:.2f}")
+            self.peak_params_grid.SetCellValue(row, 10, f"{a_ratio:.2f}")
+
+        self.peak_params_grid.ForceRefresh()
 
     def refresh_peak_params_grid(self):
         sheet_name = self.sheet_combobox.GetValue()
