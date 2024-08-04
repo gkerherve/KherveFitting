@@ -49,7 +49,7 @@ def export_results(window):
         peak_params = _extract_peak_parameters(window, row, rsf_dict)
 
         # Get the fitting model for this specific peak
-        fitting_model = window.peak_params_grid.GetCellValue(row, 9)  # Assuming column 9 is the Fitting Model
+        fitting_model = window.peak_params_grid.GetCellValue(row, 11)  # Assuming column 9 is the Fitting Model
 
         # Calculate area and related values
         area, normalized_area, rel_area = _calculate_peak_areas(peak_params, fitting_model)
@@ -85,6 +85,26 @@ def _extract_peak_parameters(window, row, rsf_dict):
     """Extract peak parameters from the peak_params_grid."""
     peak_name = window.peak_params_grid.GetCellValue(row, 1)  # Label
     core_level = ''.join(filter(str.isalnum, peak_name.split()[0]))
+
+    # Remove spin-orbit coupling designation for RSF lookup
+    base_core_level = core_level.rstrip('1234567890/')
+
+    rsf = rsf_dict.get(base_core_level, 1.0)
+
+    # Adjust RSF for doublets
+    if '3d5/2' in peak_name:
+        rsf *= 6 / 10
+    elif '3d3/2' in peak_name:
+        rsf *= 4 / 10
+    elif '2p3/2' in peak_name:
+        rsf *= 4 / 6
+    elif '2p1/2' in peak_name:
+        rsf *= 2 / 6
+    elif '4f7/2' in peak_name:
+        rsf *= 8 / 14
+    elif '4f5/2' in peak_name:
+        rsf *= 6 / 14
+
     return {
         'name': peak_name,
         'position': float(window.peak_params_grid.GetCellValue(row, 2)),
