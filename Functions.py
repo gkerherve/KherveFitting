@@ -1483,6 +1483,8 @@ def fit_peaks(window, peak_params_grid):
                 window.vline3 = None
                 window.vline4 = None
 
+                window.update_ratios()
+
                 return r_squared, chi_square, red_chi_square
 
             except Exception as e:

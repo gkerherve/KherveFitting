@@ -30,7 +30,7 @@ from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(1300, 600))
+        super().__init__(parent, title=title, size=(1500, 600))
         self.SetMinSize((800, 600))
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white
@@ -1596,8 +1596,15 @@ class MyFrame(wx.Frame):
 
     def update_ratios(self):
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
+        if num_peaks < 1:
+            return  # No peaks to calculate ratios for
+
+        # Set first peak's ratios to 1.00
+        self.peak_params_grid.SetCellValue(0, 9, "1.00")
+        self.peak_params_grid.SetCellValue(0, 10, "1.00")
+
         if num_peaks < 2:
-            return  # No ratios to calculate with less than 2 peaks
+            return  # No other ratios to calculate with only one peak
 
         # Get first peak's height and area
         first_height = float(self.peak_params_grid.GetCellValue(0, 3))

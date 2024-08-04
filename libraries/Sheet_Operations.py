@@ -102,8 +102,9 @@ def on_sheet_selected(window, event):
 
         window.plot_config.update_plot_limits(window, selected_sheet)
         window.plot_manager.update_legend(window)
+        window.update_ratios()
 
-        print(f"Selected sheet: {selected_sheet}, Peak count: {window.peak_count}, Show fit: {window.show_fit}")
+        # print(f"Selected sheet: {selected_sheet}, Peak count: {window.peak_count}, Show fit: {window.show_fit}")
 
     # Update the combobox selection if a string was passed directly
     if isinstance(event, str):
