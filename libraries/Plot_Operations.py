@@ -247,7 +247,7 @@ class PlotManager:
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
                 label = window.peak_params_grid.GetCellValue(row, 1)
-                fitting_model = window.peak_params_grid.GetCellValue(row, 9)
+                fitting_model = window.peak_params_grid.GetCellValue(row, 11)
             except ValueError:
                 print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
                 continue
@@ -401,7 +401,7 @@ class PlotManager:
             height_str = window.peak_params_grid.GetCellValue(row, 3)  # Height
             fwhm_str = window.peak_params_grid.GetCellValue(row, 4)  # FWHM
             lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)  # L/G
-            fitting_model = window.peak_params_grid.GetCellValue(row, 9)  # Fitting Model
+            fitting_model = window.peak_params_grid.GetCellValue(row, 11)  # Fitting Model
 
             # Check if any of the cells are empty
             if not all([position_str, height_str, fwhm_str, lg_ratio_str, fitting_model]):
