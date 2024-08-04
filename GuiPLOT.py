@@ -202,7 +202,7 @@ class MyFrame(wx.Frame):
 
         # Initialize the Fit_grid for peak parameters
         self.peak_params_grid = wx.grid.Grid(self.peak_params_frame)
-        self.peak_params_grid.CreateGrid(0, 15)
+        self.peak_params_grid.CreateGrid(0, 17)
         self.peak_params_grid.SetColLabelValue(0, "ID")
         self.peak_params_grid.SetColLabelValue(1, "Label")
         self.peak_params_grid.SetColLabelValue(2, "Position")
@@ -212,12 +212,14 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetColLabelValue(6, "Area")
         self.peak_params_grid.SetColLabelValue(7, "Tail E")
         self.peak_params_grid.SetColLabelValue(8, "Tail M")
-        self.peak_params_grid.SetColLabelValue(9, "Fitting Model")
-        self.peak_params_grid.SetColLabelValue(10, "Bkg Type")
-        self.peak_params_grid.SetColLabelValue(11, "Bkg Low")
-        self.peak_params_grid.SetColLabelValue(12, "Bkg High")
-        self.peak_params_grid.SetColLabelValue(13, "Bkg Offset Low")
-        self.peak_params_grid.SetColLabelValue(14, "Bkg Offset High")
+        self.peak_params_grid.SetColLabelValue(9, "I ratio")
+        self.peak_params_grid.SetColLabelValue(10, "A ratio")
+        self.peak_params_grid.SetColLabelValue(11, "Fitting Model")
+        self.peak_params_grid.SetColLabelValue(12, "Bkg Type")
+        self.peak_params_grid.SetColLabelValue(13, "Bkg Low")
+        self.peak_params_grid.SetColLabelValue(14, "Bkg High")
+        self.peak_params_grid.SetColLabelValue(15, "Bkg Offset Low")
+        self.peak_params_grid.SetColLabelValue(16, "Bkg Offset High")
 
         # Set grid properties
         self.peak_params_grid.SetDefaultRowSize(25)
@@ -236,9 +238,9 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetColSize(5, 50)
         self.peak_params_grid.SetColSize(7, 50)
         self.peak_params_grid.SetColSize(8, 50)
-        self.peak_params_grid.SetColSize(9, 100)
-        self.peak_params_grid.SetColSize(13, 100)
-        self.peak_params_grid.SetColSize(14, 100)
+        self.peak_params_grid.SetColSize(11, 100)
+        self.peak_params_grid.SetColSize(15, 100)
+        self.peak_params_grid.SetColSize(16, 100)
 
         peak_params_sizer_inner.Add(self.peak_params_grid, 1, wx.EXPAND | wx.ALL, 5)
         self.peak_params_frame.SetSizer(peak_params_sizer_inner)
@@ -429,14 +431,16 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "0.3")
         self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
-        self.peak_params_grid.SetCellValue(row, 9, self.selected_fitting_method)  # Fitting Model
-        self.peak_params_grid.SetCellValue(row, 10, self.background_method)  # Bkg Type
-        self.peak_params_grid.SetCellValue(row, 11,
+        self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
+        self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
+        self.peak_params_grid.SetCellValue(row, 11, self.selected_fitting_method)  # Fitting Model
+        self.peak_params_grid.SetCellValue(row, 12, self.background_method)  # Bkg Type
+        self.peak_params_grid.SetCellValue(row, 13,
                                            f"{self.bg_min_energy:.2f}" if self.bg_min_energy is not None else "")  # Bkg Low
-        self.peak_params_grid.SetCellValue(row, 12,
+        self.peak_params_grid.SetCellValue(row, 14,
                                            f"{self.bg_max_energy:.2f}" if self.bg_max_energy is not None else "")  # Bkg High
-        self.peak_params_grid.SetCellValue(row, 13, f"{self.offset_l:.2f}")  # Bkg Offset Low
-        self.peak_params_grid.SetCellValue(row, 14, f"{self.offset_h:.2f}")  # Bkg Offset High
+        self.peak_params_grid.SetCellValue(row, 15, f"{self.offset_l:.2f}")  # Bkg Offset Low
+        self.peak_params_grid.SetCellValue(row, 16, f"{self.offset_h:.2f}")  # Bkg Offset High
 
         # Set constraint values
         self.peak_params_grid.SetReadOnly(row + 1, 0)
@@ -775,7 +779,7 @@ class MyFrame(wx.Frame):
                     height = float(self.peak_params_grid.GetCellValue(row, 3))
                     fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                     fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                    model = self.peak_params_grid.GetCellValue(row, 9)
+                    model = self.peak_params_grid.GetCellValue(row, 11)
                     area = self.calculate_peak_area(model, height, fwhm, fraction)
                     self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
 
@@ -901,17 +905,21 @@ class MyFrame(wx.Frame):
                     if sheet_name in self.Data['Core levels']:
                         core_level_data = self.Data['Core levels'][sheet_name]
                         if self.background_method == "Adaptive Smart":
+                            # Check if click is close to vline1 or vline2
                             if self.vline1 is not None and self.vline2 is not None:
                                 vline1_x = self.vline1.get_xdata()[0]
                                 vline2_x = self.vline2.get_xdata()[0]
+
                                 dist1 = abs(x_click - vline1_x)
                                 dist2 = abs(x_click - vline2_x)
+
                                 if dist1 < dist2 and dist1 < self.some_threshold:
                                     self.moving_vline = self.vline1
                                 elif dist2 < self.some_threshold:
                                     self.moving_vline = self.vline2
                                 else:
                                     self.moving_vline = None
+
                                 if self.moving_vline is not None:
                                     self.motion_cid = self.canvas.mpl_connect('motion_notify_event', self.on_motion)
                                     self.release_cid = self.canvas.mpl_connect('button_release_event', self.on_release)
@@ -1130,7 +1138,8 @@ class MyFrame(wx.Frame):
 
                     # If in Adaptive Smart mode, update the background in real-time
                     if self.background_method == "Adaptive Smart":
-                        plot_background(self)
+                        # plot_background(self)
+                        pass
 
                 elif self.moving_vline in [self.vline3, self.vline4]:
                     if self.moving_vline == self.vline3:
@@ -1146,8 +1155,8 @@ class MyFrame(wx.Frame):
 
     def on_release(self, event):
         if self.moving_vline is not None:
-            self.canvas.mpl_disconnect(self.motion_cid)
-            self.canvas.mpl_disconnect(self.release_cid)
+            # self.canvas.mpl_disconnect(self.motion_cid)
+            # self.canvas.mpl_disconnect(self.release_cid)
             self.moving_vline = None
 
             # Ensure the background range is correctly ordered in the data dictionary
@@ -1163,8 +1172,8 @@ class MyFrame(wx.Frame):
 
             # If in Adaptive Smart mode, update the background
             if self.background_method == "Adaptive Smart":
-                plot_background(self)
-
+                # plot_background(self)
+                pass
         # If a peak is being moved, update its position and height
         if self.selected_peak_index is not None:
             row = self.selected_peak_index * 2  # Each peak uses two rows in the grid
@@ -1470,6 +1479,17 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
 
+        if col in [0,6]:
+            event.Veto()
+            return
+        # Allow only numeric input for specific columns in non-constraint rows
+        elif col not in [1, 11, 12] and row % 2 == 0:
+            try:
+                float(new_value)  # This will handle integers, floats, and scientific notation
+            except ValueError:
+                event.Veto()
+                return
+
         if new_value.lower() in ['fi', 'fix', 'fixe', 'fixed']:
             new_value = 'Fixed'
         elif new_value == 'F':
@@ -1527,7 +1547,7 @@ class MyFrame(wx.Frame):
                             'L/G': round(fraction, 2),
                             'Area': area
                         })
-                    elif col == 9:  # Fitting Model changed
+                    elif col == 11:  # Fitting Model changed
                         peaks[correct_peak_key]['Fitting Model'] = new_value
 
                         # Recalculate area with new model

@@ -1127,7 +1127,7 @@ def on_save(window):
 
 def toggle_Col_1(window):
     # List of columns to toggle
-    columns1 = [9, 10, 11, 12, 13, 14]
+    columns1 = [11, 12, 13, 14, 15,16]
     columns2 = [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
 
 
@@ -1223,7 +1223,7 @@ def fit_peaks(window, peak_params_grid):
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
-                peak_model_choice = peak_params_grid.GetCellValue(row, 9)  # Assuming column 9 is the Fitting Model
+                peak_model_choice = peak_params_grid.GetCellValue(row, 11)  # Assuming column 11 is the Fitting Model
                 sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                 gamma = lg_ratio * sigma
 
@@ -1333,7 +1333,7 @@ def fit_peaks(window, peak_params_grid):
                 row = i * 2
                 prefix = f'peak{i}_'
                 peak_label = peak_params_grid.GetCellValue(row, 1)
-                peak_model_choice = peak_params_grid.GetCellValue(row, 9)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 11)
 
                 if peak_label in existing_peaks:
                     center = result.params[f'{prefix}center'].value
