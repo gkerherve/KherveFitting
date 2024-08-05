@@ -4,7 +4,9 @@ import re
 import wx
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 from matplotlib.ticker import ScalarFormatter
+from itertools import cycle
 
 import lmfit
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
@@ -57,13 +59,16 @@ class PlotManager:
 
         return peak_y
 
-    def plot_peak(self, x_values, background, peak_params, sheet_name):
+    def plot_peak(self, x_values, background, peak_params, sheet_name, color=None, alpha=0.3):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
         lg_ratio = peak_params['lg_ratio']
         x = peak_params['position']
         y = peak_params['height']
         peak_label = peak_params['label']
+
+        # Format the peak label for matplotlib
+        formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', peak_label)
 
         # Get the fitting model for this specific peak
         fitting_model = peak_params.get('fitting_model', "GL")  # Default to GL if not specified
@@ -89,8 +94,14 @@ class PlotManager:
 
         peak_y = peak_model.eval(params, x=x_values) + background
 
-        self.ax.plot(x_values, peak_y, alpha=0.5)
-        self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=peak_label)
+        # self.ax.plot(x_values, peak_y, alpha=0.5)
+        # self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=formatted_label)
+
+        if color is None:
+            color = 'blue'  # default color
+
+        self.ax.plot(x_values, peak_y, color=color, alpha=alpha)
+        self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
 
         self.canvas.draw_idle()
 
@@ -234,6 +245,10 @@ class PlotManager:
         self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
+        # Create a color cycle
+        colors = plt.cm.tab10(np.linspace(0, 1, 10))
+        color_cycle = cycle(colors)
+
 
         # Replot all peaks and update indices
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
@@ -258,6 +273,22 @@ class PlotManager:
                 self.ax.fill_between(x_values, window.background, y_values,
                                      facecolor='lightgreen', alpha=0.5, label=label)
             else:
+                is_doublet = (i < num_peaks - 1 and
+                              window.peak_params_grid.GetCellValue(row, 1).split()[0] ==
+                              window.peak_params_grid.GetCellValue(row + 2, 1).split()[0])
+
+                if is_doublet:
+                    # Use the same color for both peaks of the doublet
+                    if i % 2 == 0:  # First peak of the doublet
+                        color = next(color_cycle)
+                        alpha = 0.3
+                    else:  # Second peak of the doublet
+                        alpha = 0.2
+                else:
+                    color = next(color_cycle)
+                    alpha = 0.3
+
+
                 # For fitted peaks, use the existing plot_peak method
                 peak_params = {
                     'row': row,
@@ -268,7 +299,7 @@ class PlotManager:
                     'label': label,
                     'fitting_model': fitting_model
                 }
-                self.plot_peak(window.x_values, window.background, peak_params, sheet_name)
+                self.plot_peak(window.x_values, window.background, peak_params, sheet_name, color=color, alpha=alpha)
 
 
 
@@ -571,9 +602,10 @@ class PlotManager:
         # Collect peak labels
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
         peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
+        formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
 
         # Ensure peaks are added to the end of the order
-        legend_order += peak_labels
+        legend_order += formatted_peak_labels
 
         # Create a list of (handle, label) tuples in the desired order
         ordered_handles_labels = []
