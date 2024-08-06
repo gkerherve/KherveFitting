@@ -273,9 +273,43 @@ class PlotManager:
                 self.ax.fill_between(x_values, window.background, y_values,
                                      facecolor='lightgreen', alpha=0.5, label=label)
             else:
+                # Improved doublet check
+                def is_part_of_doublet(current_label, next_label):
+                    current_parts = current_label.split()
+                    next_parts = next_label.split()
+                    print(current_parts)
+                    print(next_parts)
+                    if len(current_parts) < 2 or len(next_parts) < 2:
+                        return False
+
+                    current_core_level = current_parts[0]
+                    next_core_level = next_parts[0]
+                    print()
+
+                    if current_core_level != next_core_level:
+                        print("not current level")
+                        return False
+
+                    orbital = re.search(r'\d([spdf])', current_core_level)
+                    if not orbital:
+                        print("not orbital")
+                        return False
+
+                    orbital = orbital.group(1)
+                    print(orbital)
+
+                    if orbital == 'p':
+                        return '3/2' in current_parts[1] and '1/2' in next_parts[1]
+                    elif orbital == 'd':
+                        return '5/2' in current_parts[1] and '3/2' in next_parts[1]
+                    elif orbital == 'f':
+                        return '7/2' in current_parts[1] and '5/2' in next_parts[1]
+
+                    return False
+
                 is_doublet = (i < num_peaks - 1 and
-                              window.peak_params_grid.GetCellValue(row, 1).split()[0] ==
-                              window.peak_params_grid.GetCellValue(row + 2, 1).split()[0])
+                              is_part_of_doublet(window.peak_params_grid.GetCellValue(row, 1),
+                                                 window.peak_params_grid.GetCellValue(row + 2, 1)))
 
                 if is_doublet:
                     # Use the same color for both peaks of the doublet
