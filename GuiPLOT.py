@@ -1807,7 +1807,7 @@ class MyFrame(wx.Frame):
 
         with open('config.json', 'w') as f:
             json.dump(config, f)
-        self.clear_and_replot()
+
 
 
     def on_preferences(self, event):
@@ -1824,6 +1824,14 @@ class MyFrame(wx.Frame):
             self.line_color,
             self.scatter_marker
         )
+
+        # Check if a sheet is selected and a file is open
+        selected_sheet = self.sheet_combobox.GetValue()
+        if selected_sheet and 'FilePath' in self.Data and self.Data['FilePath']:
+            self.clear_and_replot()
+        else:
+            print("No sheet selected or no file open. Skipping replot.")
+
         self.canvas.draw_idle()
 
     def on_be_correction_change(self, event):
