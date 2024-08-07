@@ -559,7 +559,9 @@ def create_menu(window):
     Undo_item = edit_menu.Append(wx.NewId(), "Undo Fit - TBD")
     Redo_item = edit_menu.Append(wx.NewId(), "Redo Fit - TBD")
     edit_menu.AppendSeparator()
-    Config_item = edit_menu.Append(wx.NewId(), "Preference - TBD")
+
+    preferences_item = edit_menu.Append(wx.ID_PREFERENCES, "Preferences")
+    window.Bind(wx.EVT_MENU, window.on_preferences, preferences_item)
 
     ToggleFitting_item = view_menu.Append(wx.NewId(), "Toggle Peak Fitting")
     window.Bind(wx.EVT_MENU, lambda event: toggle_plot(window), ToggleFitting_item)

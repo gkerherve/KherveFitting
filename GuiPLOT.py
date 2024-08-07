@@ -27,6 +27,7 @@ from libraries.Sheet_Operations import on_sheet_selected
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
+from libraries.PreferenceWindow import PreferenceWindow
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -134,6 +135,11 @@ class MyFrame(wx.Frame):
 
         # Number of column to remove from the excel file
         self.num_fitted_columns = 15
+
+        # init for preference window
+        self.plot_style = "scatter"
+        self.plot_size = 1
+        self.plot_color = "#000000"
 
         self.create_widgets()
         create_menu(self)
@@ -1759,6 +1765,14 @@ class MyFrame(wx.Frame):
                         data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
 
         return data
+
+    def on_preferences(self, event):
+        pref_window = PreferenceWindow(self)
+        pref_window.Show()
+
+    def update_plot_preferences(self):
+        self.plot_manager.update_plot_style(self.plot_style, self.plot_size, self.plot_color)
+        self.canvas.draw_idle()
 
     def on_be_correction_change(self, event):
         new_correction = self.be_correction_spinbox.GetValue()

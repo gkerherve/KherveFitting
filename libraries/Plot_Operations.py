@@ -151,8 +151,11 @@ class PlotManager:
             self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
-            self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black',
+            if self.plot_style == "scatter":
+                self.ax.scatter(x_values, y_values, facecolors=self.plot_color, marker='o', s=self.plot_size, edgecolors=self.plot_color,
                             label='Raw Data')
+            else:
+                self.ax.plot(x_values, y_values, c=self.plot_color, linewidth=self.plot_size, label='Raw Data')
 
             # Hide the cross if it exists
             if hasattr(window, 'cross') and window.cross:
@@ -873,6 +876,11 @@ class PlotManager:
         # Update plot
         window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         window.canvas.draw_idle()
+
+    def update_plot_style(self, style, size, color):
+        self.plot_style = style
+        self.plot_size = size
+        self.plot_color = color
 
 
 
