@@ -1163,7 +1163,7 @@ from matplotlib.ticker import ScalarFormatter
 import matplotlib.pyplot as plt
 
 
-def fit_peaks(window, peak_params_grid):
+def fit_peaks2(window, peak_params_grid):
     """
     Perform peak fitting on the spectral data and update the plot and window.Data.
     """
@@ -1492,6 +1492,222 @@ def fit_peaks(window, peak_params_grid):
                 import traceback
                 traceback.print_exc()
                 wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
+
+        else:
+            raise ValueError("No data points found in the specified energy range for background subtraction")
+
+    else:
+        raise ValueError("Invalid background energy range")
+
+def fit_peaks(window, peak_params_grid):
+    """
+    Perform peak fitting on the spectral data and update the peak parameters.
+    """
+    if peak_params_grid is None or peak_params_grid.GetNumberRows() == 0:
+        wx.MessageBox("No peak parameters defined. Please add at least one peak before fitting.", "Error",
+                      wx.OK | wx.ICON_ERROR)
+        return None
+
+    sheet_name = window.sheet_combobox.GetValue()
+
+    if sheet_name not in window.plot_config.plot_limits:
+        window.plot_config.update_plot_limits(window, sheet_name)
+    limits = window.plot_config.plot_limits[sheet_name]
+
+    if sheet_name not in window.Data['Core levels']:
+        wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
+        return None
+
+    core_level_data = window.Data['Core levels'][sheet_name]
+    x_values = np.array(core_level_data['B.E.'])
+    y_values = np.array(core_level_data['Raw Data'])
+    background = np.array(core_level_data['Background']['Bkg Y'])
+
+    num_peaks = peak_params_grid.GetNumberRows() // 2
+
+    bg_min_energy = core_level_data['Background'].get('Bkg Low')
+    bg_max_energy = core_level_data['Background'].get('Bkg High')
+
+    if bg_min_energy is not None and bg_max_energy is not None and bg_min_energy <= bg_max_energy:
+        mask = (x_values >= bg_min_energy) & (x_values <= bg_max_energy)
+        x_values_filtered = x_values[mask]
+        y_values_filtered = y_values[mask]
+        background_filtered = background[mask]
+
+        if len(x_values_filtered) > 0 and len(y_values_filtered) > 0:
+            y_values_subtracted = y_values_filtered - background_filtered
+
+            model_choice = window.selected_fitting_method
+            max_nfev = window.max_iterations
+
+            model = None
+            params = lmfit.Parameters()
+
+            individual_peaks = []
+
+            for i in range(num_peaks):
+                row = i * 2
+                center = float(peak_params_grid.GetCellValue(row, 2))
+                height = float(peak_params_grid.GetCellValue(row, 3))
+                fwhm = float(peak_params_grid.GetCellValue(row, 4))
+                lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
+                peak_model_choice = peak_params_grid.GetCellValue(row, 11)
+                sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+                gamma = lg_ratio * sigma
+
+                center_min, center_max, center_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 2),
+                                                                        center, peak_params_grid, i, "Position")
+                height_min, height_max, height_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 3),
+                                                                        height, peak_params_grid, i, "Height")
+                fwhm_min, fwhm_max, fwhm_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 4),
+                                                                  fwhm, peak_params_grid, i, "FWHM")
+                lg_ratio_min, lg_ratio_max, lg_ratio_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 5),
+                                                                              lg_ratio, peak_params_grid, i, "L/G")
+
+                center_min = evaluate_constraint(center_min, peak_params_grid, 'center', center)
+                center_max = evaluate_constraint(center_max, peak_params_grid, 'center', center)
+                height_min = evaluate_constraint(height_min, peak_params_grid, 'height', height)
+                height_max = evaluate_constraint(height_max, peak_params_grid, 'height', height)
+                fwhm_min = evaluate_constraint(fwhm_min, peak_params_grid, 'fwhm', fwhm)
+                fwhm_max = evaluate_constraint(fwhm_max, peak_params_grid, 'fwhm', fwhm)
+                lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
+                lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio)
+
+                sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
+                sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
+                gamma_min = lg_ratio_min * sigma_min if lg_ratio_min is not None and sigma_min is not None else None
+                gamma_max = lg_ratio_max * sigma_max if lg_ratio_max is not None and sigma_max is not None else None
+
+                prefix = f'peak{i}_'
+
+                if peak_model_choice == "Voigt":
+                    peak_model = lmfit.models.VoigtModel(prefix=prefix)
+                    params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=fwhm_vary)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=lg_ratio_vary)
+                elif peak_model_choice == "Pseudo-Voigt":
+                    peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
+                    sigma = fwhm / 2.355
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}amplitude', value=height * sigma * np.sqrt(2 * np.pi), min=0)
+                    params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
+                               max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=0, max=1, vary=lg_ratio_vary)
+                elif peak_model_choice == "GL":
+                    peak_model = lmfit.Model(PeakFunctions.gauss_lorentz, prefix=prefix)
+                    params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
+                               vary=lg_ratio_vary)
+                elif peak_model_choice == "SGL":
+                    peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz, prefix=prefix)
+                    params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
+                               vary=lg_ratio_vary)
+                else:
+                    raise ValueError(f"Unknown fitting model: {peak_model_choice} for peak {i}")
+
+                if model is None:
+                    model = peak_model
+                else:
+                    model += peak_model
+
+                individual_peaks.append(peak_model)
+
+            result = model.fit(y_values_subtracted, params, x=x_values_filtered, max_nfev=max_nfev)
+
+            residuals = y_values_subtracted - result.best_fit
+            ss_res = np.sum(residuals ** 2)
+            ss_tot = np.sum((y_values_subtracted - np.mean(y_values_subtracted)) ** 2)
+            r_squared = 1 - (ss_res / ss_tot)
+            window.r_squared = r_squared
+            chi_square = result.chisqr
+            red_chi_square = result.redchi
+
+            if 'Fitting' not in window.Data['Core levels'][sheet_name]:
+                window.Data['Core levels'][sheet_name]['Fitting'] = {}
+            if 'Peaks' not in window.Data['Core levels'][sheet_name]['Fitting']:
+                window.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = {}
+
+            existing_peaks = window.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+
+            for i in range(num_peaks):
+                row = i * 2
+                prefix = f'peak{i}_'
+                peak_label = peak_params_grid.GetCellValue(row, 1)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 11)
+
+                if peak_label in existing_peaks:
+                    center = result.params[f'{prefix}center'].value
+                    if peak_model_choice == "Voigt":
+                        amplitude = result.params[f'{prefix}amplitude'].value
+                        sigma = result.params[f'{prefix}sigma'].value
+                        gamma = result.params[f'{prefix}gamma'].value
+                        height = PeakFunctions.get_voigt_height(amplitude, sigma, gamma)
+                        fwhm = PeakFunctions.voigt_fwhm(sigma, gamma)
+                        fraction = gamma / (sigma * np.sqrt(2 * np.log(2)))
+                        area = amplitude * (sigma * np.sqrt(2 * np.pi))
+                    elif peak_model_choice == "Pseudo-Voigt":
+                        amplitude = result.params[f'{prefix}amplitude'].value
+                        sigma = result.params[f'{prefix}sigma'].value
+                        fraction = result.params[f'{prefix}fraction'].value
+                        fwhm = sigma * 2.355
+                        height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
+                        area = amplitude
+                    elif peak_model_choice in ["GL", "SGL"]:
+                        height = result.params[f'{prefix}amplitude'].value
+                        fwhm = result.params[f'{prefix}fwhm'].value
+                        fraction = result.params[f'{prefix}fraction'].value
+                        area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+                    else:
+                        raise ValueError(f"Unknown fitting model: {peak_model_choice} for peak {peak_label}")
+
+                    center = round(float(center), 2)
+                    height = round(float(height), 2)
+                    fwhm = round(float(fwhm), 2)
+                    fraction = round(float(fraction), 2)
+                    area = round(float(area), 2)
+
+                    peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
+                    peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")
+                    peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")
+                    peak_params_grid.SetCellValue(row, 5, f"{fraction:.2f}")
+                    peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+
+                    existing_peaks[peak_label].update({
+                        'Position': center,
+                        'Height': height,
+                        'FWHM': fwhm,
+                        'L/G': fraction,
+                        'Area': area,
+                        'Fitting Model': peak_model_choice
+                    })
+                else:
+                    print(f"Warning: Peak {peak_label} not found in existing data. Skipping update for this peak.")
+
+            window.Data['Core levels'][sheet_name]['Fitting']['Model'] = model_choice
+
+            window.fit_results = {
+                'result': result,
+                'r_squared': r_squared,
+                'chi_square': chi_square,
+                'red_chi_square': red_chi_square,
+                'nfev': result.nfev,
+                'fitted_peak': y_values.copy(),
+                'mask': mask,
+                'background_filtered': background_filtered,
+                'y_values_subtracted': y_values_subtracted
+            }
+            window.fit_results['fitted_peak'][mask] = result.best_fit + background_filtered
+
+            window.update_ratios()
+            window.clear_and_replot()
+
+            return r_squared, chi_square, red_chi_square
 
         else:
             raise ValueError("No data points found in the specified energy range for background subtraction")

@@ -204,7 +204,7 @@ class PlotManager:
         except Exception as e:
             wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
-    def clear_and_replot2(self, window):
+    def clear_and_replot3(self, window):
         sheet_name = window.sheet_combobox.GetValue()
         limits = window.plot_config.get_plot_limits(window, sheet_name)
         cst_unfit = ""
@@ -531,6 +531,7 @@ class PlotManager:
 
         # Draw the canvas
         self.canvas.draw_idle()
+
 
     def is_part_of_doublet(self, current_label, next_label):
         current_parts = current_label.split()
