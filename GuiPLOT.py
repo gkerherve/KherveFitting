@@ -1825,14 +1825,17 @@ class MyFrame(wx.Frame):
             self.scatter_marker
         )
 
-        # Check if a sheet is selected and a file is open
-        selected_sheet = self.sheet_combobox.GetValue()
-        if selected_sheet and 'FilePath' in self.Data and self.Data['FilePath']:
-            self.clear_and_replot()
+        if hasattr(self, 'sheet_combobox'):
+            selected_sheet = self.sheet_combobox.GetValue()
+            if selected_sheet and 'FilePath' in self.Data and self.Data['FilePath']:
+                self.clear_and_replot()
+            else:
+                print("No sheet selected or no file open. Skipping replot.")
         else:
-            print("No sheet selected or no file open. Skipping replot.")
+            print("sheet_combobox not created yet. Skipping replot.")
 
-        self.canvas.draw_idle()
+        if hasattr(self, 'canvas'):
+            self.canvas.draw_idle()
 
     def on_be_correction_change(self, event):
         new_correction = self.be_correction_spinbox.GetValue()
