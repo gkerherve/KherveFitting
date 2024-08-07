@@ -136,9 +136,9 @@ class MyFrame(wx.Frame):
         # Number of column to remove from the excel file
         self.num_fitted_columns = 15
 
-        # init for preference window
-        self.plot_style = "scatter"
-        self.plot_size = 1
+        # Initialize plot preference attributes
+        self.plot_style = "line"
+        self.plot_size = 15
         self.plot_color = "#000000"
 
         self.create_widgets()

@@ -21,6 +21,11 @@ class PlotManager:
         self.fitting_results_text = None
         self.fitting_results_visible = False
 
+        # init for preference window
+        # self.plot_style = "line"
+        # self.plot_size = 3
+        # self.plot_color = "#000000"
+
     def plot_peak2(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
@@ -151,11 +156,11 @@ class PlotManager:
             self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
-            if self.plot_style == "scatter":
-                self.ax.scatter(x_values, y_values, facecolors=self.plot_color, marker='o', s=self.plot_size, edgecolors=self.plot_color,
+            if window.plot_style == "scatter":
+                self.ax.scatter(x_values, y_values, facecolors=window.plot_color, marker='o', s=window.plot_size, edgecolors=window.plot_color,
                             label='Raw Data')
             else:
-                self.ax.plot(x_values, y_values, c=self.plot_color, linewidth=self.plot_size, label='Raw Data')
+                self.ax.plot(x_values, y_values, c=window.plot_color, linewidth=window.plot_size, label='Raw Data')
 
             # Hide the cross if it exists
             if hasattr(window, 'cross') and window.cross:
@@ -509,7 +514,13 @@ class PlotManager:
         else:
             window.update_overall_fit_and_residuals()
 
-        self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black', label='Raw Data')
+        # self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black', label='Raw Data')
+        if window.plot_style == "scatter":
+            self.ax.scatter(x_values, y_values, facecolors=window.plot_color, marker='o', s=window.plot_size,
+                            edgecolors=window.plot_color,
+                            label='Raw Data')
+        else:
+            self.ax.plot(x_values, y_values, c=window.plot_color, alpha=0.7, linewidth=window.plot_size, label='Raw Data')
 
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
