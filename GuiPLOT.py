@@ -136,10 +136,16 @@ class MyFrame(wx.Frame):
         # Number of column to remove from the excel file
         self.num_fitted_columns = 15
 
-        # Initialize plot preference attributes
-        self.plot_style = "line"
-        self.plot_size = 15
-        self.plot_color = "#000000"
+        # Initialize plot preference attributes with default values
+        self.plot_style = "scatter"
+        self.scatter_size = 20
+        self.line_width = 1
+        self.line_alpha = 0.7
+        self.scatter_color = "#000000"
+        self.line_color = "#000000"
+        self.scatter_marker = "o"
+
+
 
         self.create_widgets()
         create_menu(self)
@@ -187,6 +193,12 @@ class MyFrame(wx.Frame):
 
         # Initialize plot_manager after self.ax and self.canvas are created
         self.plot_manager = PlotManager(self.ax, self.canvas)
+
+        # Load config if exists
+        self.load_config()
+
+        # Update plot manager with loaded or default values
+        self.update_plot_preferences()
 
         # Create a single NavigationToolbar (hidden by default)
         self.navigation_toolbar = NavigationToolbar(self.canvas)
@@ -1766,12 +1778,52 @@ class MyFrame(wx.Frame):
 
         return data
 
+    def load_config(self):
+        if os.path.exists('config.json'):
+            print("Loading config from file...")
+            with open('config.json', 'r') as f:
+                config = json.load(f)
+                self.plot_style = config.get('plot_style', self.plot_style)
+                self.scatter_size = config.get('scatter_size', self.scatter_size)
+                self.line_width = config.get('line_width', self.line_width)
+                self.line_alpha = config.get('line_alpha', self.line_alpha)
+                self.scatter_color = config.get('scatter_color', self.scatter_color)
+                self.line_color = config.get('line_color', self.line_color)
+                self.scatter_marker = config.get('scatter_marker', self.scatter_marker)
+            print(f"Loaded config: {config}")
+        else:
+            print("No config file found, using default values.")
+
+    def save_config(self):
+        config = {
+            'plot_style': self.plot_style,
+            'scatter_size': self.scatter_size,
+            'line_width': self.line_width,
+            'line_alpha': self.line_alpha,
+            'scatter_color': self.scatter_color,
+            'line_color': self.line_color,
+            'scatter_marker': self.scatter_marker
+        }
+
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
+        self.clear_and_replot()
+
+
     def on_preferences(self, event):
         pref_window = PreferenceWindow(self)
         pref_window.Show()
 
     def update_plot_preferences(self):
-        self.plot_manager.update_plot_style(self.plot_style, self.plot_size, self.plot_color)
+        self.plot_manager.update_plot_style(
+            self.plot_style,
+            self.scatter_size,
+            self.line_width,
+            self.line_alpha,
+            self.scatter_color,
+            self.line_color,
+            self.scatter_marker
+        )
         self.canvas.draw_idle()
 
     def on_be_correction_change(self, event):

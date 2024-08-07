@@ -22,9 +22,13 @@ class PlotManager:
         self.fitting_results_visible = False
 
         # init for preference window
-        # self.plot_style = "line"
-        # self.plot_size = 3
-        # self.plot_color = "#000000"
+        self.plot_style = "scatter"
+        self.scatter_size = 20
+        self.line_width = 1
+        self.line_alpha = 0.7
+        self.scatter_color = "#000000"
+        self.line_color = "#000000"
+        self.scatter_marker = "o"
 
     def plot_peak2(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
         row = peak_params['row']
@@ -156,11 +160,12 @@ class PlotManager:
             self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
-            if window.plot_style == "scatter":
-                self.ax.scatter(x_values, y_values, facecolors=window.plot_color, marker='o', s=window.plot_size, edgecolors=window.plot_color,
-                            label='Raw Data')
+            if self.plot_style == "scatter":
+                self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
+                                marker=self.scatter_marker, label='Raw Data')
             else:
-                self.ax.plot(x_values, y_values, c=window.plot_color, linewidth=window.plot_size, label='Raw Data')
+                self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                             alpha=self.line_alpha, label='Raw Data')
 
             # Hide the cross if it exists
             if hasattr(window, 'cross') and window.cross:
@@ -515,12 +520,13 @@ class PlotManager:
             window.update_overall_fit_and_residuals()
 
         # self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black', label='Raw Data')
-        if window.plot_style == "scatter":
-            self.ax.scatter(x_values, y_values, facecolors=window.plot_color, marker='o', s=window.plot_size,
-                            edgecolors=window.plot_color,
-                            label='Raw Data')
+
+        if self.plot_style == "scatter":
+            self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
+                            marker=self.scatter_marker, label='Raw Data')
         else:
-            self.ax.plot(x_values, y_values, c=window.plot_color, alpha=0.7, linewidth=window.plot_size, label='Raw Data')
+            self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                         alpha=self.line_alpha, label='Raw Data')
 
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
@@ -888,10 +894,14 @@ class PlotManager:
         window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         window.canvas.draw_idle()
 
-    def update_plot_style(self, style, size, color):
+    def update_plot_style(self, style, scatter_size, line_width, line_alpha, scatter_color, line_color, scatter_marker):
         self.plot_style = style
-        self.plot_size = size
-        self.plot_color = color
+        self.scatter_size = scatter_size
+        self.line_width = line_width
+        self.line_alpha = line_alpha
+        self.scatter_color = scatter_color
+        self.line_color = line_color
+        self.scatter_marker = scatter_marker
 
 
 
