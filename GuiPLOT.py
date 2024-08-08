@@ -144,7 +144,16 @@ class MyFrame(wx.Frame):
         self.scatter_color = "#000000"
         self.line_color = "#000000"
         self.scatter_marker = "o"
-
+        self.background_color = "#808080"
+        self.background_alpha = 0.5
+        self.background_linestyle = "--"
+        self.envelope_color = "#0000FF"
+        self.envelope_alpha = 0.6
+        self.envelope_linestyle = "-"
+        self.residual_color = "#00FF00"
+        self.residual_alpha = 0.4
+        self.residual_linestyle = "-"
+        self.raw_data_linestyle = "-"
 
 
         self.create_widgets()
@@ -1780,7 +1789,6 @@ class MyFrame(wx.Frame):
 
     def load_config(self):
         if os.path.exists('config.json'):
-            print("Loading config from file...")
             with open('config.json', 'r') as f:
                 config = json.load(f)
                 self.plot_style = config.get('plot_style', self.plot_style)
@@ -1790,7 +1798,16 @@ class MyFrame(wx.Frame):
                 self.scatter_color = config.get('scatter_color', self.scatter_color)
                 self.line_color = config.get('line_color', self.line_color)
                 self.scatter_marker = config.get('scatter_marker', self.scatter_marker)
-            print(f"Loaded config: {config}")
+                self.background_color = config.get('background_color', self.background_color)
+                self.background_alpha = config.get('background_alpha', self.background_alpha)
+                self.background_linestyle = config.get('background_linestyle', self.background_linestyle)
+                self.envelope_color = config.get('envelope_color', self.envelope_color)
+                self.envelope_alpha = config.get('envelope_alpha', self.envelope_alpha)
+                self.envelope_linestyle = config.get('envelope_linestyle', self.envelope_linestyle)
+                self.residual_color = config.get('residual_color', self.residual_color)
+                self.residual_alpha = config.get('residual_alpha', self.residual_alpha)
+                self.residual_linestyle = config.get('residual_linestyle', self.residual_linestyle)
+                self.raw_data_linestyle = config.get('raw_data_linestyle', self.raw_data_linestyle)
         else:
             print("No config file found, using default values.")
 
@@ -1802,7 +1819,17 @@ class MyFrame(wx.Frame):
             'line_alpha': self.line_alpha,
             'scatter_color': self.scatter_color,
             'line_color': self.line_color,
-            'scatter_marker': self.scatter_marker
+            'scatter_marker': self.scatter_marker,
+            'background_color': self.background_color,
+            'background_alpha': self.background_alpha,
+            'background_linestyle': self.background_linestyle,
+            'envelope_color': self.envelope_color,
+            'envelope_alpha': self.envelope_alpha,
+            'envelope_linestyle': self.envelope_linestyle,
+            'residual_color': self.residual_color,
+            'residual_alpha': self.residual_alpha,
+            'residual_linestyle': self.residual_linestyle,
+            'raw_data_linestyle': self.raw_data_linestyle
         }
 
         with open('config.json', 'w') as f:
@@ -1822,7 +1849,17 @@ class MyFrame(wx.Frame):
             self.line_alpha,
             self.scatter_color,
             self.line_color,
-            self.scatter_marker
+            self.scatter_marker,
+            self.background_color,
+            self.background_alpha,
+            self.background_linestyle,
+            self.envelope_color,
+            self.envelope_alpha,
+            self.envelope_linestyle,
+            self.residual_color,
+            self.residual_alpha,
+            self.residual_linestyle,
+            self.raw_data_linestyle
         )
 
         if hasattr(self, 'sheet_combobox'):

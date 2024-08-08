@@ -30,6 +30,17 @@ class PlotManager:
         self.line_color = "#000000"
         self.scatter_marker = "o"
 
+        self.background_color = "#808080"
+        self.background_alpha = 0.5
+        self.background_linestyle = "--"
+        self.envelope_color = "#0000FF"
+        self.envelope_alpha = 0.6
+        self.envelope_linestyle = "-"
+        self.residual_color = "#00FF00"
+        self.residual_alpha = 0.4
+        self.residual_linestyle = "-"
+        self.raw_data_linestyle = "-"
+
     def plot_peak2(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
@@ -165,7 +176,7 @@ class PlotManager:
                                 marker=self.scatter_marker, label='Raw Data')
             else:
                 self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
-                             alpha=self.line_alpha, label='Raw Data')
+                             alpha=self.line_alpha, linestyle=self.raw_data_linestyle, label='Raw Data')
 
             # Hide the cross if it exists
             if hasattr(window, 'cross') and window.cross:
@@ -510,8 +521,8 @@ class PlotManager:
 
         # Plot the background if it exists
         if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
-            self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color='grey', linestyle='--',
-                         label='Background', alpha=0.5)
+            self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
+                         linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
 
         # Update overall fit and residuals
         if cst_unfit == "Unfitted":
@@ -519,14 +530,13 @@ class PlotManager:
         else:
             window.update_overall_fit_and_residuals()
 
-        # self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black', label='Raw Data')
-
+        # When plotting raw data
         if self.plot_style == "scatter":
             self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
                             marker=self.scatter_marker, label='Raw Data')
         else:
             self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
-                         alpha=self.line_alpha, label='Raw Data')
+                         alpha=self.line_alpha, linestyle=self.raw_data_linestyle, label='Raw Data')
 
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
@@ -742,9 +752,12 @@ class PlotManager:
                 line.remove()
 
         # Plot the new overall fit and residuals
-        self.ax.plot(window.x_values, overall_fit, 'b-', alpha=0.3, label='Overall Fit')
-        self.ax.plot(window.x_values, scaled_residuals + 1.05 * max(window.y_values), 'g-', alpha=0.4,
-                     label='Residuals')
+        self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
+                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
+
+        self.ax.plot(window.x_values, scaled_residuals + 1.05 * max(window.y_values),
+                     color=self.residual_color, linestyle=self.residual_linestyle,
+                     alpha=self.residual_alpha, label='Residuals')
 
         # Update the Y-axis label
         self.ax.set_ylabel(f'Intensity (CTS), residual x {scaling_factor:.2f}')
@@ -894,7 +907,11 @@ class PlotManager:
         window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         window.canvas.draw_idle()
 
-    def update_plot_style(self, style, scatter_size, line_width, line_alpha, scatter_color, line_color, scatter_marker):
+    def update_plot_style(self, style, scatter_size, line_width, line_alpha, scatter_color, line_color, scatter_marker,
+                          background_color, background_alpha, background_linestyle,
+                          envelope_color, envelope_alpha, envelope_linestyle,
+                          residual_color, residual_alpha, residual_linestyle,
+                          raw_data_linestyle):
         self.plot_style = style
         self.scatter_size = scatter_size
         self.line_width = line_width
@@ -902,6 +919,16 @@ class PlotManager:
         self.scatter_color = scatter_color
         self.line_color = line_color
         self.scatter_marker = scatter_marker
+        self.background_color = background_color
+        self.background_alpha = background_alpha
+        self.background_linestyle = background_linestyle
+        self.envelope_color = envelope_color
+        self.envelope_alpha = envelope_alpha
+        self.envelope_linestyle = envelope_linestyle
+        self.residual_color = residual_color
+        self.residual_alpha = residual_alpha
+        self.residual_linestyle = residual_linestyle
+        self.raw_data_linestyle = raw_data_linestyle
 
 
 
