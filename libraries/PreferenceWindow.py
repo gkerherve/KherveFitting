@@ -10,9 +10,9 @@ class PreferenceWindow(wx.Frame):
         self.parent = parent
 
         self.SetTitle("Preferences")
-        self.SetSize((500, 650))
-        self.SetMinSize((500, 650))
-        self.SetMaxSize((500, 650))
+        self.SetSize((600, 650))
+        self.SetMinSize((600, 650))
+        self.SetMaxSize((600, 650))
 
         self.InitUI()
 
@@ -141,11 +141,23 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.envelope_color_picker, pos=(6, 5), flag=wx.ALL, border=5)
 
 
+        # Peak colors
+        peak_color_label = wx.StaticText(panel, label="Peak Colors:")
+        sizer.Add(peak_color_label, pos=(0, 7), flag=wx.ALL, border=5)
 
+        self.peak_colors = []
+        for i in range(15):
+            color_picker = wx.ColourPickerCtrl(panel)
+            color_picker.SetMinSize((30, 30))
+            sizer.Add(color_picker, pos=(i + 1, 7), flag=wx.ALL, border=2)
+            self.peak_colors.append(color_picker)
 
-
-
-
+        # Peak alpha
+        self.peak_alpha_label = wx.StaticText(panel, label="Peak Alpha:")
+        self.peak_alpha_spin = wx.SpinCtrlDouble(panel, value="0.3", min=0, max=1, inc=0.1)
+        self.peak_alpha_spin.SetMinSize((100, -1))
+        sizer.Add(self.peak_alpha_label, pos=(16, 7), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_alpha_spin, pos=(17, 7), flag=wx.ALL, border=5)
 
 
 
@@ -175,6 +187,12 @@ class PreferenceWindow(wx.Frame):
         self.residual_linestyle.SetSelection(["", "-", "--", "-.", ":"].index(self.parent.residual_linestyle))
         self.raw_data_linestyle.SetSelection(["", "-", "--", "-.", ":"].index(self.parent.raw_data_linestyle))
 
+        for i, color_picker in enumerate(self.peak_colors):
+            if i < len(self.parent.peak_colors):
+                color_picker.SetColour(self.parent.peak_colors[i])
+
+        self.peak_alpha_spin.SetValue(self.parent.peak_alpha)
+
 
     def OnSave(self, event):
         self.parent.plot_style = "scatter" if self.plot_style.GetSelection() == 0 else "line"
@@ -195,6 +213,10 @@ class PreferenceWindow(wx.Frame):
         self.parent.residual_alpha = self.residual_alpha_spin.GetValue()
         self.parent.residual_linestyle = ["", "-", "--", "-.", ":"][self.residual_linestyle.GetSelection()]
         self.parent.raw_data_linestyle = ["", "-", "--", "-.", ":"][self.raw_data_linestyle.GetSelection()]
+
+        self.parent.peak_colors = [color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+                                   for color_picker in self.peak_colors]
+        self.parent.peak_alpha = self.peak_alpha_spin.GetValue()
 
 
         self.parent.save_config()

@@ -155,6 +155,11 @@ class MyFrame(wx.Frame):
         self.residual_linestyle = "-"
         self.raw_data_linestyle = "-"
 
+        self.peak_colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF",
+                            "#00FFFF", "#800000", "#008000", "#000080", "#808000",
+                            "#800080", "#008080", "#C0C0C0", "#808080", "#9B30FF"]
+        self.peak_alpha = 0.3
+
 
         self.create_widgets()
         create_menu(self)
@@ -1808,6 +1813,8 @@ class MyFrame(wx.Frame):
                 self.residual_alpha = config.get('residual_alpha', self.residual_alpha)
                 self.residual_linestyle = config.get('residual_linestyle', self.residual_linestyle)
                 self.raw_data_linestyle = config.get('raw_data_linestyle', self.raw_data_linestyle)
+                self.peak_colors = config.get('peak_colors', self.peak_colors)
+                self.peak_alpha = config.get('peak_alpha', self.peak_alpha)
         else:
             print("No config file found, using default values.")
 
@@ -1829,7 +1836,9 @@ class MyFrame(wx.Frame):
             'residual_color': self.residual_color,
             'residual_alpha': self.residual_alpha,
             'residual_linestyle': self.residual_linestyle,
-            'raw_data_linestyle': self.raw_data_linestyle
+            'raw_data_linestyle': self.raw_data_linestyle,
+            'peak_colors': self.peak_colors,
+            'peak_alpha': self.peak_alpha
         }
 
         with open('config.json', 'w') as f:
@@ -1859,7 +1868,9 @@ class MyFrame(wx.Frame):
             self.residual_color,
             self.residual_alpha,
             self.residual_linestyle,
-            self.raw_data_linestyle
+            self.raw_data_linestyle,
+            self.peak_colors,  # Add this line
+            self.peak_alpha  # Add this line
         )
 
         if hasattr(self, 'sheet_combobox'):

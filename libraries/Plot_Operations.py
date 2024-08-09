@@ -41,6 +41,9 @@ class PlotManager:
         self.residual_linestyle = "-"
         self.raw_data_linestyle = "-"
 
+        self.peak_colors = []
+        self.peak_alpha = 0.3
+
     def plot_peak2(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
@@ -118,7 +121,9 @@ class PlotManager:
         # self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=formatted_label)
 
         if color is None:
-            color = 'blue'  # default color
+            color = self.peak_colors[len(self.ax.lines) % len(self.peak_colors)]
+        if alpha is None:
+            alpha = self.peak_alpha
 
         self.ax.plot(x_values, peak_y, color=color, alpha=alpha)
         self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
@@ -499,13 +504,15 @@ class PlotManager:
             else:
                 if i in doublets:
                     if doublets.index(i) % 2 == 0:  # First peak of the doublet
-                        color = next(color_cycle)
-                        alpha = 0.3
+                        color = self.peak_colors[i % len(self.peak_colors)]
+                        alpha = self.peak_alpha
                     else:  # Second peak of the doublet
-                        alpha = 0.2
+                        # Use the same color as the first peak of the doublet, but with lower alpha
+                        color = self.peak_colors[(i - 1) % len(self.peak_colors)]
+                        alpha = self.peak_alpha * 0.67  # Reduce alpha for the second peak
                 else:
-                    color = next(color_cycle)
-                    alpha = 0.3
+                    color = self.peak_colors[i % len(self.peak_colors)]
+                    alpha = self.peak_alpha
 
                 # For fitted peaks, use the existing plot_peak method
                 peak_params = {
@@ -911,7 +918,7 @@ class PlotManager:
                           background_color, background_alpha, background_linestyle,
                           envelope_color, envelope_alpha, envelope_linestyle,
                           residual_color, residual_alpha, residual_linestyle,
-                          raw_data_linestyle):
+                          raw_data_linestyle, peak_colors, peak_alpha):
         self.plot_style = style
         self.scatter_size = scatter_size
         self.line_width = line_width
@@ -929,6 +936,8 @@ class PlotManager:
         self.residual_alpha = residual_alpha
         self.residual_linestyle = residual_linestyle
         self.raw_data_linestyle = raw_data_linestyle
+        self.peak_colors = peak_colors
+        self.peak_alpha = peak_alpha
 
 
 
