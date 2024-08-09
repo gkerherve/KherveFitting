@@ -14,6 +14,8 @@ class PreferenceWindow(wx.Frame):
         self.SetMinSize((490, 570))
         self.SetMaxSize((490, 570))
 
+        self.temp_peak_colors = self.parent.peak_colors.copy()
+
         self.InitUI()
 
     def InitUI(self):
@@ -148,8 +150,7 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(peak_color_label, pos=(9, 4), flag=wx.ALL, border=5)
         sizer.Add(self.peak_color_picker, pos=(9, 5), flag=wx.ALL, border=5)
 
-        # Bind the spin control to update the color picker
-        self.peak_number_spin.Bind(wx.EVT_SPINCTRL, self.OnPeakNumberChange)
+
 
         # Peak alpha
         self.peak_alpha_label = wx.StaticText(panel, label="Peak Alpha:")
@@ -163,6 +164,10 @@ class PreferenceWindow(wx.Frame):
         save_button.SetMinSize((190, 40))
         save_button.Bind(wx.EVT_BUTTON, self.OnSave)
         sizer.Add(save_button, pos=(13, 0), span=(2, 2), flag=wx.ALL | wx.ALIGN_CENTER, border=5)
+
+        # Bind the spin control to update the color picker
+        self.peak_number_spin.Bind(wx.EVT_SPINCTRL, self.OnPeakNumberChange)
+        self.peak_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.OnColorChange)
 
         panel.SetSizer(sizer)
         self.Centre()
@@ -191,15 +196,43 @@ class PreferenceWindow(wx.Frame):
         self.raw_data_linestyle.SetSelection(["", "-", "--", "-.", ":"].index(self.parent.raw_data_linestyle))
 
         # Load the first peak color
+        self.temp_peak_colors = self.parent.peak_colors.copy()
         if self.parent.peak_colors:
             self.peak_color_picker.SetColour(self.parent.peak_colors[0])
 
         self.peak_alpha_spin.SetValue(self.parent.peak_alpha)
 
+    def OnPeakNumberChange2(self, event):
+        current_peak = self.peak_number_spin.GetValue() - 1
+        # Save the current color before changing
+        self.temp_peak_colors[current_peak] = self.peak_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+
+        # Change to the new peak color
+        new_peak = event.GetPosition() - 1
+        if new_peak < len(self.temp_peak_colors):
+            self.peak_color_picker.SetColour(self.temp_peak_colors[new_peak])
+        else:
+            # If it's a new peak, set a default color
+            self.peak_color_picker.SetColour(wx.Colour(128, 128, 128))  # Gray as default
+
     def OnPeakNumberChange(self, event):
-        peak_index = self.peak_number_spin.GetValue() - 1
-        if peak_index < len(self.parent.peak_colors):
-            self.peak_color_picker.SetColour(self.parent.peak_colors[peak_index])
+        current_peak = event.GetPosition() - 1  # New peak number (0-indexed)
+        if current_peak < len(self.temp_peak_colors):
+            color = wx.Colour(self.temp_peak_colors[current_peak])
+        else:
+            # If it's a new peak, set a default color and extend the list
+            color = wx.Colour(128, 128, 128)  # Gray
+            self.temp_peak_colors.append(color.GetAsString(wx.C2S_HTML_SYNTAX))
+
+        self.peak_color_picker.SetColour(color)
+
+    def OnColorChange(self, event):
+        current_peak = self.peak_number_spin.GetValue() - 1
+        new_color = event.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+        if current_peak < len(self.temp_peak_colors):
+            self.temp_peak_colors[current_peak] = new_color
+        else:
+            self.temp_peak_colors.append(new_color)
 
     def OnSave(self, event):
         self.parent.plot_style = "scatter" if self.plot_style.GetSelection() == 0 else "line"
@@ -213,25 +246,32 @@ class PreferenceWindow(wx.Frame):
         self.parent.background_color = self.background_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
         self.parent.background_alpha = self.background_alpha_spin.GetValue()
         self.parent.background_linestyle = ["", "-", "--", "-.", ":"][self.background_linestyle.GetSelection()]
+
         self.parent.envelope_color = self.envelope_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
         self.parent.envelope_alpha = self.envelope_alpha_spin.GetValue()
         self.parent.envelope_linestyle = ["", "-", "--", "-.", ":"][self.envelope_linestyle.GetSelection()]
+
         self.parent.residual_color = self.residual_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
         self.parent.residual_alpha = self.residual_alpha_spin.GetValue()
         self.parent.residual_linestyle = ["", "-", "--", "-.", ":"][self.residual_linestyle.GetSelection()]
+
         self.parent.raw_data_linestyle = ["", "-", "--", "-.", ":"][self.raw_data_linestyle.GetSelection()]
 
-        # Save peak colors
-        peak_index = self.peak_number_spin.GetValue() - 1
-        new_color = self.peak_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
-        if peak_index < len(self.parent.peak_colors):
-            self.parent.peak_colors[peak_index] = new_color
-        else:
-            self.parent.peak_colors.append(new_color)
+        # Save the current color of the selected peak
+        current_peak = self.peak_number_spin.GetValue() - 1
+        self.temp_peak_colors[current_peak] = self.peak_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+
+        # Update parent's peak_colors with temp_peak_colors
+        self.parent.peak_colors = self.temp_peak_colors.copy()
 
         self.parent.peak_alpha = self.peak_alpha_spin.GetValue()
 
-
+        # Save the configuration
         self.parent.save_config()
+
+        # Update the plot preferences
         self.parent.update_plot_preferences()
+
+        # Close the preference window
         self.Close()
+
