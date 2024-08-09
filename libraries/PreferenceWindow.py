@@ -10,9 +10,9 @@ class PreferenceWindow(wx.Frame):
         self.parent = parent
 
         self.SetTitle("Preferences")
-        self.SetSize((600, 650))
-        self.SetMinSize((600, 650))
-        self.SetMaxSize((600, 650))
+        self.SetSize((490, 570))
+        self.SetMinSize((490, 570))
+        self.SetMaxSize((490, 570))
 
         self.InitUI()
 
@@ -77,11 +77,13 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.line_color_picker, pos=(8, 1), flag=wx.ALL, border=5)
 
         # Residual options
-        residual_label = wx.StaticText(panel, label="Residual:")
-        self.residual_color_picker = wx.ColourPickerCtrl(panel)
-        self.residual_color_picker.SetMinSize((100, -1))
-        sizer.Add(residual_label, pos=(10, 0), flag=wx.ALL, border=5)
-        sizer.Add(self.residual_color_picker, pos=(10, 1), flag=wx.ALL, border=5)
+        self.residual_linestyle_label = wx.StaticText(panel, label="Residual Line:")
+        self.residual_linestyle = wx.Choice(panel, choices=["-", "--", "-.", ":"])
+        self.residual_linestyle.SetMinSize((100, -1))
+        sizer.Add(self.residual_linestyle_label, pos=(10, 0), flag=wx.ALL, border=5)
+        sizer.Add(self.residual_linestyle, pos=(10, 1), flag=wx.ALL, border=5)
+
+
 
         self.residual_alpha_label = wx.StaticText(panel, label="Residual Alpha:")
         self.residual_alpha_spin = wx.SpinCtrlDouble(panel, value="0.4", min=0, max=1, inc=0.1)
@@ -89,18 +91,11 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.residual_alpha_label, pos=(11, 0), flag=wx.ALL, border=5)
         sizer.Add(self.residual_alpha_spin, pos=(11, 1), flag=wx.ALL, border=5)
 
-        self.residual_linestyle_label = wx.StaticText(panel, label="Residual Line:")
-        self.residual_linestyle = wx.Choice(panel, choices=["-", "--", "-.", ":"])
-        self.residual_linestyle.SetMinSize((100, -1))
-        sizer.Add(self.residual_linestyle_label, pos=(12, 0), flag=wx.ALL, border=5)
-        sizer.Add(self.residual_linestyle, pos=(12, 1), flag=wx.ALL, border=5)
-
-        # Save button (moved to the bottom)
-        save_button = wx.Button(panel, label="Save")
-        save_button.SetMinSize((190, 40))
-        save_button.Bind(wx.EVT_BUTTON, self.OnSave)
-        sizer.Add(save_button, pos=(13, 0), span=(13, 2), flag=wx.ALL | wx.ALIGN_CENTER, border=5)
-
+        residual_label = wx.StaticText(panel, label="Residual:")
+        self.residual_color_picker = wx.ColourPickerCtrl(panel)
+        self.residual_color_picker.SetMinSize((100, -1))
+        sizer.Add(residual_label, pos=(12, 0), flag=wx.ALL, border=5)
+        sizer.Add(self.residual_color_picker, pos=(12, 1), flag=wx.ALL, border=5)
 
         # Background options
         self.background_linestyle_label = wx.StaticText(panel, label="Background Line:")
@@ -140,26 +135,34 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(envelope_label, pos=(6, 4), flag=wx.ALL, border=5)
         sizer.Add(self.envelope_color_picker, pos=(6, 5), flag=wx.ALL, border=5)
 
+        # Peak color selection
+        self.peak_number_spin_label = wx.StaticText(panel, label="Peak Number:")
+        self.peak_number_spin = wx.SpinCtrl(panel, min=1, max=15, initial=1)
+        self.peak_number_spin.SetMinSize((100, -1))
+        sizer.Add(self.peak_number_spin_label, pos=(8, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_number_spin, pos=(8, 5), flag=wx.ALL, border=5)
 
-        # Peak colors
-        peak_color_label = wx.StaticText(panel, label="Peak Colors:")
-        sizer.Add(peak_color_label, pos=(0, 7), flag=wx.ALL, border=5)
+        peak_color_label = wx.StaticText(panel, label="Peak Color:")
+        self.peak_color_picker = wx.ColourPickerCtrl(panel)
+        self.peak_color_picker.SetMinSize((100, -1))
+        sizer.Add(peak_color_label, pos=(9, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_color_picker, pos=(9, 5), flag=wx.ALL, border=5)
 
-        self.peak_colors = []
-        for i in range(15):
-            color_picker = wx.ColourPickerCtrl(panel)
-            color_picker.SetMinSize((30, 30))
-            sizer.Add(color_picker, pos=(i + 1, 7), flag=wx.ALL, border=2)
-            self.peak_colors.append(color_picker)
+        # Bind the spin control to update the color picker
+        self.peak_number_spin.Bind(wx.EVT_SPINCTRL, self.OnPeakNumberChange)
 
         # Peak alpha
         self.peak_alpha_label = wx.StaticText(panel, label="Peak Alpha:")
         self.peak_alpha_spin = wx.SpinCtrlDouble(panel, value="0.3", min=0, max=1, inc=0.1)
         self.peak_alpha_spin.SetMinSize((100, -1))
-        sizer.Add(self.peak_alpha_label, pos=(16, 7), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_alpha_spin, pos=(17, 7), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_alpha_label, pos=(10, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_alpha_spin, pos=(10, 5), flag=wx.ALL, border=5)
 
-
+        # Save button (moved to the bottom)
+        save_button = wx.Button(panel, label="Save")
+        save_button.SetMinSize((190, 40))
+        save_button.Bind(wx.EVT_BUTTON, self.OnSave)
+        sizer.Add(save_button, pos=(13, 0), span=(2, 2), flag=wx.ALL | wx.ALIGN_CENTER, border=5)
 
         panel.SetSizer(sizer)
         self.Centre()
@@ -187,12 +190,16 @@ class PreferenceWindow(wx.Frame):
         self.residual_linestyle.SetSelection(["", "-", "--", "-.", ":"].index(self.parent.residual_linestyle))
         self.raw_data_linestyle.SetSelection(["", "-", "--", "-.", ":"].index(self.parent.raw_data_linestyle))
 
-        for i, color_picker in enumerate(self.peak_colors):
-            if i < len(self.parent.peak_colors):
-                color_picker.SetColour(self.parent.peak_colors[i])
+        # Load the first peak color
+        if self.parent.peak_colors:
+            self.peak_color_picker.SetColour(self.parent.peak_colors[0])
 
         self.peak_alpha_spin.SetValue(self.parent.peak_alpha)
 
+    def OnPeakNumberChange(self, event):
+        peak_index = self.peak_number_spin.GetValue() - 1
+        if peak_index < len(self.parent.peak_colors):
+            self.peak_color_picker.SetColour(self.parent.peak_colors[peak_index])
 
     def OnSave(self, event):
         self.parent.plot_style = "scatter" if self.plot_style.GetSelection() == 0 else "line"
@@ -214,8 +221,14 @@ class PreferenceWindow(wx.Frame):
         self.parent.residual_linestyle = ["", "-", "--", "-.", ":"][self.residual_linestyle.GetSelection()]
         self.parent.raw_data_linestyle = ["", "-", "--", "-.", ":"][self.raw_data_linestyle.GetSelection()]
 
-        self.parent.peak_colors = [color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
-                                   for color_picker in self.peak_colors]
+        # Save peak colors
+        peak_index = self.peak_number_spin.GetValue() - 1
+        new_color = self.peak_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+        if peak_index < len(self.parent.peak_colors):
+            self.parent.peak_colors[peak_index] = new_color
+        else:
+            self.parent.peak_colors.append(new_color)
+
         self.parent.peak_alpha = self.peak_alpha_spin.GetValue()
 
 
