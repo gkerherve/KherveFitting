@@ -1708,11 +1708,13 @@ def fit_peaks(window, peak_params_grid):
 
             # Add text annotations with fit results
             std_value_int = int(window.noise_std_value) if hasattr(window, 'noise_std_value') else "N/A"
-            window.plot_manager.set_fitting_results_text(f'Noise STD: {std_value_int}'
-                                                         f' cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {result.nfev}')
 
             window.update_ratios()
             window.clear_and_replot()
+
+            # Fitting results --- THIS NEEDS TO BE SET AFTER CLEAR & REPLOT TO WORK
+            window.plot_manager.set_fitting_results_text(f'Noise STD: {std_value_int}'
+                                                         f' cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {result.nfev}')
 
             return r_squared, chi_square, red_chi_square
 

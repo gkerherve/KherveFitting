@@ -838,6 +838,8 @@ class PlotManager:
         self.canvas.draw_idle()
 
     def toggle_fitting_results(self):
+        print(self.fitting_results_text)
+        print(self.fitting_results_visible)
         if self.fitting_results_text:
             self.fitting_results_visible = not self.fitting_results_visible
             self.fitting_results_text.set_visible(self.fitting_results_visible)
@@ -847,6 +849,8 @@ class PlotManager:
         # Method to set or update the fitting results text
         if self.fitting_results_text:
             self.fitting_results_text.remove()
+        print("Hello I am called")
+        print(text)
         self.fitting_results_text = self.ax.text(
             0.02, 0.04, text,
             transform=self.ax.transAxes,
