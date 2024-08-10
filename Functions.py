@@ -676,7 +676,7 @@ def create_horizontal_toolbar(window):
                                 wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
 
     toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill',
-                                            wx.Bitmap(os.path.join(icon_path, "peak_fill.png"), wx.BITMAP_TYPE_PNG),
+                                            wx.Bitmap(os.path.join(icon_path, "STO-64.png"), wx.BITMAP_TYPE_PNG),
                                             shortHelp="Toggle Peak Fill")
 
     # resize_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Resize Plot', wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Resize Plot")

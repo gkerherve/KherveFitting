@@ -123,10 +123,13 @@ class PlotManager:
         if alpha is None:
             alpha = self.peak_alpha
 
-        self.ax.plot(x_values, peak_y, color=color, alpha=alpha)
+
 
         if self.peak_fill_enabled:
+            label = peak_label
             self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
+        else:
+            self.ax.plot(x_values, peak_y, color=color, alpha=alpha, label=peak_label)
 
         self.canvas.draw_idle()
 
