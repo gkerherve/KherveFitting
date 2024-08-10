@@ -675,6 +675,10 @@ def create_horizontal_toolbar(window):
                                 wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"),
                                 wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
 
+    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill',
+                                            wx.Bitmap(os.path.join(icon_path, "peak_fill.png"), wx.BITMAP_TYPE_PNG),
+                                            shortHelp="Toggle Peak Fill")
+
     # resize_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Resize Plot', wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Resize Plot")
     toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend',
                                          wx.Bitmap(os.path.join(icon_path, "Legend-100.png"), wx.BITMAP_TYPE_PNG),
@@ -745,6 +749,7 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, lambda event: window.export_results(), export_tool)
     window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
     window.Bind(wx.EVT_TOOL, window.on_auto_be, auto_be_button)
+    window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
 
     return toolbar
 

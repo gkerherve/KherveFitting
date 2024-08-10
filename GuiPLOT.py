@@ -119,6 +119,9 @@ class MyFrame(wx.Frame):
         self.x_values = None  # To store x values for noise plotting
         self.y_values = None  # To store y values for noise plotting
 
+        # initialise peak fill or not
+        self.peak_fill_enabled = True
+
         # Initialize right_frame to None before creating widgets
         self.right_frame = None
         self.figure = plt.figure()
@@ -1948,6 +1951,11 @@ class MyFrame(wx.Frame):
         if 'BEcorrection' in self.Data:
             self.be_correction = self.Data['BEcorrection']
             self.be_correction_spinbox.SetValue(self.be_correction)
+
+    def on_toggle_peak_fill(self, event):
+        new_state = self.plot_manager.toggle_peak_fill()
+        self.clear_and_replot()
+        print(f"Peak fill toggled in main window. New state: {new_state}")  # Debugging line
 
 
 if __name__ == '__main__':

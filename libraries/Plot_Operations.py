@@ -18,6 +18,7 @@ class PlotManager:
         self.ax = ax
         self.canvas = canvas
         self.cross = None
+        self.peak_fill_enabled = True
         self.fitting_results_text = None
         self.fitting_results_visible = False
 
@@ -117,16 +118,15 @@ class PlotManager:
 
         peak_y = peak_model.eval(params, x=x_values) + background
 
-        # self.ax.plot(x_values, peak_y, alpha=0.5)
-        # self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=formatted_label)
-
         if color is None:
             color = self.peak_colors[len(self.ax.lines) % len(self.peak_colors)]
         if alpha is None:
             alpha = self.peak_alpha
 
         self.ax.plot(x_values, peak_y, color=color, alpha=alpha)
-        self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
+
+        if self.peak_fill_enabled:
+            self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
 
         self.canvas.draw_idle()
 
@@ -943,9 +943,8 @@ class PlotManager:
         self.peak_colors = peak_colors
         self.peak_alpha = peak_alpha
 
-
-
-
-
-
+    def toggle_peak_fill(self):
+        self.peak_fill_enabled = not self.peak_fill_enabled
+        print(f"Peak fill toggled. New state: {self.peak_fill_enabled}")  # Debugging line
+        return self.peak_fill_enabled  # Return the new state
 
