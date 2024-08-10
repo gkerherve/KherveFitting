@@ -53,7 +53,7 @@ def export_results(window):
         fitting_model = window.peak_params_grid.GetCellValue(row, 11)  # Assuming column 9 is the Fitting Model
 
         # Calculate area and related values
-        area, normalized_area, rel_area = _calculate_peak_areas(peak_params, fitting_model)
+        area, normalized_area, rel_area = _calculate_peak_areas(window, peak_params, row)
 
         # Store peak data for atomic percent calculation
         peak_data.append((peak_params['name'], peak_params['position'], peak_params['height'],
@@ -132,7 +132,7 @@ def _extract_peak_parameters(window, row, rsf_dict):
     }
 
 
-def _calculate_peak_areas(peak_params, fitting_model):
+def _calculate_peak_areas2(peak_params, fitting_model):
     """Calculate area, normalized area, and relative area for a peak."""
     height = peak_params['height']
     fwhm = peak_params['fwhm']
@@ -155,6 +155,12 @@ def _calculate_peak_areas(peak_params, fitting_model):
 
     return round(area, 2), round(normalized_area, 2), round(rel_area, 2)
 
+def _calculate_peak_areas(window, peak_params, row):
+    area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
+    rsf = peak_params['rsf']
+    normalized_area = area / rsf
+    rel_area = normalized_area
+    return round(area, 2), round(normalized_area, 2), round(rel_area, 2)
 
 def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model):
     """Update a row in the results grid with peak data."""
