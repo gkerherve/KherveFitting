@@ -1706,6 +1706,11 @@ def fit_peaks(window, peak_params_grid):
             }
             window.fit_results['fitted_peak'][mask] = result.best_fit + background_filtered
 
+            # Add text annotations with fit results
+            std_value_int = int(window.noise_std_value) if hasattr(window, 'noise_std_value') else "N/A"
+            window.plot_manager.set_fitting_results_text(f'Noise STD: {std_value_int}'
+                                                         f' cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {result.nfev}')
+
             window.update_ratios()
             window.clear_and_replot()
 
