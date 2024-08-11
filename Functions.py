@@ -621,7 +621,7 @@ def create_horizontal_toolbar(window):
     save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
 
     save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets',
-                                    wx.Bitmap(os.path.join(icon_path, "save-64.png"), wx.BITMAP_TYPE_PNG),
+                                    wx.Bitmap(os.path.join(icon_path, "save-Multi-64.png"), wx.BITMAP_TYPE_PNG),
                                     shortHelp="Save all sheets with plots")
 
     toolbar.AddSeparator()

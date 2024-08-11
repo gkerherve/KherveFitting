@@ -36,7 +36,7 @@ def save_all_sheets_with_plots(window):
             # Save plot to Excel
             save_plot_to_excel(window)
 
-        wx.MessageBox(f"All sheets saved with plots to: {file_path}", "Success", wx.OK | wx.ICON_INFORMATION)
+        # wx.MessageBox(f"All sheets saved with plots to: {file_path}", "Success", wx.OK | wx.ICON_INFORMATION)
 
     except Exception as e:
         wx.MessageBox(f"Error saving sheets with plots: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
