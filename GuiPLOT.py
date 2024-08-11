@@ -1762,7 +1762,7 @@ class MyFrame(wx.Frame):
 
 
 
-    def get_data_for_save(self):
+    def get_data_for_save2(self):
         data = {
             'x_values': self.x_values,
             'y_values': self.y_values,
@@ -1789,6 +1789,39 @@ class MyFrame(wx.Frame):
 
             # Individual peaks are stored as fill_between plots
             if hasattr(self, 'ax'):
+                for collection in self.ax.collections:
+                    if collection.get_label().startswith(self.sheet_combobox.GetValue()):
+                        data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
+
+        return data
+
+    def get_data_for_save(self):
+        data = {
+            'x_values': self.x_values,
+            'y_values': self.y_values,
+            'background': self.background if hasattr(self, 'background') else None,
+            'calculated_fit': None,
+            'residuals': None,
+            'individual_peak_fits': [],
+            'peak_params_grid': self.peak_params_grid if hasattr(self, 'peak_params_grid') else None,
+            'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
+        }
+
+        # Use existing fit_peaks function to get the fit data
+        from Functions import fit_peaks
+        fit_result = fit_peaks(self, self.peak_params_grid)
+
+        if fit_result:
+            r_squared, chi_square, red_chi_square = fit_result
+
+            if hasattr(self, 'ax'):
+                for line in self.ax.lines:
+                    if line.get_label() == 'Overall Fit':
+                        data['calculated_fit'] = line.get_ydata()
+                    elif line.get_label() == 'Residuals':
+                        data['residuals'] = line.get_ydata()
+
+                # Individual peaks are stored as fill_between plots
                 for collection in self.ax.collections:
                     if collection.get_label().startswith(self.sheet_combobox.GetValue()):
                         data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
@@ -1956,6 +1989,8 @@ class MyFrame(wx.Frame):
         new_state = self.plot_manager.toggle_peak_fill()
         self.clear_and_replot()
         print(f"Peak fill toggled in main window. New state: {new_state}")  # Debugging line
+
+
 
 
 if __name__ == '__main__':

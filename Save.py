@@ -4,14 +4,71 @@ from scipy import interpolate
 import json
 import numpy as np
 import wx
+import io
 import os
 import pandas as pd
 import openpyxl
 from ConfigFile import add_core_level_Data
-# from Functions import on_sheet_selected
-# from libraries.Sheet_Operations import on_sheet_selected
+from openpyxl.drawing.image import Image
+from libraries.Sheet_Operations import on_sheet_selected
 
 
+def save_all_sheets_with_plots(window):
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    file_path = window.Data['FilePath']
+
+    try:
+        workbook = openpyxl.load_workbook(file_path)
+
+        for sheet_name in window.Data['Core levels'].keys():
+            # Select the sheet
+            window.sheet_combobox.SetValue(sheet_name)
+            event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
+            event.SetString(sheet_name)
+            on_sheet_selected(window, sheet_name)
+
+            # Get fitting data
+            fit_data = window.get_data_for_save()
+
+            # Save fitting data to Excel
+            if sheet_name in workbook.sheetnames:
+                ws = workbook[sheet_name]
+            else:
+                ws = workbook.create_sheet(sheet_name)
+
+            # Clear existing content
+            ws.delete_rows(1, ws.max_row)
+
+            # Add fitting data
+            headers = ['B.E.', 'Raw Data', '', 'Background', 'Calculated Fit', 'Residuals']
+            ws.append(headers)
+
+            for i in range(len(fit_data['x_values'])):
+                row = [
+                    fit_data['x_values'][i],
+                    fit_data['y_values'][i],
+                    '',
+                    fit_data['background'][i] if fit_data['background'] is not None else '',
+                    fit_data['calculated_fit'][i] if fit_data['calculated_fit'] is not None else '',
+                    fit_data['residuals'][i] if fit_data['residuals'] is not None else ''
+                ]
+                ws.append(row)
+
+            # Save plot as image
+            buf = io.BytesIO()
+            window.figure.savefig(buf, format='png', dpi=300, bbox_inches='tight')
+            buf.seek(0)
+            img = Image(buf)
+            ws.add_image(img, 'H1')
+
+        workbook.save(file_path)
+        wx.MessageBox(f"All sheets saved with plots to: {file_path}", "Success", wx.OK | wx.ICON_INFORMATION)
+
+    except Exception as e:
+        wx.MessageBox(f"Error saving sheets with plots: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 def save_data(window, data):
     if 'FilePath' not in window.Data or not window.Data['FilePath']:
@@ -474,19 +531,6 @@ def save_data_ORI(window, data):
         import traceback
         traceback.print_exc()
         wx.MessageBox(f"Error saving data: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
-
-
-
-# def create_peak(x, peak_data, model_type):
-#     # Implement this function based on your peak models
-#     # This is a placeholder and should be replaced with your actual implementation
-#     pass
-
-
-import io
-import openpyxl
-from openpyxl.drawing.image import Image
-import wx
 
 
 def save_plot_to_excel(window):

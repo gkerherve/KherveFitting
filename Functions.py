@@ -620,6 +620,9 @@ def create_horizontal_toolbar(window):
     save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level")
     save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
 
+    save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets',
+                                    wx.Bitmap(os.path.join(icon_path, "save-64.png"), wx.BITMAP_TYPE_PNG),
+                                    shortHelp="Save all sheets with plots")
 
     toolbar.AddSeparator()
 
@@ -745,6 +748,7 @@ def create_horizontal_toolbar(window):
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
     window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
     window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: on_save_all_sheets(window,event), save_all_tool)
     window.Bind(wx.EVT_TOOL, lambda event: toggle_Col_1(window), toggle_Col_1_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.export_results(), export_tool)
     window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
@@ -1132,6 +1136,10 @@ def on_save(window):
     save_data(window,data)
     # save_data(window, data)
 
+def on_save_all_sheets(window, event):
+    from Save import save_all_sheets_with_plots
+    save_all_sheets_with_plots(window)
+
 def toggle_Col_1(window):
     # List of columns to toggle
     columns1 = [11, 12, 13, 14, 15,16]
@@ -1151,6 +1159,8 @@ def toggle_Col_1(window):
             window.results_grid.ShowCol(col)
 
     # print(window.Data)
+
+
 
 
 def calculate_r2(y_true, y_pred):
