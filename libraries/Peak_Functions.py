@@ -8,7 +8,7 @@ import numpy as np
 
 class PeakFunctions:
     @staticmethod
-    def gauss_lorentz(x, center, fwhm, fraction, amplitude):
+    def gauss_lorentz2(x, center, fwhm, fraction, amplitude):
         return amplitude * (
             PeakFunctions.gaussian(x, center, fwhm, fraction*100) *
             PeakFunctions.lorentzian(x, center, fwhm, fraction*100))
@@ -18,6 +18,26 @@ class PeakFunctions:
         return amplitude * (
             (1-fraction) * PeakFunctions.gaussian(x, center, fwhm, 0) +
             fraction * PeakFunctions.lorentzian(x, center, fwhm, 100))
+
+    @staticmethod
+    def tail(x, center, tail_mix, tail_exp):
+        return np.where(x > center, tail_mix * np.exp(-tail_exp * (x - center)), 0)
+
+    @staticmethod
+    def gauss_lorentz(x, center, fwhm, fraction, amplitude, tail_mix, tail_exp):
+        peak = amplitude * (
+                PeakFunctions.gaussian(x, center, fwhm, fraction * 100) *
+                PeakFunctions.lorentzian(x, center, fwhm, fraction * 100))
+        tail = PeakFunctions.tail(x, center, tail_mix, tail_exp)
+        return peak * (1 - tail_mix) + amplitude * tail
+
+    @staticmethod
+    def S_gauss_lorentz_tail(x, center, fwhm, fraction, amplitude, tail_mix, tail_exp):
+        peak = amplitude * (
+                (1 - fraction) * PeakFunctions.gaussian(x, center, fwhm, 0) +
+                fraction * PeakFunctions.lorentzian(x, center, fwhm, 100))
+        tail = PeakFunctions.tail(x, center, tail_mix, tail_exp)
+        return peak * (1 - tail_mix) + amplitude * tail
 
     @staticmethod
     def gaussian(x, E, F, m):

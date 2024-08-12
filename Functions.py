@@ -1569,6 +1569,14 @@ def fit_peaks(window, peak_params_grid):
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
                 peak_model_choice = peak_params_grid.GetCellValue(row, 11)
+
+                tail_m = float(peak_params_grid.GetCellValue(row, 7))
+                tail_e = float(peak_params_grid.GetCellValue(row, 8))
+
+                # Add tail parameters to the model
+                params.add(f'{prefix}tail_mix', value=tail_m, min=0, max=1)
+                params.add(f'{prefix}tail_exp', value=tail_e, min=0)
+
                 sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                 gamma = lg_ratio * sigma
 

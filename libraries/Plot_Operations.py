@@ -128,8 +128,9 @@ class PlotManager:
         if self.peak_fill_enabled:
             label = peak_label
             self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
+            self.ax.plot(x_values, peak_y, color=color, alpha=1)
         else:
-            self.ax.plot(x_values, peak_y, color=color, alpha=alpha, label=peak_label)
+            self.ax.plot(x_values, peak_y, color=color, alpha=1, label=peak_label)
 
         self.canvas.draw_idle()
 
@@ -636,6 +637,9 @@ class PlotManager:
             gamma = lg_ratio * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - x))]
 
+            tail_m = float(window.peak_params_grid.GetCellValue(row, 7))
+            tail_e = float(window.peak_params_grid.GetCellValue(row, 8))
+
             # Ensure height is not negative
             y = max(y, 0)
 
@@ -651,6 +655,10 @@ class PlotManager:
             elif window.selected_fitting_method == "GL":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+            elif window.selected_fitting_method == "GLT":
+                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
+                params = peak_model.make_params(center=x, amplitude=y, sigma=sigma, gamma=gamma, tail_mix=tail_m,
+                                                tail_exp=tail_e)
             elif window.selected_fitting_method == "SGL":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)

@@ -466,6 +466,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "0.3")
         self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
+        self.peak_params_grid.SetCellValue(row, 7, "0")  # Tail M
+        self.peak_params_grid.SetCellValue(row, 8, '0')  # Tail E
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 11, self.selected_fitting_method)  # Fitting Model
@@ -489,6 +491,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 3, "100,1e7")
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "0.05,0.8")
+        self.peak_params_grid.SetCellValue(row + 1, 7, "Fixed")
+        self.peak_params_grid.SetCellValue(row + 1, 8, "Fixed")
         self.peak_params_grid.ForceRefresh()
 
         # Set selected_peak_index to the index of the new peak
@@ -1583,6 +1587,8 @@ class MyFrame(wx.Frame):
                             'L/G': round(fraction, 2),
                             'Area': area
                         })
+                    elif col in [7, 8]:  # Tail M or Tail E changed
+                        self.update_peak_plot(None, None, remove_old_peaks=False)
                     elif col == 11:  # Fitting Model changed
                         peaks[correct_peak_key]['Fitting Model'] = new_value
 
