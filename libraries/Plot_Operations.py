@@ -852,8 +852,6 @@ class PlotManager:
         # Method to set or update the fitting results text
         if self.fitting_results_text:
             self.fitting_results_text.remove()
-        print("Hello I am called")
-        print(text)
         self.fitting_results_text = self.ax.text(
             0.02, 0.04, text,
             transform=self.ax.transAxes,
