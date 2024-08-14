@@ -100,6 +100,8 @@ class PlotManager:
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = lg_ratio * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
+        tail_mix = peak_params.get('tail_mix', 0)  # Default to 0 if not provided
+        tail_exp = peak_params.get('tail_exp', 1)  # Default to 1 if not provided
 
         if fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
@@ -109,9 +111,13 @@ class PlotManager:
             peak_model = lmfit.models.PseudoVoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-        elif fitting_model == "GL":
+        elif fitting_model == "GL2":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+        elif fitting_model == "GL":
+            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y, tail_mix=tail_mix,
+                                            tail_exp=tail_exp)
         elif fitting_model == "SGL":
             peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)

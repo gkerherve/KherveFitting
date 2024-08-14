@@ -467,7 +467,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 5, "0.3")
         self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 7, "0")  # Tail M
-        self.peak_params_grid.SetCellValue(row, 8, '0')  # Tail E
+        self.peak_params_grid.SetCellValue(row, 8, '1')  # Tail E
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 11, self.selected_fitting_method)  # Fitting Model

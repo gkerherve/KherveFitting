@@ -1564,6 +1564,8 @@ def fit_peaks(window, peak_params_grid):
 
             for i in range(num_peaks):
                 row = i * 2
+                prefix = f'peak{i}_'  # Define the prefix here
+
                 center = float(peak_params_grid.GetCellValue(row, 2))
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))

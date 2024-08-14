@@ -21,7 +21,10 @@ class PeakFunctions:
 
     @staticmethod
     def tail(x, center, tail_mix, tail_exp):
-        return np.where(x > center, tail_mix * np.exp(-tail_exp * (x - center)), 0)
+        # Avoid division by zero and negative exponents
+        safe_exp = np.maximum(tail_exp, 1e-10)
+        safe_mix = np.clip(tail_mix, 0, 1)
+        return np.where(x > center, safe_mix * np.exp(-safe_exp * (x - center)), 0)
 
     @staticmethod
     def gauss_lorentz(x, center, fwhm, fraction, amplitude, tail_mix, tail_exp):
@@ -29,6 +32,7 @@ class PeakFunctions:
                 PeakFunctions.gaussian(x, center, fwhm, fraction * 100) *
                 PeakFunctions.lorentzian(x, center, fwhm, fraction * 100))
         tail = PeakFunctions.tail(x, center, tail_mix, tail_exp)
+        print(tail)
         return peak * (1 - tail_mix) + amplitude * tail
 
     @staticmethod
