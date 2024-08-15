@@ -466,8 +466,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "0.3")
         self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
-        self.peak_params_grid.SetCellValue(row, 7, "0")  # Tail M
-        self.peak_params_grid.SetCellValue(row, 8, '1')  # Tail E
+        self.peak_params_grid.SetCellValue(row, 7, "1")  # Tail E
+        self.peak_params_grid.SetCellValue(row, 8, '0')  # Tail M
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 11, self.selected_fitting_method)  # Fitting Model
@@ -1578,25 +1578,26 @@ class MyFrame(wx.Frame):
                     elif col == 2:  # Position
                         peaks[correct_peak_key]['Position'] = float(new_value)
                     elif col in [3, 4, 5, 7, 8]:  # Height, FWHM, or L/G changed
-                        if col in [7, 8]:         # Tail M or Tail E changed
-                            try:
-                                value = float(new_value)
-                                if col == 7:  # Tail M
-                                    value = max(0, min(1, value))  # Ensure value is between 0 and 1
-                                elif col == 8:  # Tail E
-                                    value = max(0, value)  # Ensure value is non-negative
-                                self.peak_params_grid.SetCellValue(row, col, f"{value:.2f}")
-
-                                # Update the Data structure
-                                key = 'Tail M' if col == 7 else 'Tail E'
-                                peaks[correct_peak_key][key] = value
-                                print(f"Updated {key} to {value}")  # Debug print
-                            except ValueError:
-                                default_value = "0.00" if col == 7 else "1.00"
-                                self.peak_params_grid.SetCellValue(row, col, default_value)
-                                peaks[correct_peak_key][key] = float(default_value)
-
-                                print(f"Invalid input for {key}, set to default: {default_value}")  # Debug print
+                        print('Cell CHANGED')
+                        # if col in [7, 8]:  # Tail E or Tail M changed
+                        #     try:
+                        #         value = float(new_value)
+                        #         if col == 8:  # Tail M
+                        #             value = max(0, min(1, value))  # Ensure value is between 0 and 1
+                        #         elif col == 7:  # Tail E
+                        #             value = max(0, value)  # Ensure value is non-negative
+                        #         self.peak_params_grid.SetCellValue(row, col, f"{value:.2f}")
+                        #
+                        #         # Update the Data structure
+                        #         key = 'Tail E' if col == 7 else 'Tail M'
+                        #         # peaks[correct_peak_key][key] = value
+                        #         print(f"Updated {key} to {value}")  # Debug print
+                        #     except ValueError:
+                        #         print("EEEROR")
+                        #         default_value = "1.00" if col == 7 else "0.00"
+                        #         self.peak_params_grid.SetCellValue(row, col, default_value)
+                        #         peaks[correct_peak_key][key] = float(default_value)
+                        #         print(f"Invalid input for {key}, set to default: {default_value}")  # Debug print
 
 
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
@@ -1609,7 +1610,8 @@ class MyFrame(wx.Frame):
                         # Recalculate area
                         area = self.calculate_peak_area(model, height, fwhm, fraction)
                         self.update_ratios()
-
+                        print('TAIL E: '+str(tail_E))
+                        print('TAIL M: ' + str(tail_M))
                         # Update grid and data
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
                         peaks[correct_peak_key].update({
@@ -1620,18 +1622,6 @@ class MyFrame(wx.Frame):
                             'Tail E': tail_E,
                             'Tail M': tail_M
                         })
-                    # elif col in [7, 8]:  # Tail M or Tail E changed
-                    #     try:
-                    #         value = float(self.peak_params_grid.GetCellValue(row, col))
-                    #         if col == 7:  # Tail M
-                    #             value = max(0, min(1, value))  # Ensure value is between 0 and 1
-                    #         elif col == 8:  # Tail E
-                    #             value = max(0, value)  # Ensure value is non-negative
-                    #         self.peak_params_grid.SetCellValue(row, col, f"{value:.2f}")
-                    #     except ValueError:
-                    #         self.peak_params_grid.SetCellValue(row, col, "0.00" if col == 7 else "1.00")
-                    #
-                    #     self.update_peak_plot(None, None, remove_old_peaks=False)
                     elif col == 11:  # Fitting Model changed
                         peaks[correct_peak_key]['Fitting Model'] = new_value
 
@@ -1645,7 +1635,7 @@ class MyFrame(wx.Frame):
                         peaks[correct_peak_key]['Area'] = area
                 else:  # Constraint row
                     if col >= 2 and col <= 5:
-                        constraint_key = ['Position', 'Height', 'FWHM', 'L/G'][col - 2]
+                        constraint_key = ['Position', 'Height', 'FWHM', 'L/G', 'Tail E', 'Tail M'][col - 2]
                         if 'Constraints' not in peaks[correct_peak_key]:
                             peaks[correct_peak_key]['Constraints'] = {}
 
@@ -1724,7 +1714,7 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellValue(row, 4, f"{peak_data['FWHM']:.2f}")
                 self.peak_params_grid.SetCellValue(row, 5, f"{peak_data['L/G']:.2f}")
                 self.peak_params_grid.SetCellValue(row, 7, f"{peak_data['Tail E']:.2f}")
-                self.peak_params_grid.SetCellValue(row, 7, f"{peak_data['Tail M']:.2f}")
+                self.peak_params_grid.SetCellValue(row, 8, f"{peak_data['Tail M']:.2f}")
                 if 'Constraints' in peak_data:
                     self.peak_params_grid.SetCellValue(row + 1, 2, str(peak_data['Constraints'].get('Position', '')))
                     self.peak_params_grid.SetCellValue(row + 1, 3, str(peak_data['Constraints'].get('Height', '')))

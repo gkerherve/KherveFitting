@@ -90,6 +90,14 @@ class PlotManager:
         x = peak_params['position']
         y = peak_params['height']
         peak_label = peak_params['label']
+        try:
+            tail_M = float(peak_params.get('Tail M', 0.5))
+            tail_E = float(peak_params.get('Tail E', 0.5))
+        except ValueError:
+            print('ErrorTAIL')
+            tail_M = 0.0
+            tail_E = 1.0
+
 
         # Format the peak label for matplotlib
         formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', peak_label)
@@ -100,14 +108,9 @@ class PlotManager:
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = lg_ratio * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
-        try:
-            tail_mix = float(peak_params.get('tail_mix', 0))
-            tail_exp = float(peak_params.get('tail_exp', 1))
-        except ValueError:
-            tail_mix = 0.0
-            tail_exp = 1.0
 
-        print(f"Plotting peak: Tail Mix = {tail_mix}, Tail Exp = {tail_exp}")
+
+        print(f"Plotting peak: Tail Mix = {tail_M}, Tail Exp = {tail_E}")
 
         if fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
@@ -122,8 +125,8 @@ class PlotManager:
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif fitting_model == "GL":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y, tail_mix=tail_mix,
-                                            tail_exp=tail_exp)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y, tail_mix=tail_M,
+                                            tail_exp=tail_E)
         elif fitting_model == "SGL":
             peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -506,8 +509,8 @@ class PlotManager:
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
-                tail_m = float(window.peak_params_grid.GetCellValue(row, 7))
-                tail_e = float(window.peak_params_grid.GetCellValue(row, 8))
+                tail_e = float(window.peak_params_grid.GetCellValue(row, 7))
+                tail_m = float(window.peak_params_grid.GetCellValue(row, 8))
                 label = window.peak_params_grid.GetCellValue(row, 1)
                 fitting_model = window.peak_params_grid.GetCellValue(row, 11)
             except ValueError:
@@ -545,6 +548,8 @@ class PlotManager:
                     'fitting_model': fitting_model
                 }
                 self.plot_peak(window.x_values, window.background, peak_params, sheet_name, color=color, alpha=alpha)
+                print('Peak Parameter = ')
+                print(peak_params)
 
         # Plot the background if it exists
         if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
@@ -653,8 +658,8 @@ class PlotManager:
             gamma = lg_ratio * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - x))]
 
-            tail_m = float(window.peak_params_grid.GetCellValue(row, 7))
-            tail_e = float(window.peak_params_grid.GetCellValue(row, 8))
+            tail_e = float(window.peak_params_grid.GetCellValue(row, 7))
+            tail_m = float(window.peak_params_grid.GetCellValue(row, 8))
 
             # Ensure height is not negative
             y = max(y, 0)

@@ -1573,8 +1573,8 @@ def fit_peaks(window, peak_params_grid):
                 peak_model_choice = peak_params_grid.GetCellValue(row, 11)
 
                 try:
-                    tail_m = float(peak_params_grid.GetCellValue(row, 7))
-                    tail_e = float(peak_params_grid.GetCellValue(row, 8))
+                    tail_e = float(peak_params_grid.GetCellValue(row, 7))
+                    tail_m = float(peak_params_grid.GetCellValue(row, 8))
                 except ValueError:
                     tail_m = 0.0
                     tail_e = 1.0
