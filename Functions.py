@@ -1572,10 +1572,15 @@ def fit_peaks(window, peak_params_grid):
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
                 peak_model_choice = peak_params_grid.GetCellValue(row, 11)
 
-                tail_m = float(peak_params_grid.GetCellValue(row, 7))
-                tail_e = float(peak_params_grid.GetCellValue(row, 8))
+                try:
+                    tail_m = float(peak_params_grid.GetCellValue(row, 7))
+                    tail_e = float(peak_params_grid.GetCellValue(row, 8))
+                except ValueError:
+                    tail_m = 0.0
+                    tail_e = 1.0
 
                 # Add tail parameters to the model
+                print(f"Peak {i}: Tail M = {tail_m}, Tail E = {tail_e}")  # Debug print
                 params.add(f'{prefix}tail_mix', value=tail_m, min=0, max=1)
                 params.add(f'{prefix}tail_exp', value=tail_e, min=0)
 

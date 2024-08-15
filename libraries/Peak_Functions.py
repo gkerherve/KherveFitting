@@ -32,8 +32,8 @@ class PeakFunctions:
                 PeakFunctions.gaussian(x, center, fwhm, fraction * 100) *
                 PeakFunctions.lorentzian(x, center, fwhm, fraction * 100))
         tail = PeakFunctions.tail(x, center, tail_mix, tail_exp)
-        print(tail)
-        return peak * (1 - tail_mix) + amplitude * tail
+        safe_mix = np.clip(tail_mix, 0, 1)
+        return peak * (1 - safe_mix) + amplitude * tail
 
     @staticmethod
     def S_gauss_lorentz_tail(x, center, fwhm, fraction, amplitude, tail_mix, tail_exp):

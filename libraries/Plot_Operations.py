@@ -100,8 +100,14 @@ class PlotManager:
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = lg_ratio * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
-        tail_mix = peak_params.get('tail_mix', 0)  # Default to 0 if not provided
-        tail_exp = peak_params.get('tail_exp', 1)  # Default to 1 if not provided
+        try:
+            tail_mix = float(peak_params.get('tail_mix', 0))
+            tail_exp = float(peak_params.get('tail_exp', 1))
+        except ValueError:
+            tail_mix = 0.0
+            tail_exp = 1.0
+
+        print(f"Plotting peak: Tail Mix = {tail_mix}, Tail Exp = {tail_exp}")
 
         if fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
@@ -500,6 +506,8 @@ class PlotManager:
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
+                tail_m = float(window.peak_params_grid.GetCellValue(row, 7))
+                tail_e = float(window.peak_params_grid.GetCellValue(row, 8))
                 label = window.peak_params_grid.GetCellValue(row, 1)
                 fitting_model = window.peak_params_grid.GetCellValue(row, 11)
             except ValueError:
@@ -531,6 +539,8 @@ class PlotManager:
                     'height': height,
                     'fwhm': fwhm,
                     'lg_ratio': fraction,
+                    'Tail M': tail_m,
+                    'Tail E': tail_e,
                     'label': label,
                     'fitting_model': fitting_model
                 }

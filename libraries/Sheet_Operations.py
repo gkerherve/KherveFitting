@@ -56,6 +56,8 @@ def on_sheet_selected(window, event):
                     window.peak_params_grid.SetCellValue(row, 4, f"{peak_data.get('FWHM', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 5, f"{peak_data.get('L/G', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 6, f"{peak_data.get('Area', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 7, f"{peak_data.get('Tail E', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 8, f"{peak_data.get('Tail M', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 11, f"{peak_data.get('Fitting Model', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 12, f"{peak_data.get('Bkg Type', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 13, f"{peak_data.get('Bkg Low', 'N/A')}")
@@ -70,6 +72,8 @@ def on_sheet_selected(window, event):
                         window.peak_params_grid.SetCellValue(row + 1, 3, str(constraints.get('Height', 'N/A')))
                         window.peak_params_grid.SetCellValue(row + 1, 4, str(constraints.get('FWHM', 'N/A')))
                         window.peak_params_grid.SetCellValue(row + 1, 5, str(constraints.get('L/G', 'N/A')))
+                        window.peak_params_grid.SetCellValue(row + 1, 7, str(constraints.get('Tail E', 'N/A')))
+                        window.peak_params_grid.SetCellValue(row + 1, 8, str(constraints.get('Tail M', 'N/A')))
 
                     # Set background color for constraint rows
                     for col in range(window.peak_params_grid.GetNumberCols()+1):
