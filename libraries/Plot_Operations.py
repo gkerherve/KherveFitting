@@ -91,11 +91,11 @@ class PlotManager:
         y = peak_params['height']
         peak_label = peak_params['label']
         try:
-            tail_M = float(peak_params.get('Tail M', 0.5))
-            tail_E = float(peak_params.get('Tail E', 0.5))
+            tail_M = float(peak_params.get('Tail M', 0))
+            tail_E = float(peak_params.get('Tail E', 0))
         except ValueError:
             tail_M = 0.0
-            tail_E = 1.0
+            tail_E = 0.0
 
 
         # Format the peak label for matplotlib

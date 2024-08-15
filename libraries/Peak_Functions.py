@@ -20,25 +20,28 @@ class PeakFunctions:
             fraction * PeakFunctions.lorentzian(x, center, fwhm, 100))
 
     @staticmethod
-    def tail(x, center, tail_mix, tail_exp):
+    def tail(x, center, tail_mix, tail_exp, fwhm):
 
         # Avoid division by zero and negative exponents
-        safe_exp = np.maximum(tail_exp, 1e-10)
-        safe_mix = np.clip(tail_mix, 0, 1)
-        # return np.where(x > center, np.exp(-safe_exp * (x - center)), 0)
-        return np.where(x > center, safe_mix * np.exp(-safe_exp * (x - center)), 0)
-        # return np.where(x > center, np.exp(-tail_exp * (x - center)),0)
+        safe_exp = np.maximum(tail_exp, 1e-5)
+        safe_mix = np.maximum(tail_mix, 1e-5)
+        return np.where(x > center,     np.exp(-safe_exp * (x - center) ** safe_mix), 0)
 
     @staticmethod
-    def gauss_lorentz(x, center, fwhm, fraction, amplitude, tail_mix, tail_exp):
+    def filter_func(x, center):
+        return np.where(x <= center, 1, 0)
+
+    @staticmethod
+    def gauss_lorentz(x, center , fwhm, fraction, amplitude, tail_mix, tail_exp):
         peak = amplitude * (
                 PeakFunctions.gaussian(x, center, fwhm, fraction * 100) *
                 PeakFunctions.lorentzian(x, center, fwhm, fraction * 100))
-        tail = PeakFunctions.tail(x, center, tail_mix, tail_exp)
-        # safe_mix = np.clip(tail_mix, 0, 1)
-        # return peak * (1 - tail_mix) +  amplitude * tail_mix * tail
-        return amplitude * tail_mix * tail
-        # return peak * tail
+        tail = PeakFunctions.tail(x, center, tail_mix, tail_exp, fwhm)
+        filter = PeakFunctions.filter_func(x,center)
+        if tail_mix == 0 or tail_exp == 0:
+            return peak
+        else:
+            return peak*filter + amplitude * tail
 
     @staticmethod
     def S_gauss_lorentz_tail(x, center, fwhm, fraction, amplitude, tail_mix, tail_exp):

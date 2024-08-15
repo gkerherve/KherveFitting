@@ -1578,28 +1578,6 @@ class MyFrame(wx.Frame):
                     elif col == 2:  # Position
                         peaks[correct_peak_key]['Position'] = float(new_value)
                     elif col in [3, 4, 5, 7, 8]:  # Height, FWHM, or L/G changed
-                        print('Cell CHANGED')
-                        # if col in [7, 8]:  # Tail E or Tail M changed
-                        #     try:
-                        #         value = float(new_value)
-                        #         if col == 8:  # Tail M
-                        #             value = max(0, min(1, value))  # Ensure value is between 0 and 1
-                        #         elif col == 7:  # Tail E
-                        #             value = max(0, value)  # Ensure value is non-negative
-                        #         self.peak_params_grid.SetCellValue(row, col, f"{value:.2f}")
-                        #
-                        #         # Update the Data structure
-                        #         key = 'Tail E' if col == 7 else 'Tail M'
-                        #         # peaks[correct_peak_key][key] = value
-                        #         print(f"Updated {key} to {value}")  # Debug print
-                        #     except ValueError:
-                        #         print("EEEROR")
-                        #         default_value = "1.00" if col == 7 else "0.00"
-                        #         self.peak_params_grid.SetCellValue(row, col, default_value)
-                        #         peaks[correct_peak_key][key] = float(default_value)
-                        #         print(f"Invalid input for {key}, set to default: {default_value}")  # Debug print
-
-
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
@@ -1610,8 +1588,6 @@ class MyFrame(wx.Frame):
                         # Recalculate area
                         area = self.calculate_peak_area(model, height, fwhm, fraction)
                         self.update_ratios()
-                        print('TAIL E: '+str(tail_E))
-                        print('TAIL M: ' + str(tail_M))
                         # Update grid and data
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
                         peaks[correct_peak_key].update({
