@@ -94,7 +94,6 @@ class PlotManager:
             tail_M = float(peak_params.get('Tail M', 0.5))
             tail_E = float(peak_params.get('Tail E', 0.5))
         except ValueError:
-            print('ErrorTAIL')
             tail_M = 0.0
             tail_E = 1.0
 
@@ -108,9 +107,6 @@ class PlotManager:
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = lg_ratio * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
-
-
-        print(f"Plotting peak: Tail Mix = {tail_M}, Tail Exp = {tail_E}")
 
         if fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
@@ -548,8 +544,7 @@ class PlotManager:
                     'fitting_model': fitting_model
                 }
                 self.plot_peak(window.x_values, window.background, peak_params, sheet_name, color=color, alpha=alpha)
-                print('Peak Parameter = ')
-                print(peak_params)
+
 
         # Plot the background if it exists
         if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
