@@ -25,7 +25,7 @@ class PeakFunctions:
         # Avoid division by zero and negative exponents
         safe_exp = np.maximum(tail_exp, 1e-5)
         safe_mix = np.maximum(tail_mix, 1e-5)
-        return np.where(x > center,     np.exp(-safe_exp * (x - center) ** safe_mix), 0)
+        return np.where(x > center,     np.exp(-safe_exp * np.abs(x - center) ** safe_mix), 0)
 
     @staticmethod
     def filter_func(x, center):
