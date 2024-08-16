@@ -433,19 +433,19 @@ class MyFrame(wx.Frame):
             peak_y = residual[np.argmax(residual)]
             peak_x = self.x_values[np.argmax(residual)]
         else:
-            overall_fit = np.array(self.Data['Core levels'][sheet_name]['Background']['Bkg Y']).copy()
-            for i in range(num_peaks):
-                row = i * 2
-                peak_x = float(self.peak_params_grid.GetCellValue(row, 2))
-                peak_y = float(self.peak_params_grid.GetCellValue(row, 3))
-                fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
-                lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
-                peak_model, params = self.get_peak_model(peak_x, peak_y, fwhm, lg_ratio)
-                overall_fit += peak_model.eval(params, x=self.x_values)
 
-            residual = self.y_values - overall_fit
-            peak_y = residual.max()
-            peak_x = self.x_values[np.argmax(residual)]
+            # Call update_overall_fit_and_residuals to get the residuals
+            residual = self.plot_manager.update_overall_fit_and_residuals(self)
+
+            if residual is not None:
+                peak_y = residual.max()
+                peak_x = self.x_values[np.argmax(residual)]
+            else:
+                # Fallback if residuals couldn't be calculated
+                wx.MessageBox("Unable to calculate residuals. Using default peak position.", "Warning",
+                              wx.OK | wx.ICON_WARNING)
+                peak_y = self.y_values.max()
+                peak_x = self.x_values[np.argmax(self.y_values)]
 
         self.peak_count += 1
 

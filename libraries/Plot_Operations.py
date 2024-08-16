@@ -800,6 +800,8 @@ class PlotManager:
 
         self.canvas.draw_idle()
 
+        return residuals
+
     def update_peak_fwhm(self, window, x):
         if window.initial_fwhm is not None and window.initial_x is not None:
             row = window.selected_peak_index * 2
