@@ -511,7 +511,7 @@ class MyFrame(wx.Frame):
             'L/G': 0.3,
             'Area': '',
             'Tail M': 0.0,
-            'Tail E': 1.0,
+            'Tail E': 0.0,
             'Fitting Model': self.selected_fitting_method,
             'Bkg Type': self.background_method,
             'Bkg Low': self.bg_min_energy,
