@@ -586,6 +586,10 @@ def create_menu(window):
 
     Manual_item = help_menu.Append(wx.NewId(), "Manual - TBD")
 
+
+    mini_help_item = help_menu.Append(wx.NewId(), "Quick Help")
+    window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
+
     menubar.Append(file_menu, "&File")
     menubar.Append(edit_menu, "&Edit")
     menubar.Append(view_menu, "&View")

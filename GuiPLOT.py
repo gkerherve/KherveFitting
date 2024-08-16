@@ -2011,6 +2011,10 @@ class MyFrame(wx.Frame):
         self.clear_and_replot()
         print(f"Peak fill toggled in main window. New state: {new_state}")  # Debugging line
 
+    def on_mini_help(self, event):
+        from libraries.Help import show_quick_help
+        show_quick_help(self)
+
 
 
 
