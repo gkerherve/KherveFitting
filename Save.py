@@ -11,6 +11,7 @@ import openpyxl
 from ConfigFile import add_core_level_Data
 from openpyxl.drawing.image import Image
 from libraries.Sheet_Operations import on_sheet_selected
+# from Functions import convert_to_serializable_and_round
 
 
 def save_all_sheets_with_plots(window):
@@ -35,6 +36,11 @@ def save_all_sheets_with_plots(window):
 
             # Save plot to Excel
             save_plot_to_excel(window)
+
+        json_file_path = os.path.splitext(file_path)[0] + '.json'
+        json_data = convert_to_serializable_and_round(window.Data)
+        with open(json_file_path, 'w') as json_file:
+            json.dump(json_data, json_file, indent=2)
 
         # wx.MessageBox(f"All sheets saved with plots to: {file_path}", "Success", wx.OK | wx.ICON_INFORMATION)
 
