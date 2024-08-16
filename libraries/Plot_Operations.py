@@ -727,6 +727,8 @@ class PlotManager:
             height_str = window.peak_params_grid.GetCellValue(row, 3)  # Height
             fwhm_str = window.peak_params_grid.GetCellValue(row, 4)  # FWHM
             lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)  # L/G
+            tail_e = window.peak_params_grid.GetCellValue(row, 7)
+            tail_m = window.peak_params_grid.GetCellValue(row, 7)
             fitting_model = window.peak_params_grid.GetCellValue(row, 11)  # Fitting Model
 
             # Check if any of the cells are empty
@@ -757,7 +759,7 @@ class PlotManager:
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
             elif fitting_model == "GL":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y, tail_mix=tail_m, tail_exp=tail_e)
             elif fitting_model == "SGL":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
