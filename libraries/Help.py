@@ -3,13 +3,13 @@ import wx.html
 
 def show_quick_help(parent):
     help_text = (
-        "<h2><font color='red'>Quick Help</font></h2>"
-        "<h3><font color='blue'>Keyboard Shortcuts/font></h3>"
+        "<h2><font color='red'>Quick Help</h2>"
+        "<h3><font color='blue'>Keyboard Shortcuts</h3>"
         "<ul>"
         "<li><b>Tab:</b> Select next peak</li>"
         "<li><b>Q:</b> Select previous peak</li>"
         "</ul>"
-        "<h3><font color='blue'>Mouse Controls</font></h3>"
+        "<h3><font color='blue'>Mouse Controls</h3>"
         "<ul>"
         "<h5><li><b>With Peak Fitting window opened and the Peak Fitting is selected:</b></li></h5>"
         "<ul>"
