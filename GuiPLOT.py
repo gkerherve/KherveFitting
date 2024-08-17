@@ -1142,7 +1142,27 @@ class MyFrame(wx.Frame):
             # Call on_sheet_selected with the new sheet name
             on_sheet_selected(self, new_sheet)
             return  # Prevent event from propagating
+        elif keycode in [ord('-'), ord('=')]:
+            sheet_name = self.sheet_combobox.GetValue()
+            limits = self.plot_config.get_plot_limits(self, sheet_name)
 
+            zoom_factor = 0.2
+            if keycode == ord('-'):  # Zoom out
+                limits['Xmin'] -= zoom_factor
+                limits['Xmax'] += zoom_factor
+            else:  # Zoom in
+                limits['Xmin'] += zoom_factor
+                limits['Xmax'] -= zoom_factor
+
+            # Update the plot limits
+            self.plot_config.update_plot_limits(self, sheet_name,
+                                                x_min=limits['Xmin'],
+                                                x_max=limits['Xmax'])
+
+            # Update the plot
+            self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+            self.canvas.draw_idle()
+            return  # Prevent event from propagating
 
         event.Skip()  # Let other key events propagate normally
 
