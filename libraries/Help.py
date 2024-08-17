@@ -3,7 +3,14 @@ import wx.html
 
 def show_quick_help(parent):
     help_text = (
+        "<body bgcolor='#FFFFE0'>"  # Light yellow
         "<h2><font color='#66CC66'>Quick Help</font></h2>"
+        
+        "<h3><font color='#006400'>Keyboard Shortcut</font></h3>"
+        "<ul>"
+            "<li><b>Tab:</b> Select next peak</li>"
+            "<li><b>Q:</b> Select previous peak</li>"
+        "</ul>"
         
         "<h3><font color='#006400'>Open File</font></h3>"
         "<p>KherveFitting can open Excel file (.xlsx) and import/convert vamas file (.vms) into an Excel file. It is "
@@ -38,7 +45,9 @@ def show_quick_help(parent):
 
     help_dialog = wx.Dialog(parent, title="Quick Help", size=(400, 600),
                             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+    # help_dialog.SetBackgroundColour(wx.Colour(255, 255, 255))  # Light yellow
     html_window = wx.html.HtmlWindow(help_dialog)
+    # html_window.SetBackgroundColour(wx.Colour(255, 255, 224))  # Light yellow
     html_window.SetPage(help_text)
 
     help_dialog.Show()
