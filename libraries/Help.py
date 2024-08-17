@@ -1,7 +1,18 @@
 import wx
 import wx.html
+import os
+import sys
 
 def show_quick_help(parent):
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle, use the bundle's directory
+        application_path = sys._MEIPASS
+    else:
+        # If the application is run as a script, use the script's directory
+        application_path = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(application_path, "Images")
+
+
     help_text = (
         "<body bgcolor='#FFFFE0'>"  # Light yellow
         "<h2><font color='#66CC66'>Quick Help</font></h2>"
@@ -10,6 +21,12 @@ def show_quick_help(parent):
         "<ul>"
             "<li><b>Tab:</b> Select next peak</li>"
             "<li><b>Q:</b> Select previous peak</li>"
+            "<li><b>Minus (-):</b> Zoom OUT</li>"
+            "<li><b>Equal (=):</b> Zoom IN</li>"
+            "<li><b>Left bracket [:</b> Decrease Intensity </li>"
+            "<li><b>Right bracket ]:</b> Increase Intensity</li>"
+            "<li><b>Up:</b> Select previous core level</li>"
+            "<li><b>Down:</b> Select next core level</li>"
         "</ul>"
         
         "<h3><font color='#006400'>Open File</font></h3>"
@@ -37,10 +54,14 @@ def show_quick_help(parent):
             "<li>Use the middle mouse scroll to change the sheet or core level.</li>"
         "</ul>"
         "<h3><font color='#006400'>Binding Energy Correction</font></h3>"
+        
+        f"<img src='{os.path.join(image_path, 'BEcorrections.png')}' alt='BE Correction icon' >"
         "<p>The Binding Energy correction button searches for a peak labeled C1s C-C in the current sheet.  It then "
         "calculates the difference between the actual position of C-C and 284.8 eV. This difference is entered into  "
         "the BE correction control. All core levels are subsequently corrected by this value. Ensure that you have  "
         "fitted all your data before applying the BE correction.</p>"
+        
+        "</body>"
     )
 
     help_dialog = wx.Dialog(parent, title="Quick Help", size=(400, 600),
@@ -52,3 +73,8 @@ def show_quick_help(parent):
 
     help_dialog.Show()
     help_dialog.Bind(wx.EVT_CLOSE, lambda evt: help_dialog.Destroy())
+
+    '''
+    image_path = os.path.join(application_path, "Images")
+    
+    '''
