@@ -28,6 +28,7 @@ from libraries.Sheet_Operations import on_sheet_selected
 from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
+from libraries.Sheet_Operations import on_sheet_selected
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -1127,6 +1128,22 @@ class MyFrame(wx.Frame):
             else:
                 self.change_selected_peak(-1)  # Move to next peak
             return  # Prevent event from propagating
+        elif keycode in [wx.WXK_UP, wx.WXK_DOWN]:
+            current_index = self.sheet_combobox.GetSelection()
+            num_sheets = self.sheet_combobox.GetCount()
+            if keycode == wx.WXK_UP:
+                new_index = (current_index - 1) % num_sheets
+            else:
+                new_index = (current_index + 1) % num_sheets
+
+            self.sheet_combobox.SetSelection(new_index)
+            new_sheet = self.sheet_combobox.GetString(new_index)
+
+            # Call on_sheet_selected with the new sheet name
+            on_sheet_selected(self, new_sheet)
+            return  # Prevent event from propagating
+
+
         event.Skip()  # Let other key events propagate normally
 
     import wx.adv
