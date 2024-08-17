@@ -1163,7 +1163,24 @@ class MyFrame(wx.Frame):
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
             self.canvas.draw_idle()
             return  # Prevent event from propagating
+        elif keycode in [ord('['), ord(']')]:
+            sheet_name = self.sheet_combobox.GetValue()
+            limits = self.plot_config.get_plot_limits(self, sheet_name)
+            intensity_factor = 0.05
+            max_intensity = max(self.y_values)
 
+            if keycode == ord('['):  # Decrease intensity
+                limits['Ymax'] = max(limits['Ymax'] - intensity_factor * max_intensity, limits['Ymin'])
+            else:  # Increase intensity
+                limits['Ymax'] += intensity_factor * max_intensity
+
+            # Update the plot limits
+            self.plot_config.update_plot_limits(self, sheet_name, y_max=limits['Ymax'])
+
+            # Update the plot
+            self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
+            self.canvas.draw_idle()
+            return  # Prevent event from propagating
         event.Skip()  # Let other key events propagate normally
 
     import wx.adv
