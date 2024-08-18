@@ -14,8 +14,9 @@ def show_quick_help(parent):
 
     help_text = (
         "<body bgcolor='#FFFFE0'>"
-        "<h2><font color='#66CC66'>Quick Help</font></h2>"
+        "<h2><font color='#66CC66'>KherveFitting Help</font></h2>"
         
+        "<p>KherveFitting is an open-source software developed by Dr. Gwilherm Kerherve at Imperial College London. This application is implemented in Python, leveraging wxPython for the graphical user interface, MatplotLib for data visualization, and NumPy for numerical computations and curve fitting algorithms. KherveFitting is distributed under the MIT License, allowing for broad use, modification, and distribution. When utilizing KherveFitting in academic or research contexts, appropriate citation is requested to acknowledge the software's contribution to your work.</p>"
 
         "<h3><font color='#006400'>Keyboard Shortcuts</font></h3>"        
         "<ul>"
@@ -62,11 +63,15 @@ def show_quick_help(parent):
         "<h4>Background Tab</h4>"
         "<p>Five background types available: Linear, Shirley, Smart, Adaptive Smart, and Tougaard. Drag the red lines on the plot to set the background range.</p>"
         "<ul>"
-        "<li><b>Linear Background:</b> Y = mx + b, where m is the slope and b is the y-intercept</li>"
-        "<li><b>Shirley Background:</b> B(E) = k * ∫[E to Emax] I(E') dE', where k is a constant and I(E') is the spectrum intensity</li>"
-        "<li><b>Smart Background:</b> Uses linear if intensity decreases, Shirley if it increases</li>"
-        "<li><b>Adaptive Smart Background:</b> Starts equal to raw data, can be adapted within selected ranges</li>"
-        "<li><b>Tougaard Background:</b> B(E) = λ(E) ∫[E to ∞] K(E' - E) * [f(E') - B(E')] dE', where λ(E) is the inelastic mean free path and K(E) is the loss function</li>"
+        "<li><b>Linear Background:</b><br>"
+        "<pre>Y = mx + b</pre>"
+        "where m is the slope and b is the y-intercept</li>"
+        "<li><b>Shirley Background:</b><br>"
+        "<pre>B(E) = k × ∫<sub>E</sub><sup>E<sub>max</sub></sup> I(E') dE'</pre>"
+        "where k is a constant and I(E') is the spectrum intensity</li>"
+        "<li><b>Tougaard Background:</b><br>"
+        "<pre>B(E) = λ(E) × ∫<sub>E</sub><sup>∞</sup> K(E' - E) × [f(E') - B(E')] dE'</pre>"
+        "where λ(E) is the inelastic mean free path and K(E) is the loss function</li>"
         "</ul>"
         "<p>Use high BE and low BE controls to apply offsets at range boundaries.</p>"
 
@@ -74,13 +79,24 @@ def show_quick_help(parent):
         "<p>Fit single peaks or doublets. Doublet splitting values are stored in 'split.txt'. Intensity ratios for doublets: 0.5 for p-shell, 0.67 for d-shell, 0.75 for f-shell.</p>"
         "<p>Available fitting models:</p>"
         "<ul>"
-        "<li><b>GL (Gaussian-Lorentzian product):</b> I(x) = H * [exp(-ln(2) * ((x-x0)/σ)^2) * (1 / (1 + ((x-x0)/γ)^2))]</li>"
-        "<li><b>SGL (Gaussian-Lorentzian sum):</b> I(x) = H * [m * exp(-ln(2) * ((x-x0)/σ)^2) + (1-m) / (1 + ((x-x0)/γ)^2)]</li>"
-        "<li><b>Pseudo-Voigt:</b> I(x) = H * [η * L(x) + (1-η) * G(x)], where L(x) is Lorentzian and G(x) is Gaussian</li>"
-        "<li><b>Voigt:</b> I(x) = H * ∫[-∞ to ∞] G(x') * L(x-x') dx', convolution of Gaussian and Lorentzian</li>"
+        "<li><b>GL (Gaussian-Lorentzian product):</b><br>"
+        "<pre>I(x) = H × [exp(-ln(2) × ((x-x<sub>0</sub>)/σ)<sup>2</sup>) × (1 / (1 + ((x-x<sub>0</sub>)/γ)<sup>2</sup>))]</pre></li>"
+        "<li><b>SGL (Gaussian-Lorentzian sum):</b><br>"
+        "<pre>I(x) = H × [m × exp(-ln(2) × ((x-x<sub>0</sub>)/σ)<sup>2</sup>) + (1-m) / (1 + ((x-x<sub>0</sub>)/γ)<sup>2</sup>)]</pre></li>"
+        "<li><b>Pseudo-Voigt:</b><br>"
+        "<pre>I(x) = H × [η × L(x) + (1-η) × G(x)]</pre>"
+        "where L(x) is Lorentzian and G(x) is Gaussian</li>"
+        "<li><b>Voigt:</b><br>"
+        "<pre>I(x) = H × ∫<sub>-∞</sub><sup>∞</sup> G(x') × L(x-x') dx'</pre>"
+        "convolution of Gaussian and Lorentzian</li>"
         "</ul>"
-        "<p>H is peak height, x0 is peak center, σ is Gaussian width, γ is Lorentzian width, m and η are mixing parameters.</p>"
-
+        "<p>Where:<br>"
+        "H is peak height<br>"
+        "x<sub>0</sub> is peak center<br>"
+        "σ is Gaussian width<br>"
+        "γ is Lorentzian width<br>"
+        "m and η are mixing parameters</p>"
+    
         "<h3><font color='#006400'>Peak Fitting Parameter Grid</font></h3>"
         f"<img src='{os.path.join(image_path, 'parameter_grid.png')}' alt='Parameter Grid'>"
         "<p>Each peak uses two rows: values in the first row, constraints in the second.</p>"
@@ -156,7 +172,7 @@ def show_quick_help(parent):
     )
 
 
-    help_dialog = wx.Dialog(parent, title="Quick Help", size=(400, 600),
+    help_dialog = wx.Dialog(parent, title="Quick Help", size=(650, 650),
                             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
     # help_dialog.SetBackgroundColour(wx.Colour(255, 255, 255))  # Light yellow
     html_window = wx.html.HtmlWindow(help_dialog)
