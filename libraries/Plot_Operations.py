@@ -107,8 +107,10 @@ class PlotManager:
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         gamma = lg_ratio * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
-
-        if fitting_model == "Voigt":
+        if fitting_model == "Unfitted":
+            # We've already handled this in clear_and_replot, so just return
+            return
+        elif fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
@@ -248,197 +250,6 @@ class PlotManager:
         except Exception as e:
             wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
-    def clear_and_replot3(self, window):
-        sheet_name = window.sheet_combobox.GetValue()
-        limits = window.plot_config.get_plot_limits(window, sheet_name)
-        cst_unfit = ""
-
-        if sheet_name not in window.Data['Core levels']:
-            wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
-            return
-
-        core_level_data = window.Data['Core levels'][sheet_name]
-
-        self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-        self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-
-        # Store existing sheet name text
-        sheet_name_text = None
-        for txt in self.ax.texts:
-            if getattr(txt, 'sheet_name_text', False):
-                sheet_name_text = txt
-                break
-
-        # Clear the plot
-        self.ax.clear()
-        self.ax.set_xlabel("Binding Energy (eV)")
-        self.ax.set_ylabel("Intensity (CTS)")
-        self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-        self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-
-        # Plot the raw data
-        x_values = np.array(core_level_data['B.E.'])
-        y_values = np.array(core_level_data['Raw Data'])
-
-        # Get plot limits from PlotConfig
-        if sheet_name not in window.plot_config.plot_limits:
-            window.plot_config.update_plot_limits(window, sheet_name)
-        limits = window.plot_config.plot_limits[sheet_name]
-
-        # Set plot limits
-        self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
-        self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-
-        # Create a color cycle
-        colors = plt.cm.tab10(np.linspace(0, 1, 10))
-        color_cycle = cycle(colors)
-
-
-        # Replot all peaks and update indices
-        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-
-        for i in range(num_peaks):
-            row = i * 2
-
-            # Get all necessary values, with error checking
-            try:
-                position = float(window.peak_params_grid.GetCellValue(row, 2))
-                height = float(window.peak_params_grid.GetCellValue(row, 3))
-                fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
-                fraction = float(window.peak_params_grid.GetCellValue(row, 5))
-                label = window.peak_params_grid.GetCellValue(row, 1)
-                fitting_model = window.peak_params_grid.GetCellValue(row, 11)
-            except ValueError:
-                print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
-                continue
-
-            if fitting_model == "Unfitted":
-                # For unfitted peaks, fill between background and raw data
-                cst_unfit = "Unfitted"
-                self.ax.fill_between(x_values, window.background, y_values,
-                                     facecolor='lightgreen', alpha=0.5, label=label)
-            else:
-                # Improved doublet check
-                def is_part_of_doublet(current_label, next_label):
-                    current_parts = current_label.split()
-                    next_parts = next_label.split()
-
-                    if len(current_parts) < 1 or len(next_parts) < 1:
-                        return False
-
-                    # Extract core level without spin-orbit component
-                    def extract_core_level(label):
-                        match = re.match(r'([A-Za-z]+\d+[spdf])', label)
-                        return match.group(1) if match else label
-
-                    current_core_level = extract_core_level(current_parts[0])
-                    next_core_level = extract_core_level(next_parts[0])
-                    print(current_core_level)
-                    print(next_core_level)
-
-                    if current_core_level != next_core_level:
-                        print("different level")
-                        return False
-
-                    orbital = re.search(r'\d([spdf])', current_core_level)
-                    if not orbital:
-                        print("different orbital")
-                        return False
-
-                    orbital = orbital.group(1)
-                    print(orbital)
-
-
-                    # Check for spin-orbit components in either the first or second part of the label
-                    def has_component(parts, component):
-                        return any(component in part for part in parts)
-
-                    print(has_component(current_parts, '5/2') and has_component(next_parts, '3/2'))
-                    if orbital == 'p':
-                        return (has_component(current_parts, '3/2') and has_component(next_parts, '1/2')) or \
-                            (has_component(current_parts, '1/2') and has_component(next_parts, '3/2'))
-                    elif orbital == 'd':
-                        print("d is "+str(has_component(current_parts, '5/2') and has_component(next_parts, '3/2')))
-                        return (has_component(current_parts, '5/2') and has_component(next_parts, '3/2')) or \
-                            (has_component(current_parts, '3/2') and has_component(next_parts, '5/2'))
-                    elif orbital == 'f':
-                        return (has_component(current_parts, '7/2') and has_component(next_parts, '5/2')) or \
-                            (has_component(current_parts, '5/2') and has_component(next_parts, '7/2'))
-
-                    else:
-                        return False
-
-                is_doublet = (i < num_peaks - 1 and
-                              is_part_of_doublet(window.peak_params_grid.GetCellValue(row, 1),
-                                                 window.peak_params_grid.GetCellValue(row + 2, 1)))
-
-                print(str(num_peaks)+"    "+ str(i) +" num "+ str(num_peaks - 1))
-
-
-                if is_doublet:
-                    # Use the same color for both peaks of the doublet
-                    if i % 2 == 0:  # First peak of the doublet
-                        color = next(color_cycle)
-                        alpha = 0.3
-                    else:  # Second peak of the doublet
-                        alpha = 0.2
-                else:
-                    color = next(color_cycle)
-                    alpha = 0.3
-
-
-                # For fitted peaks, use the existing plot_peak method
-                peak_params = {
-                    'row': row,
-                    'position': position,
-                    'height': height,
-                    'fwhm': fwhm,
-                    'lg_ratio': fraction,
-                    'label': label,
-                    'fitting_model': fitting_model
-                }
-                self.plot_peak(window.x_values, window.background, peak_params, sheet_name, color=color, alpha=alpha)
-
-
-
-
-        # Plot the background if it exists
-        if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
-            self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color='grey', linestyle='--',
-                         label='Background', alpha=0.5)
-
-        # Update overall fit and residuals
-        if cst_unfit == "Unfitted":
-            pass
-        else:
-            window.update_overall_fit_and_residuals()
-
-        self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=20, edgecolors='black', label='Raw Data')
-
-        # Update the legend only if necessary
-        if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
-            self.update_legend(window)
-        # else: self.update_legend(window)
-
-        # Restore sheet name text or create new one if it doesn't exist
-        if sheet_name_text is None:
-            formatted_sheet_name = self.format_sheet_name(sheet_name)
-            sheet_name_text = self.ax.text(
-                0.98, 0.98,  # Position (top-right corner)
-                formatted_sheet_name,
-                transform=self.ax.transAxes,
-                fontsize=15,
-                fontweight='bold',
-                verticalalignment='top',
-                horizontalalignment='right',
-                bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
-            )
-            sheet_name_text.sheet_name_text = True  # Mark this text object
-        else:
-            self.ax.add_artist(sheet_name_text)
-
-        # Draw the canvas
-        self.canvas.draw_idle()
 
     def clear_and_replot(self, window):
         sheet_name = window.sheet_combobox.GetValue()
@@ -512,7 +323,7 @@ class PlotManager:
             except ValueError:
                 print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
                 continue
-
+            print(fitting_model)
             if fitting_model == "Unfitted":
                 # For unfitted peaks, fill between background and raw data
                 cst_unfit = "Unfitted"

@@ -110,6 +110,8 @@ class BackgroundWindow(wx.Frame):
                 height_constraint = "0,1e7"
                 fwhm_constraint = "0.3,3.5"
                 lg_constraint = "0,0.5"
+                tail_e_constraint = "Fixed"
+                tail_m_constraint = "Fixed"
 
                 # Update peak fitting parameter grid
                 grid = self.parent.peak_params_grid
@@ -125,6 +127,8 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(0, 4, f"{fwhm:.2f}")
                 grid.SetCellValue(0, 5, "0.00")  # L/G
                 grid.SetCellValue(0, 6, f"{area:.2f}")
+                grid.SetCellValue(0, 7, "0.00")  # Tail E
+                grid.SetCellValue(0, 8, "0.00")  # Tail_M
                 grid.SetCellValue(0, 9, "Unfitted")  # Fitting Model
 
                 # Set constraints and color
@@ -134,6 +138,8 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(1, 3, height_constraint)
                 grid.SetCellValue(1, 4, fwhm_constraint)
                 grid.SetCellValue(1, 5, lg_constraint)
+                grid.SetCellValue(1, 7, tail_e_constraint)
+                grid.SetCellValue(1, 7, tail_m_constraint)
 
                 # Save peak data in window.Data
                 if 'Fitting' not in self.parent.Data['Core levels'][sheet_name]:
@@ -147,12 +153,16 @@ class BackgroundWindow(wx.Frame):
                     'FWHM': fwhm,
                     'L/G': 0.00,
                     'Area': area,
+                    'Tail M': 0,
+                    'Tail E': 0,
                     'Fitting Model': "Unfitted",
                     'Constraints': {
                         'Position': position_constraint,
                         'Height': height_constraint,
                         'FWHM': fwhm_constraint,
-                        'L/G': lg_constraint
+                        'L/G': lg_constraint,
+                        'Tail M': tail_m_constraint,
+                        'Tail E': tail_m_constraint
                     }
                 }
 
