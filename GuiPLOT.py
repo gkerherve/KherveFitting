@@ -1128,10 +1128,10 @@ class MyFrame(wx.Frame):
             else:
                 self.change_selected_peak(-1)  # Move to next peak
             return  # Prevent event from propagating
-        elif keycode in [wx.WXK_UP, wx.WXK_DOWN]:
+        elif keycode in [ord('['), ord(']')]:
             current_index = self.sheet_combobox.GetSelection()
             num_sheets = self.sheet_combobox.GetCount()
-            if keycode == wx.WXK_UP:
+            if keycode == ord('['):
                 new_index = (current_index - 1) % num_sheets
             else:
                 new_index = (current_index + 1) % num_sheets
@@ -1163,13 +1163,33 @@ class MyFrame(wx.Frame):
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
             self.canvas.draw_idle()
             return  # Prevent event from propagating
-        elif keycode in [ord('['), ord(']')]:
+        elif keycode in [wx.WXK_LEFT, wx.WXK_RIGHT] and event.ShiftDown():
+            sheet_name = self.sheet_combobox.GetValue()
+            limits = self.plot_config.get_plot_limits(self, sheet_name)
+            move_factor = 0.1
+            if keycode == wx.WXK_LEFT:
+                limits['Xmin'] -= move_factor
+                limits['Xmax'] -= move_factor
+            else:  # Right key
+                limits['Xmin'] += move_factor
+                limits['Xmax'] += move_factor
+
+            # Update the plot limits
+            self.plot_config.update_plot_limits(self, sheet_name,
+                                                x_min=limits['Xmin'],
+                                                x_max=limits['Xmax'])
+
+            # Update the plot
+            self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+            self.canvas.draw_idle()
+            return
+        elif keycode in [wx.WXK_UP, wx.WXK_DOWN] and event.ShiftDown():
             sheet_name = self.sheet_combobox.GetValue()
             limits = self.plot_config.get_plot_limits(self, sheet_name)
             intensity_factor = 0.05
             max_intensity = max(self.y_values)
 
-            if keycode == ord('['):  # Decrease intensity
+            if keycode == wx.WXK_DOWN:  # Decrease intensity
                 limits['Ymax'] = max(limits['Ymax'] - intensity_factor * max_intensity, limits['Ymin'])
             else:  # Increase intensity
                 limits['Ymax'] += intensity_factor * max_intensity
