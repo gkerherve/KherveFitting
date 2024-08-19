@@ -1684,8 +1684,11 @@ class MyFrame(wx.Frame):
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
                         peaks[correct_peak_key]['Area'] = area
                 else:  # Constraint row
-                    if col in [3, 4, 5, 7, 8]:
-                        constraint_key = ['Position', 'Height', 'FWHM', 'L/G', 'Tail E', 'Tail M'][col - 2]
+                    if col in [2, 3, 4, 5, 7, 8]:
+                        constraint_keys = ['Position', 'Height', 'FWHM', 'L/G', 'Tail E', 'Tail M']
+                        column_to_constraint = {2: 0, 3: 1, 4: 2, 5: 3, 7: 4, 8: 5}
+                        constraint_key = constraint_keys[column_to_constraint[col]]
+
                         if 'Constraints' not in peaks[correct_peak_key]:
                             peaks[correct_peak_key]['Constraints'] = {}
 
