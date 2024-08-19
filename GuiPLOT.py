@@ -1128,7 +1128,7 @@ class MyFrame(wx.Frame):
             else:
                 self.change_selected_peak(-1)  # Move to next peak
             return  # Prevent event from propagating
-        elif keycode in [ord('['), ord(']')]:
+        elif keycode in [ord('['), ord(']')] and event.ControlDown():
             current_index = self.sheet_combobox.GetSelection()
             num_sheets = self.sheet_combobox.GetCount()
             if keycode == ord('['):
@@ -1142,7 +1142,7 @@ class MyFrame(wx.Frame):
             # Call on_sheet_selected with the new sheet name
             on_sheet_selected(self, new_sheet)
             return  # Prevent event from propagating
-        elif keycode in [ord('-'), ord('=')]:
+        elif keycode in [ord('-'), ord('=')] and event.ControlDown():
             sheet_name = self.sheet_combobox.GetValue()
             limits = self.plot_config.get_plot_limits(self, sheet_name)
 
@@ -1163,7 +1163,7 @@ class MyFrame(wx.Frame):
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
             self.canvas.draw_idle()
             return  # Prevent event from propagating
-        elif keycode in [wx.WXK_LEFT, wx.WXK_RIGHT] and event.ShiftDown():
+        elif keycode in [wx.WXK_LEFT, wx.WXK_RIGHT] and event.ControlDown():
             sheet_name = self.sheet_combobox.GetValue()
             limits = self.plot_config.get_plot_limits(self, sheet_name)
             move_factor = 0.1
@@ -1183,7 +1183,7 @@ class MyFrame(wx.Frame):
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
             self.canvas.draw_idle()
             return
-        elif keycode in [wx.WXK_UP, wx.WXK_DOWN] and event.ShiftDown():
+        elif keycode in [wx.WXK_UP, wx.WXK_DOWN] and event.ControlDown():
             sheet_name = self.sheet_combobox.GetValue()
             limits = self.plot_config.get_plot_limits(self, sheet_name)
             intensity_factor = 0.05
@@ -1600,7 +1600,7 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
 
-        if col in [0,6]:
+        if col in [0,6, 9,10]:
             event.Veto()
             return
         # Allow only numeric input for specific columns in non-constraint rows
@@ -1614,7 +1614,7 @@ class MyFrame(wx.Frame):
         if new_value.lower() in ['fi', 'fix', 'fixe', 'fixed']:
             new_value = 'Fixed'
         elif new_value == 'F':
-            new_value = 'Fixed'
+            new_value = 'F*1'
         elif new_value.startswith('#'):
             peak_value = float(self.peak_params_grid.GetCellValue(row-1, col))
             new_value = str(round(peak_value-float(new_value[1:]),2))+':'+str(round(peak_value+float(new_value[1:]),2))
@@ -1684,7 +1684,7 @@ class MyFrame(wx.Frame):
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
                         peaks[correct_peak_key]['Area'] = area
                 else:  # Constraint row
-                    if col >= 2 and col <= 5:
+                    if col in [3, 4, 5, 7, 8]:
                         constraint_key = ['Position', 'Height', 'FWHM', 'L/G', 'Tail E', 'Tail M'][col - 2]
                         if 'Constraints' not in peaks[correct_peak_key]:
                             peaks[correct_peak_key]['Constraints'] = {}
@@ -1705,7 +1705,7 @@ class MyFrame(wx.Frame):
                         peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 
             # Ensure numeric values are displayed with 2 decimal places
-        if col in [2, 3, 4, 5] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
+        if col in [2, 3, 4, 5,7,8] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
             try:
                 formatted_value = f"{float(new_value):.2f}"
                 self.peak_params_grid.SetCellValue(row, col, formatted_value)
