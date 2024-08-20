@@ -789,13 +789,6 @@ class MyFrame(wx.Frame):
                         self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")
                         self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
 
-                        # Update split value
-                        if self.selected_peak_index > 0:
-                            previous_position = float(
-                                self.peak_params_grid.GetCellValue((self.selected_peak_index - 1) * 2, 2))
-                            split = new_x - previous_position
-                            self.peak_params_grid.SetCellValue(row, 11, f"{split:.2f}")
-
                         # Update the Data structure
                         sheet_name = self.sheet_combobox.GetValue()
                         peak_label = self.peak_params_grid.GetCellValue(row, 1)
@@ -805,8 +798,9 @@ class MyFrame(wx.Frame):
                             if peak_label in peaks:
                                 peaks[peak_label]['Position'] = new_x
                                 peaks[peak_label]['Height'] = new_height
-                                if self.selected_peak_index > 0:
-                                    peaks[peak_label]['Split'] = split
+
+                        # Call the function that updates all split values
+                        self.update_ratios()
 
                         self.clear_and_replot()
                         self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
