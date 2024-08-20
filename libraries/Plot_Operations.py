@@ -616,7 +616,6 @@ class PlotManager:
     def update_peak_fwhm(self, window, x):
         if window.initial_fwhm is not None and window.initial_x is not None:
             row = window.selected_peak_index * 2
-            peak_center = float(window.peak_params_grid.GetCellValue(row, 2))
             peak_label = window.peak_params_grid.GetCellValue(row, 1)
 
             delta_x = x - window.initial_x
@@ -632,10 +631,8 @@ class PlotManager:
                 if peak_label in peaks:
                     peaks[peak_label]['FWHM'] = new_fwhm
 
-            position = float(window.peak_params_grid.GetCellValue(row, 2))
-            height = float(window.peak_params_grid.GetCellValue(row, 3))
-
-            self.update_peak_plot(window, position, height, remove_old_peaks=False)
+            # Use clear_and_replot to redraw everything
+            window.clear_and_replot()
 
     def add_cross_to_peak(self, window, index):
         try:
