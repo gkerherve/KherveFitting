@@ -792,6 +792,9 @@ class MyFrame(wx.Frame):
 
                         self.clear_and_replot()
 
+                        # Add the cross back
+                        self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
+
                         self.peak_params_grid.ForceRefresh()
                         self.canvas.draw_idle()
 

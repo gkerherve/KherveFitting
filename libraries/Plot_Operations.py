@@ -631,8 +631,14 @@ class PlotManager:
                 if peak_label in peaks:
                     peaks[peak_label]['FWHM'] = new_fwhm
 
-            # Use clear_and_replot to redraw everything
+            # Clear and replot
             window.clear_and_replot()
+
+            # Add the cross back
+            window.plot_manager.add_cross_to_peak(window, window.selected_peak_index)
+
+            # Redraw the canvas
+            window.canvas.draw_idle()
 
     def add_cross_to_peak(self, window, index):
         try:
