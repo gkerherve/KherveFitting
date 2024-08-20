@@ -90,7 +90,7 @@ class MyFrame(wx.Frame):
         self.noise_max_energy = None
 
         # Initial max iteration value
-        self.max_iterations = 100
+        self.max_iterations = 50
         # Initial fitting method
         self.selected_fitting_method = "GL"
 

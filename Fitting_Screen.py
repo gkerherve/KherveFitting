@@ -100,7 +100,7 @@ class FittingWindow(wx.Frame):
         self.max_iter_spin = wx.SpinCtrl(fitting_panel, value=str(self.parent.max_iterations), min=1, max=10000)
         self.max_iter_spin.Bind(wx.EVT_SPINCTRL, self.on_max_iter_change)
 
-        self.fit_iterations_spin = wx.SpinCtrl(fitting_panel, value="1", min=1, max=100)
+        self.fit_iterations_spin = wx.SpinCtrl(fitting_panel, value="20", min=1, max=100)
 
         self.r_squared_label = wx.StaticText(fitting_panel, label="R²:")
         self.r_squared_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
@@ -183,11 +183,12 @@ class FittingWindow(wx.Frame):
     def on_fit_multi(self, event):
         iterations = self.fit_iterations_spin.GetValue()
         for _ in range(iterations):
-            self.on_fit_peaks(event)
+            result = fit_peaks(self.parent, self.parent.peak_params_grid)
+            if result:
+                r_squared, chi_square, red_chi_square = result
+                self.update_fit_indicators(r_squared, chi_square, red_chi_square)
             self.parent.clear_and_replot()
-
-            # Redraw the canvas
-            self.parent.canvas.draw_idle()
+            wx.Yield()
 
 
 

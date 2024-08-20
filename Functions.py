@@ -1593,7 +1593,7 @@ def fit_peaks(window, peak_params_grid):
                     tail_e = 1.0
 
                 # Add tail parameters to the model
-                print(f"Peak {i}: Tail M = {tail_m}, Tail E = {tail_e}")  # Debug print
+                # print(f"Peak {i}: Tail M = {tail_m}, Tail E = {tail_e}")  # Debug print
                 params.add(f'{prefix}tail_mix', value=tail_m, min=0, max=1)
                 params.add(f'{prefix}tail_exp', value=tail_e, min=0)
 
