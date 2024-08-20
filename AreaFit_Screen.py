@@ -129,7 +129,7 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(0, 6, f"{area:.2f}")
                 grid.SetCellValue(0, 7, "0.00")  # Tail E
                 grid.SetCellValue(0, 8, "0.00")  # Tail_M
-                grid.SetCellValue(0, 9, "Unfitted")  # Fitting Model
+                grid.SetCellValue(0, 12, "Unfitted")  # Fitting Model
 
                 # Set constraints and color
                 for col in range(grid.GetNumberCols()):

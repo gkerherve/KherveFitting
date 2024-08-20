@@ -58,12 +58,12 @@ def on_sheet_selected(window, event):
                     window.peak_params_grid.SetCellValue(row, 6, f"{peak_data.get('Area', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 7, f"{peak_data.get('Tail E', 'N/A')}")
                     window.peak_params_grid.SetCellValue(row, 8, f"{peak_data.get('Tail M', 'N/A')}")
-                    window.peak_params_grid.SetCellValue(row, 11, f"{peak_data.get('Fitting Model', 'N/A')}")
-                    window.peak_params_grid.SetCellValue(row, 12, f"{peak_data.get('Bkg Type', 'N/A')}")
-                    window.peak_params_grid.SetCellValue(row, 13, f"{peak_data.get('Bkg Low', 'N/A')}")
-                    window.peak_params_grid.SetCellValue(row, 14, f"{peak_data.get('Bkg High', 'N/A')}")
-                    window.peak_params_grid.SetCellValue(row, 15, f"{peak_data.get('Bkg Offset Low', 'N/A')}")
-                    window.peak_params_grid.SetCellValue(row, 16, f"{peak_data.get('Bkg Offset High', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 12, f"{peak_data.get('Fitting Model', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 13, f"{peak_data.get('Bkg Type', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 14, f"{peak_data.get('Bkg Low', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 15, f"{peak_data.get('Bkg High', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 16, f"{peak_data.get('Bkg Offset Low', 'N/A')}")
+                    window.peak_params_grid.SetCellValue(row, 17, f"{peak_data.get('Bkg Offset High', 'N/A')}")
 
                     # Set constraints if available
                     if 'Constraints' in peak_data:

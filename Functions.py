@@ -619,14 +619,11 @@ def create_horizontal_toolbar(window):
     separators = []
 
     # File operations
-    open_file_tool = toolbar.AddTool(wx.ID_ANY, 'Open File', wx.Bitmap(os.path.join(icon_path, "open-folder-64-green.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open File")
+    open_file_tool = toolbar.AddTool(wx.ID_ANY, 'Open File', wx.Bitmap(os.path.join(icon_path, "open-folder-25-green.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open File")
     refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Folder', wx.Bitmap(os.path.join(icon_path, "refresh-96g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Refresh Folder")
-    save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level")
-    save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-64.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
-
-    save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets',
-                                    wx.Bitmap(os.path.join(icon_path, "save-Multi-64.png"), wx.BITMAP_TYPE_PNG),
-                                    shortHelp="Save all sheets with plots")
+    save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level")
+    save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-PNG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
+    save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
 
     toolbar.AddSeparator()
 
@@ -665,9 +662,7 @@ def create_horizontal_toolbar(window):
     toolbar.AddControl(window.be_correction_spinbox)
 
     # Add Auto BE button
-    auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE',
-                                     wx.Bitmap(os.path.join(icon_path, "BEcorrect-64.png"), wx.BITMAP_TYPE_PNG),
-                                     shortHelp="Automatic binding energy correction")
+    auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE',wx.Bitmap(os.path.join(icon_path, "BEcorrect-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Automatic binding energy correction")
 
     toolbar.AddSeparator()
 
@@ -678,13 +673,8 @@ def create_horizontal_toolbar(window):
     toolbar.AddSeparator()
 
     # Plot adjustment tools
-    plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot',
-                                wx.Bitmap(os.path.join(icon_path, "scatter-plot-60.png"),
-                                wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
-
-    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill',
-                                            wx.Bitmap(os.path.join(icon_path, "STO-64.png"), wx.BITMAP_TYPE_PNG),
-                                            shortHelp="Toggle Peak Fill")
+    plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot',wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"),wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
+    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill',wx.Bitmap(os.path.join(icon_path, "STO-25.png"), wx.BITMAP_TYPE_PNG),shortHelp="Toggle Peak Fill")
 
     # resize_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Resize Plot', wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Resize Plot")
     toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend',
@@ -706,10 +696,14 @@ def create_horizontal_toolbar(window):
     toolbar.AddSeparator()
 
     # Analysis tools
-    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-64.png"), wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area between the range cursor")
+    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-25.png"),
+                                                                  wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area between the range cursor")
     # bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(wx.Bitmap(os.path.join(icon_path, "Plot_Area.ico")), wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area under Peak")
-    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window")
-    noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
+    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s-25.png"),
+                                                                   wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window")
+    noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path,
+                                                                                              "Noise-25.png"),
+                                                                                 wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
     # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
     # separators[-1].SetSize((2, 24))
@@ -721,12 +715,13 @@ def create_horizontal_toolbar(window):
 
     # Add export button
     export_tool = toolbar.AddTool(wx.ID_ANY, 'Export Results',
-                                  wx.Bitmap(os.path.join(icon_path, "Export-64g.png"), wx.BITMAP_TYPE_PNG),
+                                  wx.Bitmap(os.path.join(icon_path, "Export-25g.png"), wx.BITMAP_TYPE_PNG),
                                   shortHelp="Export to Results Grid")
 
     # Hide columns in Peak Fitting Parameters
     toggle_Col_1_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
-                                            wx.Bitmap(os.path.join(icon_path, "HideColumn.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
+                                            wx.Bitmap(os.path.join(icon_path, "HideColumn-25.png"),
+                                                      wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
 
     # Add toggle button for the right panel
     window.toggle_right_panel_tool = window.add_toggle_tool(toolbar, "Toggle Right Panel",
@@ -773,29 +768,37 @@ def create_vertical_toolbar(parent, frame):
     # Add zoom tool
     # Add zoom in tool
     zoom_in_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom In',
-                                     wx.Bitmap(os.path.join(icon_path, "ZoomIN-64.png"), wx.BITMAP_TYPE_PNG),
+                                     wx.Bitmap(os.path.join(icon_path, "ZoomIN-25.png"), wx.BITMAP_TYPE_PNG),
                                      shortHelp="Zoom In")
 
     # Add zoom out tool (previously resize_plot)
     zoom_out_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom Out',
-                                      wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
+                                      wx.Bitmap(os.path.join(icon_path, "ZoomOUT-25.png"), wx.BITMAP_TYPE_PNG),
                                       shortHelp="Zoom Out")
 
     # Add drag tool
     drag_tool = v_toolbar.AddTool(wx.ID_ANY, 'Drag',
-                                  wx.Bitmap(os.path.join(icon_path, "drag-64.png"), wx.BITMAP_TYPE_PNG),
+                                  wx.Bitmap(os.path.join(icon_path, "drag-25.png"), wx.BITMAP_TYPE_PNG),
                                   shortHelp="Drag Plot")
 
     v_toolbar.AddSeparator()
 
     # BE adjustment tools
-    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path, "Right-Red-64g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
-    high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path, "Left-Red-64g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High BE")
+    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path,
+                                                                                             "Right-Red-25g.png"),
+                                                                                wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
+    high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path,
+                                                                                             "Left-Red-25g.png"),
+                                                                                wx.BITMAP_TYPE_PNG), shortHelp="Decrease High BE")
 
     v_toolbar.AddSeparator()
 
-    low_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE +', wx.Bitmap(os.path.join(icon_path, "Left-Blue-64g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase Low BE")
-    low_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE -', wx.Bitmap(os.path.join(icon_path, "Right-Blue-64g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease Low BE")
+    low_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE +', wx.Bitmap(os.path.join(icon_path,
+                                                                                           "Left-Blue-25g.png"),
+                                                                              wx.BITMAP_TYPE_PNG), shortHelp="Increase Low BE")
+    low_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE -', wx.Bitmap(os.path.join(icon_path,
+                                                                                           "Right-Blue-25g.png"),
+                                                                              wx.BITMAP_TYPE_PNG), shortHelp="Decrease Low BE")
 
     # v_toolbar.AddSeparator()
 
@@ -809,15 +812,21 @@ def create_vertical_toolbar(parent, frame):
     v_toolbar.AddSeparator()
 
     # Intensity adjustment tools
-    high_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int +', wx.Bitmap(os.path.join(icon_path, "Up-Red-64g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase High Intensity")
-    high_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int -', wx.Bitmap(os.path.join(icon_path, "Down-Red-64g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Decrease High Intensity")
+    high_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int +', wx.Bitmap(os.path.join(icon_path,
+                                                                                               "Up-Red-25g.png"),
+                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Increase High Intensity")
+    high_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int -', wx.Bitmap(os.path.join(icon_path,
+                                                                                               "Down-Red-25g.png"),
+                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Decrease High Intensity")
 
     v_toolbar.AddSeparator()
 
-    low_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int +', wx.Bitmap(os.path.join(icon_path, "Up-Blue-64g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Increase Low Intensity")
+    low_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int +', wx.Bitmap(os.path.join(icon_path,
+                                                                                             "Up-Blue-25g.png"),
+                                                                                wx.BITMAP_TYPE_PNG), shortHelp="Increase Low Intensity")
     low_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY,
                                               'Low Int -',
-                                              wx.Bitmap(os.path.join(icon_path, "Down-Blue-64g.png"),
+                                              wx.Bitmap(os.path.join(icon_path, "Down-Blue-25g.png"),
                                               wx.BITMAP_TYPE_PNG),
                                               shortHelp="Decrease Low Intensity")
 
@@ -1146,7 +1155,7 @@ def on_save_all_sheets(window, event):
 
 def toggle_Col_1(window):
     # List of columns to toggle
-    columns1 = [11, 12, 13, 14, 15,16]
+    columns1 = [12, 13, 14, 15,16, 17]
     columns2 = [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
 
 
@@ -1244,7 +1253,7 @@ def fit_peaks2(window, peak_params_grid):
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
-                peak_model_choice = peak_params_grid.GetCellValue(row, 11)  # Assuming column 11 is the Fitting Model
+                peak_model_choice = peak_params_grid.GetCellValue(row, 12)  # Assuming column 11 is the Fitting Model
                 sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                 gamma = lg_ratio * sigma
 
@@ -1354,7 +1363,7 @@ def fit_peaks2(window, peak_params_grid):
                 row = i * 2
                 prefix = f'peak{i}_'
                 peak_label = peak_params_grid.GetCellValue(row, 1)
-                peak_model_choice = peak_params_grid.GetCellValue(row, 11)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 12)
 
                 if peak_label in existing_peaks:
                     center = result.params[f'{prefix}center'].value
@@ -1574,7 +1583,7 @@ def fit_peaks(window, peak_params_grid):
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
-                peak_model_choice = peak_params_grid.GetCellValue(row, 11)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 12)
 
                 try:
                     tail_e = float(peak_params_grid.GetCellValue(row, 7))
@@ -1677,7 +1686,7 @@ def fit_peaks(window, peak_params_grid):
                 row = i * 2
                 prefix = f'peak{i}_'
                 peak_label = peak_params_grid.GetCellValue(row, 1)
-                peak_model_choice = peak_params_grid.GetCellValue(row, 11)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 12)
 
                 if peak_label in existing_peaks:
                     center = result.params[f'{prefix}center'].value

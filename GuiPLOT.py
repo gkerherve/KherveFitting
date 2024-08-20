@@ -238,7 +238,7 @@ class MyFrame(wx.Frame):
 
         # Initialize the Fit_grid for peak parameters
         self.peak_params_grid = wx.grid.Grid(self.peak_params_frame)
-        self.peak_params_grid.CreateGrid(0, 17)
+        self.peak_params_grid.CreateGrid(0, 18)
         self.peak_params_grid.SetColLabelValue(0, "ID")
         self.peak_params_grid.SetColLabelValue(1, "Label")
         self.peak_params_grid.SetColLabelValue(2, "Position")
@@ -250,12 +250,13 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetColLabelValue(8, "Tail M")
         self.peak_params_grid.SetColLabelValue(9, "I ratio")
         self.peak_params_grid.SetColLabelValue(10, "A ratio")
-        self.peak_params_grid.SetColLabelValue(11, "Fitting Model")
-        self.peak_params_grid.SetColLabelValue(12, "Bkg Type")
-        self.peak_params_grid.SetColLabelValue(13, "Bkg Low")
-        self.peak_params_grid.SetColLabelValue(14, "Bkg High")
-        self.peak_params_grid.SetColLabelValue(15, "Bkg Offset Low")
-        self.peak_params_grid.SetColLabelValue(16, "Bkg Offset High")
+        self.peak_params_grid.SetColLabelValue(11, "Split")
+        self.peak_params_grid.SetColLabelValue(12, "Fitting Model")
+        self.peak_params_grid.SetColLabelValue(13, "Bkg Type")
+        self.peak_params_grid.SetColLabelValue(14, "Bkg Low")
+        self.peak_params_grid.SetColLabelValue(15, "Bkg High")
+        self.peak_params_grid.SetColLabelValue(16, "Bkg Offset Low")
+        self.peak_params_grid.SetColLabelValue(17, "Bkg Offset High")
 
         # Set grid properties
         self.peak_params_grid.SetDefaultRowSize(25)
@@ -274,9 +275,9 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetColSize(5, 50)
         self.peak_params_grid.SetColSize(7, 50)
         self.peak_params_grid.SetColSize(8, 50)
-        self.peak_params_grid.SetColSize(11, 100)
-        self.peak_params_grid.SetColSize(15, 100)
+        self.peak_params_grid.SetColSize(12, 100)
         self.peak_params_grid.SetColSize(16, 100)
+        self.peak_params_grid.SetColSize(17, 100)
 
         peak_params_sizer_inner.Add(self.peak_params_grid, 1, wx.EXPAND | wx.ALL, 5)
         self.peak_params_frame.SetSizer(peak_params_sizer_inner)
@@ -297,8 +298,8 @@ class MyFrame(wx.Frame):
 
         # Set column labels and properties for results grid
         column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-                         "Rel. Area", "Tail E", "Tail M","Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low", "Bkg Offset High", "Sheetname",
-                         "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
+                         "Rel. Area", "Tail E", "Tail M", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
+                         "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
         for i, label in enumerate(column_labels):
             self.results_grid.SetColLabelValue(i, label)
 
@@ -471,14 +472,15 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 8, '0')  # Tail M
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
-        self.peak_params_grid.SetCellValue(row, 11, self.selected_fitting_method)  # Fitting Model
-        self.peak_params_grid.SetCellValue(row, 12, self.background_method)  # Bkg Type
-        self.peak_params_grid.SetCellValue(row, 13,
-                                           f"{self.bg_min_energy:.2f}" if self.bg_min_energy is not None else "")  # Bkg Low
+        self.peak_params_grid.SetCellValue(row, 11, '')  # Split, initially empty
+        self.peak_params_grid.SetCellValue(row, 12, self.selected_fitting_method)  # Fitting Model
+        self.peak_params_grid.SetCellValue(row, 13, self.background_method)  # Bkg Type
         self.peak_params_grid.SetCellValue(row, 14,
+                                           f"{self.bg_min_energy:.2f}" if self.bg_min_energy is not None else "")  # Bkg Low
+        self.peak_params_grid.SetCellValue(row, 15,
                                            f"{self.bg_max_energy:.2f}" if self.bg_max_energy is not None else "")  # Bkg High
-        self.peak_params_grid.SetCellValue(row, 15, f"{self.offset_l:.2f}")  # Bkg Offset Low
-        self.peak_params_grid.SetCellValue(row, 16, f"{self.offset_h:.2f}")  # Bkg Offset High
+        self.peak_params_grid.SetCellValue(row, 16, f"{self.offset_l:.2f}")  # Bkg Offset Low
+        self.peak_params_grid.SetCellValue(row, 17, f"{self.offset_h:.2f}")  # Bkg Offset High
 
         # Set constraint values
         self.peak_params_grid.SetReadOnly(row + 1, 0)
@@ -823,7 +825,7 @@ class MyFrame(wx.Frame):
                     height = float(self.peak_params_grid.GetCellValue(row, 3))
                     fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                     fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                    model = self.peak_params_grid.GetCellValue(row, 11)
+                    model = self.peak_params_grid.GetCellValue(row, 12)
                     area = self.calculate_peak_area(model, height, fwhm, fraction)
                     self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
 
@@ -1066,7 +1068,7 @@ class MyFrame(wx.Frame):
                     y += self.background[np.argmin(np.abs(self.x_values - x))]
 
                     self.remove_cross_from_peak()
-                    self.cross, = self.ax.plot(x, y, 'bx', markersize=15, markerfacecolor='none', picker=5)
+                    self.cross, = self.ax.plot(x, y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)
 
                     self.peak_params_grid.ClearSelection()
                     self.peak_params_grid.SelectRow(row, addToSelected=False)
@@ -1600,11 +1602,11 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
 
-        if col in [0,6, 9,10]:
+        if col in [0,6, 9,10,11]:
             event.Veto()
             return
         # Allow only numeric input for specific columns in non-constraint rows
-        elif col not in [1, 11, 12] and row % 2 == 0:
+        elif col not in [1, 12, 13] and row % 2 == 0:
             try:
                 float(new_value)  # This will handle integers, floats, and scientific notation
             except ValueError:
@@ -1672,7 +1674,7 @@ class MyFrame(wx.Frame):
                             'Tail E': tail_E,
                             'Tail M': tail_M
                         })
-                    elif col == 11:  # Fitting Model changed
+                    elif col == 12:  # Fitting Model changed
                         peaks[correct_peak_key]['Fitting Model'] = new_value
 
                         # Recalculate area with new model
@@ -1728,29 +1730,34 @@ class MyFrame(wx.Frame):
         if num_peaks < 1:
             return  # No peaks to calculate ratios for
 
-        # Set first peak's ratios to 1.00
-        self.peak_params_grid.SetCellValue(0, 9, "1.00")
-        self.peak_params_grid.SetCellValue(0, 10, "1.00")
+        # Set first peak's ratios and split to 0.00
+        self.peak_params_grid.SetCellValue(0, 9, "1.00")  # I ratio
+        self.peak_params_grid.SetCellValue(0, 10, "1.00")  # A ratio
+        self.peak_params_grid.SetCellValue(0, 11, "0.00")  # Split
 
         if num_peaks < 2:
             return  # No other ratios to calculate with only one peak
 
         # Get first peak's height and area
+        first_position = float(self.peak_params_grid.GetCellValue(0, 2))
         first_height = float(self.peak_params_grid.GetCellValue(0, 3))
         first_area = float(self.peak_params_grid.GetCellValue(0, 6))
 
         for i in range(1, num_peaks):
             row = i * 2
+            position = float(self.peak_params_grid.GetCellValue(row, 2))
             height = float(self.peak_params_grid.GetCellValue(row, 3))
             area = float(self.peak_params_grid.GetCellValue(row, 6))
 
             # Calculate ratios
             i_ratio = height / first_height if first_height != 0 else 0
             a_ratio = area / first_area if first_area != 0 else 0
+            split = position - first_position
 
             # Update grid
-            self.peak_params_grid.SetCellValue(row, 9, f"{i_ratio:.2f}")
-            self.peak_params_grid.SetCellValue(row, 10, f"{a_ratio:.2f}")
+            self.peak_params_grid.SetCellValue(row, 9, f"{i_ratio*100:.0f}")
+            self.peak_params_grid.SetCellValue(row, 10, f"{a_ratio*100:.0f}")
+            self.peak_params_grid.SetCellValue(row, 11, f"{split:.2f}")
 
         self.peak_params_grid.ForceRefresh()
 
