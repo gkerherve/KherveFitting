@@ -108,24 +108,32 @@ class FittingWindow(wx.Frame):
         self.red_chi_squared_label = wx.StaticText(fitting_panel, label="Red. Chi²:")
         self.red_chi_squared_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
 
-        add_peak_button = wx.Button(fitting_panel, label="Add Peak")
-        add_peak_button.SetMinSize((60, 40))
+        add_peak_button = wx.Button(fitting_panel, label="Add Single Peak")
+        add_peak_button.SetMinSize((110, 40))
         add_peak_button.Bind(wx.EVT_BUTTON, self.on_add_peak)
-
-        remove_peak_button = wx.Button(fitting_panel, label="Remove Peak")
-        remove_peak_button.SetMinSize((60, 40))
-        remove_peak_button.Bind(wx.EVT_BUTTON, self.on_remove_peak)
-
-        fit_button = wx.Button(fitting_panel, label="Fit")
-        fit_button.SetMinSize((110, 40))
-        fit_button.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
 
         add_doublet_button = wx.Button(fitting_panel, label="Add Doublet")
         add_doublet_button.SetMinSize((110, 40))
         add_doublet_button.Bind(wx.EVT_BUTTON, self.on_add_doublet)
 
+        remove_peak_button = wx.Button(fitting_panel, label="Remove Peak")
+        remove_peak_button.SetMinSize((110, 40))
+        remove_peak_button.Bind(wx.EVT_BUTTON, self.on_remove_peak)
+
         export_button = wx.Button(fitting_panel, label="Export")
-        export_button.SetMinSize((60, 40))
+        export_button.SetMinSize((110, 40))
+        export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
+
+        fit_button = wx.Button(fitting_panel, label="Fit Once")
+        fit_button.SetMinSize((110, 40))
+        fit_button.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
+
+        fit_buttonM = wx.Button(fitting_panel, label="Fit Muli")
+        fit_buttonM.SetMinSize((110, 40))
+        fit_buttonM.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
+
+        export_button = wx.Button(fitting_panel, label="Export")
+        export_button.SetMinSize((110, 40))
         export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 
         # Layout Peak Fitting Tab
@@ -144,12 +152,16 @@ class FittingWindow(wx.Frame):
         fitting_sizer.Add(self.red_chi_squared_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         fitting_sizer.Add(add_peak_button, pos=(5, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(remove_peak_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_doublet_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(fit_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(add_doublet_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(remove_peak_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(export_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(export_button, pos=(7, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_button, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_buttonM, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
+
+
+
 
         fitting_panel.SetSizer(fitting_sizer)
         notebook.AddPage(fitting_panel, "Peak Fitting")
