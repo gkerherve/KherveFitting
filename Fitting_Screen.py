@@ -11,9 +11,9 @@ class FittingWindow(wx.Frame):
         self.parent = parent  # Store reference to MainFrame
 
         self.SetTitle("Peak Fitting")
-        self.SetSize((270, 400))  # Increased height to accommodate new elements
-        self.SetMinSize((270, 400))
-        self.SetMaxSize((270, 400))
+        self.SetSize((270, 430))  # Increased height to accommodate new elements
+        self.SetMinSize((270, 430))
+        self.SetMaxSize((270, 430))
 
         self.init_ui()
 
@@ -90,7 +90,6 @@ class FittingWindow(wx.Frame):
         fitting_panel = wx.Panel(notebook)
         fitting_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
-        # self.model_combobox = wx.ComboBox(fitting_panel, choices=["Pseudo-Voigt", "Pseudo-Voigt_2", "Pseudo-Voigt_3", "GL", "SGL", "Voigt"], style=wx.CB_READONLY)
         self.model_combobox = wx.ComboBox(fitting_panel,
                                           choices=["Pseudo-Voigt", "GL", "SGL",
                                                    "Voigt"], style=wx.CB_READONLY)
@@ -100,6 +99,8 @@ class FittingWindow(wx.Frame):
 
         self.max_iter_spin = wx.SpinCtrl(fitting_panel, value=str(self.parent.max_iterations), min=1, max=10000)
         self.max_iter_spin.Bind(wx.EVT_SPINCTRL, self.on_max_iter_change)
+
+        self.fit_iterations_spin = wx.SpinCtrl(fitting_panel, value="1", min=1, max=100)
 
         self.r_squared_label = wx.StaticText(fitting_panel, label="R²:")
         self.r_squared_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
@@ -128,43 +129,39 @@ class FittingWindow(wx.Frame):
         fit_button.SetMinSize((110, 40))
         fit_button.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
 
-        fit_buttonM = wx.Button(fitting_panel, label="Fit Muli")
-        fit_buttonM.SetMinSize((110, 40))
-        fit_buttonM.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
+        fit_multi_button = wx.Button(fitting_panel, label="Fit Multi")
+        fit_multi_button.SetMinSize((110, 40))
+        fit_multi_button.Bind(wx.EVT_BUTTON, self.on_fit_multi)
 
-        export_button = wx.Button(fitting_panel, label="Export")
-        export_button.SetMinSize((110, 40))
-        export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
-
-        # Layout Peak Fitting Tab
         fitting_sizer.Add(wx.StaticText(fitting_panel, label="Fitting Model:"), pos=(0, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         fitting_sizer.Add(self.model_combobox, pos=(0, 1), flag=wx.ALL | wx.EXPAND, border=5)
         fitting_sizer.Add(wx.StaticText(fitting_panel, label="Max Iteration:"), pos=(1, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         fitting_sizer.Add(self.max_iter_spin, pos=(1, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(wx.StaticText(fitting_panel, label="Fit Iterations:"), pos=(2, 0),
+                          flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.fit_iterations_spin, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(self.r_squared_label, pos=(2, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.r_squared_text, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.chi_squared_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.chi_squared_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.red_chi_squared_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.red_chi_squared_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.r_squared_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.r_squared_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.chi_squared_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.chi_squared_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.red_chi_squared_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.red_chi_squared_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(add_peak_button, pos=(5, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(add_doublet_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_peak_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_doublet_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(remove_peak_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(export_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(remove_peak_button, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(export_button, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(fit_button, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(fit_buttonM, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
-
-
-
+        fitting_sizer.Add(fit_button, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_multi_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         fitting_panel.SetSizer(fitting_sizer)
         notebook.AddPage(fitting_panel, "Peak Fitting")
+
 
     def on_max_iter_change(self, event):
         self.parent.set_max_iterations(self.max_iter_spin.GetValue())
@@ -182,6 +179,17 @@ class FittingWindow(wx.Frame):
 
     def on_remove_peak(self, event):
         remove_peak(self.parent)
+
+    def on_fit_multi(self, event):
+        iterations = self.fit_iterations_spin.GetValue()
+        for _ in range(iterations):
+            self.on_fit_peaks(event)
+            self.parent.clear_and_replot()
+
+            # Redraw the canvas
+            self.parent.canvas.draw_idle()
+
+
 
     def on_fit_peaks(self, event):
         result = fit_peaks(self.parent, self.parent.peak_params_grid)
