@@ -32,7 +32,7 @@ from libraries.Sheet_Operations import on_sheet_selected
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(1500, 600))
+        super().__init__(parent, title=title, size=(1600, 700))
         self.SetMinSize((800, 600))
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white
@@ -833,7 +833,8 @@ class MyFrame(wx.Frame):
                     self.remove_cross_from_peak()
 
                     # Create new cross at final position
-                    self.cross, = self.ax.plot(x, event.ydata, 'bx', markersize=15, markerfacecolor='none', picker=5)
+                    self.cross, = self.ax.plot(x, event.ydata, 'bx', markersize=15, markerfacecolor='none', picker=5,
+                                               linewidth=3)
 
                     # self.update_peak_plot(x, y)
 

@@ -655,7 +655,8 @@ class PlotManager:
                 self.cross.remove()
 
             # Plot new cross
-            self.cross, = self.ax.plot(peak_x, peak_y, 'bx', markersize=15, markerfacecolor='none', picker=5)
+            self.cross, = self.ax.plot(peak_x, peak_y, 'bx', markersize=15, markerfacecolor='none', picker=5,
+                                       linewidth=3)
 
             # Connect event handlers
             self.canvas.mpl_disconnect('motion_notify_event')  # Disconnect existing handlers
