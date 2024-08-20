@@ -778,7 +778,6 @@ class MyFrame(wx.Frame):
                 try:
                     if event.key == 'shift':
                         self.update_peak_fwhm(event.xdata)
-
                     elif self.is_mouse_on_peak(event):
                         closest_index = np.argmin(np.abs(self.x_values - event.xdata))
                         bkg_y = self.background[closest_index]
@@ -787,15 +786,30 @@ class MyFrame(wx.Frame):
                         new_height = max(event.ydata - bkg_y, 0)
 
                         # Update the grid
-                        self.peak_params_grid.SetCellValue(row, 2, f"{new_x}")
-                        self.peak_params_grid.SetCellValue(row, 3, f"{new_height}")
+                        self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")
+                        self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
+
+                        # Update split value
+                        if self.selected_peak_index > 0:
+                            previous_position = float(
+                                self.peak_params_grid.GetCellValue((self.selected_peak_index - 1) * 2, 2))
+                            split = new_x - previous_position
+                            self.peak_params_grid.SetCellValue(row, 11, f"{split:.2f}")
+
+                        # Update the Data structure
+                        sheet_name = self.sheet_combobox.GetValue()
+                        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+                        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
+                            sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
+                            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+                            if peak_label in peaks:
+                                peaks[peak_label]['Position'] = new_x
+                                peaks[peak_label]['Height'] = new_height
+                                if self.selected_peak_index > 0:
+                                    peaks[peak_label]['Split'] = split
 
                         self.clear_and_replot()
-
-                        # Add the cross back
                         self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
-
-                        self.peak_params_grid.ForceRefresh()
                         self.canvas.draw_idle()
 
                 except Exception as e:
