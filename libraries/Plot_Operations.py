@@ -323,7 +323,7 @@ class PlotManager:
             except ValueError:
                 print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
                 continue
-            print(fitting_model)
+
             if fitting_model == "Unfitted":
                 # For unfitted peaks, fill between background and raw data
                 cst_unfit = "Unfitted"

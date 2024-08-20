@@ -34,8 +34,8 @@ class PeakFunctions:
     @staticmethod
     def gauss_lorentz(x, center , fwhm, fraction, amplitude, tail_mix, tail_exp):
         peak = amplitude * (
-                PeakFunctions.gaussian(x, center, fwhm, fraction * 100) *
-                PeakFunctions.lorentzian(x, center, fwhm, fraction * 100))
+                PeakFunctions.gaussian(x, center, fwhm, fraction * 1) *
+                PeakFunctions.lorentzian(x, center, fwhm, fraction * 1))
         tail = PeakFunctions.tail(x, center, tail_mix, tail_exp, fwhm)
         filter = PeakFunctions.filter_func(x,center)
         if tail_mix == 0 or tail_exp == 0:

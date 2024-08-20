@@ -465,7 +465,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 2, f"{peak_x:.2f}")
         self.peak_params_grid.SetCellValue(row, 3, f"{peak_y:.2f}")
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
-        self.peak_params_grid.SetCellValue(row, 5, "0.3")
+        self.peak_params_grid.SetCellValue(row, 5, "30")
         self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 7, "0")  # Tail E
         self.peak_params_grid.SetCellValue(row, 8, '0')  # Tail M
@@ -491,7 +491,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 2, position_constraint)
         self.peak_params_grid.SetCellValue(row + 1, 3, "100,1e7")
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
-        self.peak_params_grid.SetCellValue(row + 1, 5, "0.05,0.8")
+        self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
         self.peak_params_grid.SetCellValue(row + 1, 7, "Fixed")
         self.peak_params_grid.SetCellValue(row + 1, 8, "Fixed")
         self.peak_params_grid.ForceRefresh()
@@ -509,7 +509,7 @@ class MyFrame(wx.Frame):
             'Position': peak_x,
             'Height': peak_y,
             'FWHM': 1.6,
-            'L/G': 0.3,
+            'L/G': 30,
             'Area': '',
             'Tail M': 0.0,
             'Tail E': 0.0,
@@ -523,7 +523,7 @@ class MyFrame(wx.Frame):
                 'Position': position_constraint,
                 'Height': "100,1e7",
                 'FWHM': "0.3,3.5",
-                'L/G': "0.05,0.8",
+                'L/G': "2,80",
                 'Tail M': "Fixed",
                 'Tail E': "Fixed"
             }
