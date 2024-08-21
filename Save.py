@@ -285,22 +285,34 @@ def save_to_excel(window, data, file_path, sheet_name):
                 bottom=openpyxl.styles.Side(style=None)
             )
 
-        # Add borders to peak fitting parameter rows
-        thin_border = Border(
-            left=Side(style='thin'),
-            right=Side(style='thin'),
-            top=Side(style='thin'),
-            bottom=Side(style='thin')
-        )
+        # Define border styles
+        thin_side = Side(style='thin')
+        thick_side = Side(style='medium')  # Use 'medium' for a thicker line
 
         start_row = 1  # Assuming data starts from the second row
-        end_row = window.peak_params_grid.GetNumberRows()+1  # Get the actual number of rows
+        num_peak_rows = window.peak_params_grid.GetNumberRows()
+        end_row = start_row + num_peak_rows
         start_col = 24  # Column X (24th column)
         end_col = worksheet.max_column
 
-        for row in worksheet.iter_rows(min_row=start_row, max_row=end_row, min_col=start_col, max_col=end_col):
-            for cell in row:
-                cell.border = thin_border
+        for row in range(start_row, end_row + 1):
+            for col in range(start_col, end_col + 1):
+                cell = worksheet.cell(row=row, column=col)
+
+                # Default to thin borders
+                left = right = top = bottom = thin_side
+
+                # Add thick borders for outer edges
+                if row == start_row:
+                    top = thick_side
+                if row == end_row:
+                    bottom = thick_side
+                if col == start_col:
+                    left = thick_side
+                if col == end_col:
+                    right = thick_side
+
+                cell.border = Border(left=left, right=right, top=top, bottom=bottom)
 
     # After saving to Excel, update the plot with the current limits
     if hasattr(window, 'plot_config'):
