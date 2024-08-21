@@ -266,22 +266,37 @@ def save_to_excel(window, data, file_path, sheet_name):
                 bottom=openpyxl.styles.Side(style=None)
             )
 
-        # Start from column X (24 in openpyxl)
-        start_col = 24
+    # Pad the DataFrame with empty columns up to column X if needed
+    while existing_df.shape[1] < 24:  # 24 is the index for column X (0-indexed)
+        existing_df[f'Empty_{existing_df.shape[1]}'] = np.nan
 
-        # Write table headers
-        for col in range(window.results_grid.GetNumberCols()):
-            cell = worksheet.cell(row=1, column=start_col + col)
-            cell.value = window.results_grid.GetColLabelValue(col)
+    # Create a DataFrame for peak fitting parameters
+    peak_params_df = pd.DataFrame()
+    for col in range(window.peak_params_grid.GetNumberCols()):
+        col_name = window.peak_params_grid.GetColLabelValue(col)
+        col_data = [window.peak_params_grid.GetCellValue(row, col) for row in
+                    range(window.peak_params_grid.GetNumberRows())]
+        peak_params_df[col_name] = col_data
 
-        # Write table data
-        for row in range(window.results_grid.GetNumberRows()):
-            for col in range(window.results_grid.GetNumberCols()):
-                cell = worksheet.cell(row=row + 2, column=start_col + col)
-                cell.value = window.results_grid.GetCellValue(row, col)
+    # Add peak fitting parameters to existing_df, starting from column X
+    start_col = 23  # Column X is the 24th column (0-indexed)
+    for i, col in enumerate(peak_params_df.columns):
+        existing_df.insert(start_col + i, f'Param_{col}', peak_params_df[col])
 
-        # Save the workbook
-        workbook.save(file_path)
+    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        existing_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        # Remove border from first row
+        workbook = writer.book
+        worksheet = workbook[sheet_name]
+        for cell in worksheet[1]:
+            cell.border = openpyxl.styles.Border(
+                left=openpyxl.styles.Side(style=None),
+                right=openpyxl.styles.Side(style=None),
+                top=openpyxl.styles.Side(style=None),
+                bottom=openpyxl.styles.Side(style=None)
+            )
+
 
     # After saving to Excel, update the plot with the current limits
     if hasattr(window, 'plot_config'):
