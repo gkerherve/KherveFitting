@@ -311,7 +311,7 @@ class MyFrame(wx.Frame):
         self.results_grid.SetDefaultCellBackgroundColour(self.results_grid.GetLabelBackgroundColour())
 
         # Adjust specific column sizes
-        col_sizes = [60, 50, 50, 50, 40, 50, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 100, 110, 110, 110]
+        col_sizes = [120, 70, 70, 70, 40, 50, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 100, 110, 110, 110]
         for i, size in enumerate(col_sizes):
             self.results_grid.SetColSize(i, size)
 

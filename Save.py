@@ -546,6 +546,13 @@ def save_plot_to_excel(window):
         # Save the workbook
         wb.save(file_path)
 
+        # Save as PNG
+        png_filename = f"{os.path.splitext(os.path.basename(file_path))[0]}_{sheet_name}.png"
+        png_filepath = os.path.join(os.path.dirname(file_path), png_filename)
+        window.figure.savefig(png_filepath, format='png', dpi=300, bbox_inches='tight')
+
+        print(f"Plot saved as PNG: {png_filepath}")
+
         print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
         # wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
         #               wx.OK | wx.ICON_INFORMATION)
