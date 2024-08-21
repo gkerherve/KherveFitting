@@ -266,9 +266,9 @@ def save_to_excel(window, data, file_path, sheet_name):
                 bottom=openpyxl.styles.Side(style=None)
             )
 
-    # Pad the DataFrame with empty columns up to column X if needed
+    # Pad the DataFrame with unnamed empty columns up to column X if needed
     while existing_df.shape[1] < 24:  # 24 is the index for column X (0-indexed)
-        existing_df[f'Empty_{existing_df.shape[1]}'] = np.nan
+        existing_df = existing_df.join(pd.DataFrame({' ': pd.Series(dtype='float64')}))
 
     # Create a DataFrame for peak fitting parameters
     peak_params_df = pd.DataFrame()
@@ -282,6 +282,9 @@ def save_to_excel(window, data, file_path, sheet_name):
     start_col = 23  # Column X is the 24th column (0-indexed)
     for i, col in enumerate(peak_params_df.columns):
         existing_df.insert(start_col + i, f'Param_{col}', peak_params_df[col])
+
+    # Remove any column names for the empty columns
+    existing_df.columns = [col if i < 3 or i >= 24 else '' for i, col in enumerate(existing_df.columns)]
 
     with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
         existing_df.to_excel(writer, sheet_name=sheet_name, index=False)
