@@ -11,9 +11,9 @@ class FittingWindow(wx.Frame):
         self.parent = parent  # Store reference to MainFrame
 
         self.SetTitle("Peak Fitting")
-        self.SetSize((270, 430))  # Increased height to accommodate new elements
-        self.SetMinSize((270, 430))
-        self.SetMaxSize((270, 430))
+        self.SetSize((270, 480))  # Increased height to accommodate new elements
+        self.SetMinSize((270, 480))
+        self.SetMaxSize((270, 480))
 
         self.init_ui()
 
@@ -109,6 +109,12 @@ class FittingWindow(wx.Frame):
         self.red_chi_squared_label = wx.StaticText(fitting_panel, label="Red. Chi²:")
         self.red_chi_squared_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
 
+        self.actual_iter_label = wx.StaticText(fitting_panel, label="Actual Iterations:")
+        self.actual_iter_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
+
+        self.current_fit_label = wx.StaticText(fitting_panel, label="Current Fit:")
+        self.current_fit_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
+
         add_peak_button = wx.Button(fitting_panel, label="Add Single Peak")
         add_peak_button.SetMinSize((110, 40))
         add_peak_button.Bind(wx.EVT_BUTTON, self.on_add_peak)
@@ -150,14 +156,19 @@ class FittingWindow(wx.Frame):
         fitting_sizer.Add(self.red_chi_squared_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         fitting_sizer.Add(self.red_chi_squared_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(add_peak_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(add_doublet_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.actual_iter_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.actual_iter_text, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.current_fit_label, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.current_fit_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(remove_peak_button, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(export_button, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_peak_button, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_doublet_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(fit_button, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(fit_multi_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(remove_peak_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(export_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+
+        fitting_sizer.Add(fit_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_multi_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         fitting_panel.SetSizer(fitting_sizer)
         notebook.AddPage(fitting_panel, "Peak Fitting")
@@ -182,13 +193,16 @@ class FittingWindow(wx.Frame):
 
     def on_fit_multi(self, event):
         iterations = self.fit_iterations_spin.GetValue()
-        for _ in range(iterations):
+        for i in range(1, iterations + 1):
+            self.current_fit_text.SetValue(f"{i}/{iterations}")
             result = fit_peaks(self.parent, self.parent.peak_params_grid)
             if result:
                 r_squared, chi_square, red_chi_square = result
                 self.update_fit_indicators(r_squared, chi_square, red_chi_square)
+                self.actual_iter_text.SetValue(str(self.parent.fit_results['nfev']))
             self.parent.clear_and_replot()
             wx.Yield()
+        self.current_fit_text.SetValue("Complete")
 
 
 
