@@ -266,6 +266,23 @@ def save_to_excel(window, data, file_path, sheet_name):
                 bottom=openpyxl.styles.Side(style=None)
             )
 
+        # Start from column X (24 in openpyxl)
+        start_col = 24
+
+        # Write table headers
+        for col in range(window.results_grid.GetNumberCols()):
+            cell = worksheet.cell(row=1, column=start_col + col)
+            cell.value = window.results_grid.GetColLabelValue(col)
+
+        # Write table data
+        for row in range(window.results_grid.GetNumberRows()):
+            for col in range(window.results_grid.GetNumberCols()):
+                cell = worksheet.cell(row=row + 2, column=start_col + col)
+                cell.value = window.results_grid.GetCellValue(row, col)
+
+        # Save the workbook
+        workbook.save(file_path)
+
     # After saving to Excel, update the plot with the current limits
     if hasattr(window, 'plot_config'):
         limits = window.plot_config.get_plot_limits(window, sheet_name)
