@@ -10,6 +10,8 @@ import pandas as pd
 import openpyxl
 from ConfigFile import add_core_level_Data
 from openpyxl.drawing.image import Image
+from openpyxl.styles import Border
+from openpyxl import load_workbook
 from libraries.Sheet_Operations import on_sheet_selected
 # from Functions import convert_to_serializable_and_round
 
@@ -194,7 +196,7 @@ def save_to_excel2(window, data, file_path, sheet_name):
                 bottom=openpyxl.styles.Side(style=None)
             )
 
-def save_to_excel(window, data, file_path, sheet_name):
+def save_to_excel3(window, data, file_path, sheet_name):
     existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
     # Remove previously fitted data if it exists
@@ -266,11 +268,125 @@ def save_to_excel(window, data, file_path, sheet_name):
                 bottom=openpyxl.styles.Side(style=None)
             )
 
-    # Pad the DataFrame with unnamed empty columns up to column X if needed
-    while existing_df.shape[1] < 24:  # 24 is the index for column X (0-indexed)
+    # Pad the DataFrame with unnamed empty columns up to column W if needed
+    while existing_df.shape[1] < 23:  # 23 is the index for column W (0-indexed)
         existing_df[f'temp_{existing_df.shape[1]}'] = np.nan
 
     # Create a DataFrame for peak fitting parameters
+    peak_params_df = pd.DataFrame()
+    for col in range(window.peak_params_grid.GetNumberCols()):
+        col_name = f"param_{col}"  # Temporary unique name
+        col_data = [window.peak_params_grid.GetCellValue(row, col) for row in
+                    range(window.peak_params_grid.GetNumberRows())]
+        peak_params_df[col_name] = col_data
+
+    # Add an empty column as the first column of peak_params_df
+    peak_params_df.insert(0, 'empty', '')
+
+    # Add peak fitting parameters to existing_df, starting from column X
+    start_col = 23  # Column X is the 24th column (0-indexed)
+    for i, col in enumerate(peak_params_df.columns):
+        existing_df.insert(start_col + i, col, peak_params_df[col])
+
+    # Rename columns to remove names from empty columns and set correct headers
+    new_columns = []
+    for i, col in enumerate(existing_df.columns):
+        if i < 3:
+            new_columns.append(col)  # Keep original names for first 3 columns
+        elif i < 23:
+            new_columns.append('')  # Empty name for padding columns
+        elif i == 23:
+            new_columns.append('')  # Empty name for the first column of peak params
+        else:
+            new_columns.append(window.peak_params_grid.GetColLabelValue(i - 24))  # Original names for parameter columns
+
+    # existing_df.columns = new_columns
+
+    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        existing_df.to_excel(writer, sheet_name=sheet_name, index=False, startcol=23)  # Start from column X
+
+        # Remove border from first row
+        workbook = writer.book
+        worksheet = workbook[sheet_name]
+        for cell in worksheet[1]:
+            cell.border = openpyxl.styles.Border(
+                left=openpyxl.styles.Side(style=None),
+                right=openpyxl.styles.Side(style=None),
+                top=openpyxl.styles.Side(style=None),
+                bottom=openpyxl.styles.Side(style=None)
+            )
+
+
+    # After saving to Excel, update the plot with the current limits
+    if hasattr(window, 'plot_config'):
+        limits = window.plot_config.get_plot_limits(window, sheet_name)
+        window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
+        window.canvas.draw_idle()
+
+
+def save_to_excel(window, data, file_path, sheet_name):
+    existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
+
+    # Remove previously fitted data if it exists
+    if existing_df.shape[1] > 3:  # If there are more than 3 columns (BE, Raw Data, empty)
+        existing_df = existing_df.iloc[:, :3]  # Keep only the first 3 columns
+
+    # Ensure there's an empty column C
+    if existing_df.shape[1] < 3:
+        existing_df.insert(2, '', np.nan)
+
+    if 'x_values' in data and data['x_values'] is not None:
+        x_values = data['x_values'].to_numpy() if isinstance(data['x_values'], pd.Series) else data['x_values']
+        filtered_data = pd.DataFrame({
+            'BE': x_values
+        })
+
+        if data['background'] is not None and data['calculated_fit'] is not None:
+            mask = np.isin(data['x_values'], x_values)
+            y_values = data['y_values'][mask]
+
+            if len(y_values) == len(data['calculated_fit']):
+                residuals = y_values - data['calculated_fit']
+                filtered_data['Residuals'] = residuals
+            else:
+                filtered_data['Residuals'] = np.nan
+        else:
+            filtered_data['Residuals'] = np.nan
+
+        filtered_data['Background'] = data['background'] if data['background'] is not None else np.nan
+        filtered_data['Calculated Fit'] = data['calculated_fit'] if data['calculated_fit'] is not None else np.nan
+
+        if data['individual_peak_fits']:
+            num_rows = len(x_values)
+            num_peaks = data['peak_params_grid'].GetNumberRows() // 2
+            for i in range(num_peaks):
+                row = i * 2
+                peak_label = data['peak_params_grid'].GetCellValue(row, 1)  # Get the peak label
+                if i < len(data['individual_peak_fits']):
+                    reversed_peak = np.array(data['individual_peak_fits'][i])[::-1]
+                    trimmed_peak = reversed_peak[:num_rows]
+                    filtered_data[peak_label] = trimmed_peak  # Use peak label as column name
+
+        # Rename columns to avoid conflicts before inserting them
+        for i, col in enumerate(filtered_data.columns):
+            new_col_name = col
+            while new_col_name in existing_df.columns:
+                new_col_name += '_new'
+            existing_df.insert(3 + i, new_col_name, filtered_data[col])
+
+    # Ensure there are at least 23 columns (A to W)
+    while existing_df.shape[1] < 23:
+        existing_df[f'Column_{existing_df.shape[1] + 1}'] = ''
+
+    # Rename columns starting with "Unnamed" or "Column" to empty string
+    existing_df.columns = ['' if col.startswith(('Unnamed', 'Column')) else col for col in existing_df.columns]
+
+    # Ensure column C is empty
+    if existing_df.columns[2] != '':
+        existing_df.rename(columns={existing_df.columns[2]: ''}, inplace=True)
+
+    # Create DataFrame for peak fitting parameters
     peak_params_df = pd.DataFrame()
     for col in range(window.peak_params_grid.GetNumberCols()):
         col_name = window.peak_params_grid.GetColLabelValue(col)
@@ -278,22 +394,10 @@ def save_to_excel(window, data, file_path, sheet_name):
                     range(window.peak_params_grid.GetNumberRows())]
         peak_params_df[col_name] = col_data
 
-    # Add peak fitting parameters to existing_df, starting from column X
-    start_col = 23  # Column X is the 24th column (0-indexed)
+    # Add peak_params_df to existing_df starting from column 23 (X)
     for i, col in enumerate(peak_params_df.columns):
-        existing_df.insert(start_col + i, f'Param_{col}', peak_params_df[col])
+        existing_df.insert(23 + i, col, peak_params_df[col])
 
-    # Rename columns to remove names from empty columns and restore original names
-    new_columns = []
-    for i, col in enumerate(existing_df.columns):
-        if i < 3:
-            new_columns.append(col)  # Keep original names for first 3 columns
-        elif i < 24:
-            new_columns.append('')  # Empty name for padding columns
-        else:
-            new_columns.append(window.peak_params_grid.GetColLabelValue(i - 24))  # Original names for parameter columns
-
-    existing_df.columns = new_columns
 
     with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
         existing_df.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -308,7 +412,6 @@ def save_to_excel(window, data, file_path, sheet_name):
                 top=openpyxl.styles.Side(style=None),
                 bottom=openpyxl.styles.Side(style=None)
             )
-
 
     # After saving to Excel, update the plot with the current limits
     if hasattr(window, 'plot_config'):
