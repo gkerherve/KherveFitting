@@ -989,11 +989,13 @@ def populate_results_grid(window):
             window.results_grid.SetCellValue(row, 5, f"{peak_data['Area']:.2f}")
             window.results_grid.SetCellValue(row, 6, f"{peak_data['at. %']:.2f}")
 
-            # Set up checkbox
+            # Set up checkbox and its state
             window.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
             window.results_grid.SetCellEditor(row, 7, wx.grid.GridCellBoolEditor())
-            checkbox_state = peak_data.get(peak_data['Name'], {}).get('Checkbox', '0')
-            window.results_grid.SetCellValue(row, 7, checkbox_state)
+            checkbox_state = peak_data.get('Checkbox', '0')
+            # Convert '0' or '1' to the appropriate checkbox state
+            checkbox_value = "1" if checkbox_state == '1' else ""
+            window.results_grid.SetCellValue(row, 7, checkbox_value)
 
             window.results_grid.SetCellValue(row, 8, f"{peak_data['RSF']:.2f}")
             window.results_grid.SetCellValue(row, 9, peak_data['Fitting Model'])

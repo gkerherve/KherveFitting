@@ -1802,20 +1802,13 @@ class MyFrame(wx.Frame):
 
         if col == 7:  # Only handle checkbox column
             current_value = self.results_grid.GetCellValue(row, col)
-            new_value = '1' if current_value == '0' else '0'
+            new_value = "1" if current_value == "" else ""
             self.results_grid.SetCellValue(row, col, new_value)
 
             # Update window.Data
             peak_label = chr(65 + row)  # A, B, C, ...
             if 'Results' in self.Data and 'Peak' in self.Data['Results'] and peak_label in self.Data['Results']['Peak']:
-                self.Data['Results']['Peak'][peak_label]['Checkbox'] = new_value
-
-            # If you need to update by peak name as well (for redundancy or other purposes)
-            peak_name = self.results_grid.GetCellValue(row, 0)  # Assuming peak name is in the first column
-            for peak_data in self.Data['Results']['Peak'].values():
-                if peak_data.get('Name') == peak_name:
-                    peak_data['Checkbox'] = new_value
-                    break
+                self.Data['Results']['Peak'][peak_label]['Checkbox'] = '1' if new_value == "1" else '0'
 
             self.update_atomic_percentages()
 
