@@ -10,7 +10,7 @@ import pandas as pd
 import openpyxl
 from ConfigFile import add_core_level_Data
 from openpyxl.drawing.image import Image
-from openpyxl.styles import Border, Side
+from openpyxl.styles import Border, Side, PatternFill, Font
 from openpyxl import load_workbook
 from libraries.Sheet_Operations import on_sheet_selected
 # from Functions import convert_to_serializable_and_round
@@ -285,34 +285,44 @@ def save_to_excel(window, data, file_path, sheet_name):
                 bottom=openpyxl.styles.Side(style=None)
             )
 
-        # Define border styles
-        thin_side = Side(style='thin')
-        thick_side = Side(style='medium')  # Use 'medium' for a thicker line
+            # Define styles
+            thin_side = Side(style='thin')
+            thick_side = Side(style='medium')
+            green_fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")  # Light green
+            bold_font = Font(bold=True)
 
-        start_row = 1  # Assuming data starts from the second row
-        num_peak_rows = window.peak_params_grid.GetNumberRows()
-        end_row = start_row + num_peak_rows
-        start_col = 24  # Column X (24th column)
-        end_col = worksheet.max_column
+            start_row = 2  # Assuming data starts from the second row
+            num_peak_rows = window.peak_params_grid.GetNumberRows()
+            end_row = start_row + num_peak_rows - 1
+            start_col = 24  # Column X (24th column)
+            end_col = worksheet.max_column
 
-        for row in range(start_row, end_row + 1):
-            for col in range(start_col, end_col + 1):
-                cell = worksheet.cell(row=row, column=col)
+            for row in range(start_row - 1, end_row + 1):  # Start from header row
+                for col in range(start_col, end_col + 1):
+                    cell = worksheet.cell(row=row, column=col)
 
-                # Default to thin borders
-                left = right = top = bottom = thin_side
+                    # Default to thin borders
+                    left = right = top = bottom = thin_side
 
-                # Add thick borders for outer edges
-                if row == start_row:
-                    top = thick_side
-                if row == end_row:
-                    bottom = thick_side
-                if col == start_col:
-                    left = thick_side
-                if col == end_col:
-                    right = thick_side
+                    # Header row
+                    if row == start_row - 1:
+                        cell.fill = green_fill
+                        cell.font = bold_font
+                        top = thick_side
 
-                cell.border = Border(left=left, right=right, top=top, bottom=bottom)
+                    # Add thick borders for outer edges
+                    if row == start_row - 1 or row == end_row:
+                        bottom = thick_side
+                    if col == start_col:
+                        left = thick_side
+                    if col == end_col:
+                        right = thick_side
+
+                    # Add thick bottom border for every second row (constraints row)
+                    if (row - start_row + 1) % 2 == 0:
+                        bottom = thick_side
+
+                    cell.border = Border(left=left, right=right, top=top, bottom=bottom)
 
     # After saving to Excel, update the plot with the current limits
     if hasattr(window, 'plot_config'):
