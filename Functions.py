@@ -995,36 +995,34 @@ def populate_results_grid(window):
             window.results_grid.SetCellValue(row, 6, f"{peak_data['at. %']:.2f}")
 
             # Set up checkbox and its state
-            window.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
-            window.results_grid.SetCellEditor(row, 7, wx.grid.GridCellBoolEditor())
             checkbox_state = peak_data.get('Checkbox', '0')
-
-            # Set the checkbox state
+            window.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
             window.results_grid.SetCellValue(row, 7, checkbox_state)
 
-            # Refresh the grid
-            window.results_grid.ForceRefresh()
 
             window.results_grid.SetCellValue(row, 8, f"{peak_data['RSF']:.2f}")
             window.results_grid.SetCellValue(row, 9, peak_data['Fitting Model'])
             window.results_grid.SetCellValue(row, 10, f"{peak_data['Rel. Area']:.2f}")
             window.results_grid.SetCellValue(row, 11, peak_data['Tail E'])
             window.results_grid.SetCellValue(row, 12, peak_data['Tail M'])
-            window.results_grid.SetCellValue(row, 13, str(peak_data['Bkg Low']))
-            window.results_grid.SetCellValue(row, 14, str(peak_data['Bkg High']))
-            window.results_grid.SetCellValue(row, 15, peak_data['Sheetname'])
-            window.results_grid.SetCellValue(row, 16, peak_data['Pos. Constraint'])
-            window.results_grid.SetCellValue(row, 17, peak_data['Height Constraint'])
-            window.results_grid.SetCellValue(row, 18, peak_data['FWHM Constraint'])
-            window.results_grid.SetCellValue(row, 19, peak_data['L/G Constraint'])
+            window.results_grid.SetCellValue(row, 13, peak_data.get('Bkg Type', ''))  # Bkg Type
+            window.results_grid.SetCellValue(row, 14, str(peak_data['Bkg Low']))
+            window.results_grid.SetCellValue(row, 15, str(peak_data['Bkg High']))
+            window.results_grid.SetCellValue(row, 16, str(peak_data.get('Bkg Offset Low', '')))
+            window.results_grid.SetCellValue(row, 17, str(peak_data.get('Bkg Offset High', '')))
+            window.results_grid.SetCellValue(row, 18, peak_data['Sheetname'])
+            window.results_grid.SetCellValue(row, 19, peak_data['Pos. Constraint'])
+            window.results_grid.SetCellValue(row, 20, peak_data['Height Constraint'])
+            window.results_grid.SetCellValue(row, 21, peak_data['FWHM Constraint'])
+            window.results_grid.SetCellValue(row, 22, peak_data['L/G Constraint'])
 
         # Bind events
-        window.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, window.on_checkbox_update)
+        # window.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, window.on_checkbox_update)
         window.results_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGED, window.on_cell_changed)
 
         # Refresh the grid
         window.results_grid.ForceRefresh()
-        print("Results grid populated from window.Data")
+        window.results_grid.Refresh()
     else:
         print("No results data found in window.Data")
 

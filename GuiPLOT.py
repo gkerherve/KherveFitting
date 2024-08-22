@@ -28,7 +28,8 @@ from libraries.Sheet_Operations import on_sheet_selected
 from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
-from libraries.Sheet_Operations import on_sheet_selected
+from libraries.Sheet_Operations import on_sheet_selected, on_grid_left_click
+from libraries.Sheet_Operations import CheckboxRenderer
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -316,9 +317,12 @@ class MyFrame(wx.Frame):
             self.results_grid.SetColSize(i, size)
 
         # Set renderer for checkbox column
+        checkbox_renderer = CheckboxRenderer()
         for row in range(self.results_grid.GetNumberRows()):
-            self.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
-            self.results_grid.SetCellEditor(row, 7, wx.grid.GridCellBoolEditor())
+
+            self.results_grid.SetCellRenderer(row, 7, checkbox_renderer)
+            # self.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
+            # self.results_grid.SetCellEditor(row, 7, wx.grid.GridCellBoolEditor())
 
         results_sizer_inner.Add(self.results_grid, 1, wx.EXPAND | wx.ALL, 5)
         self.results_frame.SetSizer(results_sizer_inner)
@@ -356,7 +360,7 @@ class MyFrame(wx.Frame):
         self.results_grid.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select)
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.on_splitter_changed)
-        # self.results_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGING, self.on_grid_cell_changing)
+        self.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, lambda event: on_grid_left_click(self, event))
 
     def add_toggle_tool(self, toolbar, label, bmp):
         tool = toolbar.AddTool(wx.ID_ANY, label, bmp, kind=wx.ITEM_NORMAL)
@@ -1810,7 +1814,7 @@ class MyFrame(wx.Frame):
         else:
             print(f"Checkbox update event ignored (wrong column)")
 
-        # event.Skip()  # Allow the event to propagate
+        event.Skip()  # Allow the event to propagate
 
     # def print_checkbox_states(self):
     #     print("Current checkbox states:")

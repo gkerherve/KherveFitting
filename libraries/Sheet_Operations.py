@@ -115,3 +115,48 @@ def on_sheet_selected(window, event):
     if isinstance(event, str):
         window.sheet_combobox.SetValue(selected_sheet)
 
+
+def on_grid_left_click(window, event):
+    if event.GetCol() == 7:  # Checkbox column
+        row = event.GetRow()
+        current_value = window.results_grid.GetCellValue(row, 7)
+        new_value = '1' if current_value == '0' else '0'
+
+        # Update grid
+        window.results_grid.SetCellValue(row, 7, new_value)
+
+        # Update Data structure
+        peak_label = chr(65 + row)  # A, B, C, ...
+        if 'Results' in window.Data and 'Peak' in window.Data['Results'] and peak_label in window.Data['Results'][
+            'Peak']:
+            window.Data['Results']['Peak'][peak_label]['Checkbox'] = new_value
+
+        # window.results_grid.RefreshCell(row, 7)
+        window.results_grid.ForceRefresh()
+        window.update_atomic_percentages()
+
+    event.Skip()
+
+
+class CheckboxRenderer(wx.grid.GridCellRenderer):
+    def __init__(self):
+        wx.grid.GridCellRenderer.__init__(self)
+
+    def Draw(self, grid, attr, dc, rect, row, col, isSelected):
+        dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
+        dc.SetPen(wx.TRANSPARENT_PEN)
+        dc.DrawRectangle(rect)
+
+        value = grid.GetCellValue(row, col)
+        if value == '1':
+            flag = wx.CONTROL_CHECKED
+        else:
+            flag = 0
+
+        wx.RendererNative.Get().DrawCheckBox(grid, dc, rect, flag)
+
+    def GetBestSize(self, grid, attr, dc, row, col):
+        return wx.Size(20, 20)
+
+    def Clone(self):
+        return CheckboxRenderer()
