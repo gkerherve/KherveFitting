@@ -1802,13 +1802,16 @@ class MyFrame(wx.Frame):
 
         if col == 7:  # Only handle checkbox column
             current_value = self.results_grid.GetCellValue(row, col)
-            new_value = "1" if current_value == "" else ""
+            new_value = '1' if current_value == '0' else '0'
             self.results_grid.SetCellValue(row, col, new_value)
 
             # Update window.Data
             peak_label = chr(65 + row)  # A, B, C, ...
             if 'Results' in self.Data and 'Peak' in self.Data['Results'] and peak_label in self.Data['Results']['Peak']:
-                self.Data['Results']['Peak'][peak_label]['Checkbox'] = '1' if new_value == "1" else '0'
+                self.Data['Results']['Peak'][peak_label]['Checkbox'] = new_value
+
+            # Force the checkbox to update its visual state
+            self.results_grid.ForceRefresh()
 
             self.update_atomic_percentages()
 
