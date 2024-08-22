@@ -311,7 +311,7 @@ class MyFrame(wx.Frame):
         self.results_grid.SetDefaultCellBackgroundColour(self.results_grid.GetLabelBackgroundColour())
 
         # Adjust specific column sizes
-        col_sizes = [120, 70, 70, 70, 40, 50, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 100, 110, 110, 110]
+        col_sizes = [120, 70, 70, 70, 40, 50, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 120, 120, 120, 120]
         for i, size in enumerate(col_sizes):
             self.results_grid.SetColSize(i, size)
 
@@ -323,6 +323,8 @@ class MyFrame(wx.Frame):
         results_sizer_inner.Add(self.results_grid, 1, wx.EXPAND | wx.ALL, 5)
         self.results_frame.SetSizer(results_sizer_inner)
         results_sizer.Add(self.results_frame, 1, wx.EXPAND | wx.ALL, 5)
+
+
 
         grids_sizer.Add(results_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -354,6 +356,7 @@ class MyFrame(wx.Frame):
         self.results_grid.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select)
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.on_splitter_changed)
+        # self.results_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGING, self.on_grid_cell_changing)
 
     def add_toggle_tool(self, toolbar, label, bmp):
         tool = toolbar.AddTool(wx.ID_ANY, label, bmp, kind=wx.ITEM_NORMAL)
@@ -690,20 +693,9 @@ class MyFrame(wx.Frame):
         self.plot_manager.update_peak_fwhm(self, x)
 
 
-    # END MOVE TO PLOT OPERATIONS ----------------------------------------------------------------------
-    # --------------------------------------------------------------------------------------------------
-
-
-
-    # --------------------------------------------------------------------------------------------------
-    # MOVE TO PLOT CONFIG-------------------------------------------------------------------------------
-
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)
 
-
-    # END MOVE TO PLOT CONFIG --------------------------------------------------------------------------
-    # --------------------------------------------------------------------------------------------------
 
 
 
@@ -737,21 +729,17 @@ class MyFrame(wx.Frame):
             self.selected_peak_index = None
             self.deselect_all_peaks()
 
-        event.Skip()  # Ensure the event is processed further
+        # self.print_checkbox_states()
+        # event.Skip()  # Ensure the event is processed further
 
-    # END -----------------------------------------------------------------------
+    # def on_grid_cell_changing(self, event):
+    #     if event.GetCol() == 7:  # Checkbox column
+    #         # Allow changes only through our custom handler
+    #         if not hasattr(event, 'custom_checkbox_event'):
+    #             event.Veto()
+    #             return
+    #     event.Skip()
 
-    # Ensure the following method exists to get the peak index from a checkbox
-    # def get_peak_index_from_checkbox(self, checkbox):
-    #     for i, peak in enumerate(self.peak_params):
-    #         #NOT TOO SURE IF IT REQUIRED
-    #         # row = i * 2  # Assuming each peak has 2 rows (peak and constraints)
-    #         # if peak["peak_checkbox"].GetValue() or self.peak_params_grid.IsInSelection(row, 0):
-    #         if peak["peak_checkbox"] == checkbox:
-    #             return i
-    #     return None
-
-    # Ensure the following methods exist to handle adding, removing, and dragging the cross
 
     def remove_cross_from_peak(self):
         if hasattr(self, 'cross'):
@@ -1032,8 +1020,7 @@ class MyFrame(wx.Frame):
             self.show_hide_vlines()
             self.canvas.draw()
 
-    # def on_scroll(self, event):
-    #     pass  # Do nothing
+
 
     def on_mouse_wheel(self, event):
         if event.step != 0:
@@ -1453,7 +1440,7 @@ class MyFrame(wx.Frame):
         export_results(self)
 
 
-    def on_cell_changed(self, event):
+    def on_cell_changed2(self, event):
         row = event.GetRow()
         col = event.GetCol()
 
@@ -1477,7 +1464,7 @@ class MyFrame(wx.Frame):
         except ValueError:
             wx.MessageBox("Invalid value entered", "Error", wx.OK | wx.ICON_ERROR)
 
-    def on_cell_changed2(self, event):
+    def on_cell_changed(self, event):
         row = event.GetRow()
         col = event.GetCol()
 
@@ -1712,7 +1699,7 @@ class MyFrame(wx.Frame):
                                 'Position': '0,1000',
                                 'Height': '100,1e7',
                                 'FWHM': '0.3,3.5',
-                                'L/G': '0.05,0.8',
+                                'L/G': '5,80',
                                 'Tail E': 'Fixed',
                                 'Tail M': 'Fixed'
                             }
@@ -1743,8 +1730,8 @@ class MyFrame(wx.Frame):
             return  # No peaks to calculate ratios for
 
         # Set first peak's ratios and split to 0.00
-        self.peak_params_grid.SetCellValue(0, 9, "1.00")  # I ratio
-        self.peak_params_grid.SetCellValue(0, 10, "1.00")  # A ratio
+        self.peak_params_grid.SetCellValue(0, 9, "100.00")  # I ratio
+        self.peak_params_grid.SetCellValue(0, 10, "100.00")  # A ratio
         self.peak_params_grid.SetCellValue(0, 11, "0.00")  # Split
 
         if num_peaks < 2:
@@ -1800,8 +1787,12 @@ class MyFrame(wx.Frame):
         row = event.GetRow()
         col = event.GetCol()
 
+        print(f"Checkbox update event triggered: Row {row}, Col {col}")
+
         if col == 7:  # Only handle checkbox column
+            print('Bool  ' + str(self.results_grid.GetCellValue(row, col)))
             current_value = self.results_grid.GetCellValue(row, col)
+            print('current value: '+str(current_value))
             new_value = '1' if current_value == '0' else '0'
             self.results_grid.SetCellValue(row, col, new_value)
 
@@ -1810,10 +1801,32 @@ class MyFrame(wx.Frame):
             if 'Results' in self.Data and 'Peak' in self.Data['Results'] and peak_label in self.Data['Results']['Peak']:
                 self.Data['Results']['Peak'][peak_label]['Checkbox'] = new_value
 
+            print(f"Checkbox state updated: Peak {peak_label}, New value: {new_value}")
+
             # Force the checkbox to update its visual state
             self.results_grid.ForceRefresh()
 
             self.update_atomic_percentages()
+        else:
+            print(f"Checkbox update event ignored (wrong column)")
+
+        # event.Skip()  # Allow the event to propagate
+
+    # def print_checkbox_states(self):
+    #     print("Current checkbox states:")
+    #     for row in range(self.results_grid.GetNumberRows()):
+    #         visual_value = self.results_grid.GetCellValue(row, 7)
+    #         peak_label = chr(65 + row)
+    #         data_value = self.Data['Results']['Peak'].get(peak_label, {}).get('Checkbox', 'N/A')
+    #         print(f"Peak {peak_label}: Visual={visual_value}, Data={data_value}")
+
+    # def update_checkbox_visuals(self):
+    #     for row in range(self.results_grid.GetNumberRows()):
+    #         peak_label = chr(65 + row)
+    #         checkbox_state = self.Data['Results']['Peak'].get(peak_label, {}).get('Checkbox', '0')
+    #         print("peaks: "+str(peak_label)+"  "+ checkbox_state)
+    #         self.results_grid.SetCellValue(row, 7, "1" if checkbox_state == '1' else "")
+    #     self.results_grid.ForceRefresh()
 
     def on_key_down(self, event):
         keycode = event.GetKeyCode()

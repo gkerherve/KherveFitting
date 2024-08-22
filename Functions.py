@@ -966,16 +966,21 @@ def populate_results_grid(window):
 
         # Resize the grid if necessary
         num_rows = len(results)
-        num_cols = 20  # Based on your Export.py structure
+        num_cols = 23  # Based on your Export.py structure
         if window.results_grid.GetNumberRows() < num_rows:
             window.results_grid.AppendRows(num_rows - window.results_grid.GetNumberRows())
         if window.results_grid.GetNumberCols() < num_cols:
             window.results_grid.AppendCols(num_cols - window.results_grid.GetNumberCols())
 
+
+        # column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
+        #                  "Rel. Area", "Tail E", "Tail M", "Bkg Low", "Bkg High", "Sheetname",
+        #                  "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
         # Set column labels
         column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-                         "Rel. Area", "Tail E", "Tail M", "Bkg Low", "Bkg High", "Sheetname",
-                         "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
+                         "Rel. Area", "Tail E", "Tail M", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
+                         "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint",
+                         "L/G Constraint"]
         for col, label in enumerate(column_labels):
             window.results_grid.SetColLabelValue(col, label)
 

@@ -399,6 +399,7 @@ class PlotManager:
 
         # Draw the canvas
         self.canvas.draw_idle()
+        # window.update_checkbox_visuals()
 
 
     def is_part_of_doublet(self, current_label, next_label):
