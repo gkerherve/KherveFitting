@@ -992,7 +992,8 @@ def populate_results_grid(window):
             # Set up checkbox
             window.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
             window.results_grid.SetCellEditor(row, 7, wx.grid.GridCellBoolEditor())
-            window.results_grid.SetCellValue(row, 7, '0')  # Initialize as unchecked
+            checkbox_state = peak_data.get(peak_data['Name'], {}).get('Checkbox', '0')
+            window.results_grid.SetCellValue(row, 7, checkbox_state)
 
             window.results_grid.SetCellValue(row, 8, f"{peak_data['RSF']:.2f}")
             window.results_grid.SetCellValue(row, 9, peak_data['Fitting Model'])
