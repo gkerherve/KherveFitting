@@ -115,6 +115,8 @@ def on_sheet_selected(window, event):
     if isinstance(event, str):
         window.sheet_combobox.SetValue(selected_sheet)
 
+    window.update_checkboxes_from_data()
+
 
 def on_grid_left_click(window, event):
     if event.GetCol() == 7:  # Checkbox column

@@ -364,6 +364,7 @@ class MyFrame(wx.Frame):
         self.canvas.mpl_connect('button_release_event', self.on_plot_mouse_release)
         self.peak_params_grid.Bind(wx.EVT_LEFT_UP, self.on_peak_params_mouse_release)
 
+
     def add_toggle_tool(self, toolbar, label, bmp):
         tool = toolbar.AddTool(wx.ID_ANY, label, bmp, kind=wx.ITEM_NORMAL)
         self.Bind(wx.EVT_TOOL, self.on_toggle_right_panel, tool)
@@ -735,16 +736,8 @@ class MyFrame(wx.Frame):
             self.selected_peak_index = None
             self.deselect_all_peaks()
 
-        # self.print_checkbox_states()
-        # event.Skip()  # Ensure the event is processed further
-
-    # def on_grid_cell_changing(self, event):
-    #     if event.GetCol() == 7:  # Checkbox column
-    #         # Allow changes only through our custom handler
-    #         if not hasattr(event, 'custom_checkbox_event'):
-    #             event.Veto()
-    #             return
-    #     event.Skip()
+        self.update_checkboxes_from_data()
+        event.Skip()
 
 
     def remove_cross_from_peak(self):
@@ -1446,6 +1439,10 @@ class MyFrame(wx.Frame):
         # No need to call event.Skip() for Matplotlib events
 
     def on_peak_params_mouse_release(self, event):
+        self.update_checkboxes_from_data()
+        event.Skip()
+
+    def on_peak_params_cell_select(self, event):
         self.update_checkboxes_from_data()
         event.Skip()
 

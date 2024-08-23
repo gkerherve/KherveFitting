@@ -21,7 +21,9 @@ from Save import refresh_sheets
 # from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
+from libraries.Sheet_Operations import on_sheet_selected
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+
 
 
 # -------------------------------------------------------------------------------
@@ -640,6 +642,8 @@ def create_horizontal_toolbar(window):
     window.sheet_combobox.SetToolTip("Select Sheet")
     toolbar.AddControl(window.sheet_combobox)
 
+    # Add the binding here
+    window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected(window, event))
 
 
     # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
