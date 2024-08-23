@@ -30,6 +30,7 @@ from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
 from libraries.Sheet_Operations import on_sheet_selected, on_grid_left_click
 from libraries.Sheet_Operations import CheckboxRenderer
+from libraries.SplashScreen import show_splash
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -37,6 +38,9 @@ class MyFrame(wx.Frame):
         self.SetMinSize((800, 600))
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white
+
+        # Center the window on the screen
+        self.Centre()
 
         self.Data = Init_Measurement_Data(self)
 
@@ -2148,9 +2152,16 @@ class MyFrame(wx.Frame):
 
 
 if __name__ == '__main__':
+
     app = wx.App(False)
+    splash = show_splash(duration=3000, delay=2)
+
     frame = MyFrame(None, "KherveFitting")
     frame.Show(True)
+
+    if splash:
+        splash.Destroy()
+
     # print("Entering app.MainLoop()")
     app.MainLoop()
 
