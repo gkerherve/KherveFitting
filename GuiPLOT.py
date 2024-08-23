@@ -1341,12 +1341,6 @@ class MyFrame(wx.Frame):
                 plot_background(self)
 
 
-    # SHALL NOT BE USED
-    # def on_radio_box(self, event):
-    #     # Function to handle radio box selection change
-    #     self.canvas.draw_idle()
-
-
     def on_zoom_in_tool(self, event):
         self.zoom_mode = not self.zoom_mode
         if self.zoom_mode:
@@ -1373,8 +1367,6 @@ class MyFrame(wx.Frame):
             self.drag_mode = False
 
         self.canvas.draw_idle()
-
-
 
     def on_zoom_select(self, eclick, erelease):
         if self.zoom_mode:
