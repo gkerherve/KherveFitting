@@ -361,6 +361,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select)
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.on_splitter_changed)
         self.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, lambda event: on_grid_left_click(self, event))
+        self.canvas.mpl_connect('button_release_event', self.on_plot_mouse_release)
+        self.peak_params_grid.Bind(wx.EVT_LEFT_UP, self.on_peak_params_mouse_release)
 
     def add_toggle_tool(self, toolbar, label, bmp):
         tool = toolbar.AddTool(wx.ID_ANY, label, bmp, kind=wx.ITEM_NORMAL)
@@ -1429,7 +1431,23 @@ class MyFrame(wx.Frame):
             self.disable_drag()
             self.canvas.draw_idle()
 
+    def update_checkboxes_from_data(self):
+        if 'Results' in self.Data and 'Peak' in self.Data['Results']:
+            for row, (peak_label, peak_data) in enumerate(self.Data['Results']['Peak'].items()):
+                checkbox_state = peak_data.get('Checkbox', '0')
+                current_grid_state = self.results_grid.GetCellValue(row, 7)
+                if checkbox_state != current_grid_state:
+                    self.results_grid.SetCellValue(row, 7, checkbox_state)
+                    self.results_grid.RefreshAttr(row, 7)
+        self.results_grid.ForceRefresh()
 
+    def on_plot_mouse_release(self, event):
+        self.update_checkboxes_from_data()
+        # No need to call event.Skip() for Matplotlib events
+
+    def on_peak_params_mouse_release(self, event):
+        self.update_checkboxes_from_data()
+        event.Skip()
 
 
     def export_results(self):
