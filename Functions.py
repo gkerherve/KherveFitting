@@ -1283,7 +1283,7 @@ def fit_peaks(window, peak_params_grid):
                 fwhm_min, fwhm_max, fwhm_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 4),
                                                                   fwhm, peak_params_grid, i, "FWHM")
                 lg_ratio_min, lg_ratio_max, lg_ratio_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 5),
-                                                                              lg_ratio/100, peak_params_grid, i, "L/G")
+                                                                              lg_ratio, peak_params_grid, i, "L/G")
 
                 center_min = evaluate_constraint(center_min, peak_params_grid, 'center', center)
                 center_max = evaluate_constraint(center_max, peak_params_grid, 'center', center)
@@ -1291,8 +1291,8 @@ def fit_peaks(window, peak_params_grid):
                 height_max = evaluate_constraint(height_max, peak_params_grid, 'height', height)
                 fwhm_min = evaluate_constraint(fwhm_min, peak_params_grid, 'fwhm', fwhm)
                 fwhm_max = evaluate_constraint(fwhm_max, peak_params_grid, 'fwhm', fwhm)
-                lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio/100)
-                lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio/100)
+                lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
+                lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio)
 
                 sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
                 sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
@@ -1314,7 +1314,8 @@ def fit_peaks(window, peak_params_grid):
                     params.add(f'{prefix}amplitude', value=height * sigma * np.sqrt(2 * np.pi), min=0)
                     params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
                                max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
-                    params.add(f'{prefix}fraction', value=lg_ratio, min=0, max=1, vary=lg_ratio_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio/100, min=lg_ratio_min/100, max=lg_ratio_max/100,
+                               vary=lg_ratio_vary)
                 elif peak_model_choice == "GL":
                     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz, prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
@@ -1476,7 +1477,10 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
 
     if constraint_str in ['Fixed']:
         small_error3=0.001
-        return current_value - small_error3, current_value +small_error3, False
+        if param_name=="L/G":
+            return current_value - 0.5, current_value + 0.5, False
+        else:
+            return current_value - small_error3, current_value +small_error3, False
     elif match:
         ref_peak, operator, value, delta = match.groups()
         value = float(value)
