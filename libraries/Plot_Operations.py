@@ -104,7 +104,7 @@ class PlotManager:
         # Get the fitting model for this specific peak
         fitting_model = peak_params.get('fitting_model', "GL")  # Default to GL if not specified
 
-        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        sigma = fwhm / 2.355
         gamma = lg_ratio * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
         if fitting_model == "Unfitted":

@@ -1311,7 +1311,7 @@ def fit_peaks(window, peak_params_grid):
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     sigma = fwhm / 2.355
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
-                    params.add(f'{prefix}amplitude', value=height * sigma * np.sqrt(2 * np.pi), min=0)
+                    params.add(f'{prefix}amplitude', value=height * sigma * np.sqrt(2 * np.pi), min=height_min * sigma * np.sqrt(2*np.pi), max=height_max* sigma * np.sqrt(2 * np.pi))
                     params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
                                max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio/100, min=lg_ratio_min/100, max=lg_ratio_max/100,
@@ -1378,10 +1378,14 @@ def fit_peaks(window, peak_params_grid):
                     elif peak_model_choice == "Pseudo-Voigt":
                         amplitude = result.params[f'{prefix}amplitude'].value
                         sigma = result.params[f'{prefix}sigma'].value
-                        fraction = result.params[f'{prefix}fraction'].value
+                        fraction = result.params[f'{prefix}fraction'].value * 100
+
                         fwhm = sigma * 2.355
+                        # fwhm = sigma * 2
                         height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
                         area = amplitude
+
+
                     elif peak_model_choice in ["GL", "SGL"]:
                         height = result.params[f'{prefix}amplitude'].value
                         fwhm = result.params[f'{prefix}fwhm'].value
