@@ -8,28 +8,16 @@ import numpy as np
 
 class PeakFunctions:
     @staticmethod
-    def gauss_lorentz2(x, center, fwhm, fraction, amplitude):
+    def gauss_lorentz_OLD(x, center, fwhm, fraction, amplitude):
         return amplitude * (
-            PeakFunctions.gaussian(x, center, fwhm, fraction*100) *
-            PeakFunctions.lorentzian(x, center, fwhm, fraction*100))
+            PeakFunctions.gaussian(x, center, fwhm, fraction*1) *
+            PeakFunctions.lorentzian(x, center, fwhm, fraction*1))
 
     @staticmethod
     def S_gauss_lorentz(x, center, fwhm, fraction, amplitude):
         return amplitude * (
-            (1-fraction) * PeakFunctions.gaussian(x, center, fwhm, 0) +
-            fraction * PeakFunctions.lorentzian(x, center, fwhm, 100))
-
-    @staticmethod
-    def tail(x, center, tail_mix, tail_exp, fwhm):
-
-        # Avoid division by zero and negative exponents
-        safe_exp = np.maximum(tail_exp, 1e-5)
-        safe_mix = np.maximum(tail_mix, 1e-5)
-        return np.where(x > center,     np.exp(-safe_exp * np.abs(x - center) ** safe_mix), 0)
-
-    @staticmethod
-    def filter_func(x, center):
-        return np.where(x <= center, 1, 0)
+            (1-fraction/100) * PeakFunctions.gaussian(x, center, fwhm, 0) +
+            fraction/100 * PeakFunctions.lorentzian(x, center, fwhm, 100))
 
     @staticmethod
     def gauss_lorentz(x, center , fwhm, fraction, amplitude, tail_mix, tail_exp):
@@ -44,10 +32,24 @@ class PeakFunctions:
             return peak*filter + amplitude * tail
 
     @staticmethod
+    def tail(x, center, tail_mix, tail_exp, fwhm):
+
+        # Avoid division by zero and negative exponents
+        safe_exp = np.maximum(tail_exp, 1e-5)
+        safe_mix = np.maximum(tail_mix, 1e-5)
+        return np.where(x > center,     np.exp(-safe_exp * np.abs(x - center) ** safe_mix), 0)
+
+    @staticmethod
+    def filter_func(x, center):
+        return np.where(x <= center, 1, 0)
+
+
+
+    @staticmethod
     def S_gauss_lorentz_tail(x, center, fwhm, fraction, amplitude, tail_mix, tail_exp):
         peak = amplitude * (
-                (1 - fraction) * PeakFunctions.gaussian(x, center, fwhm, 0) +
-                fraction * PeakFunctions.lorentzian(x, center, fwhm, 100))
+                (1 - fraction/100) * PeakFunctions.gaussian(x, center, fwhm, 0) +
+                fraction/100 * PeakFunctions.lorentzian(x, center, fwhm, 100))
         tail = PeakFunctions.tail(x, center, tail_mix, tail_exp)
         return peak * (1 - tail_mix) + amplitude * tail
 
@@ -82,8 +84,8 @@ class PeakFunctions:
         sigma2 = sigma ** 2
         gamma = sigma * np.sqrt(2 * np.log(2))
 
-        gaussian = (1 - fraction) * np.exp(-((x - center) ** 2) / (2 * sigma2))
-        lorentzian = fraction * (gamma ** 2 / ((x - center) ** 2 + gamma ** 2))
+        gaussian = (1 - fraction/100) * np.exp(-((x - center) ** 2) / (2 * sigma2))
+        lorentzian = fraction/100 * (gamma ** 2 / ((x - center) ** 2 + gamma ** 2))
 
         return amplitude * (gaussian + lorentzian)
 
@@ -112,8 +114,8 @@ class PeakFunctions:
 
         z = (x - center) / sigma
 
-        gaussian = (1 - fraction) * np.exp(-z ** 2 / 2) / (sigma * np.sqrt(2 * np.pi))
-        lorentzian = fraction * gamma / (np.pi * (gamma ** 2 + (x - center) ** 2))
+        gaussian = (1 - fraction/100) * np.exp(-z ** 2 / 2) / (sigma * np.sqrt(2 * np.pi))
+        lorentzian = fraction/100 * gamma / (np.pi * (gamma ** 2 + (x - center) ** 2))
 
         return amplitude * (gaussian + lorentzian) * sigma * np.sqrt(2 * np.pi)
 
@@ -159,7 +161,7 @@ class PeakFunctions:
         gaussian_height = amplitude / (sigma * sqrt2pi)
         lorentzian_height = 2 * amplitude / (np.pi * sigma * 2 * sqrt2ln2)
 
-        height = (1 - fraction) * gaussian_height + fraction * lorentzian_height
+        height = (1 - fraction/100) * gaussian_height + fraction/100 * lorentzian_height
 
         return height
 
@@ -185,7 +187,7 @@ class PeakFunctions:
         gaussian_amplitude = height * sigma * sqrt2pi
         lorentzian_amplitude = height * np.pi * sigma * 2 * sqrt2ln2 / 2
 
-        amplitude = (1 - fraction) * gaussian_amplitude + fraction * lorentzian_amplitude
+        amplitude = (1 - fraction/100) * gaussian_amplitude + fraction/100 * lorentzian_amplitude
 
         return amplitude
 
@@ -204,5 +206,5 @@ class PeakFunctions:
         Calculate the height of a Pseudo-Voigt profile directly using the lmfit model.
         """
         model = lmfit.models.PseudoVoigtModel()
-        params = model.make_params(amplitude=amplitude, center=0, sigma=sigma, fraction=fraction)
+        params = model.make_params(amplitude=amplitude, center=0, sigma=sigma, fraction=fraction/100)
         return model.eval(params, x=0)

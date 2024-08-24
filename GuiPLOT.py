@@ -16,7 +16,7 @@ import lmfit
 from libraries.Fitting_Screen import *
 from libraries.AreaFit_Screen import *
 from Save import *
-from NoiseAnalysis import NoiseAnalysisWindow
+from libraries.NoiseAnalysis import NoiseAnalysisWindow
 from ConfigFile import *
 from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig

@@ -1274,7 +1274,7 @@ def fit_peaks(window, peak_params_grid):
                 params.add(f'{prefix}tail_exp', value=tail_e, min=0)
 
                 sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-                gamma = lg_ratio * sigma
+                gamma = lg_ratio/100 * sigma
 
                 center_min, center_max, center_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 2),
                                                                         center, peak_params_grid, i, "Position")
@@ -1283,7 +1283,7 @@ def fit_peaks(window, peak_params_grid):
                 fwhm_min, fwhm_max, fwhm_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 4),
                                                                   fwhm, peak_params_grid, i, "FWHM")
                 lg_ratio_min, lg_ratio_max, lg_ratio_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 5),
-                                                                              lg_ratio, peak_params_grid, i, "L/G")
+                                                                              lg_ratio/100, peak_params_grid, i, "L/G")
 
                 center_min = evaluate_constraint(center_min, peak_params_grid, 'center', center)
                 center_max = evaluate_constraint(center_max, peak_params_grid, 'center', center)
@@ -1291,8 +1291,8 @@ def fit_peaks(window, peak_params_grid):
                 height_max = evaluate_constraint(height_max, peak_params_grid, 'height', height)
                 fwhm_min = evaluate_constraint(fwhm_min, peak_params_grid, 'fwhm', fwhm)
                 fwhm_max = evaluate_constraint(fwhm_max, peak_params_grid, 'fwhm', fwhm)
-                lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
-                lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio)
+                lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio/100)
+                lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio/100)
 
                 sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
                 sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
@@ -1500,7 +1500,7 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
         min_val, max_val = map(float, constraint_str.split(','))
         return min_val, max_val, True
     if ':' in constraint_str:
-        min_val, max_val = map(float, constraint_str.split(','))
+        min_val, max_val = map(float, constraint_str.split(':'))
         return min_val, max_val, True
 
 
