@@ -12,10 +12,9 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib.ticker import ScalarFormatter
 # from Functions import *
-import re
 import lmfit
-from Fitting_Screen import *
-from AreaFit_Screen import *
+from libraries.Fitting_Screen import *
+from libraries.AreaFit_Screen import *
 from Save import *
 from NoiseAnalysis import NoiseAnalysisWindow
 from ConfigFile import *
@@ -23,7 +22,6 @@ from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
-from libraries.Sheet_Operations import on_sheet_selected
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
@@ -1206,8 +1204,6 @@ class MyFrame(wx.Frame):
             self.canvas.draw_idle()
             return  # Prevent event from propagating
         event.Skip()  # Let other key events propagate normally
-
-    import wx.adv
 
     def show_popup_message(self, message):
         popup = wx.adv.RichToolTip("Are you trying to select a peak?", message)
