@@ -1309,11 +1309,14 @@ def fit_peaks(window, peak_params_grid):
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=lg_ratio_vary)
                 elif peak_model_choice == "Pseudo-Voigt":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
-                    sigma = fwhm / 2.355
+                    # sigma = fwhm / 2.355
+                    sigma = fwhm / 2.
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}amplitude', value=height * sigma * np.sqrt(2 * np.pi), min=height_min * sigma * np.sqrt(2*np.pi), max=height_max* sigma * np.sqrt(2 * np.pi))
-                    params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
-                               max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
+                    # params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
+                    #            max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
+                    params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2. if fwhm_min else None,
+                               max=fwhm_max / 2. if fwhm_max else None, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio/100, min=lg_ratio_min/100, max=lg_ratio_max/100,
                                vary=lg_ratio_vary)
                 elif peak_model_choice == "GL":
@@ -1380,8 +1383,8 @@ def fit_peaks(window, peak_params_grid):
                         sigma = result.params[f'{prefix}sigma'].value
                         fraction = result.params[f'{prefix}fraction'].value * 100
 
-                        fwhm = sigma * 2.355
-                        # fwhm = sigma * 2
+                        # fwhm = sigma * 2.355
+                        fwhm = sigma * 2
                         height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
                         area = amplitude
 
