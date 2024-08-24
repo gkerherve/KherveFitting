@@ -316,7 +316,7 @@ class MyFrame(wx.Frame):
         self.results_grid.SetDefaultCellBackgroundColour(self.results_grid.GetLabelBackgroundColour())
 
         # Adjust specific column sizes
-        col_sizes = [120, 70, 70, 70, 40, 50, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 120, 120, 120, 120]
+        col_sizes = [120, 70, 70, 70, 50, 80, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 120, 120, 120, 120]
         for i, size in enumerate(col_sizes):
             self.results_grid.SetColSize(i, size)
 
@@ -2156,7 +2156,7 @@ if __name__ == '__main__':
     app = wx.App(False)
     splash = show_splash(duration=3000, delay=2)
 
-    frame = MyFrame(None, "KherveFitting")
+    frame = MyFrame(None, "KherveFitting - V1.0 - Sept 2024")
     frame.Show(True)
 
     if splash:

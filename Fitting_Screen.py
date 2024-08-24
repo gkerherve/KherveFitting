@@ -68,7 +68,7 @@ class FittingWindow(wx.Frame):
         background_button.SetMinSize((110, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
-        clear_background_button = wx.Button(background_panel, label="Clear Background")
+        clear_background_button = wx.Button(background_panel, label="Clear All")
         clear_background_button.SetMinSize((110, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
