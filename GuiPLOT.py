@@ -1424,14 +1424,28 @@ class MyFrame(wx.Frame):
             self.disable_drag()
             self.canvas.draw_idle()
 
-    def update_checkboxes_from_data(self):
+    def update_checkboxes_from_data2(self):
         if 'Results' in self.Data and 'Peak' in self.Data['Results']:
             for row, (peak_label, peak_data) in enumerate(self.Data['Results']['Peak'].items()):
+                print("CHeckbox =  "+str(checkbox_state))
                 checkbox_state = peak_data.get('Checkbox', '0')
                 current_grid_state = self.results_grid.GetCellValue(row, 7)
                 if checkbox_state != current_grid_state:
                     self.results_grid.SetCellValue(row, 7, checkbox_state)
                     self.results_grid.RefreshAttr(row, 7)
+        self.results_grid.ForceRefresh()
+
+    def update_checkboxes_from_data(self):
+        if 'Results' in self.Data and 'Peak' in self.Data['Results']:
+            for row in range(self.results_grid.GetNumberRows()):
+                peak_label = self.results_grid.GetCellValue(row, 0)  # Get the label from the first column
+                peak_data = self.Data['Results']['Peak'].get(peak_label)
+                if peak_data:
+                    checkbox_state = peak_data.get('Checkbox', '0')
+                    current_grid_state = self.results_grid.GetCellValue(row, 7)
+                    if checkbox_state != current_grid_state:
+                        self.results_grid.SetCellValue(row, 7, checkbox_state)
+                        self.results_grid.RefreshAttr(row, 7)
         self.results_grid.ForceRefresh()
 
     def on_plot_mouse_release(self, event):
