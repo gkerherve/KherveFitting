@@ -1832,19 +1832,6 @@ class MyFrame(wx.Frame):
 
         event.Skip()
 
-
-    def on_key_down2(self, event):
-        keycode = event.GetKeyCode()
-        if keycode == wx.WXK_DELETE:  # Check if the Delete key is pressed
-            selected_rows = self.get_selected_rows()
-            if selected_rows:
-                selected_rows.sort(reverse=True)
-                for row in selected_rows:
-                    self.results_grid.DeleteRows(row)
-                self.results_grid.ForceRefresh()
-        else:
-            event.Skip()
-
     def on_key_down(self, event):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_DELETE:

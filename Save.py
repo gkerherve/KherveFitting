@@ -552,6 +552,10 @@ def save_plot_to_excel(window):
 
 from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
 
+from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
+import openpyxl
+import wx
+
 
 def save_results_table(window):
     if 'FilePath' not in window.Data or not window.Data['FilePath']:
@@ -604,13 +608,26 @@ def save_results_table(window):
             for cell in row:
                 cell.border = thin_border
 
-        for row in ws[f'B2:{chr(65 + max_col)}{max_row}']:
-            row[0].border = Border(left=Side(style='medium'), top=cell.border.top, bottom=cell.border.bottom)
-            row[-1].border = Border(right=Side(style='medium'), top=cell.border.top, bottom=cell.border.bottom)
+        # Apply thick borders to the outer edges
+        for col in range(2, max_col + 1):
+            ws.cell(row=2, column=col).border = Border(left=ws.cell(row=2, column=col).border.left,
+                                                       right=ws.cell(row=2, column=col).border.right,
+                                                       top=Side(style='medium'),
+                                                       bottom=ws.cell(row=2, column=col).border.bottom)
+            ws.cell(row=max_row, column=col).border = Border(left=ws.cell(row=max_row, column=col).border.left,
+                                                             right=ws.cell(row=max_row, column=col).border.right,
+                                                             top=ws.cell(row=max_row, column=col).border.top,
+                                                             bottom=Side(style='medium'))
 
-        for cell in ws[f'B{max_row}:{chr(65 + max_col)}{max_row}']:
-            cell.border = Border(left=cell.border.left, right=cell.border.right, top=cell.border.top,
-                                 bottom=Side(style='medium'))
+        for row in range(2, max_row + 1):
+            ws.cell(row=row, column=2).border = Border(left=Side(style='medium'),
+                                                       right=ws.cell(row=row, column=2).border.right,
+                                                       top=ws.cell(row=row, column=2).border.top,
+                                                       bottom=ws.cell(row=row, column=2).border.bottom)
+            ws.cell(row=row, column=max_col).border = Border(left=ws.cell(row=row, column=max_col).border.left,
+                                                             right=Side(style='medium'),
+                                                             top=ws.cell(row=row, column=max_col).border.top,
+                                                             bottom=ws.cell(row=row, column=max_col).border.bottom)
 
         # Adjust column widths
         for column_cells in ws.columns:
