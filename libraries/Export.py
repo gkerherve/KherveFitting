@@ -4,7 +4,7 @@ import re
 from Functions import load_rsf_data
 
 
-def export_results(window):
+def export_results2(window):
     """
     Export peak fitting results to the results grid and update window.Data.
 
@@ -28,6 +28,7 @@ def export_results(window):
     rsf_dict = load_rsf_data("RSF.txt")
 
     current_rows = window.results_grid.GetNumberRows()
+
     start_row = current_rows  # Preserve existing data
 
     # Ensure necessary columns exist in the results grid
@@ -60,8 +61,11 @@ def export_results(window):
         peak_data.append((peak_params['name'], peak_params['position'], peak_params['height'],
                           peak_params['fwhm'], peak_params['lg_ratio'], area, peak_params['rsf'], normalized_area))
 
+        peak_label = _update_data_structure(window, sheet_name, i, peak_params, area, rel_area, fitting_model)
+
         # Update results grid
-        _update_results_grid(window, start_row + i, peak_params, area, rel_area, fitting_model)
+        _update_results_grid(window, i, peak_params, area, rel_area, fitting_model, peak_label)
+
 
         # Get checkbox state from window.Data
         checkbox_state = window.Data['Results']['Peak'].get(peak_label, {}).get('Checkbox', '0')
@@ -70,6 +74,9 @@ def export_results(window):
         # Update window.Data structure
         _update_data_structure(window, sheet_name, i, peak_params, area, rel_area, fitting_model)
 
+    # After updating the results grid
+    window.update_checkboxes_from_data()
+
     window.results_grid.ForceRefresh()  # Refresh the grid to update the new cells
 
     # Bind events
@@ -77,6 +84,68 @@ def export_results(window):
 
     # Calculate atomic percentages for checked elements
     window.update_atomic_percentages()
+
+
+def export_results(window):
+    """
+    Export peak fitting results to the results grid and update window.Data.
+    """
+    # Load RSF data
+    rsf_dict = load_rsf_data("RSF.txt")
+
+    current_rows = window.results_grid.GetNumberRows()
+    start_row = current_rows  # Preserve existing data
+
+    # Ensure necessary columns exist in the results grid
+    _ensure_results_grid_columns(window)
+
+    # Initialize variables for atomic percent calculations
+    peak_data = []
+
+    sheet_name = window.sheet_combobox.GetValue()
+
+    num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
+
+    for i in range(num_peaks):
+        row = i * 2  # Each peak uses two rows in the grid
+
+        # Extract peak parameters
+        peak_params = _extract_peak_parameters(window, row, rsf_dict)
+
+        # Get the fitting model for this specific peak
+        fitting_model = window.peak_params_grid.GetCellValue(row, 12)
+
+        # Calculate area and related values
+        area, normalized_area, rel_area = _calculate_peak_areas(window, peak_params, row)
+
+        # Store peak data for atomic percent calculation
+        peak_data.append((peak_params['name'], peak_params['position'], peak_params['height'],
+                          peak_params['fwhm'], peak_params['lg_ratio'], area, peak_params['rsf'], normalized_area))
+
+        # Update window.Data structure and get the peak_label
+        peak_label = _update_data_structure(window, sheet_name, i, peak_params, area, rel_area, fitting_model)
+
+        # Update or add to results grid
+        if start_row + i >= current_rows:
+            window.results_grid.AppendRows(1)
+
+        _update_results_grid(window, start_row + i, peak_params, area, rel_area, fitting_model, peak_label)
+
+        # Get checkbox state from window.Data
+        checkbox_state = window.Data['Results']['Peak'].get(peak_label, {}).get('Checkbox', '0')
+        window.results_grid.SetCellValue(start_row + i, 7, checkbox_state)
+
+    # After updating the results grid
+    window.update_checkboxes_from_data()
+
+    window.results_grid.ForceRefresh()  # Refresh the grid to update the new cells
+
+    # Bind events
+    _bind_grid_events(window)
+
+    # Calculate atomic percentages for checked elements
+    window.update_atomic_percentages()
+
 
 
 def _ensure_results_grid_columns(window):
@@ -195,12 +264,8 @@ def _update_results_grid2(window, row, peak_params, area, rel_area, fitting_mode
     window.results_grid.SetCellValue(row, 15, window.sheet_combobox.GetValue())
     _set_constraints(window, row, peak_params['constraints'])
 
-def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model):
+def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model, peak_label):
     """Update a row in the results grid with peak data."""
-    window.results_grid.AppendRows(1)
-    sheet_name = window.sheet_combobox.GetValue()
-    peak_label = f"{sheet_name}_{row}"
-
     window.results_grid.SetCellValue(row, 0, f"{peak_params['name']}")
     window.results_grid.SetCellValue(row, 1, f"{peak_params['position']:.2f}")
     window.results_grid.SetCellValue(row, 2, f"{peak_params['height']:.2f}")
@@ -209,8 +274,7 @@ def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model
     window.results_grid.SetCellValue(row, 5, f"{area:.2f}")
     window.results_grid.SetCellValue(row, 6, "0.00")  # Initial atomic percentage
 
-    # Get checkbox state from the peak data
-    checkbox_state = window.Data['Results']['Peak'].get(peak_label, {}).get('Checkbox', '0')
+    checkbox_state = window.Data['Results']['Peak'][peak_label].get('Checkbox', '0')
     _set_checkbox(window, row, 7, checkbox_state)
 
     window.results_grid.SetCellValue(row, 8, f"{peak_params['rsf']:.2f}")
@@ -220,7 +284,7 @@ def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model
     window.results_grid.SetCellValue(row, 12, "")  # Tail M
     window.results_grid.SetCellValue(row, 13, f"{window.bg_min_energy:.2f}" if window.bg_min_energy is not None else "")
     window.results_grid.SetCellValue(row, 14, f"{window.bg_max_energy:.2f}" if window.bg_max_energy is not None else "")
-    window.results_grid.SetCellValue(row, 15, sheet_name)
+    window.results_grid.SetCellValue(row, 15, window.sheet_combobox.GetValue())
     _set_constraints(window, row, peak_params['constraints'])
 
 
@@ -229,7 +293,8 @@ def _set_checkbox(window, row, col, state='0'):
     window.results_grid.SetCellRenderer(row, col, wx.grid.GridCellBoolRenderer())
     window.results_grid.SetCellEditor(row, col, wx.grid.GridCellBoolEditor())
     window.results_grid.SetCellValue(row, col, state)
-
+    # window.results_grid.SetCellValue(row, col, '1' if state == '1' else '0')
+    window.results_grid.ForceRefresh()
 
 def _set_constraints(window, row, constraints):
     """Set constraint values in the results grid."""
@@ -238,9 +303,11 @@ def _set_constraints(window, row, constraints):
     window.results_grid.SetCellValue(row, 18, constraints['fwhm'])
     window.results_grid.SetCellValue(row, 19, constraints['lg_ratio'])
 
+
+
 def _update_data_structure2(window, sheet_name, peak_index, peak_params, area, rel_area, fitting_model):
-    """Update the window.Data structure with peak results."""
-    peak_label = chr(65 + peak_index)  # A, B, C, ...
+    """Append new results to the window.Data structure."""
+    peak_label = f"Peak_{peak_index}"  # Use a sheet-independent identifier
     peak_name = peak_params['name']
 
     # Get existing checkbox state or default to '0'
@@ -267,15 +334,29 @@ def _update_data_structure2(window, sheet_name, peak_index, peak_params, area, r
         'Height Constraint': peak_params['constraints']['height'],
         'FWHM Constraint': peak_params['constraints']['fwhm'],
         'L/G Constraint': peak_params['constraints']['lg_ratio'],
-        'Checkbox': existing_checkbox_state  # Include checkbox state in peak_data
+        'Checkbox': existing_checkbox_state # Include checkbox state in peak_data
     }
 
     window.Data['Results']['Peak'][peak_label] = peak_data
 
+
 def _update_data_structure(window, sheet_name, peak_index, peak_params, area, rel_area, fitting_model):
-    """Append new results to the window.Data structure."""
-    peak_label = f"{sheet_name}_{peak_index}"  # Use a unique identifier
+    """Update the window.Data structure with peak results."""
+    results = window.Data['Results']['Peak']
+
+    # Find the next available peak number
+    existing_peaks = [int(key.split('_')[1]) for key in results.keys() if key.startswith('Peak_')]
+    next_peak_number = max(existing_peaks + [-1]) + 1
+
+    peak_label = f"Peak_{next_peak_number}"
     peak_name = peak_params['name']
+
+    # Check if this peak already exists (by name and sheet)
+    existing_peak = next((key for key, value in results.items()
+                          if value['Name'] == peak_name and value['Sheetname'] == sheet_name), None)
+
+    if existing_peak:
+        peak_label = existing_peak
 
     peak_data = {
         'Label': peak_label,
@@ -285,7 +366,7 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
         'FWHM': peak_params['fwhm'],
         'L/G': peak_params['lg_ratio'],
         'Area': area,
-        'at. %': 0.00,  # Initial atomic percentage
+        'at. %': results.get(peak_label, {}).get('at. %', 0.00),  # Preserve existing at. % if available
         'RSF': peak_params['rsf'],
         'Fitting Model': fitting_model,
         'Rel. Area': rel_area,
@@ -298,10 +379,11 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
         'Height Constraint': peak_params['constraints']['height'],
         'FWHM Constraint': peak_params['constraints']['fwhm'],
         'L/G Constraint': peak_params['constraints']['lg_ratio'],
-        'Checkbox': '0'  # Default to unchecked
+        'Checkbox': results.get(peak_label, {}).get('Checkbox', '0')  # Preserve existing checkbox state if available
     }
 
     window.Data['Results']['Peak'][peak_label] = peak_data
+    return peak_label  # Return the peak label for reference
 
 
 def _bind_grid_events(window):

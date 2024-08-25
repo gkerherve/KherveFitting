@@ -362,7 +362,8 @@ class MyFrame(wx.Frame):
         self.results_grid.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, self.on_grid_select)
         self.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, self.on_splitter_changed)
-        self.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, lambda event: on_grid_left_click(self, event))
+        # self.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, lambda event: on_grid_left_click(self, event))
+        self.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_checkbox_update)
         self.canvas.mpl_connect('button_release_event', self.on_plot_mouse_release)
         self.peak_params_grid.Bind(wx.EVT_LEFT_UP, self.on_peak_params_mouse_release)
 
@@ -1426,19 +1427,22 @@ class MyFrame(wx.Frame):
 
     def update_checkboxes_from_data2(self):
         if 'Results' in self.Data and 'Peak' in self.Data['Results']:
-            for row, (peak_label, peak_data) in enumerate(self.Data['Results']['Peak'].items()):
-                print("CHeckbox =  "+str(checkbox_state))
-                checkbox_state = peak_data.get('Checkbox', '0')
-                current_grid_state = self.results_grid.GetCellValue(row, 7)
-                if checkbox_state != current_grid_state:
-                    self.results_grid.SetCellValue(row, 7, checkbox_state)
-                    self.results_grid.RefreshAttr(row, 7)
+            for row in range(self.results_grid.GetNumberRows()):
+                sheet_name = self.sheet_combobox.GetValue()
+                peak_label = f"{sheet_name}_{row}"
+                peak_data = self.Data['Results']['Peak'].get(peak_label)
+                if peak_data:
+                    checkbox_state = peak_data.get('Checkbox', '0')
+                    current_grid_state = self.results_grid.GetCellValue(row, 7)
+                    if checkbox_state != current_grid_state:
+                        self.results_grid.SetCellValue(row, 7, checkbox_state)
+                        self.results_grid.RefreshAttr(row, 7)
         self.results_grid.ForceRefresh()
 
     def update_checkboxes_from_data(self):
         if 'Results' in self.Data and 'Peak' in self.Data['Results']:
             for row in range(self.results_grid.GetNumberRows()):
-                peak_label = self.results_grid.GetCellValue(row, 0)  # Get the label from the first column
+                peak_label = f"Peak_{row}"
                 peak_data = self.Data['Results']['Peak'].get(peak_label)
                 if peak_data:
                     checkbox_state = peak_data.get('Checkbox', '0')
@@ -1812,46 +1816,21 @@ class MyFrame(wx.Frame):
         row = event.GetRow()
         col = event.GetCol()
 
-        print(f"Checkbox update event triggered: Row {row}, Col {col}")
-
-        if col == 7:  # Only handle checkbox column
-            print('Bool  ' + str(self.results_grid.GetCellValue(row, col)))
+        if col == 7:  # Checkbox column
             current_value = self.results_grid.GetCellValue(row, col)
-            print('current value: '+str(current_value))
             new_value = '1' if current_value == '0' else '0'
             self.results_grid.SetCellValue(row, col, new_value)
 
-            # Update window.Data
-            peak_label = chr(65 + row)  # A, B, C, ...
+            peak_label = f"Peak_{row}"
             if 'Results' in self.Data and 'Peak' in self.Data['Results'] and peak_label in self.Data['Results']['Peak']:
                 self.Data['Results']['Peak'][peak_label]['Checkbox'] = new_value
 
-            print(f"Checkbox state updated: Peak {peak_label}, New value: {new_value}")
-
-            # Force the checkbox to update its visual state
+            print(f"Checkbox updated: {peak_label}, New value: {new_value}")
+            self.update_atomic_percentages()
             self.results_grid.ForceRefresh()
 
-            self.update_atomic_percentages()
-        else:
-            print(f"Checkbox update event ignored (wrong column)")
+        event.Skip()
 
-        event.Skip()  # Allow the event to propagate
-
-    # def print_checkbox_states(self):
-    #     print("Current checkbox states:")
-    #     for row in range(self.results_grid.GetNumberRows()):
-    #         visual_value = self.results_grid.GetCellValue(row, 7)
-    #         peak_label = chr(65 + row)
-    #         data_value = self.Data['Results']['Peak'].get(peak_label, {}).get('Checkbox', 'N/A')
-    #         print(f"Peak {peak_label}: Visual={visual_value}, Data={data_value}")
-
-    # def update_checkbox_visuals(self):
-    #     for row in range(self.results_grid.GetNumberRows()):
-    #         peak_label = chr(65 + row)
-    #         checkbox_state = self.Data['Results']['Peak'].get(peak_label, {}).get('Checkbox', '0')
-    #         print("peaks: "+str(peak_label)+"  "+ checkbox_state)
-    #         self.results_grid.SetCellValue(row, 7, "1" if checkbox_state == '1' else "")
-    #     self.results_grid.ForceRefresh()
 
     def on_key_down(self, event):
         keycode = event.GetKeyCode()
