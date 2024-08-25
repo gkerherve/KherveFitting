@@ -124,78 +124,6 @@ def convert_to_serializable(obj):
     else:
         return obj
 
-def save_to_excel2(window, data, file_path, sheet_name):
-    existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
-
-    # Remove previously fitted data if it exists
-    if existing_df.shape[1] > 3:  # If there are more than 3 columns (BE, Raw Data, empty)
-        existing_df = existing_df.iloc[:, :3]  # Keep only the first 3 columns
-
-    # Ensure there's an empty column C
-    if existing_df.shape[1] < 3:
-        existing_df.insert(2, '', np.nan)
-
-    if 'x_values' in data and data['x_values'] is not None:
-        x_values = data['x_values'].to_numpy() if isinstance(data['x_values'], pd.Series) else data['x_values']
-        filtered_data = pd.DataFrame({
-            'BE': x_values
-        })
-
-        if data['background'] is not None and data['calculated_fit'] is not None:
-            mask = np.isin(data['x_values'], x_values)
-            y_values = data['y_values'][mask]
-
-            if len(y_values) == len(data['calculated_fit']):
-                residuals = y_values - data['calculated_fit']
-                filtered_data['Residuals'] = residuals
-            else:
-                filtered_data['Residuals'] = np.nan
-        else:
-            filtered_data['Residuals'] = np.nan
-
-        filtered_data['Background'] = data['background'] if data['background'] is not None else np.nan
-        filtered_data['Calculated Fit'] = data['calculated_fit'] if data['calculated_fit'] is not None else np.nan
-
-        if data['individual_peak_fits']:
-            num_rows = len(x_values)
-            num_peaks = data['peak_params_grid'].GetNumberRows() // 2
-            for i in range(num_peaks):
-                row = i * 2
-                peak_label = data['peak_params_grid'].GetCellValue(row, 1)  # Get the peak label
-                if i < len(data['individual_peak_fits']):
-                    reversed_peak = np.array(data['individual_peak_fits'][i])[::-1]
-                    trimmed_peak = reversed_peak[:num_rows]
-                    filtered_data[peak_label] = trimmed_peak  # Use peak label as column name
-
-        # Rename columns to avoid conflicts before inserting them
-        for i, col in enumerate(filtered_data.columns):
-            new_col_name = col
-            while new_col_name in existing_df.columns:
-                new_col_name += '_new'
-            existing_df.insert(3 + i, new_col_name, filtered_data[col])
-
-    # Pad with empty columns if necessary
-    while existing_df.shape[1] < 3 + window.num_fitted_columns:
-        existing_df[f'Empty_{existing_df.shape[1]}'] = np.nan
-
-    # Remove names from column C and empty columns
-    existing_df.columns = ['' if i == 2 or i >= 3 + len(filtered_data.columns) else col for i, col in
-                           enumerate(existing_df.columns)]
-
-    with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-        existing_df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-        # Remove border from first row
-        workbook = writer.book
-        worksheet = workbook[sheet_name]
-        for cell in worksheet[1]:
-            cell.border = openpyxl.styles.Border(
-                left=openpyxl.styles.Side(style=None),
-                right=openpyxl.styles.Side(style=None),
-                top=openpyxl.styles.Side(style=None),
-                bottom=openpyxl.styles.Side(style=None)
-            )
-
 
 def save_to_excel(window, data, file_path, sheet_name):
     existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
@@ -620,3 +548,80 @@ def save_plot_to_excel(window):
         import traceback
         traceback.print_exc()
         wx.MessageBox(f"Error saving plot to Excel: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
+
+
+def save_results_table(window):
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    file_path = window.Data['FilePath']
+
+    try:
+        # Load the existing workbook
+        wb = openpyxl.load_workbook(file_path)
+
+        # Create a new sheet named 'Results Table' or 'Results Table (1)', etc. if it already exists
+        sheet_name = 'Results Table'
+        counter = 1
+        while sheet_name in wb.sheetnames:
+            sheet_name = f'Results Table ({counter})'
+            counter += 1
+
+        ws = wb.create_sheet(sheet_name)
+
+        # Write headers starting from row 2 and column B
+        headers = [window.results_grid.GetColLabelValue(col) for col in range(window.results_grid.GetNumberCols())]
+        for col, header in enumerate(headers, start=2):
+            cell = ws.cell(row=2, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # Write data
+        for row in range(window.results_grid.GetNumberRows()):
+            for col in range(window.results_grid.GetNumberCols()):
+                cell = ws.cell(row=row + 3, column=col + 2, value=window.results_grid.GetCellValue(row, col))
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # Apply borders
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
+                             bottom=Side(style='thin'))
+        thick_border = Border(left=Side(style='medium'), right=Side(style='medium'), top=Side(style='medium'),
+                              bottom=Side(style='medium'))
+
+        max_row = ws.max_row
+        max_col = ws.max_column
+
+        for row in ws[f'B2:{chr(65 + max_col)}2']:
+            for cell in row:
+                cell.border = thick_border
+
+        for row in ws[f'B3:{chr(65 + max_col)}{max_row}']:
+            for cell in row:
+                cell.border = thin_border
+
+        for row in ws[f'B2:{chr(65 + max_col)}{max_row}']:
+            row[0].border = Border(left=Side(style='medium'), top=cell.border.top, bottom=cell.border.bottom)
+            row[-1].border = Border(right=Side(style='medium'), top=cell.border.top, bottom=cell.border.bottom)
+
+        for cell in ws[f'B{max_row}:{chr(65 + max_col)}{max_row}']:
+            cell.border = Border(left=cell.border.left, right=cell.border.right, top=cell.border.top,
+                                 bottom=Side(style='medium'))
+
+        # Adjust column widths
+        for column_cells in ws.columns:
+            length = max(len(str(cell.value)) for cell in column_cells)
+            ws.column_dimensions[column_cells[0].column_letter].width = length + 2
+
+        # Save the workbook
+        wb.save(file_path)
+
+        wx.MessageBox(f"Results table saved to sheet '{sheet_name}' in {file_path}", "Success",
+                      wx.OK | wx.ICON_INFORMATION)
+
+    except Exception as e:
+        wx.MessageBox(f"Error saving results table: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)

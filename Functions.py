@@ -22,6 +22,7 @@ from Save import refresh_sheets
 from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
+from Save import save_results_table
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 
 
@@ -550,7 +551,8 @@ def create_menu(window):
     save_plot_item = file_menu.Append(wx.NewId(), "Save plot to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
 
-    save_Table_item = file_menu.Append(wx.NewId(), "Save Table - TBD")
+    save_Table_item = file_menu.Append(wx.NewId(), "Save Table")
+    window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
 
     save_all_item = file_menu.Append(wx.NewId(), "Save all - TBD")
 

@@ -1821,7 +1821,8 @@ class MyFrame(wx.Frame):
             new_value = '1' if current_value == '0' else '0'
             self.results_grid.SetCellValue(row, col, new_value)
 
-            peak_label = f"Peak_{row}"
+            sheet_name = self.sheet_combobox.GetValue()
+            peak_label = f"Peak_{row}"  # Construct the peak_label based on the row
             if 'Results' in self.Data and 'Peak' in self.Data['Results'] and peak_label in self.Data['Results']['Peak']:
                 self.Data['Results']['Peak'][peak_label]['Checkbox'] = new_value
 
@@ -1832,7 +1833,7 @@ class MyFrame(wx.Frame):
         event.Skip()
 
 
-    def on_key_down(self, event):
+    def on_key_down2(self, event):
         keycode = event.GetKeyCode()
         if keycode == wx.WXK_DELETE:  # Check if the Delete key is pressed
             selected_rows = self.get_selected_rows()
@@ -1843,6 +1844,40 @@ class MyFrame(wx.Frame):
                 self.results_grid.ForceRefresh()
         else:
             event.Skip()
+
+    def on_key_down(self, event):
+        keycode = event.GetKeyCode()
+        if keycode == wx.WXK_DELETE:
+            selected_rows = self.get_selected_rows()
+            if selected_rows:
+                selected_rows.sort(reverse=True)
+                for row in selected_rows:
+                    peak_name = self.results_grid.GetCellValue(row, 0)  # Get the peak name from the first column
+                    self.results_grid.DeleteRows(row)
+
+                    # Remove the peak from self.Data
+                    for key, value in list(self.Data['Results']['Peak'].items()):
+                        if value.get('Name') == peak_name:
+                            del self.Data['Results']['Peak'][key]
+                            break
+
+                # Renumber the remaining peaks in self.Data
+                new_data = {}
+                for i, (key, value) in enumerate(self.Data['Results']['Peak'].items()):
+                    new_key = f"Peak_{i}"
+                    new_data[new_key] = value
+                self.Data['Results']['Peak'] = new_data
+
+                self.results_grid.ForceRefresh()
+                self.update_atomic_percentages()
+        else:
+            event.Skip()
+
+    def refresh_results_grid(self):
+        self.results_grid.ClearGrid()
+        for i, (peak_label, peak_data) in enumerate(self.Data['Results']['Peak'].items()):
+            for j, value in enumerate(peak_data.values()):
+                self.results_grid.SetCellValue(i, j, str(value))
 
     def get_selected_rows(self):
         """
