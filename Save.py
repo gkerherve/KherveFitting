@@ -556,6 +556,10 @@ from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
 import openpyxl
 import wx
 
+from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
+import openpyxl
+import wx
+
 
 def save_results_table(window):
     if 'FilePath' not in window.Data or not window.Data['FilePath']:
@@ -565,19 +569,13 @@ def save_results_table(window):
     file_path = window.Data['FilePath']
 
     try:
-        # Load the existing workbook
         wb = openpyxl.load_workbook(file_path)
 
-        # Create a new sheet named 'Results Table' or 'Results Table (1)', etc. if it already exists
         sheet_name = 'Results Table'
-        counter = 1
-        while sheet_name in wb.sheetnames:
-            sheet_name = f'Results Table ({counter})'
-            counter += 1
-
+        if sheet_name in wb.sheetnames:
+            wb.remove(wb[sheet_name])
         ws = wb.create_sheet(sheet_name)
 
-        # Write headers starting from row 2 and column B
         headers = [window.results_grid.GetColLabelValue(col) for col in range(window.results_grid.GetNumberCols())]
         for col, header in enumerate(headers, start=2):
             cell = ws.cell(row=2, column=col, value=header)
@@ -585,13 +583,11 @@ def save_results_table(window):
             cell.fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
             cell.alignment = Alignment(horizontal="center", vertical="center")
 
-        # Write data
         for row in range(window.results_grid.GetNumberRows()):
             for col in range(window.results_grid.GetNumberCols()):
                 cell = ws.cell(row=row + 3, column=col + 2, value=window.results_grid.GetCellValue(row, col))
                 cell.alignment = Alignment(horizontal="center", vertical="center")
 
-        # Apply borders
         thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
                              bottom=Side(style='thin'))
         thick_border = Border(left=Side(style='medium'), right=Side(style='medium'), top=Side(style='medium'),
@@ -600,15 +596,14 @@ def save_results_table(window):
         max_row = ws.max_row
         max_col = ws.max_column
 
-        for row in ws[f'B2:{chr(65 + max_col)}2']:
+        for row in ws[f'B2:{chr(65 + max_col-1)}2']:
             for cell in row:
                 cell.border = thick_border
 
-        for row in ws[f'B3:{chr(65 + max_col)}{max_row}']:
+        for row in ws[f'B3:{chr(65 + max_col - 1)}{max_row}']:
             for cell in row:
                 cell.border = thin_border
 
-        # Apply thick borders to the outer edges
         for col in range(2, max_col + 1):
             ws.cell(row=2, column=col).border = Border(left=ws.cell(row=2, column=col).border.left,
                                                        right=ws.cell(row=2, column=col).border.right,
@@ -629,16 +624,13 @@ def save_results_table(window):
                                                              top=ws.cell(row=row, column=max_col).border.top,
                                                              bottom=ws.cell(row=row, column=max_col).border.bottom)
 
-        # Adjust column widths
         for column_cells in ws.columns:
             length = max(len(str(cell.value)) for cell in column_cells)
             ws.column_dimensions[column_cells[0].column_letter].width = length + 2
 
-        # Save the workbook
         wb.save(file_path)
 
-        wx.MessageBox(f"Results table saved to sheet '{sheet_name}' in {file_path}", "Success",
-                      wx.OK | wx.ICON_INFORMATION)
+        window.show_popup_message2("Table Saved","Results table has been saved to the Excel file.")
 
     except Exception as e:
         wx.MessageBox(f"Error saving results table: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
