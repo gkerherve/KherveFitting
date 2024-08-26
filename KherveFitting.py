@@ -1158,11 +1158,13 @@ class MyFrame(wx.Frame):
                 from libraries.Save import redo
                 redo(self)
                 return
-            if keycode == ord('C'):
+            elif keycode == ord('C'):
+                print('Control C')
                 copy_cell(self.peak_params_grid)
                 return
             elif keycode == ord('V'):
                 paste_cell(self.peak_params_grid)
+                save_state(self)
                 return
 
         if keycode == wx.WXK_TAB:

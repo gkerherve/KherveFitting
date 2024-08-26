@@ -8,13 +8,24 @@ def _clear_peak_params_grid(window):
         window.peak_params_grid.DeleteRows(0, num_rows)
     window.peak_count = 0  # Reset peak count when clearing the grid
 
+
 def copy_cell(grid):
-    if grid.HasFocus() and grid.GetSelectedCells():
-        row, col = grid.GetSelectedCells()[0]
-        data = grid.GetCellValue(row, col)
-        if wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(wx.TextDataObject(data))
-            wx.TheClipboard.Close()
+    print("Copy cell function called")
+    print(f"Grid has focus: {grid.HasFocus()}")
+    print(f"Selected cells: {grid.GetSelectedCells()}")
+
+    if grid.HasFocus():
+        if grid.GetSelectedCells():
+            print("CTL C has focus")
+            row, col = grid.GetSelectedCells()[0]
+            data = grid.GetCellValue(row, col)
+            if wx.TheClipboard.Open():
+                wx.TheClipboard.SetData(wx.TextDataObject(data))
+                wx.TheClipboard.Close()
+        else:
+            print("No cells selected")
+    else:
+        print("Grid does not have focus")
 
 def paste_cell(grid):
     if grid.HasFocus() and wx.TheClipboard.Open():
