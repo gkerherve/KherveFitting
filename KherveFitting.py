@@ -30,6 +30,7 @@ from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.SplashScreen import show_splash
 from libraries.Save import save_state, undo, redo
+from libraries.Open import ExcelDropTarget
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -225,7 +226,11 @@ class MyFrame(wx.Frame):
 
         # Create the FigureCanvas
         self.canvas = FigureCanvas(self.right_frame, -1, self.figure)
-        # self.canvas.mpl_connect("button_press_event", self.on_click)
+
+        # After creating self.canvas
+        file_drop_target = ExcelDropTarget(self)
+        self.canvas.SetDropTarget(file_drop_target)
+
         plt.tight_layout()
         right_frame_sizer.Add(self.canvas, 1, wx.EXPAND | wx.ALL, 0)
 

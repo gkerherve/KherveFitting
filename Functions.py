@@ -863,98 +863,108 @@ def toggle_plot(window):
 import json
 from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
 
-def open_xlsx_file(window):
+def open_xlsx_file(window, file_path=None):
     print("Starting open_xlsx_file function")
-    with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
-                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
-        if dlg.ShowModal() == wx.ID_OK:
-            file_path = dlg.GetPath()
-            window.SetStatusText(f"Selected File: {file_path}", 0)
+    if file_path is None:
+        with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
+                file_path = dlg.GetPath()
+            else:
+                return
 
-            try:
-                # Clear undo and redo history
-                window.history = []
-                window.redo_stack = []
-                update_undo_redo_state(window)
+    window.SetStatusText(f"Selected File: {file_path}", 0)
 
-                # Clear the results grid
-                window.results_grid.ClearGrid()
-                if window.results_grid.GetNumberRows() > 0:
-                    window.results_grid.DeleteRows(0, window.results_grid.GetNumberRows())
+    # with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
+    #                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+    #     if dlg.ShowModal() == wx.ID_OK:
+    #         file_path = dlg.GetPath()
+    #         window.SetStatusText(f"Selected File: {file_path}", 0)
 
-                # Look for corresponding .json file
-                json_file = os.path.splitext(file_path)[0] + '.json'
-                if os.path.exists(json_file):
-                    print(f"Found corresponding .json file: {json_file}")
-                    with open(json_file, 'r') as f:
-                        loaded_data = json.load(f)
+    try:
+        # Clear undo and redo history
+        window.history = []
+        window.redo_stack = []
+        update_undo_redo_state(window)
 
-                    # Convert data structure without changing types
-                    window.Data = convert_from_serializable(loaded_data)
+        # Clear the results grid
+        window.results_grid.ClearGrid()
+        if window.results_grid.GetNumberRows() > 0:
+            window.results_grid.DeleteRows(0, window.results_grid.GetNumberRows())
 
-                    print("Loaded data from .json file")
+        # Look for corresponding .json file
+        json_file = os.path.splitext(file_path)[0] + '.json'
+        if os.path.exists(json_file):
+            print(f"Found corresponding .json file: {json_file}")
+            with open(json_file, 'r') as f:
+                loaded_data = json.load(f)
 
-                    # Populate the results grid
-                    populate_results_grid(window)
-                else:
-                    print("No corresponding .json file found. Initializing new data.")
-                    # Initialize the measurement data
-                    window.Data = Init_Measurement_Data(window)
+            # Convert data structure without changing types
+            window.Data = convert_from_serializable(loaded_data)
 
-                # Read the Excel file
-                excel_file = pd.ExcelFile(file_path)
-                all_sheet_names = excel_file.sheet_names
-                results_table_index = -1
+            print("Loaded data from .json file")
 
-                for i, name in enumerate(all_sheet_names):
-                    if name.lower() == "results table":
-                        results_table_index = i
-                        break
+            # Populate the results grid
+            populate_results_grid(window)
+        else:
+            print("No corresponding .json file found. Initializing new data.")
+            # Initialize the measurement data
+            window.Data = Init_Measurement_Data(window)
 
-                if results_table_index != -1:
-                    sheet_names = all_sheet_names[:results_table_index]
-                else:
-                    sheet_names = all_sheet_names
+        # Read the Excel file
+        excel_file = pd.ExcelFile(file_path)
+        all_sheet_names = excel_file.sheet_names
+        results_table_index = -1
 
-                print(f"Number of sheets: {len(sheet_names)}")
+        for i, name in enumerate(all_sheet_names):
+            if name.lower() == "results table":
+                results_table_index = i
+                break
 
-                # Update file path
-                window.Data['FilePath'] = file_path
+        if results_table_index != -1:
+            sheet_names = all_sheet_names[:results_table_index]
+        else:
+            sheet_names = all_sheet_names
 
-                # If we didn't load from json, populate the data from Excel
-                if 'Core levels' not in window.Data or not window.Data['Core levels']:
-                    window.Data['Number of Core levels'] = 0
-                    for sheet_name in sheet_names:
-                        window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
+        print(f"Number of sheets: {len(sheet_names)}")
 
-                print(f"Final number of core levels: {window.Data['Number of Core levels']}")
+        # Update file path
+        window.Data['FilePath'] = file_path
 
-                # Load BE correction
-                window.load_be_correction()
+        # If we didn't load from json, populate the data from Excel
+        if 'Core levels' not in window.Data or not window.Data['Core levels']:
+            window.Data['Number of Core levels'] = 0
+            for sheet_name in sheet_names:
+                window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
 
-                # Update sheet names in the combobox
-                window.sheet_combobox.Clear()
-                window.sheet_combobox.AppendItems(sheet_names)
+        print(f"Final number of core levels: {window.Data['Number of Core levels']}")
 
-                # Set the first sheet as the selected one
-                first_sheet = sheet_names[0]
-                window.sheet_combobox.SetValue(first_sheet)
+        # Load BE correction
+        window.load_be_correction()
 
-                # Use on_sheet_selected to update peak parameter grid and plot
-                event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
-                event.SetString(first_sheet)
-                window.plot_config.plot_limits.clear()
-                on_sheet_selected_wrapper(window,event)
+        # Update sheet names in the combobox
+        window.sheet_combobox.Clear()
+        window.sheet_combobox.AppendItems(sheet_names)
 
-                # undo and redo
-                save_state(window)
+        # Set the first sheet as the selected one
+        first_sheet = sheet_names[0]
+        window.sheet_combobox.SetValue(first_sheet)
 
-                print("open_xlsx_file function completed successfully")
-            except Exception as e:
-                print(f"Error in open_xlsx_file: {str(e)}")
-                import traceback
-                traceback.print_exc()
-                wx.MessageBox(f"Error reading file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+        # Use on_sheet_selected to update peak parameter grid and plot
+        event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
+        event.SetString(first_sheet)
+        window.plot_config.plot_limits.clear()
+        on_sheet_selected_wrapper(window,event)
+
+        # undo and redo
+        save_state(window)
+
+        print("open_xlsx_file function completed successfully")
+    except Exception as e:
+        print(f"Error in open_xlsx_file: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error reading file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 def populate_results_grid(window):
     if 'Results' in window.Data and 'Peak' in window.Data['Results']:
