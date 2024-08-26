@@ -13,6 +13,7 @@ from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
 from libraries.Help import on_about
+from libraries.Save import undo, redo
 
 
 
@@ -517,8 +518,10 @@ def create_menu(window):
     exit_item = file_menu.Append(wx.ID_EXIT, "Exit")
     window.Bind(wx.EVT_MENU, lambda event: on_exit(window, event), exit_item)  # Bind the on_exit function
 
-    Undo_item = edit_menu.Append(wx.NewId(), "Undo Fit - TBD")
-    Redo_item = edit_menu.Append(wx.NewId(), "Redo Fit - TBD")
+    undo_item = edit_menu.Append(wx.ID_UNDO, "Undo\tCtrl+Z")
+    redo_item = edit_menu.Append(wx.ID_REDO, "Redo\tCtrl+Y")
+    window.Bind(wx.EVT_MENU, lambda event: undo(window), undo_item)
+    window.Bind(wx.EVT_MENU, lambda event: redo(window), redo_item)
     edit_menu.AppendSeparator()
 
     preferences_item = edit_menu.Append(wx.ID_PREFERENCES, "Preferences")

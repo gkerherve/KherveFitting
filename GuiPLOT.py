@@ -29,6 +29,7 @@ from libraries.PreferenceWindow import PreferenceWindow
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.SplashScreen import show_splash
+from libraries.Save import save_state, undo, redo
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -56,6 +57,11 @@ class MyFrame(wx.Frame):
 
         self.noise_analysis_window = None
         self.noise_tab_selected = False
+
+        # Variables for Undo & Redo
+        self.history = []
+        self.redo_stack = []
+        self.max_history = 20
 
         # New attribute to track plot state for showing fit or not
         self.show_fit = True
@@ -428,6 +434,7 @@ class MyFrame(wx.Frame):
 
 
     def add_peak_params(self):
+        save_state(self)
         sheet_name = self.sheet_combobox.GetValue()
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
 
@@ -2158,6 +2165,12 @@ class MyFrame(wx.Frame):
     def on_mini_help(self, event):
         from libraries.Help import show_quick_help
         show_quick_help(self)
+
+    def on_undo(self, event):
+        undo(self)
+
+    def on_redo(self, event):
+        redo(self)
 
 
 

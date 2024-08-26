@@ -13,6 +13,7 @@ from openpyxl.drawing.image import Image
 from openpyxl.styles import Border, Side, PatternFill, Font
 from openpyxl import load_workbook
 from libraries.Sheet_Operations import on_sheet_selected
+from copy import deepcopy
 # from Functions import convert_to_serializable_and_round
 
 
@@ -636,3 +637,49 @@ def save_results_table(window):
 
     except Exception as e:
         wx.MessageBox(f"Error saving results table: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+def save_state(window):
+    state = {
+        'Data': deepcopy(window.Data),
+        'peak_params_grid': get_grid_data(window.peak_params_grid),
+        'results_grid': get_grid_data(window.results_grid)
+    }
+    window.history.append(state)
+    window.redo_stack.clear()
+    if len(window.history) > window.max_history:
+        window.history.pop(0)
+
+def undo(window):
+    if len(window.history) > 1:
+        current_state = window.history.pop()
+        window.redo_stack.append(current_state)
+        previous_state = window.history[-1]
+        restore_state(window, previous_state)
+
+def redo(window):
+    if window.redo_stack:
+        next_state = window.redo_stack.pop()
+        window.history.append(next_state)
+        restore_state(window, next_state)
+
+def restore_state(window, state):
+    window.Data = deepcopy(state['Data'])
+    set_grid_data(window.peak_params_grid, state['peak_params_grid'])
+    set_grid_data(window.results_grid, state['results_grid'])
+    window.clear_and_replot()
+
+def get_grid_data(grid):
+    data = []
+    for row in range(grid.GetNumberRows()):
+        row_data = [grid.GetCellValue(row, col) for col in range(grid.GetNumberCols())]
+        data.append(row_data)
+    return data
+
+def set_grid_data(grid, data):
+    grid.ClearGrid()
+    if len(data) > grid.GetNumberRows():
+        grid.AppendRows(len(data) - grid.GetNumberRows())
+    for row, row_data in enumerate(data):
+        for col, value in enumerate(row_data):
+            grid.SetCellValue(row, col, value)
