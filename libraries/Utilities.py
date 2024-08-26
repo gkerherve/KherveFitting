@@ -14,25 +14,29 @@ def copy_cell(grid):
     print(f"Grid has focus: {grid.HasFocus()}")
 
     if grid.HasFocus():
-        row, col = grid.GetGridCursorPosition()
-        print(f"Cursor position: ({row}, {col})")
-        if row >= 0 and col >= 0:
+        selected_block = grid.GetSelectedBlocks()
+        if selected_block:
+            top_left = selected_block[0].GetTopLeft()
+            row, col = top_left.GetRow(), top_left.GetCol()
+            print(f"Selected cell: ({row}, {col})")
             print("CTL C has focus")
             data = grid.GetCellValue(row, col)
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(wx.TextDataObject(data))
                 wx.TheClipboard.Close()
         else:
-            print("Invalid cursor position")
+            print("No cell selected")
     else:
         print("Grid does not have focus")
 
 def paste_cell(grid):
-    if grid.HasFocus() and wx.TheClipboard.Open():
-        if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
-            data = wx.TextDataObject()
-            wx.TheClipboard.GetData(data)
-            if grid.GetSelectedCells():
-                row, col = grid.GetSelectedCells()[0]
+    if grid.HasFocus():
+        selected_block = grid.GetSelectedBlocks()
+        if selected_block and wx.TheClipboard.Open():
+            if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
+                data = wx.TextDataObject()
+                wx.TheClipboard.GetData(data)
+                top_left = selected_block[0].GetTopLeft()
+                row, col = top_left.GetRow(), top_left.GetCol()
                 grid.SetCellValue(row, col, data.GetText())
-        wx.TheClipboard.Close()
+            wx.TheClipboard.Close()
