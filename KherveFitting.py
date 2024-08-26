@@ -34,6 +34,17 @@ from libraries.Save import save_state, undo, redo
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
         super().__init__(parent, title=title, size=(1600, 700))
+
+        # Get the directory of the current script
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the path to the icon file
+        icon_path = os.path.join(current_dir, "Icons", "Icon.ico")
+
+        # Set the icon
+        icon = wx.Icon(icon_path, wx.BITMAP_TYPE_ICO)
+        self.SetIcon(icon)
+
         self.SetMinSize((800, 600))
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white
@@ -1449,20 +1460,6 @@ class MyFrame(wx.Frame):
             self.disable_drag()
             self.canvas.draw_idle()
 
-    def update_checkboxes_from_data2(self):
-        if 'Results' in self.Data and 'Peak' in self.Data['Results']:
-            for row in range(self.results_grid.GetNumberRows()):
-                sheet_name = self.sheet_combobox.GetValue()
-                peak_label = f"{sheet_name}_{row}"
-                peak_data = self.Data['Results']['Peak'].get(peak_label)
-                if peak_data:
-                    checkbox_state = peak_data.get('Checkbox', '0')
-                    current_grid_state = self.results_grid.GetCellValue(row, 7)
-                    if checkbox_state != current_grid_state:
-                        self.results_grid.SetCellValue(row, 7, checkbox_state)
-                        self.results_grid.RefreshAttr(row, 7)
-        self.results_grid.ForceRefresh()
-
     def update_checkboxes_from_data(self):
         if 'Results' in self.Data and 'Peak' in self.Data['Results']:
             for row in range(self.results_grid.GetNumberRows()):
@@ -1493,30 +1490,6 @@ class MyFrame(wx.Frame):
         save_state(self)
         export_results(self)
 
-
-    def on_cell_changed2(self, event):
-        row = event.GetRow()
-        col = event.GetCol()
-
-        try:
-            height = float(self.results_grid.GetCellValue(row, 2))
-            fwhm = float(self.results_grid.GetCellValue(row, 3))
-            rsf = float(self.results_grid.GetCellValue(row, 8))
-
-            # Recalculate the area
-            # to check because this does not seem right for all
-            new_area = height * fwhm * (np.sqrt(2 * np.pi) / 2.355)
-            self.results_grid.SetCellValue(row, 5, f"{new_area:.2f}")
-
-            # Recalculate the relative area
-            new_rel_area = new_area / rsf
-            self.results_grid.SetCellValue(row, 10, f"{new_rel_area:.2f}")
-
-            # Update the atomic percentages if necessary
-            self.update_atomic_percentages()
-
-        except ValueError:
-            wx.MessageBox("Invalid value entered", "Error", wx.OK | wx.ICON_ERROR)
 
     def on_cell_changed(self, event):
         row = event.GetRow()
@@ -1551,31 +1524,6 @@ class MyFrame(wx.Frame):
         except ValueError:
             wx.MessageBox("Invalid value entered", "Error", wx.OK | wx.ICON_ERROR)
 
-
-    # Keep for now but I think it needs to be removed
-    def update_atomic_percentages2(self):
-        current_rows = self.results_grid.GetNumberRows()
-        total_normalized_area = 0
-        checked_indices = []
-
-        # Calculate total normalized area for checked elements
-        for i in range(current_rows):
-            if self.results_grid.GetCellValue(i, 7) == '1':  # Checkbox is ticked
-                normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(
-                    self.results_grid.GetCellValue(i, 8))
-                total_normalized_area += normalized_area
-                checked_indices.append(i)
-            else:
-                # Set the atomic percentage to 0 for unticked rows
-                self.results_grid.SetCellValue(i, 6, "0.00")
-
-        # Calculate and set atomic percentages for checked elements
-        for i in checked_indices:
-            normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(self.results_grid.GetCellValue(i, 8))
-            atomic_percent = (normalized_area / total_normalized_area) * 100 if total_normalized_area > 0 else 0
-            self.results_grid.SetCellValue(i, 6, f"{atomic_percent:.2f}")
-
-        self.results_grid.ForceRefresh()
 
     def update_atomic_percentages(self):
         current_rows = self.results_grid.GetNumberRows()
