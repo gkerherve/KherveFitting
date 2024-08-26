@@ -13,7 +13,7 @@ from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
 from libraries.Help import on_about
-from libraries.Save import undo, redo
+from libraries.Save import undo, redo, save_state
 
 
 
@@ -593,6 +593,11 @@ def create_horizontal_toolbar(window):
     save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
 
     toolbar.AddSeparator()
+    undo_tool = toolbar.AddTool(wx.ID_ANY, 'Undo',wx.Bitmap(os.path.join(icon_path, "undo-25.png"), wx.BITMAP_TYPE_PNG),
+                                shortHelp="Undo -- For peaks properties only")
+    redo_tool = toolbar.AddTool(wx.ID_ANY, 'Redo',wx.Bitmap(os.path.join(icon_path, "redo-25.png"), wx.BITMAP_TYPE_PNG),
+                                shortHelp="Redo -- For peaks properties only")
+    toolbar.AddSeparator()
 
     # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
     # separators[-1].SetSize((2, 24))
@@ -722,6 +727,8 @@ def create_horizontal_toolbar(window):
     window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
     window.Bind(wx.EVT_TOOL, window.on_auto_be, auto_be_button)
     window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: undo(window), undo_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: redo(window), redo_tool)
 
     return toolbar
 

@@ -595,6 +595,7 @@ class MyFrame(wx.Frame):
         self.background_window.Raise()
 
     def on_background_window_close(self, event):
+        save_state(self)
         self.background_tab_selected = False
         self.show_hide_vlines()
         self.background_window = None
@@ -613,6 +614,7 @@ class MyFrame(wx.Frame):
         self.show_hide_vlines()
 
     def on_open_fitting_window(self):
+        save_state(self)
         if self.fitting_window is None or not self.fitting_window:
             self.fitting_window = FittingWindow(self)
             self.background_tab_selected = True
@@ -1484,6 +1486,7 @@ class MyFrame(wx.Frame):
 
 
     def export_results(self):
+        save_state(self)
         export_results(self)
 
 
