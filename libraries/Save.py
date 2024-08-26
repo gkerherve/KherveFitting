@@ -651,7 +651,11 @@ def save_state(window):
                 'selected_peak_index': window.selected_peak_index,
             } for sheet in window.Data['Core levels'].keys()
         },
-        'results_grid': get_grid_data(window.results_grid)
+        'results_grid':  {
+            'data': get_grid_data(window.results_grid),
+            'num_rows': window.results_grid.GetNumberRows(),
+            'num_cols': window.results_grid.GetNumberCols()
+        }
     }
     window.history.append(state)
     window.redo_stack.clear()
@@ -685,7 +689,17 @@ def restore_state(window, state):
             window.peak_count = sheet_data['peak_count']
             window.selected_peak_index = sheet_data['selected_peak_index']
 
-    set_grid_data(window.results_grid, state['results_grid'])
+    # Restore results grid
+    results_grid_data = state['results_grid']
+    current_rows = window.results_grid.GetNumberRows()
+    target_rows = results_grid_data['num_rows']
+
+    if current_rows < target_rows:
+        window.results_grid.AppendRows(target_rows - current_rows)
+    elif current_rows > target_rows:
+        window.results_grid.DeleteRows(target_rows, current_rows - target_rows)
+
+    set_grid_data(window.results_grid, results_grid_data['data'])
 
     # Switch to the correct sheet
     window.sheet_combobox.SetValue(state['current_sheet'])
