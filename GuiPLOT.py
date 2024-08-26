@@ -15,9 +15,9 @@ from matplotlib.ticker import ScalarFormatter
 import lmfit
 from libraries.Fitting_Screen import *
 from libraries.AreaFit_Screen import *
-from Save import *
+from libraries.Save import *
 from libraries.NoiseAnalysis import NoiseAnalysisWindow
-from ConfigFile import *
+from libraries.ConfigFile import *
 from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
@@ -26,7 +26,7 @@ from libraries.Peak_Functions import PeakFunctions
 from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
-from libraries.Sheet_Operations import on_sheet_selected, on_grid_left_click
+from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.SplashScreen import show_splash
 

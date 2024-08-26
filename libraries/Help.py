@@ -3,6 +3,18 @@ import wx.html
 import os
 import sys
 
+
+
+def on_about(self, event):
+    info = wx.adv.AboutDialogInfo()
+    info.SetName("KherveFitting")
+    info.SetVersion("1.0")
+    info.SetDescription("An open-source XPS peak fitting software developed by Dr. Gwilherm Kerherve at Imperial College London.")
+    info.SetCopyright("(C) 2024 Gwilherm Kerherve")
+    info.SetWebSite("https://www.imperial.ac.uk/people/g.kerherve")
+    info.AddDeveloper("Dr. Gwilherm Kerherve, William Skinner")
+    wx.adv.AboutBox(info)
+
 def show_quick_help(parent):
     if getattr(sys, 'frozen', False):
         # If the application is run as a bundle, use the bundle's directory

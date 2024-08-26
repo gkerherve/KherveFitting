@@ -1,36 +1,25 @@
 # FUNCTIONS.PY-------------------------------------------------------------------
 
 # LIBRARIES----------------------------------------------------------------------
-import wx
 import wx.grid
-from wx import DirDialog, MessageBox
 
-import pandas as pd
 import numpy as np
 import lmfit
-import os
 import sys
-import matplotlib.pyplot as plt
-from matplotlib.ticker import ScalarFormatter
 from scipy.stats import linregress
-from Save import save_data
-from vamas import Vamas
-from openpyxl import Workbook
-from ConfigFile import *
-from Save import refresh_sheets
+from libraries.Save import refresh_sheets
 # from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
-from Save import save_results_table
-# from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+from libraries.Save import save_results_table, save_all_sheets_with_plots
+from libraries.Help import on_about
 
 
 
 # -------------------------------------------------------------------------------
 
 def save_data_wrapper(window, data):
-    from Save import save_data
+    from libraries.Save import save_data
     save_data(window, data)
 
 def on_sheet_selected_wrapper(window, event):
@@ -46,12 +35,6 @@ def load_rsf_data(file_path):
                 core_level, rsf = parts
                 rsf_dict[core_level] = float(rsf)
     return rsf_dict
-
-
-
-
-from matplotlib.ticker import ScalarFormatter
-
 
 
 def safe_delete_rows(grid, pos, num_rows):
@@ -467,33 +450,6 @@ def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, t
     return background[1:-1]  # Remove padding before returning
 
 
-# NOT SURE IF IT IS USED
-# def open_file(window):
-#     with DirDialog(window, "Open directory", style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST) as dlg:
-#         if dlg.ShowModal() == wx.ID_OK:
-#             path = dlg.GetPath()
-#             window.entry.SetValue(path)
-#             populate_listbox(window)
-
-# NOT SURE IF IT IS USED
-# def populate_listbox(window):
-#     """Populates the file listbox with Excel files from the selected directory."""
-#     window.file_listbox.Clear()  # Use Clear() to empty the ListBox in wxPython
-#     directory = window.entry.GetValue()  # Use GetValue() for wx.TextCtrl
-#     if os.path.isdir(directory):
-#         for filename in os.listdir(directory):
-#             if filename.endswith(".xlsx") or filename.endswith(".xls"):
-#                 window.file_listbox.Append(filename)  # Use Append() to add items in wxPython
-#     else:
-#         wx.MessageBox("Error", "Invalid directory path", style=wx.OK | wx.ICON_ERROR)
-#
-#     # Bind selection event to update the sheet names
-#     window.file_listbox.Bind(wx.EVT_LISTBOX, lambda event: update_sheet_names(window))
-
-
-
-
-
 
 def update_sheet_names(window):
     if window.selected_files:
@@ -554,7 +510,8 @@ def create_menu(window):
     save_Table_item = file_menu.Append(wx.NewId(), "Save Table")
     window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
 
-    save_all_item = file_menu.Append(wx.NewId(), "Save all - TBD")
+    save_all_item = file_menu.Append(wx.NewId(), "Save all")
+    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
 
     file_menu.AppendSeparator()
     exit_item = file_menu.Append(wx.ID_EXIT, "Exit")
@@ -593,6 +550,9 @@ def create_menu(window):
 
     mini_help_item = help_menu.Append(wx.NewId(), "Help")
     window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
+
+    about_item = help_menu.Append(wx.ID_ABOUT, "About")
+    window.Bind(wx.EVT_MENU, lambda event: on_about(window, event), about_item)
 
     menubar.Append(file_menu, "&File")
     menubar.Append(edit_menu, "&Edit")
@@ -888,7 +848,7 @@ def toggle_plot(window):
     window.canvas.draw_idle()
 
 import json
-from ConfigFile import Init_Measurement_Data, add_core_level_Data
+from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
 
 def open_xlsx_file(window):
     print("Starting open_xlsx_file function")
@@ -925,7 +885,19 @@ def open_xlsx_file(window):
 
                 # Read the Excel file
                 excel_file = pd.ExcelFile(file_path)
-                sheet_names = excel_file.sheet_names
+                all_sheet_names = excel_file.sheet_names
+                results_table_index = -1
+
+                for i, name in enumerate(all_sheet_names):
+                    if name.lower() == "results table":
+                        results_table_index = i
+                        break
+
+                if results_table_index != -1:
+                    sheet_names = all_sheet_names[:results_table_index]
+                else:
+                    sheet_names = all_sheet_names
+
                 print(f"Number of sheets: {len(sheet_names)}")
 
                 # Update file path
@@ -1140,7 +1112,7 @@ def open_xlsx_file_vamas(window, file_path):
         window.sheet_combobox.SetValue(sheet_names[0])  # Set first sheet as default
 
         # Update other necessary GUI elements or data structures
-        update_sheet_names(window)
+        # update_sheet_names(window)
 
         # Plot the data for the first sheet
         window.plot_manager.plot_data(window)
@@ -1153,19 +1125,19 @@ def open_xlsx_file_vamas(window, file_path):
 
 def on_save_plot(window):
     print("on_save plot function called")
-    from Save import save_plot_to_excel
+    from libraries.Save import save_plot_to_excel
     save_plot_to_excel(window)
 
 
 def on_save(window):
     print("on_save function called")
-    from Save import save_data
+    from libraries.Save import save_data
     data = window.get_data_for_save()
     save_data(window,data)
     # save_data(window, data)
 
 def on_save_all_sheets(window, event):
-    from Save import save_all_sheets_with_plots
+    from libraries.Save import save_all_sheets_with_plots
     save_all_sheets_with_plots(window)
 
 def toggle_Col_1(window):

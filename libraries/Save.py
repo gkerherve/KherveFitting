@@ -8,7 +8,7 @@ import io
 import os
 import pandas as pd
 import openpyxl
-from ConfigFile import add_core_level_Data
+from libraries.ConfigFile import add_core_level_Data
 from openpyxl.drawing.image import Image
 from openpyxl.styles import Border, Side, PatternFill, Font
 from openpyxl import load_workbook
@@ -39,16 +39,18 @@ def save_all_sheets_with_plots(window):
             # Save plot to Excel
             save_plot_to_excel(window)
 
+        # Save results table
+        save_results_table(window)
+
         json_file_path = os.path.splitext(file_path)[0] + '.json'
         json_data = convert_to_serializable_and_round(window.Data)
         with open(json_file_path, 'w') as json_file:
             json.dump(json_data, json_file, indent=2)
 
-        # wx.MessageBox(f"All sheets saved with plots to: {file_path}", "Success", wx.OK | wx.ICON_INFORMATION)
+        window.show_popup_message2("Save Complete", "All sheets, plots, and results table have been saved.")
 
     except Exception as e:
         wx.MessageBox(f"Error saving sheets with plots: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
-
 def save_data(window, data):
     if 'FilePath' not in window.Data or not window.Data['FilePath']:
         wx.MessageBox("No file path found in window.Data. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
