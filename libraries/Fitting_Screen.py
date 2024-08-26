@@ -1,8 +1,9 @@
 
-
+import re
 import wx
 from Functions import fit_peaks, remove_peak, plot_background, clear_background
-import re
+
+from libraries.Save import save_state
 
 class FittingWindow(wx.Frame):
     def __init__(self, parent, *args, **kw):
@@ -192,6 +193,7 @@ class FittingWindow(wx.Frame):
         remove_peak(self.parent)
 
     def on_fit_multi(self, event):
+        save_state(self.parent)
         iterations = self.fit_iterations_spin.GetValue()
         for i in range(1, iterations + 1):
             self.current_fit_text.SetValue(f"{i}/{iterations}")
@@ -207,6 +209,7 @@ class FittingWindow(wx.Frame):
 
 
     def on_fit_peaks(self, event):
+        save_state(self.parent)
         result = fit_peaks(self.parent, self.parent.peak_params_grid)
         if result:
             r_squared, chi_squared, red_chi_squared = result

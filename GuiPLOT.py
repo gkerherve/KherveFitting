@@ -434,7 +434,7 @@ class MyFrame(wx.Frame):
 
 
     def add_peak_params(self):
-        save_state(self)
+        # save_state(self)
         sheet_name = self.sheet_combobox.GetValue()
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
 
@@ -807,6 +807,7 @@ class MyFrame(wx.Frame):
                     print(f"Error during cross drag: {e}")
 
     def on_cross_release(self, event):
+        save_state(self)
         if event.inaxes and self.selected_peak_index is not None:
             if event.button == 1:  # Left button release
                 row = self.selected_peak_index * 2
@@ -1126,6 +1127,16 @@ class MyFrame(wx.Frame):
 
     def on_key_press_global(self, event):
         keycode = event.GetKeyCode()
+        if event.ControlDown():
+            if keycode == ord('Z'):
+                from libraries.Save import undo
+                undo(self)
+                return
+            elif keycode == ord('Y'):
+                from libraries.Save import redo
+                redo(self)
+                return
+
         if keycode == wx.WXK_TAB:
             if not self.peak_fitting_tab_selected:
                 self.show_popup_message("Open the Peak Fitting Tab to move or select a peak")
