@@ -61,7 +61,7 @@ class MyFrame(wx.Frame):
         # Variables for Undo & Redo
         self.history = []
         self.redo_stack = []
-        self.max_history = 20
+        self.max_history = 30
 
         # New attribute to track plot state for showing fit or not
         self.show_fit = True
@@ -1523,7 +1523,7 @@ class MyFrame(wx.Frame):
         col = event.GetCol()
 
         try:
-            if col in [2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19]:
+            if col in [1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19]:
                 event.Veto()
                 return
             elif col in [8]:  # Height, FWHM, L/G, RSF columns
@@ -1788,8 +1788,8 @@ class MyFrame(wx.Frame):
             return  # No peaks to calculate ratios for
 
         # Set first peak's ratios and split to 0.00
-        self.peak_params_grid.SetCellValue(0, 9, "100.00")  # I ratio
-        self.peak_params_grid.SetCellValue(0, 10, "100.00")  # A ratio
+        self.peak_params_grid.SetCellValue(0, 9, "100")  # I ratio
+        self.peak_params_grid.SetCellValue(0, 10, "100")  # A ratio
         self.peak_params_grid.SetCellValue(0, 11, "0.00")  # Split
 
         if num_peaks < 2:
@@ -1869,6 +1869,9 @@ class MyFrame(wx.Frame):
             print(f"Checkbox updated: {peak_label}, New value: {new_value}")
             self.update_atomic_percentages()
             self.results_grid.ForceRefresh()
+
+            # undo & redo state
+            save_state(self)
 
         event.Skip()
 
