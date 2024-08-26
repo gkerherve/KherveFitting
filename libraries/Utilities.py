@@ -12,18 +12,18 @@ def _clear_peak_params_grid(window):
 def copy_cell(grid):
     print("Copy cell function called")
     print(f"Grid has focus: {grid.HasFocus()}")
-    print(f"Selected cells: {grid.GetSelectedCells()}")
 
     if grid.HasFocus():
-        if grid.GetSelectedCells():
+        row, col = grid.GetGridCursorPosition()
+        print(f"Cursor position: ({row}, {col})")
+        if row >= 0 and col >= 0:
             print("CTL C has focus")
-            row, col = grid.GetSelectedCells()[0]
             data = grid.GetCellValue(row, col)
             if wx.TheClipboard.Open():
                 wx.TheClipboard.SetData(wx.TextDataObject(data))
                 wx.TheClipboard.Close()
         else:
-            print("No cells selected")
+            print("Invalid cursor position")
     else:
         print("Grid does not have focus")
 
