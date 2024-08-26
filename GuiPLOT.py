@@ -362,7 +362,9 @@ class MyFrame(wx.Frame):
 
         # Create the horizontal toolbar
         self.toolbar = create_horizontal_toolbar(self)
+        update_undo_redo_state(self)
         toggle_Col_1(self)
+
 
         # Bind events
         self.results_grid.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
@@ -1794,6 +1796,7 @@ class MyFrame(wx.Frame):
             first_area = float(self.peak_params_grid.GetCellValue(0, 6))
         except ValueError:
             # If we can't get the first peak's data, we can't calculate ratios
+
             print("Warning: Unable to get first peak's data for ratio calculation")
             return
 

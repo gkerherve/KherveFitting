@@ -205,6 +205,7 @@ class FittingWindow(wx.Frame):
             self.parent.clear_and_replot()
             wx.Yield()
         self.current_fit_text.SetValue("Complete")
+        save_state(self.parent)
 
 
 

@@ -657,6 +657,7 @@ def save_state(window):
     window.redo_stack.clear()
     if len(window.history) > window.max_history:
         window.history.pop(0)
+    update_undo_redo_state(window)
 
 def undo(window):
     if len(window.history) > 1:
@@ -664,12 +665,14 @@ def undo(window):
         window.redo_stack.append(current_state)
         previous_state = window.history[-1]
         restore_state(window, previous_state)
+        update_undo_redo_state(window)
 
 def redo(window):
     if window.redo_stack:
         next_state = window.redo_stack.pop()
         window.history.append(next_state)
         restore_state(window, next_state)
+        update_undo_redo_state(window)
 
 
 def restore_state(window, state):
@@ -704,3 +707,19 @@ def set_grid_data(grid, data):
     for row, row_data in enumerate(data):
         for col, value in enumerate(row_data):
             grid.SetCellValue(row, col, value)
+
+
+def update_undo_redo_state(window):
+    can_undo = len(window.history) > 1
+    can_redo = len(window.redo_stack) > 0
+
+    # Update toolbar buttons if they exist
+    if hasattr(window, 'undo_tool'):
+        window.toolbar.EnableTool(window.undo_tool.GetId(), can_undo)
+    if hasattr(window, 'redo_tool'):
+        window.toolbar.EnableTool(window.redo_tool.GetId(), can_redo)
+
+    # Update menu items if they exist
+    if hasattr(window, 'edit_menu'):
+        window.edit_menu.Enable(wx.ID_UNDO, can_undo)
+        window.edit_menu.Enable(wx.ID_REDO, can_redo)

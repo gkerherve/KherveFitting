@@ -13,7 +13,7 @@ from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
 from libraries.Help import on_about
-from libraries.Save import undo, redo, save_state
+from libraries.Save import undo, redo, save_state, update_undo_redo_state
 
 
 
@@ -594,9 +594,11 @@ def create_horizontal_toolbar(window):
     save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
 
     toolbar.AddSeparator()
-    undo_tool = toolbar.AddTool(wx.ID_ANY, 'Undo',wx.Bitmap(os.path.join(icon_path, "undo-25.png"), wx.BITMAP_TYPE_PNG),
+    window.undo_tool = toolbar.AddTool(wx.ID_ANY, 'Undo',wx.Bitmap(os.path.join(icon_path, "undo-25.png"),
+                                                             wx.BITMAP_TYPE_PNG),
                                 shortHelp="Undo -- For peaks properties only")
-    redo_tool = toolbar.AddTool(wx.ID_ANY, 'Redo',wx.Bitmap(os.path.join(icon_path, "redo-25.png"), wx.BITMAP_TYPE_PNG),
+    window.redo_tool = toolbar.AddTool(wx.ID_ANY, 'Redo',wx.Bitmap(os.path.join(icon_path, "redo-25.png"),
+                                                             wx.BITMAP_TYPE_PNG),
                                 shortHelp="Redo -- For peaks properties only")
     toolbar.AddSeparator()
 
@@ -728,8 +730,8 @@ def create_horizontal_toolbar(window):
     window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
     window.Bind(wx.EVT_TOOL, window.on_auto_be, auto_be_button)
     window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: undo(window), undo_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: redo(window), redo_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: undo(window), window.undo_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: redo(window), window.redo_tool)
 
     return toolbar
 
@@ -870,6 +872,11 @@ def open_xlsx_file(window):
             window.SetStatusText(f"Selected File: {file_path}", 0)
 
             try:
+                # Clear undo and redo history
+                window.history = []
+                window.redo_stack = []
+                update_undo_redo_state(window)
+
                 # Clear the results grid
                 window.results_grid.ClearGrid()
                 if window.results_grid.GetNumberRows() > 0:
@@ -1047,6 +1054,11 @@ def open_vamas_file(window):
         original_vamas_path = fileDialog.GetPath()
 
     try:
+        # Clear undo and redo history
+        window.history = []
+        window.redo_stack = []
+        update_undo_redo_state(window)
+
         if not os.path.exists(original_vamas_path):
             raise FileNotFoundError(f"The file {original_vamas_path} does not exist.")
 
