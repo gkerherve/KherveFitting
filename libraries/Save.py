@@ -654,7 +654,9 @@ def save_state(window):
         'results_grid':  {
             'data': get_grid_data(window.results_grid),
             'num_rows': window.results_grid.GetNumberRows(),
-            'num_cols': window.results_grid.GetNumberCols()
+            'num_cols': window.results_grid.GetNumberCols(),
+            'checkbox_states': [window.results_grid.GetCellValue(row, 7) for row in
+                                range(window.results_grid.GetNumberRows())]
         }
     }
     window.history.append(state)
@@ -700,6 +702,12 @@ def restore_state(window, state):
         window.results_grid.DeleteRows(target_rows, current_rows - target_rows)
 
     set_grid_data(window.results_grid, results_grid_data['data'])
+
+    # Restore checkbox states
+    for row, checkbox_state in enumerate(results_grid_data['checkbox_states']):
+        window.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
+        window.results_grid.SetCellEditor(row, 7, wx.grid.GridCellBoolEditor())
+        window.results_grid.SetCellValue(row, 7, checkbox_state)
 
     # Switch to the correct sheet
     window.sheet_combobox.SetValue(state['current_sheet'])

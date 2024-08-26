@@ -1057,6 +1057,7 @@ class MyFrame(wx.Frame):
 
             # Call on_sheet_selected with the mock event
             on_sheet_selected(self, mock_event)
+            save_state(self)
 
 
     def highlight_selected_peak(self):
@@ -1166,6 +1167,7 @@ class MyFrame(wx.Frame):
 
             # Call on_sheet_selected with the new sheet name
             on_sheet_selected(self, new_sheet)
+            save_state(self)
             return  # Prevent event from propagating
         elif keycode in [ord('-'), ord('=')] and event.ControlDown():
             sheet_name = self.sheet_combobox.GetValue()
@@ -1521,15 +1523,19 @@ class MyFrame(wx.Frame):
         col = event.GetCol()
 
         try:
-            if col in [2, 3, 4, 5, 8]:  # Height, FWHM, L/G, RSF columns
-                height = float(self.results_grid.GetCellValue(row, 2))
-                fwhm = float(self.results_grid.GetCellValue(row, 3))
+            if col in [2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19]:
+                event.Veto()
+                return
+            elif col in [8]:  # Height, FWHM, L/G, RSF columns
+                # height = float(self.results_grid.GetCellValue(row, 2))
+                # fwhm = float(self.results_grid.GetCellValue(row, 3))
                 rsf = float(self.results_grid.GetCellValue(row, 8))
-                tail_E = float(self.results_grid.GetCellValue(row, 11))
-                tail_M = float(self.results_grid.GetCellValue(row, 12))
+                # tail_E = float(self.results_grid.GetCellValue(row, 11))
+                # tail_M = float(self.results_grid.GetCellValue(row, 12))
+                new_area = float(self.results_grid.GetCellValue(row, 5))
 
                 # Recalculate the area
-                new_area = height * fwhm * (np.sqrt(2 * np.pi) / 2.355)
+                # new_area = height * fwhm * (np.sqrt(2 * np.pi) / 2.355)
                 self.results_grid.SetCellValue(row, 5, f"{new_area:.2f}")
 
                 # Recalculate the relative area
@@ -1891,6 +1897,7 @@ class MyFrame(wx.Frame):
 
                 self.results_grid.ForceRefresh()
                 self.update_atomic_percentages()
+                save_state(self)
         else:
             event.Skip()
 

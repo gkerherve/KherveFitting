@@ -946,6 +946,9 @@ def open_xlsx_file(window):
                 window.plot_config.plot_limits.clear()
                 on_sheet_selected_wrapper(window,event)
 
+                # undo and redo
+                save_state(window)
+
                 print("open_xlsx_file function completed successfully")
             except Exception as e:
                 print(f"Error in open_xlsx_file: {str(e)}")
