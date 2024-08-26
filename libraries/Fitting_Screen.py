@@ -7,8 +7,7 @@ from libraries.Save import save_state
 
 class FittingWindow(wx.Frame):
     def __init__(self, parent, *args, **kw):
-        super().__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(
-                wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
+        super().__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent  # Store reference to MainFrame
 
         self.SetTitle("Peak Fitting")
