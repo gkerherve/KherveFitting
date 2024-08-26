@@ -31,6 +31,7 @@ from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.SplashScreen import show_splash
 from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
+from libraries.Utilities import copy_cell, paste_cell
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -1156,6 +1157,12 @@ class MyFrame(wx.Frame):
             elif keycode == ord('Y'):
                 from libraries.Save import redo
                 redo(self)
+                return
+            if keycode == ord('C'):
+                copy_cell(self.peak_params_grid)
+                return
+            elif keycode == ord('V'):
+                paste_cell(self.peak_params_grid)
                 return
 
         if keycode == wx.WXK_TAB:
