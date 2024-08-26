@@ -640,9 +640,17 @@ def save_results_table(window):
 
 
 def save_state(window):
+    current_sheet = window.sheet_combobox.GetValue()
     state = {
         'Data': deepcopy(window.Data),
-        'peak_params_grid': get_grid_data(window.peak_params_grid),
+        'current_sheet': current_sheet,
+        'sheets': {
+            sheet: {
+                'peak_params_grid': get_grid_data(window.peak_params_grid),
+                'peak_count': window.peak_count,
+                'selected_peak_index': window.selected_peak_index,
+            } for sheet in window.Data['Core levels'].keys()
+        },
         'results_grid': get_grid_data(window.results_grid)
     }
     window.history.append(state)
@@ -663,10 +671,23 @@ def redo(window):
         window.history.append(next_state)
         restore_state(window, next_state)
 
+
 def restore_state(window, state):
     window.Data = deepcopy(state['Data'])
-    set_grid_data(window.peak_params_grid, state['peak_params_grid'])
+
+    # Restore sheet-specific data
+    for sheet, sheet_data in state['sheets'].items():
+        if sheet == state['current_sheet']:
+            set_grid_data(window.peak_params_grid, sheet_data['peak_params_grid'])
+            window.peak_count = sheet_data['peak_count']
+            window.selected_peak_index = sheet_data['selected_peak_index']
+
     set_grid_data(window.results_grid, state['results_grid'])
+
+    # Switch to the correct sheet
+    window.sheet_combobox.SetValue(state['current_sheet'])
+    on_sheet_selected(window, state['current_sheet'])
+
     window.clear_and_replot()
 
 def get_grid_data(grid):

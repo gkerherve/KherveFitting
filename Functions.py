@@ -53,6 +53,7 @@ def safe_delete_rows(grid, pos, num_rows):
 
 
 def remove_peak(window):
+    save_state(window)
     num_rows = window.peak_params_grid.GetNumberRows()
     if num_rows > 0:
         sheet_name = window.sheet_combobox.GetValue()
