@@ -48,7 +48,10 @@ def load_recent_files_from_config(window):
     window.recent_files = config.get('recent_files', [])
     update_recent_files_menu(window)
 
-def open_recent_file(window):
-    if window.recent_file:
-        from Functions import open_xlsx_file
-        open_xlsx_file(window, window.recent_file)
+def update_recent_files(window, file_path):
+    if file_path in window.recent_files:
+        window.recent_files.remove(file_path)
+    window.recent_files.insert(0, file_path)
+    window.recent_files = window.recent_files[:window.max_recent_files]
+    update_recent_files_menu(window)
+    window.save_config()  # Call save_config directly on the window object

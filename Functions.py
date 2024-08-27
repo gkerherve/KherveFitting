@@ -502,7 +502,7 @@ def create_menu(window):
     open_item = file_menu.Append(wx.ID_OPEN, "Open Excel File")
     window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
 
-    from libraries.Open import open_recent_file
+
     window.recent_files_menu = wx.Menu()
     file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
     # window.Bind(wx.EVT_MENU, lambda event: open_recent_file(window), window.recent_file_item)
@@ -962,8 +962,8 @@ def open_xlsx_file(window, file_path=None):
         # undo and redo
         save_state(window)
 
-
         # Update recent files list
+        from libraries.Open import update_recent_files
         update_recent_files(window, file_path)
 
         print("open_xlsx_file function completed successfully")
