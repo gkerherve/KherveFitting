@@ -12,3 +12,10 @@ class ExcelDropTarget(wx.FileDropTarget):
                 wx.CallAfter(open_xlsx_file, self.window, file)
                 return True
         return False
+
+
+
+def open_recent_file(window):
+    if window.recent_file:
+        from Functions import open_xlsx_file
+        open_xlsx_file(window, window.recent_file)

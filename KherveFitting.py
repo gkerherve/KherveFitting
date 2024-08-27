@@ -137,6 +137,8 @@ class MyFrame(wx.Frame):
         self.drag_mode = False
         self.drag_tool = None
 
+        # Most recent File Initialisation
+        self.recent_file = None
 
         # Initialize attributes for background and noise data
         self.background = None

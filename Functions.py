@@ -17,6 +17,7 @@ from libraries.Save import undo, redo, save_state, update_undo_redo_state
 
 
 
+
 # -------------------------------------------------------------------------------
 
 def save_data_wrapper(window, data):
@@ -503,6 +504,11 @@ def create_menu(window):
     open_vamas_item = file_menu.Append(wx.NewId(), "Open/Convert Vamas file to Excel")
     window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), open_vamas_item)
 
+    from libraries.Open import open_recent_file
+    window.recent_file_item = file_menu.Append(wx.NewId(), "Open Recent File")
+    window.recent_file_item.Enable(False)
+    window.Bind(wx.EVT_MENU, lambda event: open_recent_file(window), window.recent_file_item)
+
     save_Excel_item = file_menu.Append(wx.ID_SAVE, "Save Data to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item)
 
@@ -876,11 +882,6 @@ def open_xlsx_file(window, file_path=None):
 
     window.SetStatusText(f"Selected File: {file_path}", 0)
 
-    # with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
-    #                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
-    #     if dlg.ShowModal() == wx.ID_OK:
-    #         file_path = dlg.GetPath()
-    #         window.SetStatusText(f"Selected File: {file_path}", 0)
 
     try:
         # Clear undo and redo history
@@ -959,6 +960,11 @@ def open_xlsx_file(window, file_path=None):
 
         # undo and redo
         save_state(window)
+
+        # Update recent file
+        window.recent_file = file_path
+        window.recent_file_item.SetItemLabel(f"Open Recent: {os.path.basename(file_path)}")
+        window.recent_file_item.Enable(True)
 
         print("open_xlsx_file function completed successfully")
     except Exception as e:
