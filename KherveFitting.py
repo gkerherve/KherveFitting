@@ -37,7 +37,6 @@ from Functions import on_save
 from libraries.Open import load_recent_files_from_config
 
 
-
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
         super().__init__(parent, title=title, size=(1600, 700))
