@@ -14,6 +14,7 @@ from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
 from libraries.Help import on_about
 from libraries.Save import undo, redo, save_state, update_undo_redo_state
+from libraries.Open import update_recent_files
 
 
 
@@ -501,24 +502,24 @@ def create_menu(window):
     open_item = file_menu.Append(wx.ID_OPEN, "Open Excel File")
     window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
 
-    open_vamas_item = file_menu.Append(wx.NewId(), "Open/Convert Vamas file to Excel")
-    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), open_vamas_item)
-
     from libraries.Open import open_recent_file
-    window.recent_file_item = file_menu.Append(wx.NewId(), "Open Recent File")
-    window.recent_file_item.Enable(False)
-    window.Bind(wx.EVT_MENU, lambda event: open_recent_file(window), window.recent_file_item)
+    window.recent_files_menu = wx.Menu()
+    file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
+    # window.Bind(wx.EVT_MENU, lambda event: open_recent_file(window), window.recent_file_item)
+
+    open_vamas_item = file_menu.Append(wx.NewId(), "Open Vamas File")
+    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), open_vamas_item)
 
     save_Excel_item = file_menu.Append(wx.ID_SAVE, "Save Data to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item)
 
-    save_plot_item = file_menu.Append(wx.NewId(), "Save plot to Excel")
+    save_plot_item = file_menu.Append(wx.NewId(), "Save Plot to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
 
     save_Table_item = file_menu.Append(wx.NewId(), "Save Table")
     window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
 
-    save_all_item = file_menu.Append(wx.NewId(), "Save all")
+    save_all_item = file_menu.Append(wx.NewId(), "Save All")
     window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
 
     file_menu.AppendSeparator()
@@ -961,10 +962,9 @@ def open_xlsx_file(window, file_path=None):
         # undo and redo
         save_state(window)
 
-        # Update recent file
-        window.recent_file = file_path
-        window.recent_file_item.SetItemLabel(f"Open Recent: {os.path.basename(file_path)}")
-        window.recent_file_item.Enable(True)
+
+        # Update recent files list
+        update_recent_files(window, file_path)
 
         print("open_xlsx_file function completed successfully")
     except Exception as e:

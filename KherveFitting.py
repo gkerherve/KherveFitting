@@ -34,6 +34,7 @@ from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
 from libraries.Utilities import copy_cell, paste_cell
 from Functions import on_save
+from libraries.Open import load_recent_files_from_config
 
 
 class MyFrame(wx.Frame):
@@ -137,9 +138,6 @@ class MyFrame(wx.Frame):
         self.drag_mode = False
         self.drag_tool = None
 
-        # Most recent File Initialisation
-        self.recent_file = None
-
         # Initialize attributes for background and noise data
         self.background = None
         self.noise_data = None
@@ -191,9 +189,17 @@ class MyFrame(wx.Frame):
                             "#800080", "#008080", "#C0C0C0", "#808080", "#9B30FF"]
         self.peak_alpha = 0.3
 
+        # Most recent File Initialisation
+        self.recent_files = []
+        self.max_recent_files = 5  # Maximum number of recent files to keep
+
+        # Load config if exists
+        self.load_config()
 
         self.create_widgets()
         create_menu(self)
+
+        load_recent_files_from_config(self)
 
 
         create_statusbar(self)
@@ -244,8 +250,8 @@ class MyFrame(wx.Frame):
         # Initialize plot_manager after self.ax and self.canvas are created
         self.plot_manager = PlotManager(self.ax, self.canvas)
 
-        # Load config if exists
-        self.load_config()
+
+
 
         # Update plot manager with loaded or default values
         self.update_plot_preferences()
@@ -2033,7 +2039,11 @@ class MyFrame(wx.Frame):
                 self.peak_colors = config.get('peak_colors', self.peak_colors)
                 self.peak_alpha = config.get('peak_alpha', self.peak_alpha)
         else:
+            config = {}
             print("No config file found, using default values.")
+
+        self.recent_files = config.get('recent_files', [])
+        return config
 
     def save_config(self):
         config = {
@@ -2055,7 +2065,8 @@ class MyFrame(wx.Frame):
             'residual_linestyle': self.residual_linestyle,
             'raw_data_linestyle': self.raw_data_linestyle,
             'peak_colors': self.peak_colors,
-            'peak_alpha': self.peak_alpha
+            'peak_alpha': self.peak_alpha,
+            'recent_files': self.recent_files
         }
 
         with open('config.json', 'w') as f:
