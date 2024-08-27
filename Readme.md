@@ -8,12 +8,14 @@ KherveFitting is an open-source software developed by Dr. Gwilherm Kerherve at I
 
 - **Tab:** Select next peak
 - **Q:** Select previous peak
-- **Minus (-):** Zoom out
+- **CTL+Minus (-):** Zoom out
 - **Equal (=):** Zoom in
-- **Left bracket [:** Decrease intensity
-- **Right bracket ]:** Increase intensity
-- **Up:** Select previous core level
-- **Down:** Select next core level
+- **CTL+Left bracket [:** Select previous core level
+- **CTL+Right bracket ]:** Select next core level
+- **CTL+Up:** Increase intensity
+- **CTL+Down:** Decrease intensity
+- **CTL+Left:** Move plot to High BE
+- **CTL+Right:** Move plot to Low BE
 
 ## Opening Files
 
