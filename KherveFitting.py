@@ -2045,8 +2045,12 @@ class MyFrame(wx.Frame):
         self.recent_files = config.get('recent_files', [])
         return config
 
-    def save_config(self):
-        config = {
+    def save_config(self, config=None):
+        if config is None:
+            config = {}
+
+        # Merge the provided config with existing settings
+        config.update({
             'plot_style': self.plot_style,
             'scatter_size': self.scatter_size,
             'line_width': self.line_width,
@@ -2067,10 +2071,10 @@ class MyFrame(wx.Frame):
             'peak_colors': self.peak_colors,
             'peak_alpha': self.peak_alpha,
             'recent_files': self.recent_files
-        }
+        })
 
         with open('config.json', 'w') as f:
-            json.dump(config, f)
+            json.dump(config, f, indent=2)
 
 
 
