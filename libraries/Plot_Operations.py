@@ -3,6 +3,7 @@
 import re
 import wx
 import numpy as np
+import numpy.ma as ma
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 from matplotlib.ticker import ScalarFormatter
@@ -45,43 +46,6 @@ class PlotManager:
         self.peak_colors = []
         self.peak_alpha = 0.3
 
-    def plot_peak2(self, x_values, background, selected_fitting_method, peak_params, sheet_name):
-        row = peak_params['row']
-        fwhm = peak_params['fwhm']
-        lg_ratio = peak_params['lg_ratio']
-        x = peak_params['position']
-        y = peak_params['height']
-
-        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-        gamma = lg_ratio * sigma
-        bkg_y = background[np.argmin(np.abs(x_values - x))]
-
-        if selected_fitting_method == "Voigt":
-            peak_model = lmfit.models.VoigtModel()
-            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
-            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-        elif selected_fitting_method == "Pseudo-Voigt":
-            peak_model = lmfit.models.PseudoVoigtModel()
-            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
-            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-        elif selected_fitting_method == "GL":
-            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-        elif selected_fitting_method == "SGL":
-            peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
-            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-
-        peak_y = peak_model.eval(params, x=x_values) + background
-
-        peak_label = peak_params['label'] if 'label' in peak_params else f"{sheet_name} p{row // 2 + 1}"
-
-
-        self.ax.plot(x_values, peak_y)
-        self.ax.fill_between(x_values, background, peak_y, alpha=0.3, label=peak_label)
-
-        self.canvas.draw_idle()
-
-        return peak_y
 
     def plot_peak(self, x_values, background, peak_params, sheet_name, color=None, alpha=0.3):
         row = peak_params['row']
@@ -138,14 +102,13 @@ class PlotManager:
         if alpha is None:
             alpha = self.peak_alpha
 
-
-
+        line_alpha = min(alpha +0.1, 1)
         if self.peak_fill_enabled:
             label = peak_label
             self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
-            self.ax.plot(x_values, peak_y, color=color, alpha=1)
+            self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha)
         else:
-            self.ax.plot(x_values, peak_y, color=color, alpha=1, label=peak_label)
+            self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha, label=peak_label)
 
         self.canvas.draw_idle()
 
@@ -597,6 +560,10 @@ class PlotManager:
         # Scale residuals
         scaled_residuals = residuals * scaling_factor
 
+
+        # Create a masked array where 0 values are masked
+        masked_residuals = ma.masked_where(np.isclose(scaled_residuals, 0, atol=5e-1), scaled_residuals)
+
         # Remove old overall fit and residuals, keep background lines
         for line in self.ax.get_lines():
             if line.get_label() in ['Overall Fit', 'Residuals']:
@@ -606,7 +573,7 @@ class PlotManager:
         self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
                     linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
 
-        self.ax.plot(window.x_values, scaled_residuals + 1.05 * max(window.y_values),
+        self.ax.plot(window.x_values, masked_residuals + 1.05 * max(window.y_values),
                      color=self.residual_color, linestyle=self.residual_linestyle,
                      alpha=self.residual_alpha, label='Residuals')
 
