@@ -32,6 +32,7 @@ from libraries.SplashScreen import show_splash
 from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
 from libraries.Utilities import copy_cell, paste_cell
+from Functions import on_save
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -1165,6 +1166,10 @@ class MyFrame(wx.Frame):
             elif keycode == ord('V'):
                 paste_cell(self.peak_params_grid)
                 save_state(self)
+                return
+            elif keycode == ord('S'):
+                print("Saving")
+                on_save(self)
                 return
 
         if keycode == wx.WXK_TAB:
