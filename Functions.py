@@ -847,7 +847,8 @@ def update_statusbar(window, message):
 
 def on_exit(window, event):
     """Handles the Exit menu item."""
-    window.Close()
+    window.Destroy()
+    wx.GetApp().ExitMainLoop()
 
 
 

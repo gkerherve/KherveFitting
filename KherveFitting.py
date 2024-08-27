@@ -1,11 +1,12 @@
-# GuiPLOT------------------------------------------------------------------------
-# Fitting program create with chatGPT 4o-----------------------------------------
+# KherveFitting------------------------------------------------------------------
 
+
+# LIBRARIES----------------------------------------------------------------------
 import matplotlib
 import matplotlib.widgets as widgets
-# LIBRARIES----------------------------------------------------------------------
 import wx.grid
 import wx.adv
+import sys
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -33,6 +34,7 @@ from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
 from libraries.Utilities import copy_cell, paste_cell
 from Functions import on_save
+
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -205,6 +207,7 @@ class MyFrame(wx.Frame):
 
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGED, self.on_peak_params_cell_changed)
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGING, self.on_peak_params_cell_changed)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
         # self.peak_params_grid.Bind(wx.EVT_KEY_DOWN, self.on_grid_key)
 
 
@@ -2176,7 +2179,9 @@ class MyFrame(wx.Frame):
     def on_redo(self, event):
         redo(self)
 
-
+    def on_close(self, event):
+        self.Destroy()
+        wx.GetApp().ExitMainLoop()
 
 
 if __name__ == '__main__':
@@ -2192,4 +2197,5 @@ if __name__ == '__main__':
 
     # print("Entering app.MainLoop()")
     app.MainLoop()
+    sys.exit(0)
 
