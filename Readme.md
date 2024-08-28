@@ -16,6 +16,9 @@ KherveFitting is an open-source software developed by Dr. Gwilherm Kerherve at I
 - **CTL+Down:** Decrease intensity
 - **CTL+Left:** Move plot to High BE
 - **CTL+Right:** Move plot to Low BE
+- **CTL+Z:** Undo up to 30 events
+- **CTL+Y:** Redo
+- **CTL+S:** Save. Only works on the grid and not on the figure canvas.
 
 ## Opening Files
 
