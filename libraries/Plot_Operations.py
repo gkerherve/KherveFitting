@@ -341,6 +341,10 @@ class PlotManager:
             self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
                          alpha=self.line_alpha, linestyle=self.raw_data_linestyle, label='Raw Data')
 
+        # Assuming 'ax' is your axes object
+        for spine in self.ax.spines.values():
+            spine.set_linewidth(1)  # Adjust this value to increase or decrease thickness
+
         # Update the legend only if necessary
         if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
             self.update_legend(window)
