@@ -500,21 +500,24 @@ def create_menu(window):
     view_menu = wx.Menu()
     tools_menu = wx.Menu()
     help_menu = wx.Menu()
+    save_menu = wx.Menu()
 
     open_item = file_menu.Append(wx.ID_OPEN, "Open")
     window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
 
-    save_all_item = file_menu.Append(wx.NewId(), "Save All")
-    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
-
-    save_Excel_item = file_menu.Append(wx.ID_SAVE, "Save Data to Excel")
+    save_Excel_item = save_menu.Append(wx.ID_SAVE, "Save Data to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item)
 
-    save_plot_item = file_menu.Append(wx.NewId(), "Save Plot to Excel")
+    save_plot_item = save_menu.Append(wx.NewId(), "Save Plot to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
 
-    save_Table_item = file_menu.Append(wx.NewId(), "Save Table")
+    save_Table_item = save_menu.Append(wx.NewId(), "Save Table")
     window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
+
+    file_menu.AppendSubMenu(save_menu, "Save")
+
+    save_all_item = file_menu.Append(wx.NewId(), "Save All")
+    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
 
     import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file")
     window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), import_vamas_item)
@@ -530,7 +533,7 @@ def create_menu(window):
 
     file_menu.AppendSeparator()
     exit_item = file_menu.Append(wx.ID_EXIT, "Exit")
-    window.Bind(wx.EVT_MENU, lambda event: on_exit(window, event), exit_item)  # Bind the on_exit function
+    window.Bind(wx.EVT_MENU, lambda event: on_exit(window, event), exit_item)
 
     undo_item = edit_menu.Append(wx.ID_UNDO, "Undo\tCtrl+Z")
     redo_item = edit_menu.Append(wx.ID_REDO, "Redo\tCtrl+Y")

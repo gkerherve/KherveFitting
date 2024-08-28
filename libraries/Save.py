@@ -544,10 +544,6 @@ def save_plot_to_excel(window):
 
         print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
 
-        # Call this function after saving the PNG
-        # save_plot_data_and_script(window, png_filepath)
-        # create_plot_script_from_excel(file_path, sheet_name)
-
         # wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
         #               wx.OK | wx.ICON_INFORMATION)
         window.show_popup_message2("Plot saved into Excel file", f"Under sheet: {sheet_name}")
@@ -860,7 +856,7 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
             f.write("plt.plot(x_values, residuals + np.max(y_values), color='green', label='Residuals')\n")
 
         for i in range(len(fitted_peaks)):
-            f.write(f"plt.fill_between(x_values, background, fitted_peak_{i+1}, alpha=0.5, label='Fitted Peak"
+            f.write(f"plt.fill_between(x_values, background, fitted_peak_{i+1}, alpha=0.6, label='Fitted Peak"
                     f" {i+1}')\n")
             # f.write(f"plt.plot(x_values, fitted_peak_{i+1}, linestyle='-')\n")
 
