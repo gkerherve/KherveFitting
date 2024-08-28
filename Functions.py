@@ -7,7 +7,7 @@ import numpy as np
 import lmfit
 import sys
 from scipy.stats import linregress
-from libraries.Save import refresh_sheets
+from libraries.Save import refresh_sheets, create_plot_script_from_excel
 # from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
@@ -494,21 +494,18 @@ def rename_sheet(window, new_sheet_name):
 def create_menu(window):
     menubar = wx.MenuBar()
     file_menu = wx.Menu()
+    import_menu = wx.Menu()
+    export_menu = wx.Menu()
     edit_menu = wx.Menu()
     view_menu = wx.Menu()
     tools_menu = wx.Menu()
     help_menu = wx.Menu()
 
-    open_item = file_menu.Append(wx.ID_OPEN, "Open Excel File")
+    open_item = file_menu.Append(wx.ID_OPEN, "Open")
     window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
 
-
-    window.recent_files_menu = wx.Menu()
-    file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
-    # window.Bind(wx.EVT_MENU, lambda event: open_recent_file(window), window.recent_file_item)
-
-    open_vamas_item = file_menu.Append(wx.NewId(), "Open Vamas File")
-    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), open_vamas_item)
+    save_all_item = file_menu.Append(wx.NewId(), "Save All")
+    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
 
     save_Excel_item = file_menu.Append(wx.ID_SAVE, "Save Data to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item)
@@ -519,8 +516,17 @@ def create_menu(window):
     save_Table_item = file_menu.Append(wx.NewId(), "Save Table")
     window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
 
-    save_all_item = file_menu.Append(wx.NewId(), "Save All")
-    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
+    import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file")
+    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), import_vamas_item)
+
+    export_python_plot_item = export_menu.Append(wx.NewId(), "Python Plot")
+    window.Bind(wx.EVT_MENU, lambda event: create_plot_script_from_excel(window), export_python_plot_item)
+
+    window.recent_files_menu = wx.Menu()
+    file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
+
+    file_menu.AppendSubMenu(import_menu, "Import")
+    file_menu.AppendSubMenu(export_menu, "Export")
 
     file_menu.AppendSeparator()
     exit_item = file_menu.Append(wx.ID_EXIT, "Exit")

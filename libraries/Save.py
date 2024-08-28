@@ -546,7 +546,7 @@ def save_plot_to_excel(window):
 
         # Call this function after saving the PNG
         # save_plot_data_and_script(window, png_filepath)
-        create_plot_script_from_excel(file_path, sheet_name)
+        # create_plot_script_from_excel(file_path, sheet_name)
 
         # wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
         #               wx.OK | wx.ICON_INFORMATION)
@@ -752,7 +752,7 @@ def update_undo_redo_state(window):
         window.edit_menu.Enable(wx.ID_REDO, can_redo)
 
 
-import pandas as pd
+
 
 def save_plot_data_and_script(window, png_filepath):
     data = window.get_data_for_save()
@@ -810,8 +810,8 @@ def save_plot_data_and_script(window, png_filepath):
     print(f"Plot data and script saved to {py_filepath}")
 
 
-import pandas as pd
-import os
+
+
 
 def create_plot_script_from_excel(excel_filepath, sheet_name):
     # Read the Excel file
@@ -824,9 +824,14 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
     envelope = df['Calculated Fit'].values if 'Calculated Fit' in df.columns else None
     residuals = df['Residuals'].values if 'Residuals' in df.columns else None
 
-    # Extract individual peak fits
-    peak_columns = [col for col in df.columns if col.startswith(sheet_name + ' p')]
-    fitted_peaks = [df[col].values for col in peak_columns]
+    # Extract fitted peaks
+    fitted_peaks = []
+    calculated_fit_index = df.columns.get_loc('Calculated Fit') if 'Calculated Fit' in df.columns else -1
+    for col in df.columns[calculated_fit_index + 1:]:
+        if df[col].notna().any():  # Check if the column is not empty
+            fitted_peaks.append(df[col].values)
+        else:
+            break  # Stop when we find an empty column
 
     # Create Python script
     py_filepath = os.path.splitext(excel_filepath)[0] + f'_{sheet_name}.py'
@@ -845,20 +850,25 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
             f.write(f"residuals = np.{repr(residuals)}\n")
 
         for i, peak in enumerate(fitted_peaks):
-            f.write(f"fitted_peak_{i} = np.{repr(peak)}\n")
+            f.write(f"fitted_peak_{i+1} = np.{repr(peak)}\n")
 
-        f.write("\nplt.figure(figsize=(10, 6))\n")
-        f.write("plt.scatter(x_values, y_values, color='black', s=10, label='Raw Data')\n")
-        if background is not None:
-            f.write("plt.plot(x_values, background, color='gray', linestyle='--', label='Background')\n")
-        if envelope is not None:
-            f.write("plt.plot(x_values, envelope, color='blue', label='Envelope')\n")
+        f.write("\nplt.figure(figsize=(8, 8))\n")
+
+
+
         if residuals is not None:
             f.write("plt.plot(x_values, residuals + np.max(y_values), color='green', label='Residuals')\n")
 
         for i in range(len(fitted_peaks)):
-            f.write(f"plt.fill_between(x_values, background, fitted_peak_{i} + background, alpha=0.3, label='Fitted Peak {i+1}')\n")
-            f.write(f"plt.plot(x_values, fitted_peak_{i} + background, color='red', linestyle='-')\n")
+            f.write(f"plt.fill_between(x_values, background, fitted_peak_{i+1}, alpha=0.5, label='Fitted Peak"
+                    f" {i+1}')\n")
+            # f.write(f"plt.plot(x_values, fitted_peak_{i+1}, linestyle='-')\n")
+
+        if envelope is not None:
+            f.write("plt.plot(x_values, envelope, color='black', label='Envelope')\n")
+        if background is not None:
+            f.write("plt.plot(x_values, background, color='gray', linestyle='--', label='Background')\n")
+        f.write("plt.scatter(x_values, y_values, color='black', s=20, label='Raw Data')\n")
 
         f.write("\nplt.xlabel('Binding Energy (eV)')\n")
         f.write("plt.ylabel('Intensity (CTS)')\n")
@@ -869,6 +879,3 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
         f.write("plt.show()\n")
 
     print(f"Plot script created: {py_filepath}")
-
-# Usage
-# create_plot_script_from_excel('path_to_your_excel_file.xlsx', 'sheet_name')
