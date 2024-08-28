@@ -543,6 +543,10 @@ def save_plot_to_excel(window):
         print(f"Plot saved as PNG: {png_filepath}")
 
         print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
+
+        # Call this function after saving the PNG
+        save_plot_data_and_script(window, png_filepath)
+
         # wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
         #               wx.OK | wx.ICON_INFORMATION)
         window.show_popup_message2("Plot saved into Excel file", f"Under sheet: {sheet_name}")
@@ -745,3 +749,55 @@ def update_undo_redo_state(window):
     if hasattr(window, 'edit_menu'):
         window.edit_menu.Enable(wx.ID_UNDO, can_undo)
         window.edit_menu.Enable(wx.ID_REDO, can_redo)
+
+
+def save_plot_data_and_script(window, png_filepath):
+    sheet_name = window.sheet_combobox.GetValue()
+    core_level_data = window.Data['Core levels'][sheet_name]
+
+    data = window.get_data_for_save()
+
+    x_values = data['x_values']
+    y_values = data['y_values']
+    background = data['background']
+    residuals = data['residuals']
+    envelope = data['calculated_fit']
+    fitted_peaks = data['individual_peak_fits']
+
+    py_filepath = os.path.splitext(png_filepath)[0] + '.py'
+
+    with open(py_filepath, 'w') as f:
+        f.write("import numpy as np\n")
+        f.write("import matplotlib.pyplot as plt\n\n")
+
+        f.write(f"x_values = np.{repr(x_values)}\n")
+        f.write(f"y_values = np.{repr(y_values)}\n")
+        f.write(f"background = np.{repr(background)}\n")
+        f.write(f"residuals = np.{repr(residuals)}\n")
+        f.write(f"envelope = np.{repr(envelope)}\n")
+
+        for i, peak in enumerate(fitted_peaks):
+            f.write(f"fitted_peak_{i} = np.{repr(peak)}\n")
+
+        f.write("\nplt.figure(figsize=(10, 6))\n")
+        f.write("plt.scatter(x_values, y_values, color='black', s=10, label='Raw Data')\n")
+        f.write("plt.plot(x_values, background, color='gray', linestyle='--', label='Background')\n")
+        f.write("plt.plot(x_values, envelope, color='blue', label='Envelope')\n")
+        f.write("plt.plot(x_values, residuals + np.max(y_values), color='green', label='Residuals')\n")
+
+        for i in range(len(fitted_peaks)):
+            f.write(
+                f"plt.fill_between(x_values, background, fitted_peak_{i} + background, alpha=0.3, label='Fitted Peak {i + 1}')\n")
+            f.write(f"plt.plot(x_values, fitted_peak_{i} + background, color='red', linestyle='-')\n")
+
+        f.write("\nplt.xlabel('Binding Energy (eV)')\n")
+        f.write("plt.ylabel('Intensity (CTS)')\n")
+        f.write("plt.title('XPS Spectrum')\n")
+        f.write("plt.legend()\n")
+        f.write("plt.gca().invert_xaxis()\n")
+        f.write("plt.tight_layout()\n")
+        f.write("plt.show()\n")
+
+    print(f"Plot data and script saved to {py_filepath}")
+
+
