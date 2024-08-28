@@ -822,10 +822,12 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
 
     # Extract fitted peaks
     fitted_peaks = []
+    peak_names = []
     calculated_fit_index = df.columns.get_loc('Calculated Fit') if 'Calculated Fit' in df.columns else -1
     for col in df.columns[calculated_fit_index + 1:]:
         if df[col].notna().any():  # Check if the column is not empty
             fitted_peaks.append(df[col].values)
+            peak_names.append(col)
         else:
             break  # Stop when we find an empty column
 
@@ -850,15 +852,11 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
 
         f.write("\nplt.figure(figsize=(8, 8))\n")
 
-
-
         if residuals is not None:
             f.write("plt.plot(x_values, residuals + np.max(y_values), color='green', label='Residuals')\n")
 
-        for i in range(len(fitted_peaks)):
-            f.write(f"plt.fill_between(x_values, background, fitted_peak_{i+1}, alpha=0.6, label='Fitted Peak"
-                    f" {i+1}')\n")
-            # f.write(f"plt.plot(x_values, fitted_peak_{i+1}, linestyle='-')\n")
+        for i, peak_name in enumerate(peak_names):
+            f.write(f"plt.fill_between(x_values, background, fitted_peak_{i+1}, alpha=0.6, label='{peak_name}')\n")
 
         if envelope is not None:
             f.write("plt.plot(x_values, envelope, color='black', label='Envelope')\n")
@@ -869,8 +867,8 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
         f.write("\nplt.xlabel('Binding Energy (eV)')\n")
         f.write("plt.ylabel('Intensity (CTS)')\n")
         f.write(f"plt.title('XPS Spectrum - {sheet_name}')\n")
-        f.write("plt.legend()\n")
-        f.write("plt.gca().invert_xaxis()\n")
+        f.write("plt.legend(loc='upper left')\n")
+        f.write(f"plt.xlim({max(x_values)}, {min(x_values)})\n")  # Reverse x-axis
         f.write("plt.tight_layout()\n")
         f.write("plt.show()\n")
 
