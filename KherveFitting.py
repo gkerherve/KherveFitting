@@ -33,7 +33,7 @@ from libraries.SplashScreen import show_splash
 from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
 from libraries.Utilities import copy_cell, paste_cell
-from Functions import on_save
+from Functions import on_save, open_xlsx_file, on_exit
 from libraries.Open import load_recent_files_from_config
 
 
@@ -1182,6 +1182,17 @@ class MyFrame(wx.Frame):
                 print("Saving")
                 on_save(self)
                 return
+            elif keycode == ord('O'):
+                print("Opening")
+                open_xlsx_file(self)
+                return
+            elif keycode == ord('Q'):
+                print("Opening")
+                on_exit(self, event),
+                return
+
+
+
 
         if keycode == wx.WXK_TAB:
             if not self.peak_fitting_tab_selected:

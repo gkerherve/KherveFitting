@@ -809,9 +809,11 @@ def save_plot_data_and_script(window, png_filepath):
 
 
 
-def create_plot_script_from_excel(excel_filepath, sheet_name):
+def create_plot_script_from_excel(window):
+    file_path = window.Data['FilePath']
+    sheet_name = window.sheet_combobox.GetValue()
     # Read the Excel file
-    df = pd.read_excel(excel_filepath, sheet_name=sheet_name)
+    df = pd.read_excel(file_path, sheet_name=sheet_name)
 
     # Extract data
     x_values = df.iloc[:, 0].values  # Assuming BE is in the first column
@@ -832,7 +834,7 @@ def create_plot_script_from_excel(excel_filepath, sheet_name):
             break  # Stop when we find an empty column
 
     # Create Python script
-    py_filepath = os.path.splitext(excel_filepath)[0] + f'_{sheet_name}.py'
+    py_filepath = os.path.splitext(file_path)[0] + f'_{sheet_name}.py'
 
     with open(py_filepath, 'w') as f:
         f.write("import numpy as np\n")

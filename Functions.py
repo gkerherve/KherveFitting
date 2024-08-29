@@ -502,11 +502,14 @@ def create_menu(window):
     help_menu = wx.Menu()
     save_menu = wx.Menu()
 
-    open_item = file_menu.Append(wx.ID_OPEN, "Open")
+    open_item = file_menu.Append(wx.ID_OPEN, "Open \tCtrl+O")
     window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
 
-    save_Excel_item = save_menu.Append(wx.ID_SAVE, "Save Data to Excel")
+    save_Excel_item = file_menu.Append(wx.ID_SAVE, "Save Sheet \tCtrl+S")
     window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item)
+
+    save_all_item = save_menu.Append(wx.NewId(), "Save All")
+    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
 
     save_plot_item = save_menu.Append(wx.NewId(), "Save Plot to Excel")
     window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
@@ -515,9 +518,6 @@ def create_menu(window):
     window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
 
     file_menu.AppendSubMenu(save_menu, "Save")
-
-    save_all_item = file_menu.Append(wx.NewId(), "Save All")
-    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
 
     import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file")
     window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), import_vamas_item)
@@ -532,7 +532,7 @@ def create_menu(window):
     file_menu.AppendSubMenu(export_menu, "Export")
 
     file_menu.AppendSeparator()
-    exit_item = file_menu.Append(wx.ID_EXIT, "Exit")
+    exit_item = file_menu.Append(wx.ID_EXIT, "Exit\tCtrl+Q")
     window.Bind(wx.EVT_MENU, lambda event: on_exit(window, event), exit_item)
 
     undo_item = edit_menu.Append(wx.ID_UNDO, "Undo\tCtrl+Z")
@@ -671,13 +671,13 @@ def create_horizontal_toolbar(window):
 
     # resize_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Resize Plot', wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Resize Plot")
     toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend',
-                                         wx.Bitmap(os.path.join(icon_path, "Legend-100.png"), wx.BITMAP_TYPE_PNG),
+                                         wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG),
                                          shortHelp="Toggle Legend")
     toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results',
-                                              wx.Bitmap(os.path.join(icon_path, "ToggleFit-100.png"),
+                                              wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"),
                                                         wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
     toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
-                                            wx.Bitmap(os.path.join(icon_path, "Res-100.png"), wx.BITMAP_TYPE_PNG),
+                                            wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG),
                                             shortHelp="Toggle Residuals")
 
     toolbar.AddSeparator()
