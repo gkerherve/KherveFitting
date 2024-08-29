@@ -556,10 +556,10 @@ def create_menu(window):
     ToggleRes_item = view_menu.Append(wx.NewId(), "Toggle Residuals")
     window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_residuals(), ToggleRes_item)
 
-    Area_item = tools_menu.Append(wx.NewId(), "Calculate Area")
+    Area_item = tools_menu.Append(wx.NewId(), "Calculate Area\tCtrl+A")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
 
-    Fitting_item = tools_menu.Append(wx.NewId(), "Peak Fitting")
+    Fitting_item = tools_menu.Append(wx.NewId(), "Peak Fitting\tCtrl+P")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_fitting_window(), Fitting_item)
 
     Noise_item = tools_menu.Append(wx.NewId(), "Noise Analysis")
@@ -603,9 +603,15 @@ def create_horizontal_toolbar(window):
     separators = []
 
     # File operations
-    open_file_tool = toolbar.AddTool(wx.ID_ANY, 'Open File', wx.Bitmap(os.path.join(icon_path, "open-folder-25-green.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open File")
+    open_file_tool = toolbar.AddTool(wx.ID_ANY, 'Open File', wx.Bitmap(os.path.join(icon_path,
+                                                                                    "open-folder-25-green.png"),
+                                                                       wx.BITMAP_TYPE_PNG), shortHelp="Open "
+                                                                                                      "File\tCtrl+O")
     refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Folder', wx.Bitmap(os.path.join(icon_path, "refresh-96g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Refresh Folder")
-    save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level")
+    save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-25.png"),
+                                                             wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results "
+                                                                                            "to Excel for this Core "
+                                                                                            "Level \tCtrl+S")
     save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-PNG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
     save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
 
@@ -690,10 +696,12 @@ def create_horizontal_toolbar(window):
 
     # Analysis tools
     bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-25.png"),
-                                                                  wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area between the range cursor")
+                                                                  wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area "
+                                                                                                "\tCtrl+A")
     # bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(wx.Bitmap(os.path.join(icon_path, "Plot_Area.ico")), wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area under Peak")
     fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s-25.png"),
-                                                                   wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window")
+                                                                   wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting "
+                                                                                                  "Window \tCtrl+P")
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path,
                                                                                               "Noise-25.png"),
                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")

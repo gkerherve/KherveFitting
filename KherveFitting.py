@@ -1190,6 +1190,14 @@ class MyFrame(wx.Frame):
                 print("Opening")
                 on_exit(self, event),
                 return
+            elif keycode == ord('A'):
+                print("Opening")
+                self.on_open_background_window(),
+                return
+            elif keycode == ord('P'):
+                print("Opening")
+                self.on_open_fitting_window()
+                return
 
 
 
