@@ -1332,8 +1332,10 @@ def fit_peaks(window, peak_params_grid):
 
                 sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
                 sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
-                gamma_min = lg_ratio_min * sigma_min if lg_ratio_min is not None and sigma_min is not None else None
-                gamma_max = lg_ratio_max * sigma_max if lg_ratio_max is not None and sigma_max is not None else None
+                sigma_vary = fwhm_vary / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary is not None else None
+                gamma_min = lg_ratio_min/100 * sigma_min if lg_ratio_min is not None and sigma_min is not None else None
+                gamma_max = lg_ratio_max/100 * sigma_max if lg_ratio_max is not None and sigma_max is not None else None
+                gamma_vary = lg_ratio_vary/100 * sigma_vary if lg_ratio_vary is not None and sigma_vary is not None else None
 
                 prefix = f'peak{i}_'
 
@@ -1341,8 +1343,8 @@ def fit_peaks(window, peak_params_grid):
                     peak_model = lmfit.models.VoigtModel(prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
-                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=fwhm_vary)
-                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=lg_ratio_vary)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
                 elif peak_model_choice == "Pseudo-Voigt":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     # sigma = fwhm / 2.355
@@ -1412,7 +1414,7 @@ def fit_peaks(window, peak_params_grid):
                         gamma = result.params[f'{prefix}gamma'].value
                         height = PeakFunctions.get_voigt_height(amplitude, sigma, gamma)
                         fwhm = PeakFunctions.voigt_fwhm(sigma, gamma)
-                        fraction = gamma / (sigma * np.sqrt(2 * np.log(2)))
+                        fraction = gamma / (sigma * np.sqrt(2 * np.log(2))) * 100
                         area = amplitude * (sigma * np.sqrt(2 * np.pi))
                     elif peak_model_choice == "Pseudo-Voigt":
                         amplitude = result.params[f'{prefix}amplitude'].value

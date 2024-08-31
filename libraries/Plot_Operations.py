@@ -70,7 +70,7 @@ class PlotManager:
 
         sigma = fwhm / 2.355
         # sigma = fwhm / 2
-        gamma = lg_ratio * sigma
+        gamma = lg_ratio/100 * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
         if fitting_model == "Unfitted":
             # We've already handled this in clear_and_replot, so just return
@@ -431,7 +431,7 @@ class PlotManager:
             fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
             lg_ratio = float(window.peak_params_grid.GetCellValue(row, 5))
             sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-            gamma = lg_ratio * sigma
+            gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - x))]
 
             tail_e = float(window.peak_params_grid.GetCellValue(row, 7))
@@ -527,7 +527,7 @@ class PlotManager:
                 continue
 
             sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-            gamma = lg_ratio * sigma
+            gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - peak_x))]
 
             if fitting_model == "Voigt":
