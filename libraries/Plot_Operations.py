@@ -152,7 +152,7 @@ class PlotManager:
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
             self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
-            self.ax.set_ylabel("Intensity (CTS)")
+            self.ax.set_ylabel("Intensity (CPS)")
             self.ax.set_xlabel("Binding Energy (eV)")
 
             self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
@@ -240,7 +240,7 @@ class PlotManager:
         # Clear the plot
         self.ax.clear()
         self.ax.set_xlabel("Binding Energy (eV)")
-        self.ax.set_ylabel("Intensity (CTS)")
+        self.ax.set_ylabel("Intensity (CPS)")
         self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
@@ -582,7 +582,7 @@ class PlotManager:
                      alpha=self.residual_alpha, label='Residuals')
 
         # Update the Y-axis label
-        self.ax.set_ylabel(f'Intensity (CTS), residual x {scaling_factor:.2f}')
+        self.ax.set_ylabel(f'Intensity (CPS), residual x {scaling_factor:.2f}')
 
         self.canvas.draw_idle()
 

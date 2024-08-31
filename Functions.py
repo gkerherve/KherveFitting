@@ -789,10 +789,12 @@ def create_vertical_toolbar(parent, frame):
     # BE adjustment tools
     high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path,
                                                                                              "Right-Red-25g.png"),
-                                                                                wx.BITMAP_TYPE_PNG), shortHelp="Increase High BE")
+                                                                                wx.BITMAP_TYPE_PNG),
+                                                                                shortHelp="Decrease High BE")
     high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path,
                                                                                              "Left-Red-25g.png"),
-                                                                                wx.BITMAP_TYPE_PNG), shortHelp="Decrease High BE")
+                                                                                wx.BITMAP_TYPE_PNG),
+                                                                                shortHelp="Increase High BE")
 
     v_toolbar.AddSeparator()
 
@@ -864,7 +866,7 @@ def create_statusbar(window):
     window.CreateStatusBar(2)
     window.SetStatusWidths([-1, 200])
     window.SetStatusText("Working Directory: "+window.Working_directory,0)
-    window.SetStatusText("BE: 0 eV, I: 0 CTS" ,1)
+    window.SetStatusText("BE: 0 eV, I: 0 CPS" ,1)
 
 def update_statusbar(window, message):
     window.SetStatusText("Working Directory: "+message)
@@ -1477,7 +1479,8 @@ def fit_peaks(window, peak_params_grid):
 
             # Fitting results --- THIS NEEDS TO BE SET AFTER CLEAR & REPLOT TO WORK
             window.plot_manager.set_fitting_results_text(f'Noise STD: {std_value_int}'
-                                                         f' cts\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. Chi²: {red_chi_square:.2f}\nIteration: {result.nfev}')
+                                                         f' cps\nR²: {r_squared:.5f}\nChi²: {chi_square:.2f}\nRed. '
+                                                         f'Chi²: {red_chi_square:.2f}\nIteration: {result.nfev}')
 
             return r_squared, chi_square, red_chi_square
 

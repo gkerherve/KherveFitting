@@ -153,7 +153,7 @@ class MyFrame(wx.Frame):
         self.figure = plt.figure()
         self.ax = self.figure.add_subplot(111)  # Create the Matplotlib axes
         self.ax.set_xlabel("Binding Energy (eV)")  # Set x-axis label
-        self.ax.set_ylabel("Intensity (CTS)")  # Set y-axis label
+        self.ax.set_ylabel("Intensity (CPS)")  # Set y-axis label
         self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
@@ -974,7 +974,7 @@ class MyFrame(wx.Frame):
     def on_mouse_move(self, event):
         if event.inaxes:
             x, y = event.xdata, event.ydata
-            self.SetStatusText(f"BE: {x:.1f} eV, I: {int(y)} CTS", 1)
+            self.SetStatusText(f"BE: {x:.1f} eV, I: {int(y)} CPS", 1)
 
     def on_click(self, event):
         if event.inaxes:
@@ -1198,6 +1198,11 @@ class MyFrame(wx.Frame):
                 print("Opening")
                 self.on_open_fitting_window()
                 return
+        if event.ShiftDown() and keycode == wx.WXK_LEFT:
+            self.adjust_plot_limits('high_be', 'increase')
+            return
+            print("Opening")
+            self.on_open_fitting_window()
 
 
 
