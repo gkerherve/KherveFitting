@@ -2,20 +2,27 @@
 
 ## Introduction
 
-KherveFitting is an open-source software developed by Dr. Gwilherm Kerherve at Imperial College London. This application is implemented in Python, leveraging wxPython for the graphical user interface, MatplotLib for data visualization, and NumPy for numerical computations and curve fitting algorithms. KherveFitting is distributed under the MIT License, allowing for broad use, modification, and distribution. When utilizing KherveFitting in academic or research contexts, appropriate citation is requested to acknowledge the software's contribution to your work.
+KherveFitting is an open-source software implemented in Python, leveraging wxPython for the graphical user interface, MatplotLib for data visualization, NumPy and lmfit for numerical computations and curve fitting algorithms, Panda and openpyxl for manipulating Excel file. KherveFitting is distributed under the MIT License, allowing for broad use, modification, and distribution. When utilizing KherveFitting in academic or research contexts, appropriate citation is requested to acknowledge the software's contribution to your work.
 
 ## Keyboard Shortcuts
 
 - **Tab:** Select next peak
 - **Q:** Select previous peak
-- **CTL+Minus (-):** Zoom out
+- **Ctrl+Minus (-):** Zoom out
 - **Equal (=):** Zoom in
-- **CTL+Left bracket [:** Select previous core level
-- **CTL+Right bracket ]:** Select next core level
-- **CTL+Up:** Increase intensity
-- **CTL+Down:** Decrease intensity
-- **CTL+Left:** Move plot to High BE
-- **CTL+Right:** Move plot to Low BE
+- **Ctrl+Left bracket [:** Select previous core level
+- **Ctrl+Right bracket ]:** Select next core level
+- **Ctrl+Up:** Increase intensity
+- **Ctrl+Down:** Decrease intensity
+- **Ctrl+Left:** Move plot to High BE
+- **Ctrl+Right:** Move plot to Low BE
+- **SHIFT+Left:** Decrease High BE
+- **SHIFT+Right:** Increase High BE
+- **Ctrl+Z:** Undo up to 30 events
+- **Ctrl+Y:** Redo
+- **Ctrl+S:** Save. Only works on the grid and not on the figure canvas.
+- **Ctrl+P:** Open peak fitting window
+- **Ctrl+A:** Open Area window
 
 ## Opening Files
 
