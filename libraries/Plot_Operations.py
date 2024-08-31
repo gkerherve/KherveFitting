@@ -687,29 +687,24 @@ class PlotManager:
         self.canvas.draw_idle()
 
     def update_legend(self, window):
-        # Retrieve the current handles and labels
         handles, labels = self.ax.get_legend_handles_labels()
-
-        # Define the desired order of legend entries
         legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
 
-        # Collect peak labels
-        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2
         peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
         formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
 
-        # Ensure peaks are added to the end of the order
-        legend_order += formatted_peak_labels
+        filtered_peak_labels = [label for label in formatted_peak_labels if len(label.split()) > 1]
+        legend_order += filtered_peak_labels
 
-        # Create a list of (handle, label) tuples in the desired order
         ordered_handles_labels = []
         for l in legend_order:
             matching_labels = [label for label in labels if label == l or label.startswith(l)]
             for match in matching_labels:
                 index = labels.index(match)
-                ordered_handles_labels.append((handles[index], match))
+                if l not in formatted_peak_labels or l in filtered_peak_labels:
+                    ordered_handles_labels.append((handles[index], match))
 
-        # Update the legend
         self.ax.legend([h for h, l in ordered_handles_labels], [l for h, l in ordered_handles_labels])
         self.ax.legend(loc='upper left')
         self.canvas.draw_idle()
