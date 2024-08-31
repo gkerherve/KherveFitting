@@ -24,12 +24,13 @@ class PeakFunctions:
         peak = amplitude * (
                 PeakFunctions.gaussian(x, center, fwhm, fraction * 1) *
                 PeakFunctions.lorentzian(x, center, fwhm, fraction * 1))
-        tail = PeakFunctions.tail(x, center, tail_mix, tail_exp, fwhm)
-        filter = PeakFunctions.filter_func(x,center)
-        if tail_mix == 0 or tail_exp == 0:
-            return peak
-        else:
-            return peak*filter + amplitude * tail
+        return peak
+        # tail = PeakFunctions.tail(x, center, tail_mix, tail_exp, fwhm)
+        # filter = PeakFunctions.filter_func(x,center)
+        # if tail_mix == 0 or tail_exp == 0:
+        #     return peak
+        # else:
+        #     return peak*filter + amplitude * tail
 
     @staticmethod
     def tail(x, center, tail_mix, tail_exp, fwhm):
