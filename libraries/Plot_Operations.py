@@ -692,6 +692,7 @@ class PlotManager:
 
         # Define the desired order of legend entries
         legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
+        legend_order2 = ["Raw Data", "Background", "Overall Fit", "Residuals"]
 
         # Collect peak labels
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
@@ -714,76 +715,31 @@ class PlotManager:
                 print(f"Skipping label '{label}' from legend as it doesn't have a second word")
 
         # Ensure filtered peaks are added to the end of the order
-        legend_order += filtered_peak_labels
+        legend_order += peak_labels
+        legend_order2 += filtered_peak_labels
 
         print("LEGEND ORDER " + str(legend_order))
 
-        # Create a list of (handle, label) tuples for items in legend_order
-        ordered_handles_labels = []
-        for l in legend_order:
-            for index, label in enumerate(labels):
-                if label == l or label.startswith(l) or l.startswith(label):
-                    ordered_handles_labels.append((handles[index], l))
-                    break
+        # Update the legend with the ordered items from legend_order
+        if legend_order:
+            # Find handles for each label in legend_order
+            ordered_handles = []
+            for l in legend_order:
+                for index, label in enumerate(labels):
+                    if label == l or label.startswith(l) or l.startswith(label):
+                        ordered_handles.append(handles[index])
+                        break
+                else:
+                    print(f"Warning: No handle found for label '{l}'")
 
-        # Update the legend with the ordered items
-        if ordered_handles_labels:
-            self.ax.legend([h for h, l in ordered_handles_labels], [l for h, l in ordered_handles_labels],
-                           loc='upper left')
+            # Create the legend with the ordered labels and handles
+            self.ax.legend(ordered_handles, legend_order2, loc='upper left')
         else:
             self.ax.legend().remove()
 
-        print("Final legend labels:", [l for h, l in ordered_handles_labels])
+        print("Final legend labels:", legend_order)
         self.canvas.draw_idle()
 
-
-    def update_legend2(self, window):
-        # Retrieve the current handles and labels
-        handles, labels = self.ax.get_legend_handles_labels()
-
-        # Define the desired order of legend entries
-        legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
-
-        # Collect peak labels
-        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-        peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
-        formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
-
-        # Filter peak labels to only include those with a second word
-        filtered_peak_labels = []
-        for label in formatted_peak_labels:
-            split_label = label.split()
-            print("split_label    "+ str( label.split())+ "  "+ str(len(split_label)))
-            if len(split_label) > 1:
-                # Check if the second part is not empty
-                if split_label[1].strip():
-                    filtered_peak_labels.append(label)
-            else:
-                # Optionally, you can add logging or print a message for skipped labels
-                print(f"Skipping label '{label}' from legend as it doesn't have a second word")
-
-        # Ensure filtered peaks are added to the end of the order
-        legend_order += filtered_peak_labels
-
-        print("LEGEND ORDER " + str(legend_order))
-
-        # Create a list of (handle, label) tuples for items in legend_order
-        ordered_handles_labels = []
-        for l in legend_order:
-            for index, label in enumerate(labels):
-                if label == l or label.startswith(l):
-                    ordered_handles_labels.append((handles[index], label))
-                    break
-
-        # Update the legend with the ordered items
-        if ordered_handles_labels:
-            self.ax.legend([h for h, l in ordered_handles_labels], [l for h, l in ordered_handles_labels],
-                           loc='upper left')
-        else:
-            self.ax.legend().remove()
-
-        print("Final legend labels:", [l for h, l in ordered_handles_labels])
-        self.canvas.draw_idle()
 
 
 
