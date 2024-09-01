@@ -346,8 +346,8 @@ class PlotManager:
             spine.set_linewidth(1)  # Adjust this value to increase or decrease thickness
 
         # Update the legend only if necessary
-        if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
-            self.update_legend(window)
+        # if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
+        self.update_legend(window)
 
         # Restore sheet name text or create new one if it doesn't exist
         if sheet_name_text is None:
@@ -687,27 +687,105 @@ class PlotManager:
         self.canvas.draw_idle()
 
     def update_legend(self, window):
+        # Retrieve the current handles and labels
         handles, labels = self.ax.get_legend_handles_labels()
+
+        # Define the desired order of legend entries
         legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
 
-        num_peaks = window.peak_params_grid.GetNumberRows() // 2
+        # Collect peak labels
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
         peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
         formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
 
-        filtered_peak_labels = [label for label in formatted_peak_labels if len(label.split()) > 1]
+        # Filter peak labels to only include those with a second word
+        filtered_peak_labels = []
+        for label in formatted_peak_labels:
+            # Remove LaTeX formatting temporarily for splitting
+            clean_label = re.sub(r'\$.*?\$', '', label)
+            split_label = clean_label.split()
+            print(f"Clean label: {clean_label}, Split label: {split_label}")
+            if len(split_label) > 1:
+                # Check if the second part is not empty
+                if split_label[1].strip():
+                    filtered_peak_labels.append(label)
+            else:
+                # Optionally, you can add logging or print a message for skipped labels
+                print(f"Skipping label '{label}' from legend as it doesn't have a second word")
+
+        # Ensure filtered peaks are added to the end of the order
         legend_order += filtered_peak_labels
 
+        print("LEGEND ORDER " + str(legend_order))
+
+        # Create a list of (handle, label) tuples for items in legend_order
         ordered_handles_labels = []
         for l in legend_order:
-            matching_labels = [label for label in labels if label == l or label.startswith(l)]
-            for match in matching_labels:
-                index = labels.index(match)
-                if l not in formatted_peak_labels or l in filtered_peak_labels:
-                    ordered_handles_labels.append((handles[index], match))
+            for index, label in enumerate(labels):
+                if label == l or label.startswith(l) or l.startswith(label):
+                    ordered_handles_labels.append((handles[index], l))
+                    break
 
-        self.ax.legend([h for h, l in ordered_handles_labels], [l for h, l in ordered_handles_labels])
-        self.ax.legend(loc='upper left')
+        # Update the legend with the ordered items
+        if ordered_handles_labels:
+            self.ax.legend([h for h, l in ordered_handles_labels], [l for h, l in ordered_handles_labels],
+                           loc='upper left')
+        else:
+            self.ax.legend().remove()
+
+        print("Final legend labels:", [l for h, l in ordered_handles_labels])
         self.canvas.draw_idle()
+
+
+    def update_legend2(self, window):
+        # Retrieve the current handles and labels
+        handles, labels = self.ax.get_legend_handles_labels()
+
+        # Define the desired order of legend entries
+        legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
+
+        # Collect peak labels
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
+        peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
+        formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
+
+        # Filter peak labels to only include those with a second word
+        filtered_peak_labels = []
+        for label in formatted_peak_labels:
+            split_label = label.split()
+            print("split_label    "+ str( label.split())+ "  "+ str(len(split_label)))
+            if len(split_label) > 1:
+                # Check if the second part is not empty
+                if split_label[1].strip():
+                    filtered_peak_labels.append(label)
+            else:
+                # Optionally, you can add logging or print a message for skipped labels
+                print(f"Skipping label '{label}' from legend as it doesn't have a second word")
+
+        # Ensure filtered peaks are added to the end of the order
+        legend_order += filtered_peak_labels
+
+        print("LEGEND ORDER " + str(legend_order))
+
+        # Create a list of (handle, label) tuples for items in legend_order
+        ordered_handles_labels = []
+        for l in legend_order:
+            for index, label in enumerate(labels):
+                if label == l or label.startswith(l):
+                    ordered_handles_labels.append((handles[index], label))
+                    break
+
+        # Update the legend with the ordered items
+        if ordered_handles_labels:
+            self.ax.legend([h for h, l in ordered_handles_labels], [l for h, l in ordered_handles_labels],
+                           loc='upper left')
+        else:
+            self.ax.legend().remove()
+
+        print("Final legend labels:", [l for h, l in ordered_handles_labels])
+        self.canvas.draw_idle()
+
+
 
     # Used by the defs above
     @staticmethod
