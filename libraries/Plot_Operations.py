@@ -686,7 +686,7 @@ class PlotManager:
             legend.set_visible(not legend.get_visible())
         self.canvas.draw_idle()
 
-    def update_legend(self, window):
+    def update_legend2(self, window):
         # Retrieve the current handles and labels
         handles, labels = self.ax.get_legend_handles_labels()
 
@@ -740,7 +740,58 @@ class PlotManager:
         print("Final legend labels:", legend_order)
         self.canvas.draw_idle()
 
+    def update_legend(self, window):
+        # Retrieve the current handles and labels
+        handles, labels = self.ax.get_legend_handles_labels()
 
+        # Define the desired order of legend entries
+        legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
+
+        # Collect peak labels
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
+        peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
+        formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
+
+        # Filter peak labels to only include those with a second word
+        filtered_peak_labels = []
+        filtered_formatted_labels = []
+        for label, formatted_label in zip(peak_labels, formatted_peak_labels):
+            split_label = label.split()
+            if len(split_label) > 1:
+                # Check if the second part is not empty
+                if split_label[1].strip():
+                    filtered_peak_labels.append(label)
+                    filtered_formatted_labels.append(formatted_label)
+            else:
+                print(f"Skipping label '{formatted_label}' from legend as it doesn't have a second word")
+
+        # Ensure filtered peaks are added to the end of the order
+        legend_order += filtered_peak_labels
+        formatted_legend_order = legend_order[:4] + filtered_formatted_labels
+
+        print("LEGEND ORDER " + str(legend_order))
+        print("FORMATTED LEGEND ORDER " + str(formatted_legend_order))
+
+
+        # Update the legend with the ordered items from legend_order
+        if legend_order:
+            # Find handles for each label in legend_order
+            ordered_handles = []
+            for l in legend_order:
+                for index, label in enumerate(labels):
+                    if label == l:
+                        ordered_handles.append(handles[index])
+                        break
+                else:
+                    print(f"Warning: No handle found for label '{l}'")
+
+            # Create the legend with the ordered labels and handles
+            self.ax.legend(ordered_handles, formatted_legend_order, loc='upper left')
+        else:
+            self.ax.legend().remove()
+
+        print("Final legend labels:", formatted_legend_order)
+        self.canvas.draw_idle()
 
 
     # Used by the defs above
