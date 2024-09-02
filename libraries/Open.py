@@ -60,6 +60,7 @@ def update_recent_files(window, file_path):
 
 
 def import_avantage_file(window):
+    # Open file dialog to select the Avantage Excel file
     with wx.FileDialog(window, "Open Avantage Excel file", wildcard="Excel files (*.xlsx)|*.xlsx",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
         if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -67,41 +68,51 @@ def import_avantage_file(window):
 
         file_path = fileDialog.GetPath()
 
+    # Load the selected workbook
     wb = openpyxl.load_workbook(file_path)
 
+    # List to keep track of sheets to be removed
     sheets_to_remove = []
 
+    # Iterate through all sheets in the workbook
     for sheet_name in wb.sheetnames:
         sheet = wb[sheet_name]
 
         if sheet_name == "XPS survey":
+            # Process the survey sheet
             wb.create_sheet("survey")
             new_sheet = wb["survey"]
             new_sheet['A1'] = "Binding Energy"
             new_sheet['B1'] = "Raw Data"
+            # Copy data starting from row 17, skipping column B
             for row in sheet.iter_rows(min_row=17, values_only=True):
                 new_sheet.append([row[0]] + list(row[2:]))
             sheets_to_remove.append(sheet_name)
 
         elif sheet_name.endswith("Scan"):
-            new_name = sheet_name.split()[0]
+            # Process sheets ending with "Scan"
+            new_name = sheet_name.split()[0]  # Use first word as new sheet name
             wb.create_sheet(new_name)
             new_sheet = wb[new_name]
             new_sheet['A1'] = "Binding Energy"
             new_sheet['B1'] = "Raw Data"
+            # Copy data starting from row 17, skipping column B
             for row in sheet.iter_rows(min_row=17, values_only=True):
                 new_sheet.append([row[0]] + list(row[2:]))
             sheets_to_remove.append(sheet_name)
 
         else:
+            # Mark other sheets for removal
             sheets_to_remove.append(sheet_name)
 
+    # Remove the original sheets
     for sheet_name in sheets_to_remove:
         del wb[sheet_name]
 
+    # Save the modified workbook with a new name
     new_file_path = os.path.splitext(file_path)[0] + "_Kfitting.xlsx"
     wb.save(new_file_path)
 
-    # Open the newly created file
+    # Open the newly created file using the existing open_xlsx_file function
     from Functions import open_xlsx_file
     open_xlsx_file(window, new_file_path)
