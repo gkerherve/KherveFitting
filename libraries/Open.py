@@ -1,6 +1,8 @@
 import wx
 import os
 import json
+import openpyxl
+import wx
 
 class ExcelDropTarget(wx.FileDropTarget):
     def __init__(self, window):
@@ -55,3 +57,51 @@ def update_recent_files(window, file_path):
     window.recent_files = window.recent_files[:window.max_recent_files]
     update_recent_files_menu(window)
     window.save_config()  # Call save_config directly on the window object
+
+
+def import_avantage_file(window):
+    with wx.FileDialog(window, "Open Avantage Excel file", wildcard="Excel files (*.xlsx)|*.xlsx",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+
+        file_path = fileDialog.GetPath()
+
+    wb = openpyxl.load_workbook(file_path)
+
+    sheets_to_remove = []
+
+    for sheet_name in wb.sheetnames:
+        sheet = wb[sheet_name]
+
+        if sheet_name == "XPS survey":
+            wb.create_sheet("survey")
+            new_sheet = wb["survey"]
+            new_sheet['A1'] = "Binding Energy"
+            new_sheet['B1'] = "Raw Data"
+            for row in sheet.iter_rows(min_row=17, values_only=True):
+                new_sheet.append([row[0]] + list(row[2:]))
+            sheets_to_remove.append(sheet_name)
+
+        elif sheet_name.endswith("Scan"):
+            new_name = sheet_name.split()[0]
+            wb.create_sheet(new_name)
+            new_sheet = wb[new_name]
+            new_sheet['A1'] = "Binding Energy"
+            new_sheet['B1'] = "Raw Data"
+            for row in sheet.iter_rows(min_row=17, values_only=True):
+                new_sheet.append([row[0]] + list(row[2:]))
+            sheets_to_remove.append(sheet_name)
+
+        else:
+            sheets_to_remove.append(sheet_name)
+
+    for sheet_name in sheets_to_remove:
+        del wb[sheet_name]
+
+    new_file_path = os.path.splitext(file_path)[0] + "_Kfitting.xlsx"
+    wb.save(new_file_path)
+
+    # Open the newly created file
+    from Functions import open_xlsx_file
+    open_xlsx_file(window, new_file_path)
