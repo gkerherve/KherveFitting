@@ -763,14 +763,15 @@ class PlotManager:
                     filtered_peak_labels.append(label)
                     filtered_formatted_labels.append(formatted_label)
             else:
-                print(f"Skipping label '{formatted_label}' from legend as it doesn't have a second word")
+                # print(f"Skipping label '{formatted_label}' from legend as it doesn't have a second word")
+                pass
 
         # Ensure filtered peaks are added to the end of the order
         legend_order += filtered_peak_labels
         formatted_legend_order = legend_order[:4] + filtered_formatted_labels
 
-        print("LEGEND ORDER " + str(legend_order))
-        print("FORMATTED LEGEND ORDER " + str(formatted_legend_order))
+        # print("LEGEND ORDER " + str(legend_order))
+        # print("FORMATTED LEGEND ORDER " + str(formatted_legend_order))
 
 
         # Update the legend with the ordered items from legend_order
@@ -790,7 +791,7 @@ class PlotManager:
         else:
             self.ax.legend().remove()
 
-        print("Final legend labels:", formatted_legend_order)
+        # print("Final legend labels:", formatted_legend_order)
         self.canvas.draw_idle()
 
 
