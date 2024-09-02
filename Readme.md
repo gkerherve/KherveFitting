@@ -2,7 +2,10 @@
 
 ## Introduction
 
-KherveFitting is an open-source software implemented in Python, leveraging wxPython for the graphical user interface, MatplotLib for data visualization, NumPy and lmfit for numerical computations and curve fitting algorithms, Panda and openpyxl for manipulating Excel file. KherveFitting is distributed under the MIT License, allowing for broad use, modification, and distribution. When utilizing KherveFitting in academic or research contexts, appropriate citation is requested to acknowledge the software's contribution to your work.
+KherveFitting is an open-source software implemented in Python, leveraging wxPython for the graphical user interface,
+MatplotLib for data visualization, NumPy and lmfit for numerical computations and curve fitting algorithms, Panda 
+and openpyxl for manipulating Excel file. When utilizing KherveFitting in academic or research contexts, appropriate citation 
+is requested to acknowledge the software's contribution to your work.
 
 ## Keyboard Shortcuts
 
@@ -139,7 +142,7 @@ Use the Noise Analysis tool to assess data quality and determine the signal-to-n
 
 ## License
 
-KherveFitting is distributed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+KherveFitting is distributed under the BSD-3 License. See the [LICENSE](LICENSE) file for more details.
 
 ## Contact
 
