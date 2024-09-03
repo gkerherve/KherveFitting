@@ -58,7 +58,6 @@ def update_recent_files(window, file_path):
     update_recent_files_menu(window)
     window.save_config()  # Call save_config directly on the window object
 
-
 def import_avantage_file(window):
     # Open file dialog to select the Avantage Excel file
     with wx.FileDialog(window, "Open Avantage Excel file", wildcard="Excel files (*.xlsx)|*.xlsx",
@@ -78,20 +77,9 @@ def import_avantage_file(window):
     for sheet_name in wb.sheetnames:
         sheet = wb[sheet_name]
 
-        if sheet_name == "XPS survey":
-            # Process the survey sheet
-            wb.create_sheet("survey")
-            new_sheet = wb["survey"]
-            new_sheet['A1'] = "Binding Energy"
-            new_sheet['B1'] = "Raw Data"
-            # Copy data starting from row 17, skipping column B
-            for row in sheet.iter_rows(min_row=17, values_only=True):
-                new_sheet.append([row[0]] + list(row[2:]))
-            sheets_to_remove.append(sheet_name)
-
-        elif sheet_name.endswith("Scan"):
-            # Process sheets ending with "Scan"
-            new_name = sheet_name.split()[0]  # Use first word as new sheet name
+        if "Survey" in sheet_name or "Scan" in sheet_name:
+            # Process Survey or Scan sheets
+            new_name = "survey" if sheet_name == "XPS survey" else sheet_name.split()[0]
             wb.create_sheet(new_name)
             new_sheet = wb[new_name]
             new_sheet['A1'] = "Binding Energy"

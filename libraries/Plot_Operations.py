@@ -105,7 +105,8 @@ class PlotManager:
         line_alpha = min(alpha +0.1, 1)
         if self.peak_fill_enabled:
             label = peak_label
-            self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, label=peak_label)
+            self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, interpolate=True,
+                     edgecolor='none', label=peak_label)
             # self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha)
         else:
             self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha, label=peak_label)

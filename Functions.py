@@ -511,8 +511,8 @@ def create_menu(window):
     save_all_item = save_menu.Append(wx.NewId(), "Save All")
     window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
 
-    save_plot_item = save_menu.Append(wx.NewId(), "Save Plot to Excel")
-    window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
+    save_Excel_item2 = save_menu.Append(wx.NewId(), "Save Sheet")
+    window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item2)
 
     save_Table_item = save_menu.Append(wx.NewId(), "Save Table")
     window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
@@ -527,6 +527,15 @@ def create_menu(window):
 
     export_python_plot_item = export_menu.Append(wx.NewId(), "Python Plot")
     window.Bind(wx.EVT_MENU, lambda event: create_plot_script_from_excel(window), export_python_plot_item)
+
+    save_plot_item = export_menu.Append(wx.NewId(), "Export as PNG")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
+
+    save_plot_item_pdf = export_menu.Append(wx.NewId(), "Export as PDF")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot_pdf(window), save_plot_item_pdf)
+
+    save_plot_item_svg = export_menu.Append(wx.NewId(), "Export as SVG")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot_svg(window), save_plot_item_svg)
 
     window.recent_files_menu = wx.Menu()
     file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
@@ -1189,13 +1198,25 @@ def open_xlsx_file_vamas(window, file_path):
         wx.MessageBox(f"Error reading Excel file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 def on_save_plot(window):
-    print("on_save plot function called")
-    from libraries.Save import save_plot_to_excel
-    save_plot_to_excel(window)
+    # print("on_save plot function called")
+    from libraries.Save import save_plot_as_png
+    save_plot_as_png(window)
+
+
+def on_save_plot_pdf(window):
+    # print("on_save plot function called")
+    from libraries.Save import save_plot_as_pdf
+    save_plot_as_pdf(window)
+
+
+def on_save_plot_svg(window):
+    # print("on_save plot function called")
+    from libraries.Save import save_plot_as_svg
+    save_plot_as_svg(window)
 
 
 def on_save(window):
-    print("on_save function called")
+    # print("on_save function called")
     from libraries.Save import save_data
     data = window.get_data_for_save()
     save_data(window,data)

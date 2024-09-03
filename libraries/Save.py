@@ -7,9 +7,10 @@ import wx
 import io
 import os
 import pandas as pd
-import openpyxl
 from libraries.ConfigFile import add_core_level_Data
+import openpyxl
 from openpyxl.drawing.image import Image
+from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
 from openpyxl.styles import Border, Side, PatternFill, Font
 from openpyxl import load_workbook
 from libraries.Sheet_Operations import on_sheet_selected
@@ -63,6 +64,8 @@ def save_data(window, data):
     try:
         # Save to Excel
         save_to_excel(window, data, file_path, sheet_name)
+
+        save_plot_to_excel(window)
 
         # Save JSON file with entire window.Data
         json_file_path = os.path.splitext(file_path)[0] + '.json'
@@ -535,17 +538,7 @@ def save_plot_to_excel(window):
         # Save the workbook
         wb.save(file_path)
 
-        # Save as PNG
-        png_filename = f"{os.path.splitext(os.path.basename(file_path))[0]}_{sheet_name}.png"
-        png_filepath = os.path.join(os.path.dirname(file_path), png_filename)
-        window.figure.savefig(png_filepath, format='png', dpi=300, bbox_inches='tight')
-
-        print(f"Plot saved as PNG: {png_filepath}")
-
         print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
-
-        # wx.MessageBox(f"Plot saved to Excel file:\n{file_path}\nSheet: {sheet_name}", "Success",
-        #               wx.OK | wx.ICON_INFORMATION)
         window.show_popup_message2("Plot saved into Excel file", f"Under sheet: {sheet_name}")
 
     except Exception as e:
@@ -554,15 +547,86 @@ def save_plot_to_excel(window):
         wx.MessageBox(f"Error saving plot to Excel: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
-from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
+def save_plot_as_png(window):
+    # Check if a file is currently open
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
 
-from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
-import openpyxl
-import wx
+    file_path = window.Data['FilePath']
+    sheet_name = window.sheet_combobox.GetValue()
 
-from openpyxl.styles import Font, Border, Side, PatternFill, Alignment
-import openpyxl
-import wx
+    try:
+        # Generate PNG filename based on the Excel filename and sheet name
+        png_filename = f"{os.path.splitext(os.path.basename(file_path))[0]}_{sheet_name}.png"
+        png_filepath = os.path.join(os.path.dirname(file_path), png_filename)
+
+        # Save the figure as PNG
+        window.figure.savefig(png_filepath, format='png', dpi=300, bbox_inches='tight')
+
+        print(f"Plot saved as PNG: {png_filepath}")
+        window.show_popup_message2("Plot saved as PNG", f"File: {png_filename}")
+
+    except Exception as e:
+        # Handle any errors that occur during saving
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error saving plot as PNG: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+def save_plot_as_pdf(window):
+    # Check if a file is currently open
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    file_path = window.Data['FilePath']
+    sheet_name = window.sheet_combobox.GetValue()
+
+    try:
+        # Generate PDF filename based on the Excel filename and sheet name
+        pdf_filename = f"{os.path.splitext(os.path.basename(file_path))[0]}_{sheet_name}.pdf"
+        pdf_filepath = os.path.join(os.path.dirname(file_path), pdf_filename)
+
+        # Save the figure as PDF
+        window.figure.savefig(pdf_filepath, format='pdf', dpi=300, bbox_inches='tight')
+
+        print(f"Plot saved as PDF: {pdf_filepath}")
+        window.show_popup_message2("Plot saved as PDF", f"File: {pdf_filename}")
+
+    except Exception as e:
+        # Handle any errors that occur during saving
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error saving plot as PDF: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+def save_plot_as_svg(window):
+    # Check if a file is currently open
+    if 'FilePath' not in window.Data or not window.Data['FilePath']:
+        wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    file_path = window.Data['FilePath']
+    sheet_name = window.sheet_combobox.GetValue()
+
+    try:
+        # Generate SVG filename based on the Excel filename and sheet name
+        svg_filename = f"{os.path.splitext(os.path.basename(file_path))[0]}_{sheet_name}.svg"
+        svg_filepath = os.path.join(os.path.dirname(file_path), svg_filename)
+
+        # Save the figure as SVG
+        window.figure.savefig(svg_filepath, format='svg', dpi=300, bbox_inches='tight')
+
+        print(f"Plot saved as SVG: {svg_filepath}")
+        window.show_popup_message2("Plot saved as SVG", f"File: {svg_filename}")
+
+    except Exception as e:
+        # Handle any errors that occur during saving
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error saving plot as SVG: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
 
 
 def save_results_table(window):
