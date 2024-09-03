@@ -72,7 +72,7 @@ Use high BE and low BE controls to apply offsets at range boundaries.
 Fit single peaks or doublets. Doublet splitting values are stored in 'DS.txt'. Intensity ratios for doublets: 0.5 for 
 p-shell, 0.67 for d-shell, 0.75 for f-shell.
 
-Available fitting models:
+Available fitting models: 
 
 - GL Gaussian-Lorentzian product
 - SGL Gaussian-Lorentzian sum 
