@@ -2,10 +2,12 @@
 
 ## Introduction
 
-KherveFitting is an open-source software implemented in Python, leveraging wxPython for the graphical user interface,
+KherveFitting is an open-source software implemented in Python, using wxPython for the graphical user interface,
 MatplotLib for data visualization, NumPy and lmfit for numerical computations and curve fitting algorithms, Panda 
-and openpyxl for manipulating Excel file. When utilizing KherveFitting in academic or research contexts, appropriate citation 
-is requested to acknowledge the software's contribution to your work.
+and openpyxl for manipulating Excel file. 
+
+When using KherveFitting in academic or research contexts, appropriate citation is requested  to acknowledge the 
+software's contribution to your work.
 
 ## Keyboard Shortcuts
 
@@ -60,40 +62,37 @@ Five background types available: Linear, Shirley, Smart, Adaptive Smart, and Tou
 
 - **Linear Background:** Y = mx + b
 - **Shirley Background:** B(E) = k × ∫<sub>E</sub><sup>E<sub>max</sub></sup> I(E') dE'
-- **Tougaard Background:** B(E) = λ(E) × ∫<sub>E</sub><sup>∞</sup> K(E' - E) × [f(E') - B(E')] dE'
+- Adaptive Shirley
+
 
 Use high BE and low BE controls to apply offsets at range boundaries.
 
 ### Peak Fitting Tab
 
-Fit single peaks or doublets. Doublet splitting values are stored in 'split.txt'. Intensity ratios for doublets: 0.5 for p-shell, 0.67 for d-shell, 0.75 for f-shell.
+Fit single peaks or doublets. Doublet splitting values are stored in 'DS.txt'. Intensity ratios for doublets: 0.5 for 
+p-shell, 0.67 for d-shell, 0.75 for f-shell.
 
 Available fitting models:
 
-- **GL (Gaussian-Lorentzian product):** I(x) = H × [exp(-ln(2) × ((x-x<sub>0</sub>)/σ)<sup>2</sup>) × (1 / (1 + ((x-x<sub>0</sub>)/γ)<sup>2</sup>))]
-- **SGL (Gaussian-Lorentzian sum):** I(x) = H × [m × exp(-ln(2) × ((x-x<sub>0</sub>)/σ)<sup>2</sup>) + (1-m) / (1 + ((x-x<sub>0</sub>)/γ)<sup>2</sup>)]
-- **Pseudo-Voigt:** I(x) = H × [η × L(x) + (1-η) × G(x)]
-- **Voigt:** I(x) = H × ∫<sub>-∞</sub><sup>∞</sup> G(x') × L(x-x') dx'
+- GL Gaussian-Lorentzian product
+- SGL Gaussian-Lorentzian sum 
+- Pseudo-Voigt from Lmfit library
+- Voigt from lmfit library
 
-Where:
-H is peak height
-x<sub>0</sub> is peak center
-σ is Gaussian width
-γ is Lorentzian width
-m and η are mixing parameters
 
 ## Peak Fitting Parameter Grid
 
 Each peak uses two rows: values in the first row, constraints in the second.
 
 Constraint shortcuts:
-- 'a', 'b', 'c' → 'A*1', 'B*1', 'C*1' (follow peak A, B, or C)
+- 'a', 'b', 'c' → 'A * 1', 'B * 1', 'C * 1' (follow peak A, B, or C)
 - 'fi' → 'Fixed' (fix the value)
 - '#0.5' → Constrain to ±0.5 eV of the peak position
 
 ## Binding Energy Correction
 
-The BE correction button looks for a peak labeled 'C1s C-C' and calculates the difference from 284.8 eV. This correction is applied to all core levels. Fit all data before applying the BE correction.
+The BE correction button looks for a peak labeled 'C1s C-C' and calculates the difference from 284.8 eV. This 
+correction is applied to all core levels. Fit all data before applying the BE correction.
 
 ## Plot Customization
 
@@ -119,9 +118,7 @@ Use toggle buttons to show or hide various plot elements:
 Several tools are available for zooming and navigating the plot:
 - Use the zoom in/out buttons or keyboard shortcuts
 - Click and drag to create a zoom box
-- Double-click to reset the view
 - Use the pan tool to move around when zoomed in
-- Adjust x and y axis limits manually in the plot settings
 
 ## Exporting Results
 
@@ -130,7 +127,7 @@ Export fitted peak parameters, areas, and atomic percentages to a summary table 
 - Integrated areas for each peak
 - Relative sensitivity factors (RSF) used
 - Calculated atomic percentages
-- Options to export as CSV, Excel, or copy to clipboard
+- Options to export as CSV, Excel, PNG, PDF, SVG
 
 ## Noise Analysis
 
