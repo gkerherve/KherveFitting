@@ -513,7 +513,7 @@ def save_plot_to_excel(window):
     try:
         # Save the current figure to a bytes buffer
         buf = io.BytesIO()
-        window.figure.savefig(buf, format='png', dpi=80, bbox_inches='tight')
+        window.figure.savefig(buf, format='png', dpi=100, bbox_inches='tight')
         buf.seek(0)
 
         # Open the workbook and select the sheet
@@ -533,7 +533,7 @@ def save_plot_to_excel(window):
         img = Image(buf)
 
         # Add the image to the worksheet
-        ws.add_image(img, 'A4')  # You can adjust the cell reference as needed
+        ws.add_image(img, 'D6')  # You can adjust the cell reference as needed
 
         # Save the workbook
         wb.save(file_path)
