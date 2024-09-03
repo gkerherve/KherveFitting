@@ -9,6 +9,9 @@ and openpyxl for manipulating Excel file.
 When using KherveFitting in academic or research contexts, appropriate citation is requested  to acknowledge the 
 software's contribution to your work.
 
+To download .exe please go to https://sourceforge.net/projects/khervefitting/
+To download Mac install ... TBA... 
+
 ## Keyboard Shortcuts
 
 - **Tab:** Select next peak
