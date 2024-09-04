@@ -870,9 +870,6 @@ def save_plot_data_and_script(window, png_filepath):
     print(f"Plot data and script saved to {py_filepath}")
 
 
-
-
-
 def create_plot_script_from_excel(window):
     file_path = window.Data['FilePath']
     sheet_name = window.sheet_combobox.GetValue()

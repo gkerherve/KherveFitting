@@ -1187,25 +1187,45 @@ class MyFrame(wx.Frame):
                 open_xlsx_file(self)
                 return
             elif keycode == ord('Q'):
-                print("Opening")
+                print("Quiting")
                 on_exit(self, event),
                 return
+            elif keycode == ord('K'):
+                print("Shortcuts")
+                self.show_popup_message2("Keyboard Shortcuts",
+                                        "-Tab: Select next peak\n"
+                                        "-Q: Select previous peak\n"
+                                        "-Ctrl+Minus (-): Zoom out\n"
+                                        "-Ctrl+Equal (=): Zoom in\n"
+                                        "-Ctrl+Left bracket [: Select previous core level\n"
+                                        "-Ctrl+Right bracket ]: Select next core level\n"
+                                        "-Ctrl+Up: Increase intensity\n"
+                                        "-Ctrl+Down: Decrease intensity\n"
+                                        "-Ctrl+Left: Move plot to High BE\n"
+                                        "-Ctrl+Right: Move plot to Low BE\n"
+                                        "-SHIFT+Left: Decrease High BE\n"
+                                        "-SHIFT+Right: Increase High BE\n"
+                                        "-Ctrl+Z: Undo up to 30 events\n"
+                                        "-Ctrl+Y: Redo\n"
+                                        "-Ctrl+S: Save. Only works on the grid and not on the figure canvas\n"
+                                        "-Ctrl+P: Open peak fitting window\n"
+                                        "-Ctrl+A: Open Area window\n"
+                                        "-Ctrl+K: Show Keyboard shortcut\n")
+                return
             elif keycode == ord('A'):
-                print("Opening")
+                print("Opening Area Window")
                 self.on_open_background_window(),
                 return
             elif keycode == ord('P'):
-                print("Opening")
+                print("Opening Fitting Window")
                 self.on_open_fitting_window()
                 return
         if event.ShiftDown() and keycode == wx.WXK_LEFT:
             self.adjust_plot_limits('high_be', 'increase')
             return
-            print("Opening")
-            self.on_open_fitting_window()
-
-
-
+        elif event.ShiftDown() and keycode == wx.WXK_RIGHT:
+            self.adjust_plot_limits('high_be', 'decrease')
+            return
 
         if keycode == wx.WXK_TAB:
             if not self.peak_fitting_tab_selected:

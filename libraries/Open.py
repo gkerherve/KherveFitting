@@ -79,7 +79,11 @@ def import_avantage_file(window):
 
         if "Survey" in sheet_name or "Scan" in sheet_name:
             # Process Survey or Scan sheets
-            new_name = "survey" if sheet_name == "XPS survey" else sheet_name.split()[0]
+            if "Survey" in sheet_name or "survey" in sheet_name:
+                new_name = "Survey XPS"
+            else:
+                new_name = sheet_name.split()[0]
+
             wb.create_sheet(new_name)
             new_sheet = wb[new_name]
             new_sheet['A1'] = "Binding Energy"
@@ -88,6 +92,11 @@ def import_avantage_file(window):
             for row in sheet.iter_rows(min_row=17, values_only=True):
                 new_sheet.append([row[0]] + list(row[2:]))
             sheets_to_remove.append(sheet_name)
+
+            # Remove data from columns C to X
+            for col in new_sheet.iter_cols(min_col=3, max_col=24):
+                for cell in col:
+                    cell.value = None
 
         else:
             # Mark other sheets for removal

@@ -32,6 +32,7 @@ To download Mac install ... TBA ...
 - **Ctrl+S:** Save. Only works on the grid and not on the figure canvas.
 - **Ctrl+P:** Open peak fitting window
 - **Ctrl+A:** Open Area window
+- **Ctrl+K:** Show Keyboard shortcut
 
 ## Opening Files
 
