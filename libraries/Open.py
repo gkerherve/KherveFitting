@@ -167,3 +167,47 @@ def open_avg_file(window):
         open_xlsx_file(window, excel_file_path)
     except Exception as e:
         wx.MessageBox(f"Error processing AVG file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+def import_multiple_avg_files(window):
+    with wx.DirDialog(window, "Choose a directory containing AVG files",
+                      style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST) as dirDialog:
+
+        if dirDialog.ShowModal() == wx.ID_CANCEL:
+            return
+
+        folder_path = dirDialog.GetPath()
+
+    try:
+        avg_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.avg')]
+
+        if not avg_files:
+            wx.MessageBox("No AVG files found in the selected folder.", "Information", wx.OK | wx.ICON_INFORMATION)
+            return
+
+        folder_name = os.path.basename(folder_path)
+        excel_file_path = os.path.join(folder_path, f"{folder_name}.xlsx")
+
+        with pd.ExcelWriter(excel_file_path) as writer:
+            for avg_file in avg_files:
+                avg_file_path = os.path.join(folder_path, avg_file)
+                sheet_name = os.path.splitext(avg_file)[0]  # Use file name without extension as sheet name
+
+                photon_energy, start_energy, width, num_points, y_values = parse_avg_file(avg_file_path)
+                be_values = [photon_energy - (start_energy + i * width) for i in range(num_points)]
+
+                df = pd.DataFrame({
+                    'BE': be_values,
+                    'Intensity': y_values[:num_points]
+                })
+
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        wx.MessageBox(f"Excel file created: {excel_file_path}", "Success", wx.OK | wx.ICON_INFORMATION)
+
+        # Open the created Excel file
+        from Functions import open_xlsx_file
+        open_xlsx_file(window, excel_file_path)
+
+    except Exception as e:
+        wx.MessageBox(f"Error processing AVG files: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)

@@ -14,7 +14,7 @@ from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
 from libraries.Help import on_about
 from libraries.Save import undo, redo, save_state, update_undo_redo_state
-from libraries.Open import update_recent_files, import_avantage_file, open_avg_file
+from libraries.Open import update_recent_files, import_avantage_file, open_avg_file, import_multiple_avg_files
 
 
 
@@ -527,6 +527,9 @@ def create_menu(window):
 
     import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file")
     window.Bind(wx.EVT_MENU, lambda event: open_avg_file(window), import_avg_item)
+
+    import_multiple_avg_item = import_menu.Append(wx.NewId(), "Import Multiple AVG files")
+    window.Bind(wx.EVT_MENU, lambda event: import_multiple_avg_files(window), import_multiple_avg_item)
 
     export_python_plot_item = export_menu.Append(wx.NewId(), "Python Plot")
     window.Bind(wx.EVT_MENU, lambda event: create_plot_script_from_excel(window), export_python_plot_item)
