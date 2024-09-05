@@ -4,19 +4,15 @@ import os
 import sys
 
 
+
 def on_about(self, event):
     info = wx.adv.AboutDialogInfo()
     info.SetName("KherveFitting")
     info.SetVersion("1.0")
-    info.SetDescription(
-        "An open-source XPS peak fitting software developed by Dr. Gwilherm Kerherve at Imperial College London.")
+    info.SetDescription("An open-source XPS peak fitting software developed by Dr. Gwilherm Kerherve at Imperial College London.")
     info.SetCopyright("(C) 2024 Gwilherm Kerherve")
-    info.SetWebSite("https://www.imperial.ac.uk/people/g.kerherve", "Website")
-    info.AddDeveloper("Dr. Gwilherm Kerherve, William Skinner")
-
-    # Add email information
-    info.AddTranslator("mailto:g.kerherve@ic.ac.uk")  # We use AddTranslator as a workaround to add another link
-
+    info.SetWebSite("https://www.imperial.ac.uk/people/g.kerherve")
+    info.AddDeveloper("Dr. Gwilherm Kerherve / g.kerherve@imperial.ac.uk\n William Skinner")
     wx.adv.AboutBox(info)
 
 def show_quick_help(parent):
@@ -202,3 +198,47 @@ def show_quick_help(parent):
     image_path = os.path.join(application_path, "Images")
     
     '''
+
+def show_shortcuts(parent):
+    shortcuts_html = """
+    <html>
+    <body style="font-size: 10px; line-height: 1;">
+    <h3 style="margin-bottom: 1px;">Keyboard Shortcuts</h3>
+    <div style="margin-top: 0;">
+    <p style="margin: 2px 0;"><b>Tab:</b> Select next peak</p>
+    <p style="margin: 2px 0;"><b>Q:</b> Select previous peak</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Minus (-):</b> Zoom out</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Equal (=):</b> Zoom in</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Left bracket [:</b> Select previous core level</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Right bracket ]:</b> Select next core level</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Up:</b> Increase intensity</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Down:</b> Decrease intensity</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Left:</b> Move plot to High BE</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Right:</b> Move plot to Low BE</p>
+    <p style="margin: 2px 0;"><b>SHIFT+Left:</b> Decrease High BE</p>
+    <p style="margin: 2px 0;"><b>SHIFT+Right:</b> Increase High BE</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Z:</b> Undo up to 30 events</p>
+    <p style="margin: 2px 0;"><b>Ctrl+Y:</b> Redo</p>
+    <p style="margin: 2px 0;"><b>Ctrl+S:</b> Save. Only works on the grid and not on the figure canvas</p>
+    <p style="margin: 2px 0;"><b>Ctrl+P:</b> Open peak fitting window</p>
+    <p style="margin: 2px 0;"><b>Ctrl+A:</b> Open Area window</p>
+    <p style="margin: 2px 0;"><b>Ctrl+K:</b> Show Keyboard shortcut</p>
+    </div>
+    </body>
+    </html>
+    """
+
+    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(400, 670))
+    html_win = wx.html.HtmlWindow(dlg)
+    html_win.SetPage(shortcuts_html)
+
+    # btn = wx.Button(dlg, wx.ID_OK, "Close")
+    # btn.Bind(wx.EVT_BUTTON, lambda event: dlg.EndModal(wx.ID_OK))
+
+    sizer = wx.BoxSizer(wx.VERTICAL)
+    sizer.Add(html_win, 1, wx.EXPAND | wx.ALL, 1)
+    # sizer.Add(btn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+    dlg.SetSizer(sizer)
+    dlg.ShowModal()
+    dlg.Destroy()

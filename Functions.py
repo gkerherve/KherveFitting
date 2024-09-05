@@ -13,6 +13,7 @@ from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
 from libraries.Help import on_about
+from libraries.Help import show_shortcuts
 from libraries.Save import undo, redo, save_state, update_undo_redo_state
 from libraries.Open import update_recent_files, import_avantage_file, open_avg_file, import_multiple_avg_files
 
@@ -588,6 +589,9 @@ def create_menu(window):
 
     mini_help_item = help_menu.Append(wx.NewId(), "Help")
     window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
+
+    shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
+    window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
 
     about_item = help_menu.Append(wx.ID_ABOUT, "About")
     window.Bind(wx.EVT_MENU, lambda event: on_about(window, event), about_item)
