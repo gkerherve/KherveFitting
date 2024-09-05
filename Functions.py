@@ -625,7 +625,10 @@ def create_horizontal_toolbar(window):
                                                                                     "open-folder-25-green.png"),
                                                                        wx.BITMAP_TYPE_PNG), shortHelp="Open "
                                                                                                       "File\tCtrl+O")
-    refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Folder', wx.Bitmap(os.path.join(icon_path, "refresh-96g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Refresh Folder")
+    refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Excel File', wx.Bitmap(os.path.join(icon_path,
+                                                                                         "refresh-96g.png"),
+                                                                                     wx.BITMAP_TYPE_PNG),
+                                          shortHelp="Refresh Excel File")
     save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-25.png"),
                                                              wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results "
                                                                                             "to Excel for this Core "

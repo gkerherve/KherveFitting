@@ -4,15 +4,19 @@ import os
 import sys
 
 
-
 def on_about(self, event):
     info = wx.adv.AboutDialogInfo()
     info.SetName("KherveFitting")
     info.SetVersion("1.0")
-    info.SetDescription("An open-source XPS peak fitting software developed by Dr. Gwilherm Kerherve at Imperial College London.")
+    info.SetDescription(
+        "An open-source XPS peak fitting software developed by Dr. Gwilherm Kerherve at Imperial College London.")
     info.SetCopyright("(C) 2024 Gwilherm Kerherve")
-    info.SetWebSite("https://www.imperial.ac.uk/people/g.kerherve")
+    info.SetWebSite("https://www.imperial.ac.uk/people/g.kerherve", "Website")
     info.AddDeveloper("Dr. Gwilherm Kerherve, William Skinner")
+
+    # Add email information
+    info.AddTranslator("mailto:g.kerherve@ic.ac.uk")  # We use AddTranslator as a workaround to add another link
+
     wx.adv.AboutBox(info)
 
 def show_quick_help(parent):
