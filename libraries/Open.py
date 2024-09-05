@@ -3,6 +3,8 @@ import os
 import json
 import openpyxl
 import wx
+import re
+import pandas as pd
 
 class ExcelDropTarget(wx.FileDropTarget):
     def __init__(self, window):
@@ -113,3 +115,55 @@ def import_avantage_file(window):
     # Open the newly created file using the existing open_xlsx_file function
     from Functions import open_xlsx_file
     open_xlsx_file(window, new_file_path)
+
+
+def parse_avg_file(file_path):
+    with open(file_path, 'r') as file:
+        content = file.read()
+
+    photon_energy = float(re.search(r'DS_SOPROPID_ENERGY\s+:\s+VT_R4\s+=\s+(\d+\.\d+)', content).group(1))
+    start_energy, width, num_points = map(float, re.search(r'\$SPACEAXES=1\s+0=\s+(\d+\.\d+),\s+(\d+\.\d+),\s+(\d+),',
+                                                           content).groups())
+
+    # Modified part to handle multiple numbers per line
+    y_values = []
+    for match in re.findall(r'LIST@\s+\d+=\s+([\d., ]+)', content):
+        values = [float(val.strip()) for val in match.split(',')]
+        y_values.extend(values)
+
+    return photon_energy, start_energy, width, int(num_points), y_values
+
+
+def create_excel_from_avg(avg_file_path):
+    sheet_name = os.path.basename(avg_file_path).split()[0]
+    photon_energy, start_energy, width, num_points, y_values = parse_avg_file(avg_file_path)
+
+    be_values = [photon_energy - (start_energy + i * width) for i in range(num_points)]
+
+    df = pd.DataFrame({
+        'BE': be_values,
+        'Intensity': y_values[:num_points]  # Use only the correct number of y values
+    })
+
+    output_path = avg_file_path.rsplit('.', 1)[0] + '.xlsx'
+    with pd.ExcelWriter(output_path) as writer:
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    return output_path
+
+
+def open_avg_file(window):
+    with wx.FileDialog(window, "Open AVG file", wildcard="AVG files (*.avg)|*.avg",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+
+        avg_file_path = fileDialog.GetPath()
+
+    try:
+        excel_file_path = create_excel_from_avg(avg_file_path)
+
+        from Functions import open_xlsx_file
+        open_xlsx_file(window, excel_file_path)
+    except Exception as e:
+        wx.MessageBox(f"Error processing AVG file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)

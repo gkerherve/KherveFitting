@@ -63,7 +63,8 @@ KherveFitting offers three saving options:
 
 ### Background Tab
 
-Five background types available: Linear, Shirley, Smart, Adaptive Smart, and Tougaard. Drag the red lines on the plot to set the background range.
+Four background types available: Linear, Shirley, Smart, Adaptive Smart. Drag the red lines on the plot to set the 
+background range.
 
 - **Linear Background:** Y = mx + b
 - **Shirley Background:** B(E) = k × ∫<sub>E</sub><sup>E<sub>max</sub></sup> I(E') dE'

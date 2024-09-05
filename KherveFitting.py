@@ -34,7 +34,7 @@ from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
 from libraries.Utilities import copy_cell, paste_cell
 from Functions import on_save, open_xlsx_file, on_exit
-from libraries.Open import load_recent_files_from_config
+from libraries.Open import load_recent_files_from_config, open_avg_file
 
 
 class MyFrame(wx.Frame):
