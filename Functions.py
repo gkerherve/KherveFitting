@@ -584,8 +584,7 @@ def create_menu(window):
     Noise_item = tools_menu.Append(wx.NewId(), "Noise Analysis")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_noise_analysis_window, Noise_item)
 
-    Manual_item = help_menu.Append(wx.NewId(), "Manual - TBD")
-
+    # Manual_item = help_menu.Append(wx.NewId(), "Manual - TBD")
 
     mini_help_item = help_menu.Append(wx.NewId(), "Help")
     window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)

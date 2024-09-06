@@ -28,22 +28,38 @@ def show_quick_help(parent):
         "<body bgcolor='#FFFFE0'>"
         "<h2><font color='#66CC66'>KherveFitting Help</font></h2>"
         
-        "<p>KherveFitting is an open-source software developed by Dr. Gwilherm Kerherve at Imperial College London. This application is implemented in Python, leveraging wxPython for the graphical user interface, MatplotLib for data visualization, and NumPy for numerical computations and curve fitting algorithms. KherveFitting is distributed under the MIT License, allowing for broad use, modification, and distribution. When utilizing KherveFitting in academic or research contexts, appropriate citation is requested to acknowledge the software's contribution to your work.</p>"
+        "<p>KherveFitting is an open-source software developed by Dr. Gwilherm Kerherve at Imperial College London. "
+        "This application is implemented in Python, using wxPython for the graphical user interface, MatplotLib for "
+        "data visualization, NumPy and lmfit for numerical computations and curve fitting algorithms, "
+        "Panda for manipulating Excel files. KherveFitting is distributed under the BSD-3 License, allowing for broad "
+        "use, modification, and distribution. When using KherveFitting in academic or research contexts, appropriate "
+        "citation would be appreciated to acknowledge the software's contribution to your work.</p>"
 
         "<h3><font color='#006400'>Keyboard Shortcuts</font></h3>"        
         "<ul>"
         "<li><b>Tab:</b> Select next peak</li>"
         "<li><b>Q:</b> Select previous peak</li>"
-        "<li><b>Minus (-):</b> Zoom out</li>"
-        "<li><b>Equal (=):</b> Zoom in</li>"
-        "<li><b>Left bracket [:</b> Decrease intensity</li>"
-        "<li><b>Right bracket ]:</b> Increase intensity</li>"
-        "<li><b>Up:</b> Select previous core level</li>"
-        "<li><b>Down:</b> Select next core level</li>"
-        "</ul>"
-
+        "<li><b>Ctrl+Minus (-):</b> Zoom out</li>"
+        "<li><b>Ctrl+Equal (=):</b> Zoom in</li>"
+        "<li><b>Ctrl+Left bracket [:</b> Select previous core level</li>"
+        "<li><b>Ctrl+Right bracket ]:</b> Select next core level</li>"
+        "<li><b>Ctrl+Up:</b> Increase intensity</li>"
+        "<li><b>Ctrl+Down:</b> Decrease intensity</li>"
+        "<li><b>Ctrl+Up:</b> Increase intensity</p></li>"        
+        "<li><b>Ctrl+Left:</b> Move plot to High BE</p></li>"  
+        "<li><b>Ctrl+Right:</b> Move plot to Low BE</p></li>"  
+        "<li><b>SHIFT+Left:</b> Decrease High BE</p></li>"  
+        "<li><b>SHIFT+Right:</b> Increase High BE</p></li>"  
+        "<li><b>Ctrl+Z:</b> Undo up to 30 events</p></li>"  
+        "<li><b>Ctrl+Y:</b> Redo</p></li>"  
+        "<li><b>Ctrl+S:</b> Save. Only works on the grid and not on the figure canvas</p></li>"  
+        "<li><b>Ctrl+P:</b> Open peak fitting window</p></li>"  
+        "<li><b>Ctrl+A:</b> Open Area window</p></li>"  
+        "<li><b>Ctrl+K:</b> Show Keyboard shortcut</p></li>"  
         "<h3><font color='#006400'>Opening Files</font></h3>"        
-        "<p>KherveFitting can open Excel files (.xlsx) and import/convert VAMAS files (.vms) into Excel format. For best results:"
+        
+        "<p>KherveFitting can open Excel files (.xlsx) and import/convert VAMAS files (.vms), AVG files and Avantage "
+        "files  into Excel format.  For best results: "
         "<ul>"
         "<li>Place raw data (X,Y) in Columns A and B, starting at row 0</li>"
         "<li>Use the row offset control in the horizontal toolbar if needed</li>"
@@ -228,7 +244,8 @@ def show_shortcuts(parent):
     </html>
     """
 
-    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(400, 670))
+    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(400, 680), style=wx.DEFAULT_DIALOG_STYLE |
+                                                                              wx.RESIZE_BORDER)
     html_win = wx.html.HtmlWindow(dlg)
     html_win.SetPage(shortcuts_html)
 
@@ -240,5 +257,5 @@ def show_shortcuts(parent):
     # sizer.Add(btn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
     dlg.SetSizer(sizer)
-    dlg.ShowModal()
-    dlg.Destroy()
+    # dlg.ShowModal()
+    dlg.Show()
