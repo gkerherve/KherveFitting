@@ -18,7 +18,7 @@ class PeriodicTableWindow(wx.Frame):
         self.info_text.SetFont(wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         main_sizer.Add(self.info_text, 0, wx.EXPAND | wx.ALL, 5)
 
-        grid = wx.GridSizer(10, 18, 2, 2)  # Added spacing between buttons
+        grid = wx.GridSizer(10, 18, 2, 2)
 
         elements = [
             "H", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "He",
@@ -51,30 +51,54 @@ class PeriodicTableWindow(wx.Frame):
         self.SetSize(460, 280)
 
     def get_element_transitions(self, element):
+        allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
         transitions = {}
         with open('library.txt', 'r') as file:
             for line in file:
                 parts = line.strip().split('\t')
                 if parts[0] == element and parts[2] == 'BE':
-                    orbital = parts[1].split()[0]  # Take only the main part (e.g., '2s' from '2s1/2')
-                    if orbital[-1] in 's p d f'.split():  # Only consider main orbitals
+                    orbital = parts[1].split()[0]
+                    if orbital in allowed_orbitals:
                         if orbital not in transitions or float(parts[3]) > transitions[orbital]:
                             transitions[orbital] = float(parts[3])
-        return sorted(transitions.items(), key=lambda x: x[1], reverse=True)
+        return sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
 
     def OnElementClick(self, event):
         element = event.GetEventObject().GetLabel()
+        element_names = {
+            'H': 'Hydrogen', 'He': 'Helium', 'Li': 'Lithium', 'Be': 'Beryllium', 'B': 'Boron',
+            'C': 'Carbon', 'N': 'Nitrogen', 'O': 'Oxygen', 'F': 'Fluorine', 'Ne': 'Neon',
+            'Na': 'Sodium', 'Mg': 'Magnesium', 'Al': 'Aluminum', 'Si': 'Silicon', 'P': 'Phosphorus',
+            'S': 'Sulfur', 'Cl': 'Chlorine', 'Ar': 'Argon', 'K': 'Potassium', 'Ca': 'Calcium',
+            'Sc': 'Scandium', 'Ti': 'Titanium', 'V': 'Vanadium', 'Cr': 'Chromium', 'Mn': 'Manganese',
+            'Fe': 'Iron', 'Co': 'Cobalt', 'Ni': 'Nickel', 'Cu': 'Copper', 'Zn': 'Zinc',
+            'Ga': 'Gallium', 'Ge': 'Germanium', 'As': 'Arsenic', 'Se': 'Selenium', 'Br': 'Bromine',
+            'Kr': 'Krypton', 'Rb': 'Rubidium', 'Sr': 'Strontium', 'Y': 'Yttrium', 'Zr': 'Zirconium',
+            'Nb': 'Niobium', 'Mo': 'Molybdenum', 'Ru': 'Ruthenium', 'Rh': 'Rhodium', 'Pd': 'Palladium',
+            'Ag': 'Silver', 'Cd': 'Cadmium', 'In': 'Indium', 'Sn': 'Tin', 'Sb': 'Antimony',
+            'Te': 'Tellurium', 'I': 'Iodine', 'Xe': 'Xenon', 'Cs': 'Cesium', 'Ba': 'Barium',
+            'La': 'Lanthanum', 'Ce': 'Cerium', 'Pr': 'Praseodymium', 'Nd': 'Neodymium', 'Pm': 'Promethium',
+            'Sm': 'Samarium', 'Eu': 'Europium', 'Gd': 'Gadolinium', 'Tb': 'Terbium', 'Dy': 'Dysprosium',
+            'Ho': 'Holmium', 'Er': 'Erbium', 'Tm': 'Thulium', 'Yb': 'Ytterbium', 'Lu': 'Lutetium',
+            'Hf': 'Hafnium', 'Ta': 'Tantalum', 'W': 'Tungsten', 'Re': 'Rhenium', 'Os': 'Osmium',
+            'Ir': 'Iridium', 'Pt': 'Platinum', 'Au': 'Gold', 'Hg': 'Mercury', 'Tl': 'Thallium',
+            'Pb': 'Lead', 'Bi': 'Bismuth', 'At': 'Astatine', 'Rn': 'Radon', 'Ra': 'Radium',
+            'Th': 'Thorium', 'U': 'Uranium', 'Np': 'Neptunium', 'Pu': 'Plutonium', 'Am': 'Americium',
+            'Cm': 'Curium'
+        }
+
         transitions = self.get_element_transitions(element)
         if transitions:
-            info = ", ".join(f"{orbital}: {be:.1f} eV" for orbital, be in transitions)
+            info = f"<b>{element_names.get(element, element)}</b>: "
+            info += ", ".join(f"{orbital}: {be:.1f} eV" for orbital, be in transitions)
             # Split into two lines if too long
-            if len(info) > 50:
+            if len(info) > 60:
                 midpoint = len(info) // 2
                 split_point = info.rfind(", ", 0, midpoint) + 2
                 info = info[:split_point] + "\n" + info[split_point:]
-            self.info_text.SetLabel(info)
+            self.info_text.SetLabelMarkup(info)
         else:
-            self.info_text.SetLabel(f"No BE transitions found for {element}")
+            self.info_text.SetLabelMarkup(f"<b>{element_names.get(element, element)}</b>: No BE transitions found")
         self.Layout()
 
 
