@@ -53,15 +53,26 @@ class PeriodicTableWindow(wx.Frame):
     def get_element_transitions(self, element):
         allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
         transitions = {}
+        print(f"Searching transitions for {element}")  # Debug print
         with open('library.txt', 'r') as file:
             for line in file:
                 parts = line.strip().split('\t')
-                if parts[0] == element and parts[2] == 'BE':
-                    orbital = parts[1].split()[0]
+                if len(parts) >= 4 and parts[0] == element and parts[2] == 'BE':
+                    orbital = parts[1].split()[0].lower()  # Convert to lowercase
+                    # Remove any numbers after the orbital letter
+                    orbital = ''.join([c for c in orbital if not c.isdigit()])
+                    print(f"Found orbital: {orbital}")  # Debug print
                     if orbital in allowed_orbitals:
-                        if orbital not in transitions or float(parts[3]) > transitions[orbital]:
-                            transitions[orbital] = float(parts[3])
-        return sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
+                        energy = float(parts[3])
+                        if orbital not in transitions or energy > transitions[orbital]:
+                            transitions[orbital] = energy
+                            print(f"Added/Updated {orbital}: {energy} eV")  # Debug print
+                    else:
+                        print(f"Orbital {orbital} not in allowed list")  # Debug print
+
+        sorted_transitions = sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
+        print(f"Final transitions: {sorted_transitions}")  # Debug print
+        return sorted_transitions
 
     def OnElementClick(self, event):
         element = event.GetEventObject().GetLabel()
