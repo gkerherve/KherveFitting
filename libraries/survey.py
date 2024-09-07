@@ -58,17 +58,21 @@ class PeriodicTableWindow(wx.Frame):
             for line in file:
                 parts = line.strip().split('\t')
                 if len(parts) >= 4 and parts[0] == element and parts[2] == 'BE':
-                    orbital = parts[1].split()[0].lower()  # Convert to lowercase
-                    # Remove any numbers after the orbital letter
-                    orbital = ''.join([c for c in orbital if not c.isdigit()])
+                    print(f"Original line: {line.strip()}")  # Debug print
+                    orbital = parts[1].lower()  # Convert to lowercase
                     print(f"Found orbital: {orbital}")  # Debug print
-                    if orbital in allowed_orbitals:
+
+                    # Extract main orbital (1s, 2s, 2p, etc.)
+                    main_orbital = ''.join([c for c in orbital if c.isalpha() or c.isdigit()])[:2]
+                    print(f"Main orbital: {main_orbital}")  # Debug print
+
+                    if main_orbital in allowed_orbitals:
                         energy = float(parts[3])
-                        if orbital not in transitions or energy > transitions[orbital]:
-                            transitions[orbital] = energy
-                            print(f"Added/Updated {orbital}: {energy} eV")  # Debug print
+                        if main_orbital not in transitions or energy > transitions[main_orbital]:
+                            transitions[main_orbital] = energy
+                            print(f"Added/Updated {main_orbital}: {energy} eV")  # Debug print
                     else:
-                        print(f"Orbital {orbital} not in allowed list")  # Debug print
+                        print(f"Orbital {main_orbital} not in allowed list")  # Debug print
 
         sorted_transitions = sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
         print(f"Final transitions: {sorted_transitions}")  # Debug print
