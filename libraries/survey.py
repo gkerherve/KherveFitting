@@ -119,13 +119,18 @@ class PeriodicTableWindow(wx.Frame):
 
     def get_rsf_values(self, element, orbitals):
         rsf_values = []
+        print(f"Searching RSF values for element: {element}")
+        print(f"Orbitals to search for: {orbitals}")
         with open('library.lib', 'r') as file:
             for line in file:
                 parts = line.strip().split('\t')
-                if len(parts) >= 4 and parts[0] == element and parts[2] == 'RSF':
+                if len(parts) >= 4 and parts[0] == element and parts[2] == 'BE':
                     orbital = parts[1].lower()
-                    if any(orbital.startswith(o.lower()) for o in orbitals):
-                        rsf_values.append(float(parts[3]))
+                    # print(f"Found RSF entry for orbital: {orbital}")
+                    if orbital in [o.lower() for o in orbitals]:
+                        rsf_values.append(float(parts[4]))
+                        # print(f"Added RSF value: {parts[4]}")
+        print(f"Final RSF values: {rsf_values}")
         return rsf_values
 
     def OnElementHover(self, event):
