@@ -14,7 +14,11 @@ class PeriodicTableWindow(wx.Frame):
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        grid = wx.GridSizer(10, 18, 1, 1)
+        self.info_text = wx.StaticText(panel, style=wx.ALIGN_CENTER | wx.ST_NO_AUTORESIZE)
+        self.info_text.SetFont(wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        main_sizer.Add(self.info_text, 0, wx.EXPAND | wx.ALL, 5)
+
+        grid = wx.GridSizer(10, 18, 2, 2)  # Added spacing between buttons
 
         elements = [
             "H", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "He",
@@ -43,11 +47,8 @@ class PeriodicTableWindow(wx.Frame):
 
         main_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.info_text = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
-        main_sizer.Add(self.info_text, 1, wx.EXPAND | wx.ALL, 5)
-
         panel.SetSizer(main_sizer)
-        self.SetSize(460, 400)  # Increased height to accommodate the text area
+        self.SetSize(460, 280)
 
     def get_element_transitions(self, element):
         transitions = {}
@@ -55,21 +56,26 @@ class PeriodicTableWindow(wx.Frame):
             for line in file:
                 parts = line.strip().split('\t')
                 if parts[0] == element and parts[2] == 'BE':
-                    orbital = parts[1].split('/')[0] if '/' in parts[1] else parts[1]
-                    if orbital not in transitions or float(parts[3]) > transitions[orbital]:
-                        transitions[orbital] = float(parts[3])
+                    orbital = parts[1].split()[0]  # Take only the main part (e.g., '2s' from '2s1/2')
+                    if orbital[-1] in 's p d f'.split():  # Only consider main orbitals
+                        if orbital not in transitions or float(parts[3]) > transitions[orbital]:
+                            transitions[orbital] = float(parts[3])
         return sorted(transitions.items(), key=lambda x: x[1], reverse=True)
 
     def OnElementClick(self, event):
         element = event.GetEventObject().GetLabel()
         transitions = self.get_element_transitions(element)
         if transitions:
-            info = f"Transitions for {element}:\n\n"
-            for orbital, be in transitions:
-                info += f"{orbital}: {be:.1f} eV\n"
-            self.info_text.SetValue(info)
+            info = ", ".join(f"{orbital}: {be:.1f} eV" for orbital, be in transitions)
+            # Split into two lines if too long
+            if len(info) > 50:
+                midpoint = len(info) // 2
+                split_point = info.rfind(", ", 0, midpoint) + 2
+                info = info[:split_point] + "\n" + info[split_point:]
+            self.info_text.SetLabel(info)
         else:
-            self.info_text.SetValue(f"No BE transitions found for {element}")
+            self.info_text.SetLabel(f"No BE transitions found for {element}")
+        self.Layout()
 
 
 def open_periodic_table(parent):
