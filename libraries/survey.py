@@ -83,14 +83,19 @@ class PeriodicTableWindow(wx.Frame):
 
         if transitions:
             xmin, xmax = self.parent_window.ax.get_xlim()
+            print("Xmin Xmax  :"+ str(xmin)+"   "+str(xmax))
             ymin, ymax = self.parent_window.ax.get_ylim()
+            print("Ymin Ymax  :" + str(ymin)+"   "+str(ymax))
 
             # Filter transitions within xmin and xmax
-            valid_transitions = [t for t in transitions if xmin <= t[1] <= xmax]
+            valid_transitions = [t for t in transitions if xmax <= t[1] <= xmin]
+            print("Transitions: "+ str(transitions))
+            print("Transitions: " + str(valid_transitions))
 
             if valid_transitions:
                 # Get RSF values for each transition
                 rsf_values = self.get_rsf_values(element, [t[0] for t in valid_transitions])
+                print("RSF  "+ str(rsf_values))
 
                 max_rsf = max(rsf_values)
 
