@@ -1,5 +1,6 @@
 import wx
 
+
 class PeriodicTableWindow(wx.Frame):
     def __init__(self, parent):
         super().__init__(parent, title="Periodic Table",
@@ -10,7 +11,10 @@ class PeriodicTableWindow(wx.Frame):
     def InitUI(self):
         panel = wx.Panel(self)
         panel.SetBackgroundColour(wx.WHITE)
-        grid = wx.GridSizer(10, 18, 1, 1)  # Minimal gap between buttons
+
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        grid = wx.GridSizer(10, 18, 1, 1)
 
         elements = [
             "H", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "He",
@@ -25,7 +29,7 @@ class PeriodicTableWindow(wx.Frame):
             "", "", "", "Th", "", "U", "Np", "Pu", "Am", "Cm", "", "", "", "", "", "", "", ""
         ]
 
-        button_size = (24, 24)  # Slightly larger button size to accommodate font size 8
+        button_size = (24, 24)
         font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
 
         for element in elements:
@@ -37,28 +41,36 @@ class PeriodicTableWindow(wx.Frame):
                 btn = wx.StaticText(panel, label="")
             grid.Add(btn, 0, wx.EXPAND)
 
-        panel.SetSizer(grid)
-        self.SetSize(460, 280)  # Adjusted window size
+        main_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.info_text = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        main_sizer.Add(self.info_text, 1, wx.EXPAND | wx.ALL, 5)
+
+        panel.SetSizer(main_sizer)
+        self.SetSize(460, 400)  # Increased height to accommodate the text area
 
     def get_element_transitions(self, element):
-        transitions = []
+        transitions = {}
         with open('library.txt', 'r') as file:
             for line in file:
                 parts = line.strip().split('\t')
                 if parts[0] == element and parts[2] == 'BE':
-                    transitions.append((parts[1], float(parts[3]), float(parts[4])))
-        return sorted(transitions, key=lambda x: x[1], reverse=True)
+                    orbital = parts[1].split('/')[0] if '/' in parts[1] else parts[1]
+                    if orbital not in transitions or float(parts[3]) > transitions[orbital]:
+                        transitions[orbital] = float(parts[3])
+        return sorted(transitions.items(), key=lambda x: x[1], reverse=True)
 
     def OnElementClick(self, event):
         element = event.GetEventObject().GetLabel()
         transitions = self.get_element_transitions(element)
         if transitions:
             info = f"Transitions for {element}:\n\n"
-            for transition, be, rsf in transitions:
-                info += f"{transition}: BE = {be:.2f} eV, RSF = {rsf:.4f}\n"
-            wx.MessageBox(info, "Element Information", wx.OK | wx.ICON_INFORMATION)
+            for orbital, be in transitions:
+                info += f"{orbital}: {be:.1f} eV\n"
+            self.info_text.SetValue(info)
         else:
-            wx.MessageBox(f"No BE transitions found for {element}", "Element Information", wx.OK | wx.ICON_INFORMATION)
+            self.info_text.SetValue(f"No BE transitions found for {element}")
+
 
 def open_periodic_table(parent):
     periodic_table = PeriodicTableWindow(parent)
