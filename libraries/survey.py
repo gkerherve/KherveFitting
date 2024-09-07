@@ -7,7 +7,10 @@ class PeriodicTableWindow(wx.Frame):
                          style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         self.parent_window = parent  # Store the parent window
         self.SetBackgroundColour(wx.WHITE)
+
+        self.button_states = {}
         self.InitUI()
+
 
     def InitUI(self):
         panel = wx.Panel(self)
@@ -48,6 +51,8 @@ class PeriodicTableWindow(wx.Frame):
                 btn.Bind(wx.EVT_ENTER_WINDOW, self.OnElementHover)
                 btn.Bind(wx.EVT_LEAVE_WINDOW, self.OnElementLeave)
                 btn.Bind(wx.EVT_BUTTON, self.OnElementClick)
+                btn.SetBackgroundColour(wx.WHITE)
+                self.button_states[element] = False
             else:
                 btn = wx.StaticText(panel, label="")
             grid.Add(btn, 0, wx.EXPAND)
@@ -79,33 +84,39 @@ class PeriodicTableWindow(wx.Frame):
 
     def OnElementClick(self, event):
         element = event.GetEventObject().GetLabel()
+        self.button_states[element] = not self.button_states[element]
+
+        if self.button_states[element]:
+            event.GetEventObject().SetBackgroundColour(wx.GREEN)
+            self.plot_element_lines(element)
+        else:
+            event.GetEventObject().SetBackgroundColour(wx.WHITE)
+            self.remove_element_lines(element)
+
+        event.GetEventObject().Refresh()
+
+    def plot_element_lines(self, element):
         transitions = self.get_element_transitions(element)
 
         if transitions:
             xmin, xmax = self.parent_window.ax.get_xlim()
-            print("Xmin Xmax  :" + str(xmin) + "   " + str(xmax))
+            # print("Xmin Xmax  :" + str(xmin) + "   " + str(xmax))
             ymin, ymax = self.parent_window.ax.get_ylim()
-            print("Ymin Ymax  :" + str(ymin) + "   " + str(ymax))
+            # print("Ymin Ymax  :" + str(ymin) + "   " + str(ymax))
 
             # Filter transitions within xmin and xmax
             valid_transitions = [t for t in transitions if xmax <= t[1] <= xmin]
-            print("Transitions: " + str(transitions))
-            print("Valid Transitions: " + str(valid_transitions))
+            # print("Transitions: " + str(transitions))
+            # print("Valid Transitions: " + str(valid_transitions))
 
             if valid_transitions:
                 # Get RSF values for each transition
                 rsf_values = self.get_rsf_values(element, [t[0] for t in valid_transitions])
-                print("RSF  " + str(rsf_values))
+                # print("RSF  " + str(rsf_values))
 
                 if rsf_values:
                     max_rsf = max(rsf_values)
 
-                    # Clear previous lines
-                    for line in self.parent_window.ax.lines:
-                        if line.get_label().startswith('Element_Line'):
-                            line.remove()
-
-                    # Plot new lines
                     for (orbital, be), rsf in zip(valid_transitions, rsf_values):
                         intensity = (rsf / max_rsf) * 0.6 * (ymax - ymin)
                         self.parent_window.ax.vlines(be, ymin, ymin + intensity, color='red', linewidth=1,
@@ -116,6 +127,28 @@ class PeriodicTableWindow(wx.Frame):
                     print(f"No RSF values found for {element}")
             else:
                 print(f"No valid transitions found for {element} in the current plot range")
+
+    def remove_element_lines(self, element):
+        lines_to_remove = [line for line in self.parent_window.ax.lines
+                           if line.get_label().startswith(f'Element_Line_{element}_')]
+        for line in lines_to_remove:
+            line.remove()
+        self.parent_window.canvas.draw_idle()
+
+    def reset_all_buttons(self):
+        for element, button in self.button_states.items():
+            if button:
+                self.button_states[element] = False
+                btn = self.FindWindowByLabel(element)
+                if btn:
+                    btn.SetBackgroundColour(wx.WHITE)
+                    btn.Refresh()
+
+        lines_to_remove = [line for line in self.parent_window.ax.lines
+                           if line.get_label().startswith('Element_Line_')]
+        for line in lines_to_remove:
+            line.remove()
+        self.parent_window.canvas.draw_idle()
 
     def get_rsf_values(self, element, orbitals):
         rsf_values = []
