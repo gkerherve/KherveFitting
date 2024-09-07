@@ -1,6 +1,5 @@
 import wx
 
-
 class PeriodicTableWindow(wx.Frame):
     def __init__(self, parent):
         super().__init__(parent, title="Periodic Table",
@@ -11,7 +10,7 @@ class PeriodicTableWindow(wx.Frame):
     def InitUI(self):
         panel = wx.Panel(self)
         panel.SetBackgroundColour(wx.WHITE)
-        grid = wx.GridSizer(10, 18, 2, 2)
+        grid = wx.GridSizer(10, 18, 1, 1)  # Minimal gap between buttons
 
         elements = [
             "H", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "He",
@@ -26,16 +25,20 @@ class PeriodicTableWindow(wx.Frame):
             "", "", "", "Th", "", "U", "Np", "Pu", "Am", "Cm", "", "", "", "", "", "", "", ""
         ]
 
+        button_size = (24, 24)  # Slightly larger button size to accommodate font size 8
+        font = wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+
         for element in elements:
             if element:
-                btn = wx.Button(panel, label=element, size=(30, 30))
+                btn = wx.Button(panel, label=element, size=button_size)
+                btn.SetFont(font)
                 btn.Bind(wx.EVT_BUTTON, self.OnElementClick)
             else:
                 btn = wx.StaticText(panel, label="")
             grid.Add(btn, 0, wx.EXPAND)
 
         panel.SetSizer(grid)
-        self.SetSize(700, 400)
+        self.SetSize(460, 280)  # Adjusted window size
 
     def get_element_transitions(self, element):
         transitions = []
@@ -56,3 +59,7 @@ class PeriodicTableWindow(wx.Frame):
             wx.MessageBox(info, "Element Information", wx.OK | wx.ICON_INFORMATION)
         else:
             wx.MessageBox(f"No BE transitions found for {element}", "Element Information", wx.OK | wx.ICON_INFORMATION)
+
+def open_periodic_table(parent):
+    periodic_table = PeriodicTableWindow(parent)
+    periodic_table.Show()
