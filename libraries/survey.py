@@ -16,6 +16,7 @@ class PeriodicTableWindow(wx.Frame):
 
         self.info_text = wx.StaticText(panel, style=wx.ALIGN_CENTER | wx.ST_NO_AUTORESIZE)
         self.info_text.SetFont(wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.info_text.Wrap(440)  # Adjust this value as needed
         main_sizer.Add(self.info_text, 0, wx.EXPAND | wx.ALL, 5)
 
         grid = wx.GridSizer(10, 18, 2, 2)
@@ -107,11 +108,12 @@ class PeriodicTableWindow(wx.Frame):
             info = f"<b>{element_names.get(element, element)}</b>: "
             info += ", ".join(f"{orbital}: {be:.1f} eV" for orbital, be in transitions)
             # Split into two lines if too long
-            if len(info) > 60:
+            if len(info) > 100:
                 midpoint = len(info) // 2
                 split_point = info.rfind(", ", 0, midpoint) + 2
                 info = info[:split_point] + "\n" + info[split_point:]
             self.info_text.SetLabelMarkup(info)
+            print(info)
         else:
             self.info_text.SetLabelMarkup(f"<b>{element_names.get(element, element)}</b>: No BE transitions found")
         self.Layout()
