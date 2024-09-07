@@ -745,7 +745,8 @@ class PlotManager:
                         ordered_handles.append(handles[index])
                         break
                 else:
-                    print(f"Warning: No handle found for label '{l}'")
+                    pass
+                    # print(f"Warning: No handle found for label '{l}'")
 
             # Create the legend with the ordered labels and handles
             self.ax.legend(ordered_handles, legend_order2, loc='upper left')
@@ -799,7 +800,8 @@ class PlotManager:
                         ordered_handles.append(handles[index])
                         break
                 else:
-                    print(f"Warning: No handle found for label '{l}'")
+                    pass
+                    # print(f"Warning: No handle found for label '{l}'")
 
             # Create the legend with the ordered labels and handles
             self.ax.legend(ordered_handles, formatted_legend_order, loc='upper left')

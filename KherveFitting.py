@@ -378,7 +378,7 @@ class MyFrame(wx.Frame):
         self.splitter.SetSashGravity(0.5)  # Makes resizing proportional
 
         # Set initial sash position
-        self.initial_sash_position = 700  # Adjust this value as needed
+        self.initial_sash_position = 800  # Adjust this value as needed
         self.splitter.SetSashPosition(self.initial_sash_position)
 
         # Add splitter to content sizer
@@ -418,17 +418,17 @@ class MyFrame(wx.Frame):
             # The right panel is currently hidden, so show it
             new_sash_position = self.initial_sash_position
             new_bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR)
-            # print("Showing right panel")
+
             self.is_right_panel_hidden = False
         else:
             # The right panel is currently visible, so hide it
             new_sash_position = splitter_width
             new_bmp = wx.ArtProvider.GetBitmap(wx.ART_GO_BACK, wx.ART_TOOLBAR)
-            # print("Hiding right panel")
+
             self.is_right_panel_hidden = True
 
         self.splitter.SetSashPosition(new_sash_position)
-        # print(f"New sash position set to: {new_sash_position}")
+
 
         # Update the tool's bitmap
         self.toolbar.SetToolNormalBitmap(self.toggle_right_panel_tool.GetId(), new_bmp)

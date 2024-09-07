@@ -730,6 +730,14 @@ def create_horizontal_toolbar(window):
                                                                                               "Noise-25.png"),
                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
+    toolbar.AddSeparator()
+
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
+
+    toolbar.AddSeparator()
+
     id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
                               shortHelp="Open Periodic Table")
 

@@ -127,7 +127,7 @@ class PeriodicTableWindow(wx.Frame):
 
                         # Add text label
                         text = self.parent_window.ax.text(
-                            be - 0.5,  # Slightly to the left of the line
+                            be + 0.1,  # Slightly to the left of the line
                             ymin+0.01*(ymax-ymin),  # At the bottom of the plot
                             element+""+orbital,
                             rotation=90,
