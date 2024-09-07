@@ -9,8 +9,11 @@ class PeriodicTableWindow(wx.Frame):
         self.SetBackgroundColour(wx.WHITE)
 
         self.button_states = {}
+        self.element_lines = {}
         self.InitUI()
 
+        # Bind the close event
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     def InitUI(self):
         panel = wx.Panel(self)
@@ -100,14 +103,11 @@ class PeriodicTableWindow(wx.Frame):
 
         if transitions:
             xmin, xmax = self.parent_window.ax.get_xlim()
-            # print("Xmin Xmax  :" + str(xmin) + "   " + str(xmax))
             ymin, ymax = self.parent_window.ax.get_ylim()
-            # print("Ymin Ymax  :" + str(ymin) + "   " + str(ymax))
+
 
             # Filter transitions within xmin and xmax
             valid_transitions = [t for t in transitions if xmax <= t[1] <= xmin]
-            # print("Transitions: " + str(transitions))
-            # print("Valid Transitions: " + str(valid_transitions))
 
             if valid_transitions:
                 # Get RSF values for each transition
@@ -117,10 +117,26 @@ class PeriodicTableWindow(wx.Frame):
                 if rsf_values:
                     max_rsf = max(rsf_values)
 
+                    # Initialize the list for this element
+                    self.element_lines[element] = []
+
                     for (orbital, be), rsf in zip(valid_transitions, rsf_values):
                         intensity = (rsf / max_rsf) * 0.6 * (ymax - ymin)
-                        self.parent_window.ax.vlines(be, ymin, ymin + intensity, color='red', linewidth=1,
-                                                     label=f'Element_Line_{element}_{orbital}')
+                        line = self.parent_window.ax.vlines(be, ymin, ymin + intensity, color='red', linewidth=1)
+                        self.element_lines[element].append(line)
+
+                        # Add text label
+                        text = self.parent_window.ax.text(
+                            be - 0.5,  # Slightly to the left of the line
+                            ymin+0.01*(ymax-ymin),  # At the bottom of the plot
+                            element+""+orbital,
+                            rotation=90,
+                            va='bottom',
+                            ha='right',
+                            fontsize=7,
+                            color='red'
+                        )
+                        self.element_lines[element].append(text)
 
                     self.parent_window.canvas.draw_idle()
                 else:
@@ -129,11 +145,11 @@ class PeriodicTableWindow(wx.Frame):
                 print(f"No valid transitions found for {element} in the current plot range")
 
     def remove_element_lines(self, element):
-        lines_to_remove = [line for line in self.parent_window.ax.lines
-                           if line.get_label().startswith(f'Element_Line_{element}_')]
-        for line in lines_to_remove:
-            line.remove()
-        self.parent_window.canvas.draw_idle()
+        if element in self.element_lines:
+            for line in self.element_lines[element]:
+                line.remove()
+            del self.element_lines[element]
+            self.parent_window.canvas.draw_idle()
 
     def reset_all_buttons(self):
         for element, button in self.button_states.items():
@@ -144,10 +160,10 @@ class PeriodicTableWindow(wx.Frame):
                     btn.SetBackgroundColour(wx.WHITE)
                     btn.Refresh()
 
-        lines_to_remove = [line for line in self.parent_window.ax.lines
-                           if line.get_label().startswith('Element_Line_')]
-        for line in lines_to_remove:
-            line.remove()
+        for element, lines in self.element_lines.items():
+            for line in lines:
+                line.remove()
+        self.element_lines.clear()
         self.parent_window.canvas.draw_idle()
 
     def get_rsf_values(self, element, orbitals):
@@ -219,6 +235,14 @@ class PeriodicTableWindow(wx.Frame):
             self.info_text1.SetLabelMarkup(f"<b>{element_names.get(element, element)}</b>: No BE transitions found")
             self.info_text2.SetLabelMarkup("")
         self.Layout()
+
+    def Close(self, force=False):
+        self.reset_all_buttons()
+        super().Close(force)
+
+    def OnClose(self, event):
+        self.reset_all_buttons()
+        self.Destroy()
 
 
 def open_periodic_table(parent):
