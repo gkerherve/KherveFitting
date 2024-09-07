@@ -83,34 +83,39 @@ class PeriodicTableWindow(wx.Frame):
 
         if transitions:
             xmin, xmax = self.parent_window.ax.get_xlim()
-            print("Xmin Xmax  :"+ str(xmin)+"   "+str(xmax))
+            print("Xmin Xmax  :" + str(xmin) + "   " + str(xmax))
             ymin, ymax = self.parent_window.ax.get_ylim()
-            print("Ymin Ymax  :" + str(ymin)+"   "+str(ymax))
+            print("Ymin Ymax  :" + str(ymin) + "   " + str(ymax))
 
             # Filter transitions within xmin and xmax
             valid_transitions = [t for t in transitions if xmax <= t[1] <= xmin]
-            print("Transitions: "+ str(transitions))
-            print("Transitions: " + str(valid_transitions))
+            print("Transitions: " + str(transitions))
+            print("Valid Transitions: " + str(valid_transitions))
 
             if valid_transitions:
                 # Get RSF values for each transition
                 rsf_values = self.get_rsf_values(element, [t[0] for t in valid_transitions])
-                print("RSF  "+ str(rsf_values))
+                print("RSF  " + str(rsf_values))
 
-                max_rsf = max(rsf_values)
+                if rsf_values:
+                    max_rsf = max(rsf_values)
 
-                # Clear previous lines
-                for line in self.parent_window.ax.lines:
-                    if line.get_label().startswith('Element_Line'):
-                        line.remove()
+                    # Clear previous lines
+                    for line in self.parent_window.ax.lines:
+                        if line.get_label().startswith('Element_Line'):
+                            line.remove()
 
-                # Plot new lines
-                for (orbital, be), rsf in zip(valid_transitions, rsf_values):
-                    intensity = (rsf / max_rsf) * 0.6 * (ymax - ymin)
-                    self.parent_window.ax.vlines(be, ymin, ymin + intensity, color='red', linewidth=1,
-                                                 label=f'Element_Line_{element}_{orbital}')
+                    # Plot new lines
+                    for (orbital, be), rsf in zip(valid_transitions, rsf_values):
+                        intensity = (rsf / max_rsf) * 0.6 * (ymax - ymin)
+                        self.parent_window.ax.vlines(be, ymin, ymin + intensity, color='red', linewidth=1,
+                                                     label=f'Element_Line_{element}_{orbital}')
 
-                self.parent_window.canvas.draw_idle()
+                    self.parent_window.canvas.draw_idle()
+                else:
+                    print(f"No RSF values found for {element}")
+            else:
+                print(f"No valid transitions found for {element} in the current plot range")
 
     def get_rsf_values(self, element, orbitals):
         rsf_values = []
@@ -119,7 +124,7 @@ class PeriodicTableWindow(wx.Frame):
                 parts = line.strip().split('\t')
                 if len(parts) >= 4 and parts[0] == element and parts[2] == 'RSF':
                     orbital = parts[1].lower()
-                    if orbital in orbitals:
+                    if any(orbital.startswith(o.lower()) for o in orbitals):
                         rsf_values.append(float(parts[3]))
         return rsf_values
 
