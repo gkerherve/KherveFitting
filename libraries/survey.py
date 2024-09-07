@@ -122,7 +122,8 @@ class PeriodicTableWindow(wx.Frame):
 
                     for (orbital, be), rsf in zip(valid_transitions, rsf_values):
                         intensity = (rsf / max_rsf) * 0.6 * (ymax - ymin)
-                        line = self.parent_window.ax.vlines(be, ymin, ymin + intensity, color='red', linewidth=1)
+                        line = self.parent_window.ax.vlines(be, ymin - intensity, ymin + intensity, color='red',
+                                                            linewidth=1)
                         self.element_lines[element].append(line)
 
                         # Add text label
