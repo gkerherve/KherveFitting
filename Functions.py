@@ -515,7 +515,7 @@ def create_menu(window):
     save_Excel_item2 = save_menu.Append(wx.NewId(), "Save Sheet")
     window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item2)
 
-    save_Table_item = save_menu.Append(wx.NewId(), "Save Table")
+    save_Table_item = save_menu.Append(wx.NewId(), "Save Results Table")
     window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
 
     file_menu.AppendSubMenu(save_menu, "Save")
@@ -730,9 +730,8 @@ def create_horizontal_toolbar(window):
                                                                                               "Noise-25.png"),
                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
-    # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
-    # separators[-1].SetSize((2, 24))
-    # toolbar.AddControl(separators[-1])
+    id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
+                              shortHelp="Open Periodic Table")
 
 
     # Add a spacer to push the following items to the right
@@ -780,6 +779,7 @@ def create_horizontal_toolbar(window):
     window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
     window.Bind(wx.EVT_TOOL, lambda event: undo(window), window.undo_tool)
     window.Bind(wx.EVT_TOOL, lambda event: redo(window), window.redo_tool)
+    window.Bind(wx.EVT_TOOL, window.open_periodic_table, id_tool)
 
     return toolbar
 

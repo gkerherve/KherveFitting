@@ -28,34 +28,13 @@ def show_quick_help(parent):
         "<body bgcolor='#FFFFE0'>"
         "<h2><font color='#66CC66'>KherveFitting Help</font></h2>"
         
-        "<p>KherveFitting is an open-source software developed by Dr. Gwilherm Kerherve at Imperial College London. "
-        "This application is implemented in Python, using wxPython for the graphical user interface, MatplotLib for "
-        "data visualization, NumPy and lmfit for numerical computations and curve fitting algorithms, "
-        "Panda for manipulating Excel files. KherveFitting is distributed under the BSD-3 License, allowing for broad "
-        "use, modification, and distribution. When using KherveFitting in academic or research contexts, appropriate "
-        "citation would be appreciated to acknowledge the software's contribution to your work.</p>"
+        "<p>KherveFitting is an open-source software developed in Python, using wxPython for the graphical user "
+        "interface, MatplotLib for data visualization, NumPy and lmfit for numerical computations and curve fitting "
+        "algorithms, Panda for manipulating Excel files. KherveFitting is distributed under the BSD-3 License, "
+        "allowing for broad use, modification, and distribution. When using KherveFitting in academic or research "
+        "contexts, appropriate citation would be appreciated to acknowledge the software's contribution.</p>"
 
-        "<h3><font color='#006400'>Keyboard Shortcuts</font></h3>"        
-        "<ul>"
-        "<li><b>Tab:</b> Select next peak</li>"
-        "<li><b>Q:</b> Select previous peak</li>"
-        "<li><b>Ctrl+Minus (-):</b> Zoom out</li>"
-        "<li><b>Ctrl+Equal (=):</b> Zoom in</li>"
-        "<li><b>Ctrl+Left bracket [:</b> Select previous core level</li>"
-        "<li><b>Ctrl+Right bracket ]:</b> Select next core level</li>"
-        "<li><b>Ctrl+Up:</b> Increase intensity</li>"
-        "<li><b>Ctrl+Down:</b> Decrease intensity</li>"
-        "<li><b>Ctrl+Up:</b> Increase intensity</p></li>"        
-        "<li><b>Ctrl+Left:</b> Move plot to High BE</p></li>"  
-        "<li><b>Ctrl+Right:</b> Move plot to Low BE</p></li>"  
-        "<li><b>SHIFT+Left:</b> Decrease High BE</p></li>"  
-        "<li><b>SHIFT+Right:</b> Increase High BE</p></li>"  
-        "<li><b>Ctrl+Z:</b> Undo up to 30 events</p></li>"  
-        "<li><b>Ctrl+Y:</b> Redo</p></li>"  
-        "<li><b>Ctrl+S:</b> Save. Only works on the grid and not on the figure canvas</p></li>"  
-        "<li><b>Ctrl+P:</b> Open peak fitting window</p></li>"  
-        "<li><b>Ctrl+A:</b> Open Area window</p></li>"  
-        "<li><b>Ctrl+K:</b> Show Keyboard shortcut</p></li>"  
+
         "<h3><font color='#006400'>Opening Files</font></h3>"        
         
         "<p>KherveFitting can open Excel files (.xlsx) and import/convert VAMAS files (.vms), AVG files and Avantage "
@@ -66,14 +45,20 @@ def show_quick_help(parent):
         "<li>Save each core level in a separate sheet named after the core level (e.g., Si2p, Al2p, C1s, O1s)</li>"
         "</ul>"
         "</p>"
-        "<p>When reopening a saved fitting, KherveFitting also looks for the corresponding .json file containing peak properties.</p>"
+        "<p>When reopening a saved fitting, KherveFitting also looks for the corresponding .json file containing  all the"
+        "peak properties.</p>"
 
         "<h3><font color='#006400'>Saving Files</font></h3>"
+        
         f"<img src='{os.path.join(image_path, 'file_saving.png')}' alt='File Saving'>"
         "<p>KherveFitting offers three saving options:</p>"
         "<ol>"
-        "<li>Save corrected binding energy, background, envelope, residuals, and fitted peak data of the active core level to columns D onwards in the corresponding Excel sheet. Peak fitting properties for all core levels are saved in a JSON file.</li>"
-        "<li>Save the figure of the active core level to the corresponding Excel sheet and as a PNG file. The resolution (DPI) can be adjusted in the preference window.</li>"
+        "<li>Save corrected binding energy, background, envelope, residuals, and fitted peak data of the active "
+        "core level to columns D onwards in the corresponding Excel sheet. The picture of the plot is also saved in "
+        "cell D6. Peak fitting properties for all core levels are saved in a JSON file.</li>"
+        
+        "<li>Save the figure of the active core level to the corresponding Excel sheet and as a PNG file. The "
+        "resolution (DPI) is 300 DPI</li>" # can be adjusted in the preference window.</li>"
         "<li>Save all fitted core level data, including figures, to the Excel file. Peak fitting properties for all core levels are saved in a JSON file.</li>"
         "</ol>"
 
@@ -81,9 +66,9 @@ def show_quick_help(parent):
         f"<img src='{os.path.join(image_path, 'peak_control.png')}' alt='Peak Control'>"
         "<ul>"
         "<li>Ensure the Peak Fitting tab in the Peak Fitting window is selected to move peaks</li>"
-        "<li>Left-click and drag the cross to move a peak</li>"
-        "<li>Shift + Left-click to adjust peak width</li>"
-        "<li>Use the middle mouse scroll to change sheets or core levels</li>"
+        "<li>Use TAB or 'Q' to select the chosen</li>"
+        "<li>Use the left-click and drag the cross to move the position of a peak</li>"
+        "<li>Shift + Left-click and move the mouse to adjust the width of the peak</li>"        
         "</ul>"
 
         "<h3><font color='#006400'>Peak Fitting Window</font></h3>"
@@ -218,33 +203,40 @@ def show_quick_help(parent):
 def show_shortcuts(parent):
     shortcuts_html = """
     <html>
-    <body style="font-size: 10px; line-height: 1;">
-    <h3 style="margin-bottom: 1px;">Keyboard Shortcuts</h3>
-    <div style="margin-top: 0;">
-    <p style="margin: 2px 0;"><b>Tab:</b> Select next peak</p>
-    <p style="margin: 2px 0;"><b>Q:</b> Select previous peak</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Minus (-):</b> Zoom out</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Equal (=):</b> Zoom in</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Left bracket [:</b> Select previous core level</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Right bracket ]:</b> Select next core level</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Up:</b> Increase intensity</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Down:</b> Decrease intensity</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Left:</b> Move plot to High BE</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Right:</b> Move plot to Low BE</p>
-    <p style="margin: 2px 0;"><b>SHIFT+Left:</b> Decrease High BE</p>
-    <p style="margin: 2px 0;"><b>SHIFT+Right:</b> Increase High BE</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Z:</b> Undo up to 30 events</p>
-    <p style="margin: 2px 0;"><b>Ctrl+Y:</b> Redo</p>
-    <p style="margin: 2px 0;"><b>Ctrl+S:</b> Save. Only works on the grid and not on the figure canvas</p>
-    <p style="margin: 2px 0;"><b>Ctrl+P:</b> Open peak fitting window</p>
-    <p style="margin: 2px 0;"><b>Ctrl+A:</b> Open Area window</p>
-    <p style="margin: 2px 0;"><b>Ctrl+K:</b> Show Keyboard shortcut</p>
-    </div>
+    <head>
+    <style>
+        body {font-size: 10px; line-height: 1.2;}
+        ul {list-style-type: none; padding: 0; margin: 0;}
+        li {margin: 2px 0;}
+    </style>
+    </head>
+    <body>
+    <h3 style="margin-bottom: 5px;">Keyboard Shortcuts</h3>
+    <ul>
+    <li><b>Tab:</b> Select next peak</li>
+    <li><b>Q:</b> Select previous peak</li>
+    <li><b>Ctrl+Minus (-):</b> Zoom out</li>
+    <li><b>Ctrl+Equal (=):</b> Zoom in</li>
+    <li><b>Ctrl+Left bracket [:</b> Select previous core level</li>
+    <li><b>Ctrl+Right bracket ]:</b> Select next core level</li>
+    <li><b>Ctrl+Up:</b> Increase intensity</li>
+    <li><b>Ctrl+Down:</b> Decrease intensity</li>
+    <li><b>Ctrl+Left:</b> Move plot to High BE</li>
+    <li><b>Ctrl+Right:</b> Move plot to Low BE</li>
+    <li><b>SHIFT+Left:</b> Decrease High BE</li>
+    <li><b>SHIFT+Right:</b> Increase High BE</li>
+    <li><b>Ctrl+Z:</b> Undo up to 30 events</li>
+    <li><b>Ctrl+Y:</b> Redo</li>
+    <li><b>Ctrl+S:</b> Save. Only works on the grid and not on the figure canvas</li>
+    <li><b>Ctrl+P:</b> Open peak fitting window</li>
+    <li><b>Ctrl+A:</b> Open Area window</li>
+    <li><b>Ctrl+K:</b> Show Keyboard shortcut</li>
+    </ul>
     </body>
     </html>
     """
 
-    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(400, 680), style=wx.DEFAULT_DIALOG_STYLE |
+    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(380, 500), style=wx.DEFAULT_DIALOG_STYLE |
                                                                               wx.RESIZE_BORDER)
     html_win = wx.html.HtmlWindow(dlg)
     html_win.SetPage(shortcuts_html)

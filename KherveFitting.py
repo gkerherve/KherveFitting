@@ -35,6 +35,7 @@ from libraries.Open import ExcelDropTarget
 from libraries.Utilities import copy_cell, paste_cell
 from Functions import on_save, open_xlsx_file, on_exit
 from libraries.Open import load_recent_files_from_config, open_avg_file
+from libraries.survey import PeriodicTableWindow
 
 
 class MyFrame(wx.Frame):
@@ -2240,6 +2241,10 @@ class MyFrame(wx.Frame):
     def on_close(self, event):
         self.Destroy()
         wx.GetApp().ExitMainLoop()
+
+    def open_periodic_table(self, event):
+        periodic_table = PeriodicTableWindow(self)
+        periodic_table.Show()
 
 
 if __name__ == '__main__':

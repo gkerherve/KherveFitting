@@ -159,7 +159,10 @@ class PlotManager:
             self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
-            if self.plot_style == "scatter":
+            if "survey" in sheet_name.lower():
+                self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                             alpha=self.line_alpha, linestyle=self.raw_data_linestyle) #, label='Raw Data')
+            elif self.plot_style == "scatter":
                 self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
                                 marker=self.scatter_marker, label='Raw Data')
             else:
@@ -186,7 +189,10 @@ class PlotManager:
                 if collection.get_label().startswith(window.sheet_combobox.GetValue()):
                     collection.remove()
 
-            self.ax.legend(loc='upper left')
+            if "survey" in sheet_name.lower():
+                pass
+            else:
+                self.ax.legend(loc='upper left')
 
             # Check if a peak is selected and add cross
             if window.selected_peak_index is not None:
@@ -325,17 +331,23 @@ class PlotManager:
 
         # Plot the background if it exists
         if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
-            self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
-                         linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
+            if "survey" in sheet_name.lower():
+                pass
+            else:
+                self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
+                            linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
 
         # Update overall fit and residuals
-        if cst_unfit == "Unfitted":
+        if cst_unfit == "Unfitted" or "survey" in sheet_name.lower():
             pass
         else:
             window.update_overall_fit_and_residuals()
 
         # When plotting raw data
-        if self.plot_style == "scatter":
+        if "survey" in sheet_name.lower():
+            self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                         alpha=self.line_alpha, linestyle=self.raw_data_linestyle) #, label='Raw Data')
+        elif self.plot_style == "scatter":
             self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
                             marker=self.scatter_marker, label='Raw Data')
         else:
@@ -347,8 +359,10 @@ class PlotManager:
             spine.set_linewidth(1)  # Adjust this value to increase or decrease thickness
 
         # Update the legend only if necessary
-        # if self.ax.get_legend() is None or len(self.ax.get_legend().texts) != len(self.ax.lines):
-        self.update_legend(window)
+        if "survey" in sheet_name.lower():
+            pass
+        else:
+            self.ax.legend(loc='upper left')
 
         # Restore sheet name text or create new one if it doesn't exist
         if sheet_name_text is None:
