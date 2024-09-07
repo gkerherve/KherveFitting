@@ -18,7 +18,7 @@ class FittingWindow(wx.Frame):
         self.init_ui()
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
-        self.doublet_splittings = self.load_doublet_splittings("DS.txt")
+        self.doublet_splittings = self.load_doublet_splittings("DS.lib")
 
     def init_ui(self):
         """Initialize the user interface components."""
