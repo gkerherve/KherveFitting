@@ -81,7 +81,7 @@ class PlotManager:
         self.ax.clear()
 
         # Display the image
-        self.ax.imshow(img_array, aspect='auto', alpha = 0.8, extent=[1350, 0, 0, 1000000])
+        self.ax.imshow(img_array, aspect='auto', alpha = 0.1, extent=[1350, 0, 0, 1000000])
         self.ax.set_xlabel('Binding Energy (eV)')
         self.ax.set_ylabel('Intensity (CPS)')
 
