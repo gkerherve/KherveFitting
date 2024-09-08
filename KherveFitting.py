@@ -250,7 +250,7 @@ class MyFrame(wx.Frame):
 
         # Initialize plot_manager after self.ax and self.canvas are created
         self.plot_manager = PlotManager(self.ax, self.canvas)
-
+        self.plot_manager.plot_initial_logo()
 
 
 

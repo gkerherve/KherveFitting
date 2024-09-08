@@ -2,12 +2,18 @@
 
 import re
 import wx
+import os
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 from matplotlib.ticker import ScalarFormatter
 from itertools import cycle
+from PIL import Image, ImageDraw, ImageFont
+# from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.colors as mcolors
+
+from scipy.ndimage import gaussian_filter
 
 import lmfit
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
@@ -46,6 +52,85 @@ class PlotManager:
         self.peak_colors = []
         self.peak_alpha = 0.3
 
+
+    def load_and_process_image(self, blur_sigma=2):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        image_path = os.path.join(current_dir, "Images", "SplashScreen3.jpeg")
+
+        if not os.path.exists(image_path):
+            print(f"Image not found: {image_path}")
+            return None
+
+        # Load the PNG image
+        img = Image.open(image_path).convert('L')  # Convert to grayscale
+
+        # Convert to numpy array
+        img_array = np.array(img)
+
+        # Apply Gaussian blur
+        blurred_img = gaussian_filter(img_array, sigma=blur_sigma)
+
+        return blurred_img
+
+    def plot_initial_logo(self):
+        img_array = self.load_and_process_image()
+        if img_array is None:
+            return
+
+        # Clear the current axis
+        self.ax.clear()
+
+        # Display the image
+        self.ax.imshow(img_array, aspect='auto', alpha = 0.8, extent=[1350, 0, 0, 1000000])
+        self.ax.set_xlabel('Binding Energy (eV)')
+        self.ax.set_ylabel('Intensity (CPS)')
+
+        # Set axis limits
+        self.ax.set_xlim(1350, 0)
+        self.ax.set_ylim(0, 1000000)
+
+        # Enable scientific notation for the Y-axis
+        self.ax.ticklabel_format(axis='y', style='sci', scilimits=(0, 0))
+
+        # Draw the canvas
+        self.canvas.draw()
+
+    def plot_initial_logo2(self):
+        fig = self.plot_logo()
+        self.ax.clear()
+        self.ax.imshow(fig.axes[0].images[0].get_array(), cmap='hot', alpha = 0.3, aspect='auto', extent=[1350, 0,
+                                                                                                          10000,
+                                                                                                      0])
+        self.ax.set_xlabel('Binding Energy (eV)')
+        self.ax.set_ylabel('Intensity (CPS)')
+        plt.close(fig)  # Close the figure to free memory
+        self.canvas.draw()
+
+    def plot_initial_logo2(self):
+        width, height = 300, 100
+        image = Image.new('RGB', (width, height), color=(255, 255, 255))
+        draw = ImageDraw.Draw(image)
+        try:
+            font = ImageFont.truetype("calibrib.ttf", 40)  # Calibri Bold
+        except IOError:
+            font = ImageFont.load_default()
+
+        # Define a gradient color
+        gradient = np.linspace(0, 1, width)
+        color_func = mcolors.LinearSegmentedColormap.from_list("", ["#66CC66", "#006400"])
+
+        # Draw text with gradient color
+        for i, letter in enumerate("KherveFitting"):
+            x = 10 + i * 20  # Adjust spacing as needed
+            color = tuple(int(c * 255) for c in color_func(gradient[i * 20 % width])[:3])
+            draw.text((x, 25), letter, font=font, fill=color)
+
+        data = np.array(image)
+        self.ax.clear()
+        self.ax.imshow(data, aspect='auto', extent=[1350, 0, 10000, 0])
+        self.ax.set_xlabel('Binding Energy (eV)')
+        self.ax.set_ylabel('Intensity (CPS)')
+        self.canvas.draw()
 
     def plot_peak(self, x_values, background, peak_params, sheet_name, color=None, alpha=0.3):
         row = peak_params['row']

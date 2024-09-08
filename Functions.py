@@ -16,6 +16,7 @@ from libraries.Help import on_about
 from libraries.Help import show_shortcuts
 from libraries.Save import undo, redo, save_state, update_undo_redo_state
 from libraries.Open import update_recent_files, import_avantage_file, open_avg_file, import_multiple_avg_files
+# from mpl_toolkits.mplot3d import Axes3D
 
 
 
@@ -648,9 +649,6 @@ def create_horizontal_toolbar(window):
                                 shortHelp="Redo -- For peaks properties only")
     toolbar.AddSeparator()
 
-    # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
-    # separators[-1].SetSize((2, 24))
-    # toolbar.AddControl(separators[-1])
 
     window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
     window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
@@ -664,10 +662,6 @@ def create_horizontal_toolbar(window):
     # Add the binding here
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected(window, event))
 
-
-    # separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
-    # separators[-1].SetSize((2, 24))
-    # toolbar.AddControl(separators[-1])
 
     toolbar.AddSeparator()
 
@@ -739,7 +733,7 @@ def create_horizontal_toolbar(window):
     toolbar.AddSeparator()
 
     id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
-                              shortHelp="Open Periodic Table")
+                              shortHelp="Element identifications")
 
 
     # Add a spacer to push the following items to the right
@@ -1003,6 +997,11 @@ def open_xlsx_file(window, file_path=None):
         # Set the first sheet as the selected one
         first_sheet = sheet_names[0]
         window.sheet_combobox.SetValue(first_sheet)
+
+        # # After loading the data and before plotting
+        # if isinstance(window.ax, Axes3D):
+        #     window.figure.clear()
+        #     window.ax = window.figure.add_subplot(111)
 
         # Use on_sheet_selected to update peak parameter grid and plot
         event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
