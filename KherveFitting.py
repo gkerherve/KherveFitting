@@ -2181,11 +2181,11 @@ class MyFrame(wx.Frame):
             # Update B.E. values
             sheet_data['B.E.'] = [be + delta_correction for be in sheet_data['B.E.']]
 
-            # Update Background Low and High if they exist
+            # Update Background Low and High if they exist and are not empty strings
             if 'Background' in sheet_data:
-                if 'Bkg Low' in sheet_data['Background']:
+                if 'Bkg Low' in sheet_data['Background'] and sheet_data['Background']['Bkg Low'] != '':
                     sheet_data['Background']['Bkg Low'] += delta_correction
-                if 'Bkg High' in sheet_data['Background']:
+                if 'Bkg High' in sheet_data['Background'] and sheet_data['Background']['Bkg High'] != '':
                     sheet_data['Background']['Bkg High'] += delta_correction
 
             # Update peak positions in Fitting data
