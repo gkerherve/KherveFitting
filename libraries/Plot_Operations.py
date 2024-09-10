@@ -53,24 +53,25 @@ class PlotManager:
         self.peak_alpha = 0.3
 
 
-    def load_and_process_image(self, blur_sigma=2):
+    def load_and_process_image(self, blur_sigma=4):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(current_dir, "Images", "SplashScreen3.jpeg")
+        image_path = os.path.join(current_dir, "Images", "SplashScreen4.png")
 
         if not os.path.exists(image_path):
             print(f"Image not found: {image_path}")
             return None
 
         # Load the PNG image
-        img = Image.open(image_path).convert('L')  # Convert to grayscale
+        img = Image.open(image_path) #.convert('L')  # Convert to grayscale
 
         # Convert to numpy array
         img_array = np.array(img)
 
         # Apply Gaussian blur
-        blurred_img = gaussian_filter(img_array, sigma=blur_sigma)
+        blurred_img =  gaussian_filter(img_array, sigma=blur_sigma)
 
-        return blurred_img
+        # return blurred_img
+        return img_array
 
     def plot_initial_logo(self):
         img_array = self.load_and_process_image()
@@ -81,7 +82,7 @@ class PlotManager:
         self.ax.clear()
 
         # Display the image
-        self.ax.imshow(img_array, aspect='auto', alpha = 0.1, extent=[1350, 0, 0, 1000000])
+        self.ax.imshow(img_array, aspect='auto', alpha = 0.07, extent=[1350, 0, 0, 1000000])
         self.ax.set_xlabel('Binding Energy (eV)')
         self.ax.set_ylabel('Intensity (CPS)')
 
@@ -597,7 +598,7 @@ class PlotManager:
 
     def update_overall_fit_and_residuals(self, window):
         # Calculate the overall fit as the sum of all peaks
-        overall_fit = window.background.copy()
+        overall_fit = window.background.astype(float).copy()
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
 
         for i in range(num_peaks):

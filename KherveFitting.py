@@ -1826,7 +1826,7 @@ class MyFrame(wx.Frame):
         except ValueError:
             # If we can't get the first peak's data, we can't calculate ratios
 
-            print("Warning: Unable to get first peak's data for ratio calculation")
+            # print("Warning: Unable to get first peak's data for ratio calculation")
             return
 
         for i in range(1, num_peaks):
@@ -1837,7 +1837,7 @@ class MyFrame(wx.Frame):
                 area = float(self.peak_params_grid.GetCellValue(row, 6))
             except ValueError:
                 # Skip this peak if we can't get its data
-                print(f"Warning: Unable to get data for peak {i + 1} for ratio calculation")
+                # print(f"Warning: Unable to get data for peak {i + 1} for ratio calculation")
                 continue
 
             # Calculate ratios
