@@ -1142,7 +1142,12 @@ def open_vamas_file(window):
         wb.remove(wb.active)
 
         for block in vamas_data.blocks:
-            sheet_name = f"{block.species_label}".replace("/", "_")
+            if block.species_label.lower() == "wide" or block.transition_or_charge_state_label.lower() == "none":
+                sheet_name = block.species_label
+            else:
+                sheet_name = f"{block.species_label}{block.transition_or_charge_state_label}"
+
+            sheet_name = sheet_name.replace("/", "_")
             ws = wb.create_sheet(title=sheet_name)
 
             num_points = block.num_y_values
