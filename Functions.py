@@ -1251,6 +1251,8 @@ def open_vamas_file(window):
             # Store experimental setup data
             exp_data.append([
                 f"Block {i}",
+                block.block_comment,
+                block.sample_identifier,
                 block.technique,
                 block.species_label,
                 block.transition_or_charge_state_label,
@@ -1278,8 +1280,28 @@ def open_vamas_file(window):
 
         # Create the "Experimental description" sheet at the end
         exp_sheet = wb.create_sheet(title="Experimental description")
+
+        # Add VAMAS header information
+        exp_sheet.append(["VAMAS Header Information"])
+        exp_sheet.append(["Format Identifier", vamas_data.header.format_identifier])
+        exp_sheet.append(["Institution Identifier", vamas_data.header.institution_identifier])
+        exp_sheet.append(["Instrument Model", vamas_data.header.instrument_model_identifier])
+        exp_sheet.append(["Operator Identifier", vamas_data.header.operator_identifier])
+        exp_sheet.append(["Experiment Identifier", vamas_data.header.experiment_identifier])
+        exp_sheet.append(["Number of Comment Lines", vamas_data.header.num_lines_comment])
+        exp_sheet.append(["Comment", vamas_data.header.comment])
+        exp_sheet.append(["Experiment Mode", vamas_data.header.experiment_mode])
+        exp_sheet.append(["Scan Mode", vamas_data.header.scan_mode])
+        exp_sheet.append(["Number of Spectral Regions", vamas_data.header.num_spectral_regions])
+        exp_sheet.append(["Number of Analysis Positions", vamas_data.header.num_analysis_positions])
+        exp_sheet.append(["Number of Discrete X Coordinates", vamas_data.header.num_discrete_x_coords_in_full_map])
+        exp_sheet.append(["Number of Discrete Y Coordinates", vamas_data.header.num_discrete_y_coords_in_full_map])
+
+        # Add a blank row for separation
+        exp_sheet.append([])
+
         exp_sheet.append([
-            "Block", "Technique", "Species", "Transition", "Source Label", "Source Energy",
+            "Block", "Block Comment","Sample ID","Technique", "Species", "Transition", "Source Label", "Source Energy",
             "Pass Energy", "Work Function", "Analyzer Mode", "Sputtering Energy",
             "Take-off Polar Angle", "Take-off Azimuth", "Target Bias",
             "Analysis Width X", "Analysis Width Y", "X Label", "X Units",
