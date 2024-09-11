@@ -1251,13 +1251,15 @@ def open_vamas_file(window):
             # Store experimental setup data
             exp_data.append([
                 f"Block {i}",
-                block.block_comment,
                 block.sample_identifier,
+                str(block.year)+"/"+str(block.month)+"/"+str(block.day),
+                str(block.hour)+":"+str(block.minute)+":"+str(block.second),
                 block.technique,
-                block.species_label,
-                block.transition_or_charge_state_label,
+                block.species_label+" "+block.transition_or_charge_state_label,
                 block.analysis_source_label,
                 block.analysis_source_characteristic_energy,
+                block.analysis_source_beam_width_x,
+                block.analysis_source_beam_width_y,
                 block.analyzer_pass_energy_or_retard_ratio_or_mass_res,
                 block.analyzer_work_function_or_acceptance_energy,
                 block.analyzer_mode,
@@ -1275,7 +1277,8 @@ def open_vamas_file(window):
                 block.num_scans_to_compile_block,
                 block.signal_collection_time,
                 block.signal_time_correction,
-                y_unit
+                y_unit,
+                block.block_comment
             ])
 
         # Create the "Experimental description" sheet at the end
@@ -1300,16 +1303,25 @@ def open_vamas_file(window):
         # Add a blank row for separation
         exp_sheet.append([])
 
-        exp_sheet.append([
-            "Block", "Block Comment","Sample ID","Technique", "Species", "Transition", "Source Label", "Source Energy",
-            "Pass Energy", "Work Function", "Analyzer Mode", "Sputtering Energy",
-            "Take-off Polar Angle", "Take-off Azimuth", "Target Bias",
-            "Analysis Width X", "Analysis Width Y", "X Label", "X Units",
-            "X Start", "X Step", "Num Y Values", "Num Scans", "Collection Time",
-            "Time Correction", "Y Unit"
-        ])
-        for row in exp_data:
-            exp_sheet.append(row)
+        # Define the order of block information
+        block_info_order = [
+            "Sample ID",
+            "Year/Month/Day", "Time HH,MM,SS",
+            "Technique",  "Species & Transition",
+            "Source Label", "Source Energy", "Source width X",  "Source width Y",
+            "Pass Energy", "Work Function",
+            "Analyzer Mode", "Sputtering Energy", "Take-off Polar Angle",
+            "Take-off Azimuth", "Target Bias", "Analysis Width X", "Analysis Width Y",
+            "X Label", "X Units", "X Start", "X Step", "Num Y Values", "Num Scans",
+            "Collection Time", "Time Correction", "Y Unit", "Block Comment"
+        ]
+
+        # Add block information
+        for i, block_data in enumerate(exp_data, start=1):
+            exp_sheet.append([f"Block {i}", ""])
+            for j, info in enumerate(block_info_order):
+                exp_sheet.append([info, block_data[j + 1]])  # j+1 because block number is at index 0
+            exp_sheet.append([])  # Add a blank row between blocks
 
         excel_filename = os.path.splitext(vamas_filename)[0] + ".xlsx"
         excel_path = os.path.join(os.path.dirname(original_vamas_path), excel_filename)
