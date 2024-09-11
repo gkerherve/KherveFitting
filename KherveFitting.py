@@ -2039,24 +2039,25 @@ class MyFrame(wx.Frame):
             'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
         }
 
-        # Use existing fit_peaks function to get the fit data
-        from Functions import fit_peaks
-        fit_result = fit_peaks(self, self.peak_params_grid)
+        # Check if there are any peaks
+        if hasattr(self, 'peak_params_grid') and self.peak_params_grid.GetNumberRows() > 0:
+            from Functions import fit_peaks
+            fit_result = fit_peaks(self, self.peak_params_grid)
 
-        if fit_result:
-            r_squared, chi_square, red_chi_square = fit_result
+            if fit_result:
+                r_squared, chi_square, red_chi_square = fit_result
 
-            if hasattr(self, 'ax'):
-                for line in self.ax.lines:
-                    if line.get_label() == 'Overall Fit':
-                        data['calculated_fit'] = line.get_ydata()
-                    elif line.get_label() == 'Residuals':
-                        data['residuals'] = line.get_ydata()
+                if hasattr(self, 'ax'):
+                    for line in self.ax.lines:
+                        if line.get_label() == 'Overall Fit':
+                            data['calculated_fit'] = line.get_ydata()
+                        elif line.get_label() == 'Residuals':
+                            data['residuals'] = line.get_ydata()
 
-                # Individual peaks are stored as fill_between plots
-                for collection in self.ax.collections:
-                    if collection.get_label().startswith(self.sheet_combobox.GetValue()):
-                        data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
+                    # Individual peaks are stored as fill_between plots
+                    for collection in self.ax.collections:
+                        if collection.get_label().startswith(self.sheet_combobox.GetValue()):
+                            data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
 
         return data
 
