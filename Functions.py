@@ -1150,8 +1150,12 @@ def open_vamas_file(window):
             x_step = block.x_step
             x_values = [x_start + i * x_step for i in range(num_points)]
             y_values = block.corresponding_variables[0].y_values
-            print(block.corresponding_variables[0].unit)
-            print(block.num_scans_to_compile_block)
+            y_unit = block.corresponding_variables[0].unit
+            num_scans = block.num_scans_to_compile_block
+
+            if y_unit != "c/s":
+                y_values = [y / num_scans for y in y_values]
+
 
             if block.x_label == "Kinetic Energy":
                 x_values = [window.photons - x - window.workfunction for x in x_values]
