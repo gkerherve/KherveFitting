@@ -1248,7 +1248,7 @@ def open_vamas_file(window):
             for x, y in zip(x_values, y_values):
                 ws.append([x, y])
 
-            # Store experimental setup data into memory
+            # Store experimental setup data
             comment = block.block_comment
             print(comment)
             exp_data.append([
