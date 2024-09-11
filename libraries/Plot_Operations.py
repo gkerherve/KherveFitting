@@ -10,7 +10,7 @@ from matplotlib import colormaps
 from matplotlib.ticker import ScalarFormatter
 from itertools import cycle
 from PIL import Image, ImageDraw, ImageFont
-# from mpl_toolkits.mplot3d import Axes3D
+
 import matplotlib.colors as mcolors
 
 from scipy.ndimage import gaussian_filter
@@ -424,7 +424,7 @@ class PlotManager:
                             linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
 
         # Update overall fit and residuals
-        if cst_unfit == "Unfitted" in sheet_name.lower() or "survey" in sheet_name.lower():
+        if cst_unfit == "Unfitted" or any(x in sheet_name.lower() for x in ["survey", "wide"]):
             pass
         else:
             window.update_overall_fit_and_residuals()

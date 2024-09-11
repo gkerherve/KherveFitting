@@ -7,8 +7,8 @@ import numpy as np
 import lmfit
 import sys
 from scipy.stats import linregress
+
 from libraries.Save import refresh_sheets, create_plot_script_from_excel
-# from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Peak_Functions import PeakFunctions
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
@@ -1150,6 +1150,8 @@ def open_vamas_file(window):
             x_step = block.x_step
             x_values = [x_start + i * x_step for i in range(num_points)]
             y_values = block.corresponding_variables[0].y_values
+            print(block.corresponding_variables[0].unit)
+            print(block.num_scans_to_compile_block)
 
             if block.x_label == "Kinetic Energy":
                 x_values = [window.photons - x - window.workfunction for x in x_values]
