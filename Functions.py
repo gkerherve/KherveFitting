@@ -1216,9 +1216,7 @@ def open_vamas_file(window):
         wb = Workbook()
         wb.remove(wb.active)
 
-        # Create a new sheet for experimental description
-        exp_sheet = wb.create_sheet(title="Experimental description")
-        exp_sheet.append(["Block", "Technique", "Source Label", "Source Energy", "Pass Energy", "Work Function"])
+        exp_data = []  # Store experimental description data
 
         for i, block in enumerate(vamas_data.blocks, start=1):
             if block.species_label.lower() == "wide" or block.transition_or_charge_state_label.lower() == "none":
@@ -1250,15 +1248,46 @@ def open_vamas_file(window):
             for x, y in zip(x_values, y_values):
                 ws.append([x, y])
 
-            # Add experimental setup to the "Experimental description" sheet
-            exp_sheet.append([
+            # Store experimental setup data
+            exp_data.append([
                 f"Block {i}",
                 block.technique,
+                block.species_label,
+                block.transition_or_charge_state_label,
                 block.analysis_source_label,
                 block.analysis_source_characteristic_energy,
                 block.analyzer_pass_energy_or_retard_ratio_or_mass_res,
-                block.analyzer_work_function_or_acceptance_energy
+                block.analyzer_work_function_or_acceptance_energy,
+                block.analyzer_mode,
+                block.sputtering_source_energy if hasattr(block, 'sputtering_source_energy') else 'N/A',
+                block.analyzer_axis_take_off_polar_angle,
+                block.analyzer_axis_take_off_azimuth,
+                block.target_bias,
+                block.analysis_width_x,
+                block.analysis_width_y,
+                block.x_label,
+                block.x_units,
+                block.x_start,
+                block.x_step,
+                block.num_y_values,
+                block.num_scans_to_compile_block,
+                block.signal_collection_time,
+                block.signal_time_correction,
+                y_unit
             ])
+
+        # Create the "Experimental description" sheet at the end
+        exp_sheet = wb.create_sheet(title="Experimental description")
+        exp_sheet.append([
+            "Block", "Technique", "Species", "Transition", "Source Label", "Source Energy",
+            "Pass Energy", "Work Function", "Analyzer Mode", "Sputtering Energy",
+            "Take-off Polar Angle", "Take-off Azimuth", "Target Bias",
+            "Analysis Width X", "Analysis Width Y", "X Label", "X Units",
+            "X Start", "X Step", "Num Y Values", "Num Scans", "Collection Time",
+            "Time Correction", "Y Unit"
+        ])
+        for row in exp_data:
+            exp_sheet.append(row)
 
         excel_filename = os.path.splitext(vamas_filename)[0] + ".xlsx"
         excel_path = os.path.join(os.path.dirname(original_vamas_path), excel_filename)

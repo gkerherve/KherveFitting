@@ -543,7 +543,7 @@ class MyFrame(wx.Frame):
         # Set position constraint to background range
         position_constraint = f"{self.bg_min_energy:.2f},{self.bg_max_energy:.2f}"
         self.peak_params_grid.SetCellValue(row + 1, 2, position_constraint)
-        self.peak_params_grid.SetCellValue(row + 1, 3, "100,1e7")
+        self.peak_params_grid.SetCellValue(row + 1, 3, "1,1e7")
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
         self.peak_params_grid.SetCellValue(row + 1, 7, "Fixed")
@@ -575,7 +575,7 @@ class MyFrame(wx.Frame):
             'Bkg Offset High': self.offset_h,
             'Constraints': {
                 'Position': position_constraint,
-                'Height': "100,1e7",
+                'Height': "1,1e7",
                 'FWHM': "0.3,3.5",
                 'L/G': "2,80",
                 'Tail M': "Fixed",
@@ -1778,7 +1778,7 @@ class MyFrame(wx.Frame):
                         if not new_value:
                             default_constraints = {
                                 'Position': '0,1000',
-                                'Height': '100,1e7',
+                                'Height': '1,1e7',
                                 'FWHM': '0.3,3.5',
                                 'L/G': '5,80',
                                 'Tail E': 'Fixed',
