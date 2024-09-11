@@ -1249,6 +1249,8 @@ def open_vamas_file(window):
                 ws.append([x, y])
 
             # Store experimental setup data
+            comment = block.block_comment
+            print(comment)
             exp_data.append([
                 f"Block {i}",
                 block.sample_identifier,
@@ -1256,6 +1258,7 @@ def open_vamas_file(window):
                 str(block.hour)+":"+str(block.minute)+":"+str(block.second),
                 block.technique,
                 block.species_label+" "+block.transition_or_charge_state_label,
+                block.num_scans_to_compile_block,
                 block.analysis_source_label,
                 block.analysis_source_characteristic_energy,
                 block.analysis_source_beam_width_x,
@@ -1278,11 +1281,19 @@ def open_vamas_file(window):
                 block.signal_collection_time,
                 block.signal_time_correction,
                 y_unit,
-                block.block_comment
+                block.num_lines_block_comment,
+                comment
             ])
 
         # Create the "Experimental description" sheet at the end
         exp_sheet = wb.create_sheet(title="Experimental description")
+
+        # Set column A and B to be wider (adjust the width value as needed)
+        exp_sheet.column_dimensions['A'].width = 50  # You can adjust this value
+        from openpyxl.styles import Alignment
+        left_aligned = Alignment(horizontal='left')
+        exp_sheet.column_dimensions['B'].width = 100  # You can adjust this value
+
 
         # Add VAMAS header information
         exp_sheet.append(["VAMAS Header Information"])
@@ -1307,13 +1318,13 @@ def open_vamas_file(window):
         block_info_order = [
             "Sample ID",
             "Year/Month/Day", "Time HH,MM,SS",
-            "Technique",  "Species & Transition",
+            "Technique",  "Species & Transition", "Number of scans",
             "Source Label", "Source Energy", "Source width X",  "Source width Y",
             "Pass Energy", "Work Function",
             "Analyzer Mode", "Sputtering Energy", "Take-off Polar Angle",
             "Take-off Azimuth", "Target Bias", "Analysis Width X", "Analysis Width Y",
             "X Label", "X Units", "X Start", "X Step", "Num Y Values", "Num Scans",
-            "Collection Time", "Time Correction", "Y Unit", "Block Comment"
+            "Collection Time", "Time Correction", "Y Unit", "# Comment Lines", "Block Comment"
         ]
 
         # Add block information
@@ -1322,6 +1333,11 @@ def open_vamas_file(window):
             for j, info in enumerate(block_info_order):
                 exp_sheet.append([info, block_data[j + 1]])  # j+1 because block number is at index 0
             exp_sheet.append([])  # Add a blank row between blocks
+
+        # After adding all the data, set alignment for all cells in column B
+        for row in exp_sheet.iter_rows(min_row=1, max_row=exp_sheet.max_row, min_col=2, max_col=2):
+            for cell in row:
+                cell.alignment = left_aligned
 
         excel_filename = os.path.splitext(vamas_filename)[0] + ".xlsx"
         excel_path = os.path.join(os.path.dirname(original_vamas_path), excel_filename)
