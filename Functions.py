@@ -522,7 +522,7 @@ def create_menu(window):
     file_menu.AppendSubMenu(save_menu, "Save")
 
     import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file")
-    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file(window), import_vamas_item)
+    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file_dialog(window), import_vamas_item)
 
     import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage file")
     window.Bind(wx.EVT_MENU, lambda event: import_avantage_file(window), import_avantage_item)
@@ -1114,102 +1114,27 @@ from vamas import Vamas
 from openpyxl import Workbook
 
 
-
-def open_vamas_file2(window):
+def open_vamas_file_dialog(window):
     with wx.FileDialog(window, "Open VAMAS file", wildcard="VAMAS files (*.vms)|*.vms",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
         if fileDialog.ShowModal() == wx.ID_CANCEL:
             return
+        file_path = fileDialog.GetPath()
+        open_vamas_file(window, file_path)
 
-        original_vamas_path = fileDialog.GetPath()
-
+def open_vamas_file(window, file_path):
     try:
         # Clear undo and redo history
         window.history = []
         window.redo_stack = []
         update_undo_redo_state(window)
 
-        if not os.path.exists(original_vamas_path):
-            raise FileNotFoundError(f"The file {original_vamas_path} does not exist.")
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"The file {file_path} does not exist.")
 
-        vamas_filename = os.path.basename(original_vamas_path)
+        vamas_filename = os.path.basename(file_path)
         destination_path = os.path.join(os.getcwd(), vamas_filename)
-        shutil.copy2(original_vamas_path, destination_path)
-
-        vamas_data = Vamas(vamas_filename)
-
-        wb = Workbook()
-        wb.remove(wb.active)
-
-        for block in vamas_data.blocks:
-            if block.species_label.lower() == "wide" or block.transition_or_charge_state_label.lower() == "none":
-                sheet_name = block.species_label
-            else:
-                sheet_name = f"{block.species_label}{block.transition_or_charge_state_label}"
-
-            sheet_name = sheet_name.replace("/", "_")
-            ws = wb.create_sheet(title=sheet_name)
-
-            num_points = block.num_y_values
-            x_start = block.x_start
-            x_step = block.x_step
-            x_values = [x_start + i * x_step for i in range(num_points)]
-            y_values = block.corresponding_variables[0].y_values
-            y_unit = block.corresponding_variables[0].unit
-            num_scans = block.num_scans_to_compile_block
-
-            if y_unit != "c/s":
-                y_values = [y / num_scans for y in y_values]
-
-
-            if block.x_label == "Kinetic Energy":
-                x_values = [window.photons - x - window.workfunction for x in x_values]
-                x_label = "Binding Energy"
-            else:
-                x_label = block.x_label
-
-            ws.append([x_label, "Intensity"])
-            for x, y in zip(x_values, y_values):
-                ws.append([x, y])
-
-        excel_filename = os.path.splitext(vamas_filename)[0] + ".xlsx"
-        excel_path = os.path.join(os.path.dirname(original_vamas_path), excel_filename)
-        wb.save(excel_path)
-
-        os.remove(destination_path)
-
-        # Update window.Data with the new Excel file
-        window.Data = Init_Measurement_Data(window)
-        window.Data['FilePath'] = excel_path
-
-        # Open the Excel file and populate window.Data
-        open_xlsx_file_vamas(window, excel_path)
-
-    except FileNotFoundError as e:
-        wx.MessageBox(f"File not found: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
-    except Exception as e:
-        wx.MessageBox(f"Error processing VAMAS file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
-
-def open_vamas_file(window):
-    with wx.FileDialog(window, "Open VAMAS file", wildcard="VAMAS files (*.vms)|*.vms",
-                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
-        if fileDialog.ShowModal() == wx.ID_CANCEL:
-            return
-
-        original_vamas_path = fileDialog.GetPath()
-
-    try:
-        # Clear undo and redo history
-        window.history = []
-        window.redo_stack = []
-        update_undo_redo_state(window)
-
-        if not os.path.exists(original_vamas_path):
-            raise FileNotFoundError(f"The file {original_vamas_path} does not exist.")
-
-        vamas_filename = os.path.basename(original_vamas_path)
-        destination_path = os.path.join(os.getcwd(), vamas_filename)
-        shutil.copy2(original_vamas_path, destination_path)
+        shutil.copy2(file_path, destination_path)
 
         vamas_data = Vamas(vamas_filename)
 
@@ -1250,7 +1175,7 @@ def open_vamas_file(window):
 
             # Store experimental setup data
             comment = block.block_comment
-            print(comment)
+            # print(comment)
             exp_data.append([
                 f"Block {i}",
                 block.sample_identifier,
@@ -1293,7 +1218,6 @@ def open_vamas_file(window):
         from openpyxl.styles import Alignment
         left_aligned = Alignment(horizontal='left')
         exp_sheet.column_dimensions['B'].width = 100  # You can adjust this value
-
 
         # Add VAMAS header information
         exp_sheet.append(["VAMAS Header Information"])
@@ -1340,7 +1264,7 @@ def open_vamas_file(window):
                 cell.alignment = left_aligned
 
         excel_filename = os.path.splitext(vamas_filename)[0] + ".xlsx"
-        excel_path = os.path.join(os.path.dirname(original_vamas_path), excel_filename)
+        excel_path = os.path.join(os.path.dirname(file_path), excel_filename)
         wb.save(excel_path)
 
         os.remove(destination_path)

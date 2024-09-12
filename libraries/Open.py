@@ -12,10 +12,13 @@ class ExcelDropTarget(wx.FileDropTarget):
         self.window = window
 
     def OnDropFiles(self, x, y, filenames):
-        from Functions import open_xlsx_file
+        from Functions import open_xlsx_file, open_vamas_file
         for file in filenames:
             if file.lower().endswith('.xlsx'):
                 wx.CallAfter(open_xlsx_file, self.window, file)
+                return True
+            elif file.lower().endswith('.vms'):
+                wx.CallAfter(open_vamas_file, self.window, file)
                 return True
         return False
 
