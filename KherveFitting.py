@@ -101,6 +101,9 @@ class MyFrame(wx.Frame):
         self.photons = 1486.67
         self.workfunction = 0
 
+        # Add a state variable for energy mode (default to Binding Energy)
+        self.energy_scale = 'BE'  # 'BE' for binding energy, 'KE' for kinetic energy
+
         # Initialize variables for vertical lines and background energy
         self.vline1 = None
         self.vline2 = None
@@ -1163,6 +1166,11 @@ class MyFrame(wx.Frame):
     def on_key_press_global(self, event):
         keycode = event.GetKeyCode()
         if event.ControlDown():
+            if keycode == ord('B'):
+                if self.energy_scale == 'BE':
+                    self.toggle_energy_scale()
+                else:
+                    event.Skip()
             if keycode == ord('Z'):
                 from libraries.Save import undo
                 undo(self)
@@ -2246,6 +2254,9 @@ class MyFrame(wx.Frame):
     def open_periodic_table(self, event):
         periodic_table = PeriodicTableWindow(self)
         periodic_table.Show()
+
+    def toggle_energy_scale(self):
+        self.plot_manager.toggle_energy_scale(self)
 
 
 if __name__ == '__main__':

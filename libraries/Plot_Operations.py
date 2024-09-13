@@ -52,6 +52,9 @@ class PlotManager:
         self.peak_colors = []
         self.peak_alpha = 0.3
 
+    def toggle_energy_scale(self, window):
+        window.energy_scale = 'KE' if window.energy_scale == 'BE' else 'BE'
+        self.clear_and_replot(window)
 
     def load_and_process_image(self, blur_sigma=4):
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -218,11 +221,14 @@ class PlotManager:
             x_values = window.Data['Core levels'][sheet_name]['B.E.']
             y_values = window.Data['Core levels'][sheet_name]['Raw Data']
 
-
+            if window.energy_scale == 'KE':
+                x_values = window.photons - x_values
 
             # Update window.x_values and window.y_values
             window.x_values = np.array(x_values)
             window.y_values = np.array(y_values)
+
+
 
             # Initialize background to raw data if not already present
             if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
@@ -240,7 +246,9 @@ class PlotManager:
             self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
             self.ax.set_ylabel("Intensity (CPS)")
-            self.ax.set_xlabel("Binding Energy (eV)")
+            x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else "Binding Energy (eV)"
+            self.ax.set_xlabel(x_label)
+            # self.ax.set_xlabel("Binding Energy (eV)")
 
             self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
