@@ -576,6 +576,10 @@ def create_menu(window):
     ToggleRes_item = view_menu.Append(wx.NewId(), "Toggle Residuals")
     window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_residuals(), ToggleRes_item)
 
+    toggle_energy_item = view_menu.AppendCheckItem(wx.NewId(), "Show Kinetic Energy\tCtrl+B")
+    window.Bind(wx.EVT_MENU, lambda event: window.toggle_energy_scale(), toggle_energy_item)
+    window.toggle_energy_item = toggle_energy_item
+
     Area_item = tools_menu.Append(wx.NewId(), "Calculate Area\tCtrl+A")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
 

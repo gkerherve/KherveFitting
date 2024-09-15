@@ -103,6 +103,7 @@ class MyFrame(wx.Frame):
 
         # Add a state variable for energy mode (default to Binding Energy)
         self.energy_scale = 'BE'  # 'BE' for binding energy, 'KE' for kinetic energy
+        self.toggle_energy_item = None  # Will be set in create_menu
 
         # Initialize variables for vertical lines and background energy
         self.vline1 = None
@@ -731,7 +732,6 @@ class MyFrame(wx.Frame):
             'height': y,
             'label': label  # Include the label in peak_params
         }
-
         self.plot_manager.plot_peak(
             self.x_values,
             self.background,
@@ -1167,10 +1167,8 @@ class MyFrame(wx.Frame):
         keycode = event.GetKeyCode()
         if event.ControlDown():
             if keycode == ord('B'):
-                if self.energy_scale == 'BE':
-                    self.toggle_energy_scale()
-                else:
-                    event.Skip()
+                self.toggle_energy_scale()
+                self.clear_and_replot()
             if keycode == ord('Z'):
                 from libraries.Save import undo
                 undo(self)
@@ -2256,7 +2254,12 @@ class MyFrame(wx.Frame):
         periodic_table.Show()
 
     def toggle_energy_scale(self):
-        self.plot_manager.toggle_energy_scale(self)
+        self.energy_scale = 'KE' if self.energy_scale == 'BE' else 'BE'
+        self.plot_manager.clear_and_replot(self)
+
+        # Update the menu item check state
+        menu_item = self.GetMenuBar().FindItemById(self.toggle_energy_item.GetId())
+        menu_item.Check(self.energy_scale == 'KE')
 
 
 if __name__ == '__main__':

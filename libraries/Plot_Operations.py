@@ -52,6 +52,8 @@ class PlotManager:
         self.peak_colors = []
         self.peak_alpha = 0.3
 
+        self.energy_scale = 'BE'
+
     def toggle_energy_scale(self, window):
         window.energy_scale = 'KE' if window.energy_scale == 'BE' else 'BE'
         self.clear_and_replot(window)
@@ -136,7 +138,7 @@ class PlotManager:
         self.ax.set_ylabel('Intensity (CPS)')
         self.canvas.draw()
 
-    def plot_peak(self, x_values, background, peak_params, sheet_name, color=None, alpha=0.3):
+    def plot_peak(self, x_values, background, peak_params, sheet_name,window, color=None, alpha=0.3):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
         lg_ratio = peak_params['lg_ratio']
@@ -194,11 +196,18 @@ class PlotManager:
         line_alpha = min(alpha +0.1, 1)
         if self.peak_fill_enabled:
             label = peak_label
-            self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, interpolate=True,
-                     edgecolor='none', label=peak_label)
+            if window.energy_scale == 'KE':
+                self.ax.fill_between(window.photons - x_values, background, peak_y, color=color, alpha=alpha,
+                                     interpolate=True, edgecolor='none', label=peak_label)
+            else:
+                self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, interpolate=True,
+                                     edgecolor='none', label=peak_label)
             # self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha)
         else:
-            self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha, label=peak_label)
+            if self.energy_scale == 'KE':
+                self.ax.plot(window.photons - x_values, peak_y, color=color, alpha=line_alpha, label=peak_label)
+            else:
+                self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha, label=peak_label)
 
         self.canvas.draw_idle()
 
@@ -221,8 +230,7 @@ class PlotManager:
             x_values = window.Data['Core levels'][sheet_name]['B.E.']
             y_values = window.Data['Core levels'][sheet_name]['Raw Data']
 
-            if window.energy_scale == 'KE':
-                x_values = window.photons - x_values
+            x_values = np.array(x_values)  # Ensure x_values is a numpy array
 
             # Update window.x_values and window.y_values
             window.x_values = np.array(x_values)
@@ -242,7 +250,11 @@ class PlotManager:
                 window.Data['Core levels'][sheet_name]['Background']['Bkg X'] = window.x_values.tolist()
 
             # Set x-axis limits to reverse the direction and match the min and max of the data
-            self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+            if window.energy_scale == 'KE':
+                self.ax.set_xlim(window.photons-limits['Xmax'],window.photons - limits['Xmin'])  # Reverse X-axis
+            else:
+                self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+
             self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
             self.ax.set_ylabel("Intensity (CPS)")
@@ -254,14 +266,27 @@ class PlotManager:
             self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
 
             if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
-                self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                if window.energy_scale == 'KE':
+                    self.ax.plot(window.photons- x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                                 alpha=self.line_alpha, linestyle=self.raw_data_linestyle)  # , label='Raw Data')
+                else:
+                    self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
                              alpha=self.line_alpha, linestyle=self.raw_data_linestyle) #, label='Raw Data')
             elif self.plot_style == "scatter":
-                self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
+                if window.energy_scale == 'KE':
+                    self.ax.scatter(window.photons-x_values, y_values, c=self.scatter_color, s=self.scatter_size,
+                                marker=self.scatter_marker, label='Raw Data')
+                else:
+                    self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
                                 marker=self.scatter_marker, label='Raw Data')
             else:
-                self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                if window.energy_scale == 'KE':
+                    self.ax.plot(window.photons -x_values, y_values, c=self.line_color, linewidth=self.line_width,
                              alpha=self.line_alpha, linestyle=self.raw_data_linestyle, label='Raw Data')
+                else:
+                    self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                                 alpha=self.line_alpha, linestyle=self.raw_data_linestyle, label='Raw Data')
+
 
             # Hide the cross if it exists
             if hasattr(window, 'cross') and window.cross:
@@ -328,7 +353,12 @@ class PlotManager:
 
         core_level_data = window.Data['Core levels'][sheet_name]
 
-        self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        if window.energy_scale == 'KE':
+            self.ax.set_xlim(window.photons - limits['Xmax'], window.photons - limits['Xmin'])  # Reverse X-axis
+        else:
+            self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+
+        # self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
         # Store existing sheet name text
@@ -340,7 +370,9 @@ class PlotManager:
 
         # Clear the plot
         self.ax.clear()
-        self.ax.set_xlabel("Binding Energy (eV)")
+        x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else "Binding Energy (eV)"
+        self.ax.set_xlabel(x_label)
+        # self.ax.set_xlabel("Binding Energy (eV)")
         self.ax.set_ylabel("Intensity (CPS)")
         self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
@@ -355,7 +387,11 @@ class PlotManager:
         limits = window.plot_config.plot_limits[sheet_name]
 
         # Set plot limits
+
         self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        if window.energy_scale == 'KE':
+            self.ax.set_xlim(window.photons - limits['Xmax'],window.photons - limits['Xmin'])  # Reverse X-axis
+
         self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
         # Create a color cycle
@@ -393,8 +429,12 @@ class PlotManager:
             if fitting_model == "Unfitted":
                 # For unfitted peaks, fill between background and raw data
                 cst_unfit = "Unfitted"
-                self.ax.fill_between(x_values, window.background, y_values,
+                if window.energy_scale == 'KE':
+                    self.ax.fill_between(window.photons - x_values, window.background, y_values,
                                      facecolor='lightgreen', alpha=0.5, label=label)
+                else:
+                    self.ax.fill_between(x_values, window.background, y_values,
+                                         facecolor='lightgreen', alpha=0.5, label=label)
             else:
                 if i in doublets:
                     if doublets.index(i) % 2 == 0:  # First peak of the doublet
@@ -403,7 +443,7 @@ class PlotManager:
                     else:  # Second peak of the doublet
                         # Use the same color as the first peak of the doublet, but with lower alpha
                         color = self.peak_colors[(i - 1) % len(self.peak_colors)]
-                        alpha = self.peak_alpha * 0.67  # Reduce alpha for the second peak
+                        alpha = self.peak_alpha * 0.8  # Reduce alpha for the second peak
                 else:
                     color = self.peak_colors[i % len(self.peak_colors)]
                     alpha = self.peak_alpha
@@ -420,7 +460,12 @@ class PlotManager:
                     'label': label,
                     'fitting_model': fitting_model
                 }
-                self.plot_peak(window.x_values, window.background, peak_params, sheet_name, color=color, alpha=alpha)
+                if window.energy_scale == 'KE':
+                    self.plot_peak(window.x_values, window.background, peak_params, sheet_name, window,
+                                                color=color, alpha=alpha)
+                else:
+                    self.plot_peak(window.x_values, window.background, peak_params, sheet_name, window, color=color,
+                                   alpha=alpha)
 
 
         # Plot the background if it exists
@@ -428,9 +473,13 @@ class PlotManager:
             if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
                 pass
             else:
-                self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
+                if window.energy_scale == 'KE':
+                    self.ax.plot(window.photons - x_values, core_level_data['Background']['Bkg Y'],
+                                 color=self.background_color,
                             linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
-
+                else:
+                    self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
+                                 linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
         # Update overall fit and residuals
         if cst_unfit == "Unfitted" or any(x in sheet_name.lower() for x in ["survey", "wide"]):
             pass
@@ -439,11 +488,19 @@ class PlotManager:
 
         # When plotting raw data
         if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
-            self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
+            if window.energy_scale == 'KE':
+                self.ax.plot(window.photons - x_values, y_values, c=self.line_color, linewidth=self.line_width,
+                         alpha=self.line_alpha, linestyle=self.raw_data_linestyle) #, label='Raw Data')
+            else:
+                self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
                          alpha=self.line_alpha, linestyle=self.raw_data_linestyle) #, label='Raw Data')
         elif self.plot_style == "scatter":
-            self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
+            if window.energy_scale == 'KE':
+                self.ax.scatter(window.photons - x_values, y_values, c=self.scatter_color, s=self.scatter_size,
                             marker=self.scatter_marker, label='Raw Data')
+            else:
+                self.ax.scatter(x_values, y_values, c=self.scatter_color, s=self.scatter_size,
+                                marker=self.scatter_marker, label='Raw Data')
         else:
             self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
                          alpha=self.line_alpha, linestyle=self.raw_data_linestyle, label='Raw Data')
@@ -585,6 +642,7 @@ class PlotManager:
                     line.set_ydata(peak_y)
                     break
             else:
+                print("I AM NOT SURE WHAT THIS DO")
                 self.ax.plot(window.x_values, peak_y, label=peak_label)
 
             # Remove previous squares
@@ -683,10 +741,18 @@ class PlotManager:
                 line.remove()
 
         # Plot the new overall fit and residuals
-        self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
+        if window.energy_scale == 'KE':
+            self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
                     linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
 
-        self.ax.plot(window.x_values, masked_residuals + 1.05 * max(window.y_values),
+            self.ax.plot(window.photons - window.x_values, masked_residuals + 1.05 * max(window.y_values),
+                     color=self.residual_color, linestyle=self.residual_linestyle,
+                     alpha=self.residual_alpha, label='Residuals')
+        else:
+            self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
+                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
+
+            self.ax.plot(window.x_values, masked_residuals + 1.05 * max(window.y_values),
                      color=self.residual_color, linestyle=self.residual_linestyle,
                      alpha=self.residual_alpha, label='Residuals')
 
