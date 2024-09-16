@@ -48,6 +48,12 @@ class MyFrame(wx.Frame):
         # Construct the path to the icon file
         icon_path = os.path.join(current_dir, "Icons", "Icon.ico")
 
+        # Mac scaling issues
+        wx.SystemOptions.SetOption("mac.window-plain-transition", 1)
+        wx.SystemOptions.SetOption("mac.scrollbar-autohide", 0)
+        wx.SystemOptions.SetOption("osx.opengl.force-enable-angle", 0)
+        wx.SystemOptions.SetOption("mac.listctrl.always_use_generic", "1")    # ChatGPT recommendation
+
         # Set the icon
         icon = wx.Icon(icon_path, wx.BITMAP_TYPE_ICO)
         self.SetIcon(icon)
@@ -2266,6 +2272,7 @@ class MyFrame(wx.Frame):
 if __name__ == '__main__':
 
     app = wx.App(False)
+    # app.SetHighDPIAware(True)  # Add this line to enable High DPI awareness
     splash = show_splash(duration=3000, delay=2)
 
     frame = MyFrame(None, "KherveFitting - V1.0 - Sept 2024")
