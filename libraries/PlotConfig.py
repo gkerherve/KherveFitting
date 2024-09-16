@@ -78,6 +78,8 @@ class PlotConfig:
                     limits['Ymin'] = max(limits['Ymin'] - increment, 0)
 
         window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        if window.energy_scale == 'KE':
+            window.ax.set_xlim(window.photons - limits['Xmax'], window.photons - limits['Xmin'])
         window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
         window.canvas.draw_idle()
 

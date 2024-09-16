@@ -1168,6 +1168,7 @@ class MyFrame(wx.Frame):
         if event.ControlDown():
             if keycode == ord('B'):
                 self.toggle_energy_scale()
+                self.toggle_energy_scale()
                 self.clear_and_replot()
             if keycode == ord('Z'):
                 from libraries.Save import undo
