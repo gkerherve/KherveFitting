@@ -7,8 +7,12 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as Navigat
 from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.Open import ExcelDropTarget
 from libraries.Plot_Operations import PlotManager
-from Functions import create_menu, create_statusbar, create_horizontal_toolbar, create_vertical_toolbar, toggle_Col_1
+from Functions import create_statusbar, create_horizontal_toolbar, create_vertical_toolbar, toggle_Col_1
 from libraries.Save import update_undo_redo_state
+
+from Functions import open_xlsx_file, on_save, save_all_sheets_with_plots, save_results_table, open_vamas_file_dialog, \
+    import_avantage_file, open_avg_file, import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
+    on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, on_about
 
 
 def create_widgets(window):
@@ -79,7 +83,7 @@ def create_widgets(window):
     toggle_Col_1(window)
 
     # Bind events
-    bind_events(window)
+    bind_events_widgets(window)
 
 
 def create_grids_panel(window):
@@ -178,7 +182,7 @@ def create_results_grid(window, parent):
     return results_sizer
 
 
-def bind_events(window):
+def bind_events_widgets(window):
     window.results_grid.Bind(wx.EVT_KEY_DOWN, window.on_key_down)
     window.peak_params_grid.Bind(wx.grid.EVT_GRID_SELECT_CELL, window.on_grid_select)
     window.splitter.Bind(wx.EVT_SPLITTER_SASH_POS_CHANGED, window.on_splitter_changed)
@@ -188,7 +192,135 @@ def bind_events(window):
 
 
 
-#--------------KEEP PREVIOUS DEF JUST IN CASE
+def create_menu(window):
+    menubar = wx.MenuBar()
+
+    # Create menus
+    file_menu = wx.Menu()
+    import_menu = wx.Menu()
+    export_menu = wx.Menu()
+    edit_menu = wx.Menu()
+    view_menu = wx.Menu()
+    tools_menu = wx.Menu()
+    help_menu = wx.Menu()
+    save_menu = wx.Menu()
+
+    # File menu items
+    open_item = file_menu.Append(wx.ID_OPEN, "Open \tCtrl+O")
+    window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
+
+    save_Excel_item = file_menu.Append(wx.ID_SAVE, "Save Sheet \tCtrl+S")
+    window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item)
+
+    # Save submenu items
+    save_all_item = save_menu.Append(wx.NewId(), "Save All")
+    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
+
+    save_Excel_item2 = save_menu.Append(wx.NewId(), "Save Sheet")
+    window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item2)
+
+    save_Table_item = save_menu.Append(wx.NewId(), "Save Results Table")
+    window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
+
+    file_menu.AppendSubMenu(save_menu, "Save")
+
+    # Import submenu items
+    import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file")
+    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file_dialog(window), import_vamas_item)
+
+    import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage file")
+    window.Bind(wx.EVT_MENU, lambda event: import_avantage_file(window), import_avantage_item)
+
+    import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file")
+    window.Bind(wx.EVT_MENU, lambda event: open_avg_file(window), import_avg_item)
+
+    import_multiple_avg_item = import_menu.Append(wx.NewId(), "Import Multiple AVG files")
+    window.Bind(wx.EVT_MENU, lambda event: import_multiple_avg_files(window), import_multiple_avg_item)
+
+    # Export submenu items
+    export_python_plot_item = export_menu.Append(wx.NewId(), "Python Plot")
+    window.Bind(wx.EVT_MENU, lambda event: create_plot_script_from_excel(window), export_python_plot_item)
+
+    save_plot_item = export_menu.Append(wx.NewId(), "Export as PNG")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
+
+    save_plot_item_pdf = export_menu.Append(wx.NewId(), "Export as PDF")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot_pdf(window), save_plot_item_pdf)
+
+    save_plot_item_svg = export_menu.Append(wx.NewId(), "Export as SVG")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot_svg(window), save_plot_item_svg)
+
+    # Recent files submenu
+    window.recent_files_menu = wx.Menu()
+    file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
+
+    # Append submenus to file menu
+    file_menu.AppendSubMenu(import_menu, "Import")
+    file_menu.AppendSubMenu(export_menu, "Export")
+
+    # Exit item
+    file_menu.AppendSeparator()
+    exit_item = file_menu.Append(wx.ID_EXIT, "Exit\tCtrl+Q")
+    window.Bind(wx.EVT_MENU, lambda event: on_exit(window, event), exit_item)
+
+    # Edit menu items
+    undo_item = edit_menu.Append(wx.ID_UNDO, "Undo\tCtrl+Z")
+    redo_item = edit_menu.Append(wx.ID_REDO, "Redo\tCtrl+Y")
+    window.Bind(wx.EVT_MENU, lambda event: undo(window), undo_item)
+    window.Bind(wx.EVT_MENU, lambda event: redo(window), redo_item)
+    edit_menu.AppendSeparator()
+
+    preferences_item = edit_menu.Append(wx.ID_PREFERENCES, "Preferences")
+    window.Bind(wx.EVT_MENU, window.on_preferences, preferences_item)
+
+    # View menu items
+    ToggleFitting_item = view_menu.Append(wx.NewId(), "Toggle Peak Fitting")
+    window.Bind(wx.EVT_MENU, lambda event: toggle_plot(window), ToggleFitting_item)
+
+    ToggleLegend_item = view_menu.Append(wx.NewId(), "Toggle Legend")
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_legend(), ToggleLegend_item)
+
+    ToggleFit_item = view_menu.Append(wx.NewId(), "Toggle Fit Results")
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_fitting_results(), ToggleFit_item)
+
+    ToggleRes_item = view_menu.Append(wx.NewId(), "Toggle Residuals")
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_residuals(), ToggleRes_item)
+
+    toggle_energy_item = view_menu.AppendCheckItem(wx.NewId(), "Show Kinetic Energy\tCtrl+B")
+    window.Bind(wx.EVT_MENU, lambda event: window.toggle_energy_scale(), toggle_energy_item)
+    window.toggle_energy_item = toggle_energy_item
+
+    # Tools menu items
+    Area_item = tools_menu.Append(wx.NewId(), "Calculate Area\tCtrl+A")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
+
+    Fitting_item = tools_menu.Append(wx.NewId(), "Peak Fitting\tCtrl+P")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_fitting_window(), Fitting_item)
+
+    Noise_item = tools_menu.Append(wx.NewId(), "Noise Analysis")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_noise_analysis_window, Noise_item)
+
+    # Help menu items
+    mini_help_item = help_menu.Append(wx.NewId(), "Help")
+    window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
+
+    shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
+    window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
+
+    about_item = help_menu.Append(wx.ID_ABOUT, "About")
+    window.Bind(wx.EVT_MENU, lambda event: on_about(window, event), about_item)
+
+    # Add menus to menubar
+    menubar.Append(file_menu, "&File")
+    menubar.Append(edit_menu, "&Edit")
+    menubar.Append(view_menu, "&View")
+    menubar.Append(tools_menu, "&Tools")
+    menubar.Append(help_menu, "&Help")
+
+    window.SetMenuBar(menubar)
+
+# --------------KEEP PREVIOUS DEF JUST IN CASE----------------------------------------------------
+# ------------------------------------------------------------------------------------------------
 
 def create_widgets_MAIN(self):
     # Main sizer
@@ -374,4 +506,118 @@ def create_widgets_MAIN(self):
     self.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, self.on_checkbox_update)
     self.canvas.mpl_connect('button_release_event', self.on_plot_mouse_release)
     self.peak_params_grid.Bind(wx.EVT_LEFT_UP, self.on_peak_params_mouse_release)
+
+def create_menu_FUNCTION(window):
+    menubar = wx.MenuBar()
+    file_menu = wx.Menu()
+    import_menu = wx.Menu()
+    export_menu = wx.Menu()
+    edit_menu = wx.Menu()
+    view_menu = wx.Menu()
+    tools_menu = wx.Menu()
+    help_menu = wx.Menu()
+    save_menu = wx.Menu()
+
+    open_item = file_menu.Append(wx.ID_OPEN, "Open \tCtrl+O")
+    window.Bind(wx.EVT_MENU, lambda event: open_xlsx_file(window), open_item)
+
+    save_Excel_item = file_menu.Append(wx.ID_SAVE, "Save Sheet \tCtrl+S")
+    window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item)
+
+    save_all_item = save_menu.Append(wx.NewId(), "Save All")
+    window.Bind(wx.EVT_MENU, lambda event: save_all_sheets_with_plots(window), save_all_item)
+
+    save_Excel_item2 = save_menu.Append(wx.NewId(), "Save Sheet")
+    window.Bind(wx.EVT_MENU, lambda event: on_save(window), save_Excel_item2)
+
+    save_Table_item = save_menu.Append(wx.NewId(), "Save Results Table")
+    window.Bind(wx.EVT_MENU, lambda event: save_results_table(window), save_Table_item)
+
+    file_menu.AppendSubMenu(save_menu, "Save")
+
+    import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file")
+    window.Bind(wx.EVT_MENU, lambda event: open_vamas_file_dialog(window), import_vamas_item)
+
+    import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage file")
+    window.Bind(wx.EVT_MENU, lambda event: import_avantage_file(window), import_avantage_item)
+
+    import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file")
+    window.Bind(wx.EVT_MENU, lambda event: open_avg_file(window), import_avg_item)
+
+    import_multiple_avg_item = import_menu.Append(wx.NewId(), "Import Multiple AVG files")
+    window.Bind(wx.EVT_MENU, lambda event: import_multiple_avg_files(window), import_multiple_avg_item)
+
+    export_python_plot_item = export_menu.Append(wx.NewId(), "Python Plot")
+    window.Bind(wx.EVT_MENU, lambda event: create_plot_script_from_excel(window), export_python_plot_item)
+
+    save_plot_item = export_menu.Append(wx.NewId(), "Export as PNG")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot(window), save_plot_item)
+
+    save_plot_item_pdf = export_menu.Append(wx.NewId(), "Export as PDF")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot_pdf(window), save_plot_item_pdf)
+
+    save_plot_item_svg = export_menu.Append(wx.NewId(), "Export as SVG")
+    window.Bind(wx.EVT_MENU, lambda event: on_save_plot_svg(window), save_plot_item_svg)
+
+    window.recent_files_menu = wx.Menu()
+    file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
+
+    file_menu.AppendSubMenu(import_menu, "Import")
+    file_menu.AppendSubMenu(export_menu, "Export")
+
+    file_menu.AppendSeparator()
+    exit_item = file_menu.Append(wx.ID_EXIT, "Exit\tCtrl+Q")
+    window.Bind(wx.EVT_MENU, lambda event: on_exit(window, event), exit_item)
+
+    undo_item = edit_menu.Append(wx.ID_UNDO, "Undo\tCtrl+Z")
+    redo_item = edit_menu.Append(wx.ID_REDO, "Redo\tCtrl+Y")
+    window.Bind(wx.EVT_MENU, lambda event: undo(window), undo_item)
+    window.Bind(wx.EVT_MENU, lambda event: redo(window), redo_item)
+    edit_menu.AppendSeparator()
+
+    preferences_item = edit_menu.Append(wx.ID_PREFERENCES, "Preferences")
+    window.Bind(wx.EVT_MENU, window.on_preferences, preferences_item)
+
+    ToggleFitting_item = view_menu.Append(wx.NewId(), "Toggle Peak Fitting")
+    window.Bind(wx.EVT_MENU, lambda event: toggle_plot(window), ToggleFitting_item)
+
+    ToggleLegend_item = view_menu.Append(wx.NewId(), "Toggle Legend")
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_legend(), ToggleLegend_item)
+
+    ToggleFit_item = view_menu.Append(wx.NewId(), "Toggle Fit Results")
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_fitting_results(), ToggleFit_item)
+
+    ToggleRes_item = view_menu.Append(wx.NewId(), "Toggle Residuals")
+    window.Bind(wx.EVT_MENU, lambda event: window.plot_manager.toggle_residuals(), ToggleRes_item)
+
+    toggle_energy_item = view_menu.AppendCheckItem(wx.NewId(), "Show Kinetic Energy\tCtrl+B")
+    window.Bind(wx.EVT_MENU, lambda event: window.toggle_energy_scale(), toggle_energy_item)
+    window.toggle_energy_item = toggle_energy_item
+
+    Area_item = tools_menu.Append(wx.NewId(), "Calculate Area\tCtrl+A")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
+
+    Fitting_item = tools_menu.Append(wx.NewId(), "Peak Fitting\tCtrl+P")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_fitting_window(), Fitting_item)
+
+    Noise_item = tools_menu.Append(wx.NewId(), "Noise Analysis")
+    window.Bind(wx.EVT_MENU, lambda event: window.on_open_noise_analysis_window, Noise_item)
+
+    # Manual_item = help_menu.Append(wx.NewId(), "Manual - TBD")
+
+    mini_help_item = help_menu.Append(wx.NewId(), "Help")
+    window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
+
+    shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
+    window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
+
+    about_item = help_menu.Append(wx.ID_ABOUT, "About")
+    window.Bind(wx.EVT_MENU, lambda event: on_about(window, event), about_item)
+
+    menubar.Append(file_menu, "&File")
+    menubar.Append(edit_menu, "&Edit")
+    menubar.Append(view_menu, "&View")
+    menubar.Append(tools_menu, "&Tools")
+    menubar.Append(help_menu, "&Help")
+    window.SetMenuBar(menubar)
 
