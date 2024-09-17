@@ -1,5 +1,6 @@
 # In libraries/Widgets_Toolbars.py
-
+import os
+import sys
 import wx
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -7,12 +8,16 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as Navigat
 from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.Open import ExcelDropTarget
 from libraries.Plot_Operations import PlotManager
-from Functions import create_statusbar, create_horizontal_toolbar, create_vertical_toolbar, toggle_Col_1
+from Functions import create_statusbar, create_vertical_toolbar, toggle_Col_1
 from libraries.Save import update_undo_redo_state
 
 from Functions import open_xlsx_file, on_save, save_all_sheets_with_plots, save_results_table, open_vamas_file_dialog, \
     import_avantage_file, open_avg_file, import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
     on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, on_about
+
+
+from Functions import open_xlsx_file, refresh_sheets, on_sheet_selected_wrapper, toggle_plot, on_save, on_save_plot, on_save_all_sheets, toggle_Col_1, undo, redo
+
 
 
 def create_widgets(window):
@@ -319,6 +324,130 @@ def create_menu(window):
 
     window.SetMenuBar(menubar)
 
+def create_horizontal_toolbar(window):
+    toolbar = window.CreateToolBar()
+    toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
+    toolbar.SetToolBitmapSize(wx.Size(25, 25))
+
+    # Determine the correct path for icons
+    if getattr(sys, 'frozen', False):
+        application_path = sys._MEIPASS
+    else:
+        application_path = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(application_path, "Icons")
+
+    separators = []
+
+    # File operations
+    open_file_tool = toolbar.AddTool(wx.ID_ANY, 'Open File', wx.Bitmap(os.path.join(icon_path, "open-folder-25-green.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open File\tCtrl+O")
+    refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Excel File', wx.Bitmap(os.path.join(icon_path, "refresh-96g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Refresh Excel File")
+    save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level \tCtrl+S")
+    save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-PNG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
+    save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
+
+    toolbar.AddSeparator()
+    window.undo_tool = toolbar.AddTool(wx.ID_ANY, 'Undo', wx.Bitmap(os.path.join(icon_path, "undo-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Undo -- For peaks properties only")
+    window.redo_tool = toolbar.AddTool(wx.ID_ANY, 'Redo', wx.Bitmap(os.path.join(icon_path, "redo-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Redo -- For peaks properties only")
+    toolbar.AddSeparator()
+
+    # Skip rows spinbox
+    window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
+    window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
+    toolbar.AddControl(window.skip_rows_spinbox)
+
+    # Sheet selection
+    window.sheet_combobox = wx.ComboBox(toolbar, style=wx.CB_READONLY)
+    window.sheet_combobox.SetToolTip("Select Sheet")
+    toolbar.AddControl(window.sheet_combobox)
+    window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected(window, event))
+
+    toolbar.AddSeparator()
+    add_vertical_separator(toolbar, separators)
+    toolbar.AddSeparator()
+
+    # BE correction
+    window.be_correction_spinbox = wx.SpinCtrlDouble(toolbar, value='0.00', min=-20.00, max=20.00, inc=0.01, size=(70, -1))
+    window.be_correction_spinbox.SetDigits(2)
+    window.be_correction_spinbox.SetToolTip("BE Correction")
+    toolbar.AddControl(window.be_correction_spinbox)
+
+    auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE', wx.Bitmap(os.path.join(icon_path, "BEcorrect-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Automatic binding energy correction")
+
+    toolbar.AddSeparator()
+    add_vertical_separator(toolbar, separators)
+    toolbar.AddSeparator()
+
+    # Plot adjustment tools
+    plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot', wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
+    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill', wx.Bitmap(os.path.join(icon_path, "STO-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Peak Fill")
+    toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend', wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Legend")
+    toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results', wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
+    toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Residuals")
+
+    toolbar.AddSeparator()
+    add_vertical_separator(toolbar, separators)
+    toolbar.AddSeparator()
+
+    # Analysis tools
+    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area \tCtrl+A")
+    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window \tCtrl+P")
+    noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
+
+    toolbar.AddSeparator()
+    add_vertical_separator(toolbar, separators)
+    toolbar.AddSeparator()
+
+    id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Element identifications")
+
+    toolbar.AddStretchableSpace()
+
+    # Export and toggle tools
+    export_tool = toolbar.AddTool(wx.ID_ANY, 'Export Results', wx.Bitmap(os.path.join(icon_path, "Export-25g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Export to Results Grid")
+    toggle_Col_1_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "HideColumn-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
+    window.toggle_right_panel_tool = window.add_toggle_tool(toolbar, "Toggle Right Panel", wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR))
+
+    toolbar.Realize()
+
+    # Bind events
+    bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, bkg_tool, fitting_tool, noise_analysis_tool,
+                        toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, save_tool, save_plot_tool,
+                        save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, toggle_peak_fill_tool, id_tool)
+
+    return toolbar
+
+def add_vertical_separator(toolbar, separators):
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
+
+def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, bkg_tool, fitting_tool, noise_analysis_tool,
+                        toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, save_tool, save_plot_tool,
+                        save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, toggle_peak_fill_tool, id_tool):
+    window.Bind(wx.EVT_TOOL, lambda event: open_xlsx_file(window), open_file_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected_wrapper), refresh_folder_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: toggle_plot(window), plot_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
+    window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_legend(), toggle_legend_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_fitting_results(), toggle_fit_results_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(), toggle_residuals_tool)
+    window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
+    window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: on_save_all_sheets(window, event), save_all_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: toggle_Col_1(window), toggle_Col_1_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.export_results(), export_tool)
+    window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
+    window.Bind(wx.EVT_TOOL, window.on_auto_be, auto_be_button)
+    window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: undo(window), window.undo_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: redo(window), window.redo_tool)
+    window.Bind(wx.EVT_TOOL, window.open_periodic_table, id_tool)
+    window.Bind(wx.EVT_TOOL, window.on_toggle_right_panel, window.toggle_right_panel_tool)
+
+
+
 # --------------KEEP PREVIOUS DEF JUST IN CASE----------------------------------------------------
 # ------------------------------------------------------------------------------------------------
 
@@ -507,7 +636,7 @@ def create_widgets_MAIN(self):
     self.canvas.mpl_connect('button_release_event', self.on_plot_mouse_release)
     self.peak_params_grid.Bind(wx.EVT_LEFT_UP, self.on_peak_params_mouse_release)
 
-def create_menu_FUNCTION(window):
+def create_menu_FUNCTIONS(window):
     menubar = wx.MenuBar()
     file_menu = wx.Menu()
     import_menu = wx.Menu()
@@ -620,4 +749,185 @@ def create_menu_FUNCTION(window):
     menubar.Append(tools_menu, "&Tools")
     menubar.Append(help_menu, "&Help")
     window.SetMenuBar(menubar)
+
+def create_horizontal_toolbar_FUNCTIONS(window):
+    toolbar = window.CreateToolBar()
+    toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
+    toolbar.SetToolBitmapSize(wx.Size(25, 25))
+
+    # current_dir = os.path.dirname(os.path.abspath(__file__))
+    # icon_path = os.path.join(current_dir, "Icons")
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle, use the bundle's directory
+        application_path = sys._MEIPASS
+    else:
+        # If the application is run as a script, use the script's directory
+        application_path = os.path.dirname(os.path.abspath(__file__))
+
+    icon_path = os.path.join(application_path, "Icons")
+
+
+
+    separators = []
+
+    # File operations
+    open_file_tool = toolbar.AddTool(wx.ID_ANY, 'Open File', wx.Bitmap(os.path.join(icon_path,
+                                                                                    "open-folder-25-green.png"),
+                                                                       wx.BITMAP_TYPE_PNG), shortHelp="Open "
+                                                                                                      "File\tCtrl+O")
+    refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Excel File', wx.Bitmap(os.path.join(icon_path,
+                                                                                         "refresh-96g.png"),
+                                                                                     wx.BITMAP_TYPE_PNG),
+                                          shortHelp="Refresh Excel File")
+    save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-25.png"),
+                                                             wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results "
+                                                                                            "to Excel for this Core "
+                                                                                            "Level \tCtrl+S")
+    save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-PNG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
+    save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
+
+    toolbar.AddSeparator()
+    window.undo_tool = toolbar.AddTool(wx.ID_ANY, 'Undo',wx.Bitmap(os.path.join(icon_path, "undo-25.png"),
+                                                             wx.BITMAP_TYPE_PNG),
+                                shortHelp="Undo -- For peaks properties only")
+    window.redo_tool = toolbar.AddTool(wx.ID_ANY, 'Redo',wx.Bitmap(os.path.join(icon_path, "redo-25.png"),
+                                                             wx.BITMAP_TYPE_PNG),
+                                shortHelp="Redo -- For peaks properties only")
+    toolbar.AddSeparator()
+
+
+    window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
+    window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
+    toolbar.AddControl(window.skip_rows_spinbox)
+
+    # Sheet selection
+    window.sheet_combobox = wx.ComboBox(toolbar, style=wx.CB_READONLY)
+    window.sheet_combobox.SetToolTip("Select Sheet")
+    toolbar.AddControl(window.sheet_combobox)
+
+    # Add the binding here
+    window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected(window, event))
+
+
+    toolbar.AddSeparator()
+
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
+
+    toolbar.AddSeparator()
+
+
+    # Add BE correction spinbox
+    window.be_correction_spinbox = wx.SpinCtrlDouble(toolbar, value='0.00', min=-20.00, max=20.00, inc=0.01, size=(70, -1))
+    window.be_correction_spinbox.SetDigits(2)
+    window.be_correction_spinbox.SetToolTip("BE Correction")
+    toolbar.AddControl(window.be_correction_spinbox)
+
+    # Add Auto BE button
+    auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE',wx.Bitmap(os.path.join(icon_path, "BEcorrect-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Automatic binding energy correction")
+
+    toolbar.AddSeparator()
+
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
+
+    toolbar.AddSeparator()
+
+    # Plot adjustment tools
+    plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot',wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"),wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
+    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill',wx.Bitmap(os.path.join(icon_path, "STO-25.png"), wx.BITMAP_TYPE_PNG),shortHelp="Toggle Peak Fill")
+
+    # resize_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Resize Plot', wx.Bitmap(os.path.join(icon_path, "ResPlot-100.png"), wx.BITMAP_TYPE_PNG), shortHelp="Resize Plot")
+    toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend',
+                                         wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG),
+                                         shortHelp="Toggle Legend")
+    toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results',
+                                              wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"),
+                                                        wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
+    toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
+                                            wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG),
+                                            shortHelp="Toggle Residuals")
+
+    toolbar.AddSeparator()
+
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
+
+    toolbar.AddSeparator()
+
+    # Analysis tools
+    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-25.png"),
+                                                                  wx.BITMAP_TYPE_PNG),shortHelp="Calculate Area "
+                                                                                                "\tCtrl+A")
+    # bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(wx.Bitmap(os.path.join(icon_path, "Plot_Area.ico")), wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area under Peak")
+    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s-25.png"),
+                                                                   wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting "
+                                                                                                  "Window \tCtrl+P")
+    noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path,
+                                                                                              "Noise-25.png"),
+                                                                                 wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
+
+    toolbar.AddSeparator()
+
+    separators.append(wx.StaticLine(toolbar, style=wx.LI_VERTICAL))
+    separators[-1].SetSize((2, 24))
+    toolbar.AddControl(separators[-1])
+
+    toolbar.AddSeparator()
+
+    id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
+                              shortHelp="Element identifications")
+
+
+    # Add a spacer to push the following items to the right
+    toolbar.AddStretchableSpace()
+
+    # Add export button
+    export_tool = toolbar.AddTool(wx.ID_ANY, 'Export Results',
+                                  wx.Bitmap(os.path.join(icon_path, "Export-25g.png"), wx.BITMAP_TYPE_PNG),
+                                  shortHelp="Export to Results Grid")
+
+    # Hide columns in Peak Fitting Parameters
+    toggle_Col_1_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
+                                            wx.Bitmap(os.path.join(icon_path, "HideColumn-25.png"),
+                                                      wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
+
+    # Add toggle button for the right panel
+    window.toggle_right_panel_tool = window.add_toggle_tool(toolbar, "Toggle Right Panel",
+                                                            wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR))
+
+
+    # Bind the toggle event
+    window.Bind(wx.EVT_TOOL, window.on_toggle_right_panel, window.toggle_right_panel_tool)
+
+    toolbar.Realize()
+
+    # Bind events (keeping the same bindings as before, except for BE adjustment tools)
+    window.Bind(wx.EVT_TOOL, lambda event: open_xlsx_file(window), open_file_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected_wrapper), refresh_folder_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: toggle_plot(window), plot_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
+    window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: window.resize_plot(), resize_plot_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_legend(), toggle_legend_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_fitting_results(), toggle_fit_results_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(), toggle_residuals_tool)
+    window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
+    window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: on_save_all_sheets(window,event), save_all_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: toggle_Col_1(window), toggle_Col_1_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.export_results(), export_tool)
+    window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
+    window.Bind(wx.EVT_TOOL, window.on_auto_be, auto_be_button)
+    window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: undo(window), window.undo_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: redo(window), window.redo_tool)
+    window.Bind(wx.EVT_TOOL, window.open_periodic_table, id_tool)
+
+    return toolbar
 
