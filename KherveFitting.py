@@ -32,11 +32,12 @@ from libraries.SplashScreen import show_splash
 from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
 from libraries.Utilities import copy_cell, paste_cell
-from Functions import on_save, open_xlsx_file, on_exit
+from Functions import on_save, on_exit
 from libraries.Open import load_recent_files_from_config, open_avg_file
 from libraries.survey import PeriodicTableWindow
 from libraries.Widgets_Toolbars import create_widgets, create_menu
 from libraries.Widgets_Toolbars import create_statusbar, update_statusbar
+from libraries.Open import open_xlsx_file
 
 
 class MyFrame(wx.Frame):

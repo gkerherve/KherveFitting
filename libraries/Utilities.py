@@ -41,3 +41,13 @@ def paste_cell(grid):
                 row, col = block.GetTopRow(), block.GetLeftCol()
                 grid.SetCellValue(row, col, data.GetText())
             wx.TheClipboard.Close()
+
+def load_rsf_data(file_path):
+    rsf_dict = {}
+    with open(file_path, 'r') as file:
+        for line in file:
+            parts = line.split()
+            if len(parts) == 2:
+                core_level, rsf = parts
+                rsf_dict[core_level] = float(rsf)
+    return rsf_dict

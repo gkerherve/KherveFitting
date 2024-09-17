@@ -5,14 +5,18 @@ import openpyxl
 import wx
 import re
 import pandas as pd
-
+from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
+from libraries.Save import update_undo_redo_state, save_state
+from libraries.Sheet_Operations import on_sheet_selected
+from libraries.Grid_Operations import populate_results_grid
 class ExcelDropTarget(wx.FileDropTarget):
     def __init__(self, window):
         wx.FileDropTarget.__init__(self)
         self.window = window
 
     def OnDropFiles(self, x, y, filenames):
-        from Functions import open_xlsx_file, open_vamas_file
+        from Functions import open_vamas_file
+        from libraries.Open import open_xlsx_file
         for file in filenames:
             if file.lower().endswith('.xlsx'):
                 wx.CallAfter(open_xlsx_file, self.window, file)
@@ -22,33 +26,6 @@ class ExcelDropTarget(wx.FileDropTarget):
                 return True
         return False
 
-
-
-def update_recent_files(window, file_path):
-    if file_path in window.recent_files:
-        window.recent_files.remove(file_path)
-    window.recent_files.insert(0, file_path)
-    window.recent_files = window.recent_files[:window.max_recent_files]
-    update_recent_files_menu(window)
-    save_recent_files_to_config(window)
-
-
-def update_recent_files_menu(window):
-    if hasattr(window, 'recent_files_menu'):
-        from Functions import open_xlsx_file
-        # Remove all existing menu items
-        for item in window.recent_files_menu.GetMenuItems():
-            window.recent_files_menu.DestroyItem(item)
-
-        # Add new menu items for recent files
-        for i, file_path in enumerate(window.recent_files):
-            item = window.recent_files_menu.Append(wx.ID_ANY, os.path.basename(file_path))
-            window.Bind(wx.EVT_MENU, lambda evt, fp=file_path: open_xlsx_file(window, fp), item)
-
-def save_recent_files_to_config(window):
-    config = window.load_config()
-    config['recent_files'] = window.recent_files
-    window.save_config(config)
 
 def load_recent_files_from_config(window):
     config = window.load_config()
@@ -116,7 +93,7 @@ def import_avantage_file(window):
     wb.save(new_file_path)
 
     # Open the newly created file using the existing open_xlsx_file function
-    from Functions import open_xlsx_file
+    from libraries.Open import open_xlsx_file
     open_xlsx_file(window, new_file_path)
 
 
@@ -166,7 +143,7 @@ def open_avg_file(window):
     try:
         excel_file_path = create_excel_from_avg(avg_file_path)
 
-        from Functions import open_xlsx_file
+        from libraries.Open import open_xlsx_file
         open_xlsx_file(window, excel_file_path)
     except Exception as e:
         wx.MessageBox(f"Error processing AVG file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
@@ -209,8 +186,281 @@ def import_multiple_avg_files(window):
         wx.MessageBox(f"Excel file created: {excel_file_path}", "Success", wx.OK | wx.ICON_INFORMATION)
 
         # Open the created Excel file
-        from Functions import open_xlsx_file
+        from libraries.Open import open_xlsx_file
         open_xlsx_file(window, excel_file_path)
 
     except Exception as e:
         wx.MessageBox(f"Error processing AVG files: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+def open_xlsx_file(window, file_path=None):
+    print("Starting open_xlsx_file function")
+    if file_path is None:
+        with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
+                file_path = dlg.GetPath()
+            else:
+                return
+
+    window.SetStatusText(f"Selected File: {file_path}", 0)
+
+    try:
+        # Clear undo and redo history
+        window.history = []
+        window.redo_stack = []
+        update_undo_redo_state(window)
+
+        # Clear the results grid
+        window.results_grid.ClearGrid()
+        if window.results_grid.GetNumberRows() > 0:
+            window.results_grid.DeleteRows(0, window.results_grid.GetNumberRows())
+
+        # Look for corresponding .json file
+        json_file = os.path.splitext(file_path)[0] + '.json'
+        if os.path.exists(json_file):
+            print(f"Found corresponding .json file: {json_file}")
+            with open(json_file, 'r') as f:
+                loaded_data = json.load(f)
+
+            # Convert data structure without changing types
+            window.Data = convert_from_serializable(loaded_data)
+
+            print("Loaded data from .json file")
+
+            # Populate the results grid
+            populate_results_grid(window)
+        else:
+            print("No corresponding .json file found. Initializing new data.")
+            # Initialize the measurement data
+            window.Data = Init_Measurement_Data(window)
+
+        # Read the Excel file
+        excel_file = pd.ExcelFile(file_path)
+        all_sheet_names = excel_file.sheet_names
+        sheet_names = [name for name in all_sheet_names if
+                       name.lower() not in ["results table", "experimental description"]]
+
+        results_table_index = -1
+        for i, name in enumerate(all_sheet_names):
+            if name.lower() == "results table":
+                results_table_index = i
+                break
+
+        if results_table_index != -1:
+            sheet_names = sheet_names[:results_table_index]
+
+        print(f"Number of sheets: {len(sheet_names)}")
+
+        # Update file path
+        window.Data['FilePath'] = file_path
+
+        # If we didn't load from json, populate the data from Excel
+        if 'Core levels' not in window.Data or not window.Data['Core levels']:
+            window.Data['Number of Core levels'] = 0
+            for sheet_name in sheet_names:
+                window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
+
+        print(f"Final number of core levels: {window.Data['Number of Core levels']}")
+
+        # Load BE correction
+        window.load_be_correction()
+
+        # Update sheet names in the combobox
+        window.sheet_combobox.Clear()
+        window.sheet_combobox.AppendItems(sheet_names)
+
+        # Set the first sheet as the selected one
+        first_sheet = sheet_names[0]
+        window.sheet_combobox.SetValue(first_sheet)
+
+        # Use on_sheet_selected to update peak parameter grid and plot
+        event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
+        event.SetString(first_sheet)
+        window.plot_config.plot_limits.clear()
+        on_sheet_selected(window, event)
+
+        # undo and redo
+        save_state(window)
+
+        # Update recent files list
+        update_recent_files(window, file_path)
+
+        print("open_xlsx_file function completed successfully")
+    except Exception as e:
+        print(f"Error in open_xlsx_file: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error reading file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+def convert_from_serializable(obj):
+    if isinstance(obj, list):
+        return [convert_from_serializable(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_from_serializable(v) for k, v in obj.items()}
+    else:
+        return obj
+
+def update_recent_files(window, file_path):
+    if file_path in window.recent_files:
+        window.recent_files.remove(file_path)
+    window.recent_files.insert(0, file_path)
+    window.recent_files = window.recent_files[:window.max_recent_files]
+    update_recent_files_menu(window)
+    save_recent_files_to_config(window)
+
+def update_recent_files_menu(window):
+    if hasattr(window, 'recent_files_menu'):
+        # Remove all existing menu items
+        for item in window.recent_files_menu.GetMenuItems():
+            window.recent_files_menu.DestroyItem(item)
+
+        # Add new menu items for recent files
+        for i, file_path in enumerate(window.recent_files):
+            item = window.recent_files_menu.Append(wx.ID_ANY, os.path.basename(file_path))
+            window.Bind(wx.EVT_MENU, lambda evt, fp=file_path: open_xlsx_file(window, fp), item)
+
+def save_recent_files_to_config(window):
+    window.recent_files = window.recent_files[:window.max_recent_files]
+    window.save_config()
+    # config = window.load_config()
+    # config['recent_files'] = window.recent_files
+    # window.save_config(config)
+
+
+
+# ------------------ HISTORRY DEF ---------------------------------------------------
+# -----------------------------------------------------------------------------------
+
+def open_xlsx_file_FUNCTION(window, file_path=None):
+    print("Starting open_xlsx_file function")
+    if file_path is None:
+        with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
+                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
+                file_path = dlg.GetPath()
+            else:
+                return
+
+    window.SetStatusText(f"Selected File: {file_path}", 0)
+
+
+    try:
+        # Clear undo and redo history
+        window.history = []
+        window.redo_stack = []
+        update_undo_redo_state(window)
+
+        # Clear the results grid
+        window.results_grid.ClearGrid()
+        if window.results_grid.GetNumberRows() > 0:
+            window.results_grid.DeleteRows(0, window.results_grid.GetNumberRows())
+
+        # Look for corresponding .json file
+        json_file = os.path.splitext(file_path)[0] + '.json'
+        if os.path.exists(json_file):
+            print(f"Found corresponding .json file: {json_file}")
+            with open(json_file, 'r') as f:
+                loaded_data = json.load(f)
+
+            # Convert data structure without changing types
+            window.Data = convert_from_serializable(loaded_data)
+
+            print("Loaded data from .json file")
+
+            # Populate the results grid
+            populate_results_grid(window)
+        else:
+            print("No corresponding .json file found. Initializing new data.")
+            # Initialize the measurement data
+            window.Data = Init_Measurement_Data(window)
+
+        # Read the Excel file
+        excel_file = pd.ExcelFile(file_path)
+        all_sheet_names = excel_file.sheet_names
+        sheet_names = [name for name in all_sheet_names if
+                       name.lower() not in ["results table", "experimental description"]]
+
+        results_table_index = -1
+        for i, name in enumerate(all_sheet_names):
+            if name.lower() == "results table":
+                results_table_index = i
+                break
+
+        if results_table_index != -1:
+            sheet_names = sheet_names[:results_table_index]
+
+        print(f"Number of sheets: {len(sheet_names)}")
+
+        # Update file path
+        window.Data['FilePath'] = file_path
+
+        # If we didn't load from json, populate the data from Excel
+        if 'Core levels' not in window.Data or not window.Data['Core levels']:
+            window.Data['Number of Core levels'] = 0
+            for sheet_name in sheet_names:
+                window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
+
+        print(f"Final number of core levels: {window.Data['Number of Core levels']}")
+
+        # Load BE correction
+        window.load_be_correction()
+
+        # Update sheet names in the combobox
+        window.sheet_combobox.Clear()
+        window.sheet_combobox.AppendItems(sheet_names)
+
+        # Set the first sheet as the selected one
+        first_sheet = sheet_names[0]
+        window.sheet_combobox.SetValue(first_sheet)
+
+        # # After loading the data and before plotting
+        # if isinstance(window.ax, Axes3D):
+        #     window.figure.clear()
+        #     window.ax = window.figure.add_subplot(111)
+
+        # Use on_sheet_selected to update peak parameter grid and plot
+        event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
+        event.SetString(first_sheet)
+        window.plot_config.plot_limits.clear()
+        on_sheet_selected_wrapper(window,event)
+
+        # undo and redo
+        save_state(window)
+
+        # Update recent files list
+        from libraries.Open import update_recent_files
+        update_recent_files(window, file_path)
+
+        print("open_xlsx_file function completed successfully")
+    except Exception as e:
+        print(f"Error in open_xlsx_file: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error reading file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+def update_recent_files_HISTORY(window, file_path):
+    if file_path in window.recent_files:
+        window.recent_files.remove(file_path)
+    window.recent_files.insert(0, file_path)
+    window.recent_files = window.recent_files[:window.max_recent_files]
+    update_recent_files_menu(window)
+    save_recent_files_to_config(window)
+
+
+def update_recent_files_menu_HISTORY(window):
+    if hasattr(window, 'recent_files_menu'):
+        from Functions import open_xlsx_file
+        # Remove all existing menu items
+        for item in window.recent_files_menu.GetMenuItems():
+            window.recent_files_menu.DestroyItem(item)
+
+        # Add new menu items for recent files
+        for i, file_path in enumerate(window.recent_files):
+            item = window.recent_files_menu.Append(wx.ID_ANY, os.path.basename(file_path))
+            window.Bind(wx.EVT_MENU, lambda evt, fp=file_path: open_xlsx_file(window, fp), item)
+
+def save_recent_files_to_config_HISTORY(window):
+    config = window.load_config()
+    config['recent_files'] = window.recent_files
+    window.save_config(config)

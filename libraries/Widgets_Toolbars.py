@@ -6,17 +6,17 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from libraries.Sheet_Operations import CheckboxRenderer
-from libraries.Open import ExcelDropTarget
+from libraries.Open import ExcelDropTarget, open_xlsx_file
 from libraries.Plot_Operations import PlotManager
 from Functions import toggle_Col_1
 from libraries.Save import update_undo_redo_state
 
-from Functions import open_xlsx_file, on_save, save_all_sheets_with_plots, save_results_table, open_vamas_file_dialog, \
+from Functions import on_save, save_all_sheets_with_plots, save_results_table, open_vamas_file_dialog, \
     import_avantage_file, open_avg_file, import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
     on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, on_about
 
 
-from Functions import open_xlsx_file, refresh_sheets, on_sheet_selected_wrapper, toggle_plot, on_save, on_save_plot, on_save_all_sheets, toggle_Col_1, undo, redo
+from Functions import refresh_sheets, on_sheet_selected_wrapper, toggle_plot, on_save, on_save_plot, on_save_all_sheets, toggle_Col_1, undo, redo
 
 
 

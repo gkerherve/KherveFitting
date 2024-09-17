@@ -16,6 +16,8 @@ from libraries.Help import on_about
 from libraries.Help import show_shortcuts
 from libraries.Save import undo, redo, save_state, update_undo_redo_state
 from libraries.Open import update_recent_files, import_avantage_file, open_avg_file, import_multiple_avg_files
+from libraries.Utilities import load_rsf_data
+from libraries.Grid_Operations import populate_results_grid
 # from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -31,15 +33,6 @@ def on_sheet_selected_wrapper(window, event):
     from libraries.Sheet_Operations import on_sheet_selected
     on_sheet_selected(window, event)
 
-def load_rsf_data(file_path):
-    rsf_dict = {}
-    with open(file_path, 'r') as file:
-        for line in file:
-            parts = line.split()
-            if len(parts) == 2:
-                core_level, rsf = parts
-                rsf_dict[core_level] = float(rsf)
-    return rsf_dict
 
 
 def safe_delete_rows(grid, pos, num_rows):
@@ -512,184 +505,6 @@ def toggle_plot(window):
 import json
 from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
 
-def open_xlsx_file(window, file_path=None):
-    print("Starting open_xlsx_file function")
-    if file_path is None:
-        with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
-                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as dlg:
-            if dlg.ShowModal() == wx.ID_OK:
-                file_path = dlg.GetPath()
-            else:
-                return
-
-    window.SetStatusText(f"Selected File: {file_path}", 0)
-
-
-    try:
-        # Clear undo and redo history
-        window.history = []
-        window.redo_stack = []
-        update_undo_redo_state(window)
-
-        # Clear the results grid
-        window.results_grid.ClearGrid()
-        if window.results_grid.GetNumberRows() > 0:
-            window.results_grid.DeleteRows(0, window.results_grid.GetNumberRows())
-
-        # Look for corresponding .json file
-        json_file = os.path.splitext(file_path)[0] + '.json'
-        if os.path.exists(json_file):
-            print(f"Found corresponding .json file: {json_file}")
-            with open(json_file, 'r') as f:
-                loaded_data = json.load(f)
-
-            # Convert data structure without changing types
-            window.Data = convert_from_serializable(loaded_data)
-
-            print("Loaded data from .json file")
-
-            # Populate the results grid
-            populate_results_grid(window)
-        else:
-            print("No corresponding .json file found. Initializing new data.")
-            # Initialize the measurement data
-            window.Data = Init_Measurement_Data(window)
-
-        # Read the Excel file
-        excel_file = pd.ExcelFile(file_path)
-        all_sheet_names = excel_file.sheet_names
-        sheet_names = [name for name in all_sheet_names if
-                       name.lower() not in ["results table", "experimental description"]]
-
-        results_table_index = -1
-        for i, name in enumerate(all_sheet_names):
-            if name.lower() == "results table":
-                results_table_index = i
-                break
-
-        if results_table_index != -1:
-            sheet_names = sheet_names[:results_table_index]
-
-        print(f"Number of sheets: {len(sheet_names)}")
-
-        # Update file path
-        window.Data['FilePath'] = file_path
-
-        # If we didn't load from json, populate the data from Excel
-        if 'Core levels' not in window.Data or not window.Data['Core levels']:
-            window.Data['Number of Core levels'] = 0
-            for sheet_name in sheet_names:
-                window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
-
-        print(f"Final number of core levels: {window.Data['Number of Core levels']}")
-
-        # Load BE correction
-        window.load_be_correction()
-
-        # Update sheet names in the combobox
-        window.sheet_combobox.Clear()
-        window.sheet_combobox.AppendItems(sheet_names)
-
-        # Set the first sheet as the selected one
-        first_sheet = sheet_names[0]
-        window.sheet_combobox.SetValue(first_sheet)
-
-        # # After loading the data and before plotting
-        # if isinstance(window.ax, Axes3D):
-        #     window.figure.clear()
-        #     window.ax = window.figure.add_subplot(111)
-
-        # Use on_sheet_selected to update peak parameter grid and plot
-        event = wx.CommandEvent(wx.EVT_COMBOBOX.typeId)
-        event.SetString(first_sheet)
-        window.plot_config.plot_limits.clear()
-        on_sheet_selected_wrapper(window,event)
-
-        # undo and redo
-        save_state(window)
-
-        # Update recent files list
-        from libraries.Open import update_recent_files
-        update_recent_files(window, file_path)
-
-        print("open_xlsx_file function completed successfully")
-    except Exception as e:
-        print(f"Error in open_xlsx_file: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        wx.MessageBox(f"Error reading file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
-
-def populate_results_grid(window):
-    if 'Results' in window.Data and 'Peak' in window.Data['Results']:
-        results = window.Data['Results']['Peak']
-
-        # Clear existing data in the grid
-        window.results_grid.ClearGrid()
-
-        # Resize the grid if necessary
-        num_rows = len(results)
-        num_cols = 23  # Based on your Export.py structure
-        if window.results_grid.GetNumberRows() < num_rows:
-            window.results_grid.AppendRows(num_rows - window.results_grid.GetNumberRows())
-        if window.results_grid.GetNumberCols() < num_cols:
-            window.results_grid.AppendCols(num_cols - window.results_grid.GetNumberCols())
-
-
-        # column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-        #                  "Rel. Area", "Tail E", "Tail M", "Bkg Low", "Bkg High", "Sheetname",
-        #                  "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
-        # Set column labels
-        column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-                         "Rel. Area", "Tail E", "Tail M", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
-                         "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint",
-                         "L/G Constraint"]
-        for col, label in enumerate(column_labels):
-            window.results_grid.SetColLabelValue(col, label)
-
-        # Populate the grid
-        for row, (peak_label, peak_data) in enumerate(results.items()):
-            window.results_grid.SetCellValue(row, 0, peak_data['Name'])
-            window.results_grid.SetCellValue(row, 1, str(peak_data['Position']))
-            window.results_grid.SetCellValue(row, 2, str(peak_data['Height']))
-            window.results_grid.SetCellValue(row, 3, str(peak_data['FWHM']))
-            window.results_grid.SetCellValue(row, 4, str(peak_data['L/G']))
-            window.results_grid.SetCellValue(row, 5, f"{peak_data['Area']:.2f}")
-            window.results_grid.SetCellValue(row, 6, f"{peak_data['at. %']:.2f}")
-
-            # Set up checkbox and its state
-            checkbox_state = peak_data.get('Checkbox', '0')
-            window.results_grid.SetCellRenderer(row, 7, wx.grid.GridCellBoolRenderer())
-            window.results_grid.SetCellValue(row, 7, checkbox_state)
-
-
-            window.results_grid.SetCellValue(row, 8, f"{peak_data['RSF']:.2f}")
-            window.results_grid.SetCellValue(row, 9, peak_data['Fitting Model'])
-            window.results_grid.SetCellValue(row, 10, f"{peak_data['Rel. Area']:.2f}")
-            window.results_grid.SetCellValue(row, 11, peak_data['Tail E'])
-            window.results_grid.SetCellValue(row, 12, peak_data['Tail M'])
-            window.results_grid.SetCellValue(row, 13, peak_data.get('Bkg Type', ''))  # Bkg Type
-            window.results_grid.SetCellValue(row, 14, str(peak_data['Bkg Low']))
-            window.results_grid.SetCellValue(row, 15, str(peak_data['Bkg High']))
-            window.results_grid.SetCellValue(row, 16, str(peak_data.get('Bkg Offset Low', '')))
-            window.results_grid.SetCellValue(row, 17, str(peak_data.get('Bkg Offset High', '')))
-            window.results_grid.SetCellValue(row, 18, peak_data['Sheetname'])
-            window.results_grid.SetCellValue(row, 19, peak_data['Pos. Constraint'])
-            window.results_grid.SetCellValue(row, 20, peak_data['Height Constraint'])
-            window.results_grid.SetCellValue(row, 21, peak_data['FWHM Constraint'])
-            window.results_grid.SetCellValue(row, 22, peak_data['L/G Constraint'])
-
-        # Bind events
-        # window.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, window.on_checkbox_update)
-        window.results_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGED, window.on_cell_changed)
-
-        # Refresh the grid
-        window.results_grid.ForceRefresh()
-        window.results_grid.Refresh()
-    else:
-        print("No results data found in window.Data")
-
-    # Calculate atomic percentages for checked elements
-    window.update_atomic_percentages()
 
 
 
