@@ -1,6 +1,7 @@
 # libraries/PlotConfig.py
 import matplotlib.widgets as widgets
 import matplotlib.pyplot as plt
+import wx
 
 
 class PlotConfig:
@@ -42,6 +43,79 @@ class PlotConfig:
                 window.zoom_rect = None
 
             # Redraw the canvas to show updated plot
+            window.canvas.draw_idle()
+
+    def on_zoom_out(self, window):
+        # Get current sheet name
+        sheet_name = window.sheet_combobox.GetValue()
+
+        # Reset plot limits to original values
+        self.reset_plot_limits(window, sheet_name)
+
+        # Resize plot with reset limits
+        self.resize_plot(window)
+
+        # Deactivate and remove zoom rectangle if it exists
+        if window.zoom_rect:
+            window.zoom_rect.set_active(False)
+            window.zoom_rect = None
+
+        # Disable zoom mode
+        window.zoom_mode = False
+
+        # Redraw the canvas
+        window.canvas.draw_idle()
+
+        # Disable drag mode if active
+        if window.drag_mode:
+            window.disable_drag()
+            window.drag_mode = False
+
+    def on_drag_tool(self, window):
+        # Toggle drag mode
+        window.drag_mode = not window.drag_mode
+        if window.drag_mode:
+            window.enable_drag()
+        else:
+            window.disable_drag()
+
+    def enable_drag(self, window):
+        # Activate pan mode in navigation toolbar
+        window.navigation_toolbar.pan()
+
+        # Set cursor to hand
+        window.canvas.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
+        # Connect drag release event
+        window.drag_release_cid = window.canvas.mpl_connect('button_release_event',
+                                                            lambda event: self.on_drag_release(window, event))
+
+    def disable_drag(self, window):
+        # Deactivate pan mode in navigation toolbar
+        window.navigation_toolbar.pan()
+
+        # Set cursor back to arrow
+        window.canvas.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
+
+        # Disconnect drag release event if connected
+        if hasattr(window, 'drag_release_cid'):
+            window.canvas.mpl_disconnect(window.drag_release_cid)
+
+        # Ensure drag mode is set to False
+        window.drag_mode = False
+
+    def on_drag_release(self, window, event):
+        if window.drag_mode:
+            # Get current sheet name
+            sheet_name = window.sheet_combobox.GetValue()
+
+            # Update plot limits after drag
+            self.update_after_drag(window, sheet_name)
+
+            # Disable drag mode
+            self.disable_drag(window)
+
+            # Redraw the canvas
             window.canvas.draw_idle()
 
     def update_plot_limits(self, window, sheet_name, x_min=None, x_max=None, y_min=None, y_max=None):
@@ -191,7 +265,10 @@ class PlotConfig:
         limits['Ymax'] = y_max
 
         # Update the actual plot limits
-        window.ax.set_xlim(x_max, x_min)  # Reverse X-axis
+        if window.energy_scale == 'KE':
+            window.ax.set_xlim(min(x_max, x_min), max(x_max, x_min))  # Reverse X-axis
+        else:
+            window.ax.set_xlim(x_max, x_min)  # Reverse X-axis
         window.ax.set_ylim(y_min, y_max)
 
         print(f"Updated limits after drag: Xmin={x_min:.2f}, Xmax={x_max:.2f}, Ymin={y_min:.2f}, Ymax={y_max:.2f}")

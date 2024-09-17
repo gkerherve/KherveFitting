@@ -1494,43 +1494,19 @@ class MyFrame(wx.Frame):
         self.plot_config.on_zoom_select(self, eclick, erelease)
 
     def on_zoom_out(self, event):
-        sheet_name = self.sheet_combobox.GetValue()
-        self.plot_config.reset_plot_limits(self, sheet_name)
-        self.plot_config.resize_plot(self)
-        if self.zoom_rect:
-            self.zoom_rect.set_active(False)
-            self.zoom_rect = None
-        self.zoom_mode = False
-        self.canvas.draw_idle()
-        if self.drag_mode:
-            self.disable_drag()
-            self.drag_mode = False
+        self.plot_config.on_zoom_out(self)
 
     def on_drag_tool(self, event):
-        self.drag_mode = not self.drag_mode
-        if self.drag_mode:
-            self.enable_drag()
-        else:
-            self.disable_drag()
+        self.plot_config.on_drag_tool(self)
 
     def enable_drag(self):
-        self.navigation_toolbar.pan()
-        self.canvas.SetCursor(wx.Cursor(wx.CURSOR_HAND))
-        self.drag_release_cid = self.canvas.mpl_connect('button_release_event', self.on_drag_release)
+        self.plot_config.enable_drag(self)
 
     def disable_drag(self):
-        self.navigation_toolbar.pan()
-        self.canvas.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
-        if hasattr(self, 'drag_release_cid'):
-            self.canvas.mpl_disconnect(self.drag_release_cid)
-        self.drag_mode = False  # Ensure drag_mode is set to False
+        self.plot_config.disable_drag(self)
 
     def on_drag_release(self, event):
-        if self.drag_mode:
-            sheet_name = self.sheet_combobox.GetValue()
-            self.plot_config.update_after_drag(self, sheet_name)
-            self.disable_drag()
-            self.canvas.draw_idle()
+        self.plot_config.on_drag_release(self, event)
 
     def update_checkboxes_from_data(self):
         if 'Results' in self.Data and 'Peak' in self.Data['Results']:
