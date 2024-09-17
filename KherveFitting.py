@@ -24,7 +24,7 @@ from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
-from Functions import create_statusbar, create_horizontal_toolbar, create_vertical_toolbar
+from Functions import create_statusbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
 from libraries.Sheet_Operations import on_sheet_selected

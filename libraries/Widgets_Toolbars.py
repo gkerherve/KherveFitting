@@ -8,7 +8,7 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as Navigat
 from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.Open import ExcelDropTarget
 from libraries.Plot_Operations import PlotManager
-from Functions import create_statusbar, create_vertical_toolbar, toggle_Col_1
+from Functions import create_statusbar, toggle_Col_1
 from libraries.Save import update_undo_redo_state
 
 from Functions import open_xlsx_file, on_save, save_all_sheets_with_plots, save_results_table, open_vamas_file_dialog, \
@@ -446,6 +446,83 @@ def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, 
     window.Bind(wx.EVT_TOOL, window.open_periodic_table, id_tool)
     window.Bind(wx.EVT_TOOL, window.on_toggle_right_panel, window.toggle_right_panel_tool)
 
+
+def create_vertical_toolbar(parent, frame):
+    v_toolbar = wx.ToolBar(parent, style=wx.TB_VERTICAL | wx.TB_FLAT)
+    v_toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
+    v_toolbar.SetToolBitmapSize(wx.Size(25, 25))
+
+    # Get the correct path for icons
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(current_dir, "Icons")
+
+    # Zoom tools
+    zoom_in_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom In',
+                                     wx.Bitmap(os.path.join(icon_path, "ZoomIN-25.png"), wx.BITMAP_TYPE_PNG),
+                                     shortHelp="Zoom In")
+    zoom_out_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom Out',
+                                      wx.Bitmap(os.path.join(icon_path, "ZoomOUT-25.png"), wx.BITMAP_TYPE_PNG),
+                                      shortHelp="Zoom Out")
+    drag_tool = v_toolbar.AddTool(wx.ID_ANY, 'Drag',
+                                  wx.Bitmap(os.path.join(icon_path, "drag-25.png"), wx.BITMAP_TYPE_PNG),
+                                  shortHelp="Drag Plot")
+
+    v_toolbar.AddSeparator()
+
+    # BE adjustment tools
+    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +',
+                                              wx.Bitmap(os.path.join(icon_path, "Right-Red-25g.png"), wx.BITMAP_TYPE_PNG),
+                                              shortHelp="Decrease High BE")
+    high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -',
+                                              wx.Bitmap(os.path.join(icon_path, "Left-Red-25g.png"), wx.BITMAP_TYPE_PNG),
+                                              shortHelp="Increase High BE")
+
+    v_toolbar.AddSeparator()
+
+    low_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE +',
+                                             wx.Bitmap(os.path.join(icon_path, "Left-Blue-25g.png"), wx.BITMAP_TYPE_PNG),
+                                             shortHelp="Increase Low BE")
+    low_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE -',
+                                             wx.Bitmap(os.path.join(icon_path, "Right-Blue-25g.png"), wx.BITMAP_TYPE_PNG),
+                                             shortHelp="Decrease Low BE")
+
+    v_toolbar.AddSeparator()
+
+    # Intensity adjustment tools
+    high_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int +',
+                                               wx.Bitmap(os.path.join(icon_path, "Up-Red-25g.png"), wx.BITMAP_TYPE_PNG),
+                                               shortHelp="Increase High Intensity")
+    high_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int -',
+                                               wx.Bitmap(os.path.join(icon_path, "Down-Red-25g.png"), wx.BITMAP_TYPE_PNG),
+                                               shortHelp="Decrease High Intensity")
+
+    v_toolbar.AddSeparator()
+
+    low_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int +',
+                                              wx.Bitmap(os.path.join(icon_path, "Up-Blue-25g.png"), wx.BITMAP_TYPE_PNG),
+                                              shortHelp="Increase Low Intensity")
+    low_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int -',
+                                              wx.Bitmap(os.path.join(icon_path, "Down-Blue-25g.png"), wx.BITMAP_TYPE_PNG),
+                                              shortHelp="Decrease Low Intensity")
+
+    v_toolbar.AddSeparator()
+
+    v_toolbar.Realize()
+
+    # Bind events to the frame
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_be', 'increase'), high_be_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_be', 'decrease'), high_be_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_be', 'increase'), low_be_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_be', 'decrease'), low_be_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_int', 'increase'), high_int_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_int', 'decrease'), high_int_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'increase'), low_int_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'decrease'), low_int_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_zoom_in_tool, zoom_in_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_zoom_out, zoom_out_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_drag_tool, drag_tool)
+
+    return v_toolbar
 
 
 # --------------KEEP PREVIOUS DEF JUST IN CASE----------------------------------------------------
@@ -930,4 +1007,106 @@ def create_horizontal_toolbar_FUNCTIONS(window):
     window.Bind(wx.EVT_TOOL, window.open_periodic_table, id_tool)
 
     return toolbar
+
+def create_vertical_toolbar_FUNCTIONS(parent, frame):
+    v_toolbar = wx.ToolBar(parent, style=wx.TB_VERTICAL | wx.TB_FLAT)
+    v_toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
+    v_toolbar.SetToolBitmapSize(wx.Size(25, 25))
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(current_dir, "Icons")
+
+
+    # Add zoom tool
+    # Add zoom in tool
+    zoom_in_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom In',
+                                     wx.Bitmap(os.path.join(icon_path, "ZoomIN-25.png"), wx.BITMAP_TYPE_PNG),
+                                     shortHelp="Zoom In")
+
+    # Add zoom out tool (previously resize_plot)
+    zoom_out_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom Out',
+                                      wx.Bitmap(os.path.join(icon_path, "ZoomOUT-25.png"), wx.BITMAP_TYPE_PNG),
+                                      shortHelp="Zoom Out")
+
+    # Add drag tool
+    drag_tool = v_toolbar.AddTool(wx.ID_ANY, 'Drag',
+                                  wx.Bitmap(os.path.join(icon_path, "drag-25.png"), wx.BITMAP_TYPE_PNG),
+                                  shortHelp="Drag Plot")
+
+    v_toolbar.AddSeparator()
+
+    # BE adjustment tools
+    high_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE +', wx.Bitmap(os.path.join(icon_path,
+                                                                                             "Right-Red-25g.png"),
+                                                                                wx.BITMAP_TYPE_PNG),
+                                                                                shortHelp="Decrease High BE")
+    high_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High BE -', wx.Bitmap(os.path.join(icon_path,
+                                                                                             "Left-Red-25g.png"),
+                                                                                wx.BITMAP_TYPE_PNG),
+                                                                                shortHelp="Increase High BE")
+
+    v_toolbar.AddSeparator()
+
+    low_be_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE +', wx.Bitmap(os.path.join(icon_path,
+                                                                                           "Left-Blue-25g.png"),
+                                                                              wx.BITMAP_TYPE_PNG), shortHelp="Increase Low BE")
+    low_be_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low BE -', wx.Bitmap(os.path.join(icon_path,
+                                                                                           "Right-Blue-25g.png"),
+                                                                              wx.BITMAP_TYPE_PNG), shortHelp="Decrease Low BE")
+
+    # v_toolbar.AddSeparator()
+
+    # # Add increment spin control
+    # increment_label = wx.StaticText(v_toolbar, label="Increment:")
+    # v_toolbar.AddControl(increment_label)
+    # frame.be_increment_spin = wx.SpinCtrlDouble(v_toolbar, value='1.0', min=0.1, max=10.0, inc=0.1, size=(60, -1))
+    # # v_toolbar.AddControl(frame.be_increment_spin)   #  DO NOT ADD YET
+
+
+    v_toolbar.AddSeparator()
+
+    # Intensity adjustment tools
+    high_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int +', wx.Bitmap(os.path.join(icon_path,
+                                                                                               "Up-Red-25g.png"),
+                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Increase High Intensity")
+    high_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'High Int -', wx.Bitmap(os.path.join(icon_path,
+                                                                                               "Down-Red-25g.png"),
+                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Decrease High Intensity")
+
+    v_toolbar.AddSeparator()
+
+    low_int_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int +', wx.Bitmap(os.path.join(icon_path,
+                                                                                             "Up-Blue-25g.png"),
+                                                                                wx.BITMAP_TYPE_PNG), shortHelp="Increase Low Intensity")
+    low_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY,
+                                              'Low Int -',
+                                              wx.Bitmap(os.path.join(icon_path, "Down-Blue-25g.png"),
+                                              wx.BITMAP_TYPE_PNG),
+                                              shortHelp="Decrease Low Intensity")
+
+    v_toolbar.AddSeparator()
+
+    # resize_plot_tool = v_toolbar.AddTool(wx.ID_ANY, 'Resize Plot',
+    #                                    wx.Bitmap(os.path.join(icon_path, "ZoomOUT.png"), wx.BITMAP_TYPE_PNG),
+    #                                    shortHelp="Resize Plot")
+
+
+
+    v_toolbar.Realize()
+
+    # Bind events to the frame
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_be', 'increase'), high_be_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_be', 'decrease'), high_be_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_be', 'increase'), low_be_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_be', 'decrease'), low_be_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_int', 'increase'), high_int_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_int', 'decrease'), high_int_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'increase'), low_int_increase_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'decrease'), low_int_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_zoom_in_tool, zoom_in_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_zoom_out, zoom_out_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_drag_tool, drag_tool)
+
+
+    return v_toolbar
 
