@@ -1462,33 +1462,8 @@ class MyFrame(wx.Frame):
             if self.background_method == "Adaptive Smart":
                 plot_background(self)
 
-
     def on_zoom_in_tool(self, event):
-        self.zoom_mode = not self.zoom_mode
-        if self.zoom_mode:
-            if self.zoom_rect:
-                self.zoom_rect.set_active(True)
-            else:
-                self.zoom_rect = widgets.RectangleSelector(
-                    self.ax,
-                    self.on_zoom_select,
-                    useblit=True,
-                    props=dict(facecolor='green', edgecolor='green', alpha=0.3, fill=True),
-                    button=[1],
-                    minspanx=5,
-                    minspany=5,
-                    spancoords='pixels',
-                    interactive=False  # Change this to False
-                )
-        else:
-            if self.zoom_rect:
-                self.zoom_rect.set_active(False)
-
-        if self.drag_mode:
-            self.disable_drag()
-            self.drag_mode = False
-
-        self.canvas.draw_idle()
+        self.plot_config.on_zoom_in_tool(self)
 
     def on_zoom_select(self, eclick, erelease):
         self.plot_config.on_zoom_select(self, eclick, erelease)

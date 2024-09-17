@@ -9,6 +9,40 @@ class PlotConfig:
         self.plot_limits = {}
         self.original_limits = {}  # Store original limits for zoom out
 
+    def on_zoom_in_tool(self, window):
+        # Toggle zoom mode
+        window.zoom_mode = not window.zoom_mode
+
+        if window.zoom_mode:
+            if window.zoom_rect:
+                # Activate existing zoom rectangle
+                window.zoom_rect.set_active(True)
+            else:
+                # Create new zoom rectangle
+                window.zoom_rect = widgets.RectangleSelector(
+                    window.ax,
+                    lambda eclick, erelease: self.on_zoom_select(window, eclick, erelease),
+                    useblit=True,
+                    props=dict(facecolor='green', edgecolor='green', alpha=0.3, fill=True),
+                    button=[1],
+                    minspanx=5,
+                    minspany=5,
+                    spancoords='pixels',
+                    interactive=False
+                )
+        else:
+            # Deactivate zoom rectangle if it exists
+            if window.zoom_rect:
+                window.zoom_rect.set_active(False)
+
+        # Disable drag mode if active
+        if window.drag_mode:
+            self.disable_drag(window)
+            window.drag_mode = False
+
+        # Redraw the canvas
+        window.canvas.draw_idle()
+
     def on_zoom_select(self, window, eclick, erelease):
         if window.zoom_mode:
             # Extract click and release coordinates
