@@ -493,22 +493,6 @@ def rename_sheet(window, new_sheet_name):
                 wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
 
-
-
-
-
-
-
-def create_statusbar(window):
-    # Create a status bar
-    window.CreateStatusBar(2)
-    window.SetStatusWidths([-1, 200])
-    window.SetStatusText("Working Directory: "+window.Working_directory,0)
-    window.SetStatusText("BE: 0 eV, I: 0 CPS" ,1)
-
-def update_statusbar(window, message):
-    window.SetStatusText("Working Directory: "+message)
-
 def on_exit(window, event):
     """Handles the Exit menu item."""
     window.Destroy()

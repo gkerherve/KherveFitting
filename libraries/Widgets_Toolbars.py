@@ -8,7 +8,7 @@ from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as Navigat
 from libraries.Sheet_Operations import CheckboxRenderer
 from libraries.Open import ExcelDropTarget
 from libraries.Plot_Operations import PlotManager
-from Functions import create_statusbar, toggle_Col_1
+from Functions import toggle_Col_1
 from libraries.Save import update_undo_redo_state
 
 from Functions import open_xlsx_file, on_save, save_all_sheets_with_plots, save_results_table, open_vamas_file_dialog, \
@@ -523,6 +523,35 @@ def create_vertical_toolbar(parent, frame):
     frame.Bind(wx.EVT_TOOL, frame.on_drag_tool, drag_tool)
 
     return v_toolbar
+
+
+def create_statusbar(window):
+    """
+    Create a status bar for the main window.
+
+    Args:
+    window: The main application window.
+    """
+    # Create a status bar with two fields
+    window.CreateStatusBar(2)
+
+    # Set the widths of the status bar fields
+    window.SetStatusWidths([-1, 200])
+
+    # Set initial text for the status bar fields
+    window.SetStatusText("Working Directory: " + window.Working_directory, 0)
+    window.SetStatusText("BE: 0 eV, I: 0 CPS", 1)
+
+
+def update_statusbar(window, message):
+    """
+    Update the first field of the status bar with a new message.
+
+    Args:
+    window: The main application window.
+    message: The new message to display in the status bar.
+    """
+    window.SetStatusText("Working Directory: " + message)
 
 
 # --------------KEEP PREVIOUS DEF JUST IN CASE----------------------------------------------------

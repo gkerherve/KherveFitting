@@ -24,7 +24,6 @@ from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
-from Functions import create_statusbar
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
 from libraries.Sheet_Operations import on_sheet_selected
@@ -37,6 +36,7 @@ from Functions import on_save, open_xlsx_file, on_exit
 from libraries.Open import load_recent_files_from_config, open_avg_file
 from libraries.survey import PeriodicTableWindow
 from libraries.Widgets_Toolbars import create_widgets, create_menu
+from libraries.Widgets_Toolbars import create_statusbar, update_statusbar
 
 
 class MyFrame(wx.Frame):
