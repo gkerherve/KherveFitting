@@ -251,7 +251,9 @@ class PlotManager:
 
             # Set x-axis limits to reverse the direction and match the min and max of the data
             if window.energy_scale == 'KE':
-                self.ax.set_xlim(window.photons-limits['Xmax'],window.photons - limits['Xmin'])  # Reverse X-axis
+                X_MIN = window.photons-limits['Xmax']
+                X_MAX = window.photons-limits['Xmin']
+                self.ax.set_xlim(min(X_MIN, X_MAX),max(X_MIN, X_MAX))  # Reverse X-axis
             else:
                 self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
 
@@ -389,8 +391,12 @@ class PlotManager:
         # Set plot limits
 
         self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+
         if window.energy_scale == 'KE':
-            self.ax.set_xlim(window.photons - limits['Xmax'],window.photons - limits['Xmin'])  # Reverse X-axis
+            X_MIN = window.photons - limits['Xmax']
+            X_MAX = window.photons - limits['Xmin']
+            self.ax.set_xlim(min(X_MIN, X_MAX), max(X_MIN, X_MAX))  # Reverse X-axis
+            # self.ax.set_xlim(window.photons - limits['Xmax'],window.photons - limits['Xmin'])  # Reverse X-axis
 
         self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
@@ -834,8 +840,6 @@ class PlotManager:
         self.canvas.draw_idle()
 
     def toggle_fitting_results(self):
-        print(self.fitting_results_text)
-        print(self.fitting_results_visible)
         if self.fitting_results_text:
             self.fitting_results_visible = not self.fitting_results_visible
             self.fitting_results_text.set_visible(self.fitting_results_visible)
@@ -893,8 +897,6 @@ class PlotManager:
         legend_order += peak_labels
         legend_order2 += filtered_peak_labels
 
-        print("LEGEND ORDER " + str(legend_order))
-
         # Update the legend with the ordered items from legend_order
         if legend_order:
             # Find handles for each label in legend_order
@@ -912,8 +914,6 @@ class PlotManager:
             self.ax.legend(ordered_handles, legend_order2, loc='upper left')
         else:
             self.ax.legend().remove()
-
-        print("Final legend labels:", legend_order)
         self.canvas.draw_idle()
 
     def update_legend(self, window):
@@ -946,10 +946,6 @@ class PlotManager:
         legend_order += filtered_peak_labels
         formatted_legend_order = legend_order[:4] + filtered_formatted_labels
 
-        # print("LEGEND ORDER " + str(legend_order))
-        # print("FORMATTED LEGEND ORDER " + str(formatted_legend_order))
-
-
         # Update the legend with the ordered items from legend_order
         if legend_order:
             # Find handles for each label in legend_order
@@ -961,14 +957,11 @@ class PlotManager:
                         break
                 else:
                     pass
-                    # print(f"Warning: No handle found for label '{l}'")
 
             # Create the legend with the ordered labels and handles
             self.ax.legend(ordered_handles, formatted_legend_order, loc='upper left')
         else:
             self.ax.legend().remove()
-
-        # print("Final legend labels:", formatted_legend_order)
         self.canvas.draw_idle()
 
 
@@ -1022,6 +1015,5 @@ class PlotManager:
 
     def toggle_peak_fill(self):
         self.peak_fill_enabled = not self.peak_fill_enabled
-        print(f"Peak fill toggled. New state: {self.peak_fill_enabled}")  # Debugging line
         return self.peak_fill_enabled  # Return the new state
 

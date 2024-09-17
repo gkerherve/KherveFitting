@@ -49,7 +49,6 @@ def safe_delete_rows(grid, pos, num_rows):
         else:
             wx.MessageBox("Invalid row indices for deletion.", "Information", wx.OK | wx.ICON_INFORMATION)
     except Exception as e:
-        # wx.MessageBox(f"Error deleting rows: {e}", "Error", wx.OK | wx.ICON_ERROR)
         print("Error")
 
 
@@ -1325,25 +1324,21 @@ def open_xlsx_file_vamas(window, file_path):
         wx.MessageBox(f"Error reading Excel file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 def on_save_plot(window):
-    # print("on_save plot function called")
     from libraries.Save import save_plot_as_png
     save_plot_as_png(window)
 
 
 def on_save_plot_pdf(window):
-    # print("on_save plot function called")
     from libraries.Save import save_plot_as_pdf
     save_plot_as_pdf(window)
 
 
 def on_save_plot_svg(window):
-    # print("on_save plot function called")
     from libraries.Save import save_plot_as_svg
     save_plot_as_svg(window)
 
 
 def on_save(window):
-    # print("on_save function called")
     from libraries.Save import save_data
     data = window.get_data_for_save()
     save_data(window,data)

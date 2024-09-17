@@ -984,7 +984,10 @@ class MyFrame(wx.Frame):
     def on_mouse_move(self, event):
         if event.inaxes:
             x, y = event.xdata, event.ydata
-            self.SetStatusText(f"BE: {x:.1f} eV, I: {int(y)} CPS", 1)
+            if self.energy_scale == 'KE':
+                self.SetStatusText(f"KE: {x:.1f} eV, I: {int(y)} CPS", 1)
+            else:
+                self.SetStatusText(f"BE: {x:.1f} eV, I: {int(y)} CPS", 1)
 
     def on_click(self, event):
         if event.inaxes:
@@ -1498,7 +1501,10 @@ class MyFrame(wx.Frame):
             sheet_name = self.sheet_combobox.GetValue()
             self.plot_config.update_plot_limits(self, sheet_name, x_min, x_max, y_min, y_max)
 
-            self.ax.set_xlim(x_max, x_min)  # Reverse X-axis
+            if self.energy_scale == 'KE':
+                self.ax.set_xlim(min(x_max, x_min), max(x_max, x_min))
+            else:
+                self.ax.set_xlim(max(x_max, x_min), min(x_max, x_min))  # Reverse X-axis
             self.ax.set_ylim(y_min, y_max)
 
             # Deactivate zoom mode and remove the rectangle
@@ -1984,11 +1990,11 @@ class MyFrame(wx.Frame):
 
     def set_fitting_method(self, method):
         self.selected_fitting_method = method
-        # print("Set Fitting Method: "+ str(method))
+
 
     def set_background_method(self, method):
         self.background_method = method
-        # print(f"Updated background method to: {self.background_method}")
+
 
     # Method to update Offset (H)
     def set_offset_h(self, value):
@@ -2281,7 +2287,7 @@ if __name__ == '__main__':
     if splash:
         splash.Destroy()
 
-    # print("Entering app.MainLoop()")
+
     app.MainLoop()
     sys.exit(0)
 

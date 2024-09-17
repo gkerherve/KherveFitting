@@ -32,8 +32,12 @@ class PlotConfig:
         if y_max is not None: limits['Ymax'] = y_max
 
         # If any limit is not set, use the original values
-        limits['Xmin'] = limits.get('Xmin', original['Xmin'])
-        limits['Xmax'] = limits.get('Xmax', original['Xmax'])
+        if window.energy_scale == 'KE':
+            limits['Xmin'] = limits.get('Xmin', original['Xmin'])
+            limits['Xmax'] = limits.get('Xmax', original['Xmax'])
+        else:
+            limits['Xmin'] = limits.get('Xmin', original['Xmin'])
+            limits['Xmax'] = limits.get('Xmax', original['Xmax'])
         limits['Ymin'] = limits.get('Ymin', original['Ymin'])
         limits['Ymax'] = limits.get('Ymax', original['Ymax'])
 
@@ -90,7 +94,10 @@ class PlotConfig:
             self.update_plot_limits(window, sheet_name)
 
         limits = self.plot_limits[sheet_name]
-        window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+        if window.energy_scale == 'KE':
+            window.ax.set_xlim(window.photons -limits['Xmax'], window.photons - limits['Xmin'])
+        else:
+            window.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
         window.ax.set_ylim(limits['Ymin'], limits['Ymax'])
         window.canvas.draw_idle()
 
