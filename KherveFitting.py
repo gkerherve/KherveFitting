@@ -1491,29 +1491,7 @@ class MyFrame(wx.Frame):
         self.canvas.draw_idle()
 
     def on_zoom_select(self, eclick, erelease):
-        if self.zoom_mode:
-            x1, y1 = eclick.xdata, eclick.ydata
-            x2, y2 = erelease.xdata, erelease.ydata
-
-            x_min, x_max = min(x1, x2), max(x1, x2)
-            y_min, y_max = min(y1, y2), max(y1, y2)
-
-            sheet_name = self.sheet_combobox.GetValue()
-            self.plot_config.update_plot_limits(self, sheet_name, x_min, x_max, y_min, y_max)
-
-            if self.energy_scale == 'KE':
-                self.ax.set_xlim(min(x_max, x_min), max(x_max, x_min))
-            else:
-                self.ax.set_xlim(max(x_max, x_min), min(x_max, x_min))  # Reverse X-axis
-            self.ax.set_ylim(y_min, y_max)
-
-            # Deactivate zoom mode and remove the rectangle
-            self.zoom_mode = False
-            if self.zoom_rect:
-                self.zoom_rect.set_active(False)
-                self.zoom_rect = None
-
-            self.canvas.draw_idle()
+        self.plot_config.on_zoom_select(self, eclick, erelease)
 
     def on_zoom_out(self, event):
         sheet_name = self.sheet_combobox.GetValue()

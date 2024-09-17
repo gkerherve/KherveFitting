@@ -8,6 +8,42 @@ class PlotConfig:
         self.plot_limits = {}
         self.original_limits = {}  # Store original limits for zoom out
 
+    def on_zoom_select(self, window, eclick, erelease):
+        if window.zoom_mode:
+            # Extract click and release coordinates
+            x1, y1 = eclick.xdata, eclick.ydata
+            x2, y2 = erelease.xdata, erelease.ydata
+
+            # Determine the selected range
+            x_min, x_max = min(x1, x2), max(x1, x2)
+            y_min, y_max = min(y1, y2), max(y1, y2)
+
+            # Get current sheet name
+            sheet_name = window.sheet_combobox.GetValue()
+
+            # Update plot limits based on the selected range
+            self.update_plot_limits(window, sheet_name, x_min, x_max, y_min, y_max)
+
+            # Set x-axis limits based on energy scale
+            if window.energy_scale == 'KE':
+                window.ax.set_xlim(min(x_max, x_min), max(x_max, x_min))
+            else:
+                window.ax.set_xlim(max(x_max, x_min), min(x_max, x_min))  # Reverse X-axis for BE
+
+            # Set y-axis limits
+            window.ax.set_ylim(y_min, y_max)
+
+            # Deactivate zoom mode
+            window.zoom_mode = False
+
+            # Remove zoom rectangle if it exists
+            if window.zoom_rect:
+                window.zoom_rect.set_active(False)
+                window.zoom_rect = None
+
+            # Redraw the canvas to show updated plot
+            window.canvas.draw_idle()
+
     def update_plot_limits(self, window, sheet_name, x_min=None, x_max=None, y_min=None, y_max=None):
         if sheet_name not in self.plot_limits:
             self.plot_limits[sheet_name] = {}
