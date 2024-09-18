@@ -209,3 +209,265 @@ class PeakFunctions:
         model = lmfit.models.PseudoVoigtModel()
         params = model.make_params(amplitude=amplitude, center=0, sigma=sigma, fraction=fraction/100)
         return model.eval(params, x=0)
+
+
+import numpy as np
+from scipy.signal import savgol_filter
+
+
+class BackgroundCalculations:
+    @staticmethod
+    def calculate_linear_background(x, y, start_offset, end_offset):
+        """
+        Calculate a linear background between the start and end points of the data.
+
+        Args:
+            x (array): X-axis values
+            y (array): Y-axis values
+            start_offset (float): Offset to add to the start point
+            end_offset (float): Offset to add to the end point
+
+        Returns:
+            array: Linear background
+        """
+        y_start = y[0] + start_offset
+        y_end = y[-1] + end_offset
+        return np.linspace(y_start, y_end, len(y))
+
+    @staticmethod
+    def calculate_smart_background(x, y, offset_h, offset_l):
+        """
+        Calculate a 'smart' background by choosing between Shirley and linear backgrounds.
+
+        Args:
+            x (array): X-axis values
+            y (array): Y-axis values
+            offset_h (float): High offset
+            offset_l (float): Low offset
+
+        Returns:
+            array: Smart background
+        """
+        shirley_bg = BackgroundCalculations.calculate_shirley_background(x, y, offset_h, offset_l)
+        linear_bg = BackgroundCalculations.calculate_linear_background(x, y, offset_h, offset_l)
+
+        # Choose background type based on first and last y-values
+        background = shirley_bg if y[0] > y[-1] else linear_bg
+
+        # Ensure background does not exceed raw data
+        return np.minimum(background, y)
+
+    @staticmethod
+    def calculate_smart2_background(x, y, threshold=0.01):
+        """
+        Calculate an improved 'smart' background using derivative analysis.
+
+        Args:
+            x (array): X-axis values
+            y (array): Y-axis values
+            threshold (float): Threshold for determining flat regions
+
+        Returns:
+            array: Smart2 background
+        """
+        dy = np.gradient(y, x)
+        threshold = 0.001 * (max(y) - min(y))
+
+        # Smooth the derivative
+        dy_smooth = savgol_filter(dy, window_length=30, polyorder=3)
+
+        background = np.zeros_like(y)
+        flat_mask = np.abs(dy_smooth) < threshold
+
+        # Set background to raw data in flat regions
+        background[flat_mask] = y[flat_mask]
+
+        # For non-flat regions, decide between linear and Shirley
+        for i in range(1, len(y)):
+            if not flat_mask[i]:
+                if y[i] < y[i - 1]:  # Data going down
+                    background[i] = background[i - 1] + (y[i] - y[i - 1])
+                else:  # Data going up
+                    A = np.trapz(y[:i + 1] - background[:i + 1], x[:i + 1])
+                    B = np.trapz(y[i:] - background[i:], x[i:])
+                    background[i] = y[-1] + (y[0] - y[-1]) * B / (A + B)
+
+        return background
+
+    @staticmethod
+    def calculate_adaptive_smart_background(x, y, x_range, previous_background, offset_h, offset_l):
+        """
+        Calculate an adaptive smart background for a selected range.
+
+        Args:
+            x (array): X-axis values
+            y (array): Y-axis values
+            x_range (tuple): Range of x values to calculate background for
+            previous_background (array): Previous background calculation
+            offset_h (float): High offset
+            offset_l (float): Low offset
+
+        Returns:
+            array: Adaptive smart background
+        """
+        previous_background = np.array(previous_background)
+        mask = (x >= x_range[0]) & (x <= x_range[1])
+        new_background = np.copy(previous_background)
+        x_selected, y_selected = x[mask], y[mask]
+
+        # Determine background type for selected range
+        if y_selected[0] > y_selected[-1]:
+            new_background[mask] = BackgroundCalculations.calculate_shirley_background(x_selected, y_selected, offset_h,
+                                                                                       offset_l)
+        else:
+            new_background[mask] = BackgroundCalculations.calculate_linear_background(x_selected, y_selected, offset_h,
+                                                                                      offset_l)
+
+        return new_background
+
+    @staticmethod
+    def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, tol=1e-6, padding_factor=0.01):
+        """
+        Calculate the Shirley background.
+
+        Args:
+            x (array): X-axis values
+            y (array): Y-axis values
+            start_offset (float): Offset to add to the start point
+            end_offset (float): Offset to add to the end point
+            max_iter (int): Maximum number of iterations
+            tol (float): Tolerance for convergence
+            padding_factor (float): Factor for padding the data
+
+        Returns:
+            array: Shirley background
+        """
+        x, y = np.asarray(x), np.asarray(y)
+
+        # Add padding to the data
+        x_min, x_max = x[0], x[-1]
+        padding_width = padding_factor * (x_max - x_min)
+        x_padded = np.concatenate([[x_min - padding_width], x, [x_max + padding_width]])
+        y_padded = np.concatenate([[y[0] + start_offset], y, [y[-1] + end_offset]])
+
+        background = np.zeros_like(y_padded)
+        I0, Iend = y_padded[0], y_padded[-1]
+
+        # Iterative calculation of Shirley background
+        for _ in range(max_iter):
+            prev_background = background.copy()
+            for i in range(1, len(y_padded) - 1):
+                A1 = np.trapz(y_padded[:i] - background[:i], x_padded[:i])
+                A2 = np.trapz(y_padded[i:] - background[i:], x_padded[i:])
+                background[i] = Iend + (I0 - Iend) * A2 / (A1 + A2)
+            if np.all(np.abs(background - prev_background) < tol):
+                break
+
+        return background[1:-1]  # Remove padding before returning
+
+
+
+# ------------------------------ HISTORY CHECK -----------------------------------------------
+# --------------------------------------------------------------------------------------------
+
+def calculate_linear_background_FUNCTION(x, y, start_offset, end_offset):
+    y_start = y[0] + start_offset
+    y_end = y[-1] + end_offset
+    return np.linspace(y_start, y_end,  len(y))
+
+def calculate_smart_background_FUNCTION(x, y, offset_h, offset_l):
+    # Calculate both backgrounds
+    shirley_bg = calculate_shirley_background(x, y, offset_h, offset_l)
+    linear_bg = calculate_linear_background(x, y, offset_h, offset_l)
+
+    # Choose the background type based on first and last y-values
+    if y[0] > y[-1]:
+        background = shirley_bg
+    else:
+        background = linear_bg
+
+    # Ensure background does not exceed raw data
+    background = np.minimum(background, y)
+
+    return background
+
+def calculate_smart2_background_FUNCTION(x, y, threshold=0.01):
+    # Calculate the derivative
+    dy = np.gradient(y, x)
+
+    threshold = 0.001*(max(y)-min(y))
+
+
+    # Smooth the derivative (optional, but often helpful)
+    dy_smooth = savgol_filter(dy, window_length=30, polyorder=3)
+
+    # Initialize the background array
+    background = np.zeros_like(y)
+
+    # Determine flat regions (where derivative is close to zero)
+    flat_mask = np.abs(dy_smooth) < threshold
+    # flat_mask = np.abs(dy) < threshold
+
+    # Set background to raw data in flat regions
+    background[flat_mask] = y[flat_mask]
+
+    # For non-flat regions, decide between linear and Shirley
+    for i in range(1, len(y)):
+        if not flat_mask[i]:
+            if y[i] < y[i - 1]:  # Data going down
+                # Linear interpolation
+                background[i] = background[i - 1] + (y[i] - y[i - 1])
+            else:  # Data going up
+                # Use Shirley method (simplified for this example)
+                A = np.trapz(y[:i + 1] - background[:i + 1], x[:i + 1])
+                B = np.trapz(y[i:] - background[i:], x[i:])
+                background[i] = y[-1] + (y[0] - y[-1]) * B / (A + B)
+
+    # return dy_smooth + 1.1*max(y)
+    return background
+
+def calculate_adaptive_smart_background_FUNCTION(x, y, x_range, previous_background, offset_h, offset_l):
+    # Ensure previous_background is numpy array
+    previous_background = np.array(previous_background)
+
+    # Create mask for the selected range
+    mask = (x >= x_range[0]) & (x <= x_range[1])
+
+    # Calculate new background for selected range
+    new_background = np.copy(previous_background)
+    x_selected = x[mask]
+    y_selected = y[mask]
+
+    # Determine if we should use Shirley or Linear in the selected range
+    if y_selected[0] > y_selected[-1]:
+        new_background[mask] = calculate_shirley_background(x_selected, y_selected, offset_h, offset_l)
+    else:
+        new_background[mask] = calculate_linear_background(x_selected, y_selected, offset_h, offset_l)
+
+    return new_background
+
+def calculate_shirley_background_FUNCTION(x, y, start_offset, end_offset, max_iter=100, tol=1e-6, padding_factor=0.01):
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    # Padding
+    x_min, x_max = x[0], x[-1]
+    padding_width = padding_factor * (x_max - x_min)
+    x_padded = np.concatenate([[x_min - padding_width], x, [x_max + padding_width]])
+    y_padded = np.concatenate([[y[0] + start_offset], y, [y[-1] + end_offset]])
+
+    background = np.zeros_like(y_padded)
+    I0, Iend = y_padded[0], y_padded[-1]
+
+    for iteration in range(max_iter):
+        prev_background = background.copy()
+        for i in range(1, len(y_padded) - 1):  # Use len(y_padded) here
+            A1 = np.trapz(y_padded[:i] - background[:i], x_padded[:i])  # Use padded arrays
+            A2 = np.trapz(y_padded[i:] - background[i:], x_padded[i:])  # Use padded arrays
+            background[i] = Iend + (I0 - Iend) * A2 / (A1 + A2)
+        if np.all(np.abs(background - prev_background) < tol):
+            break
+
+    return background[1:-1]  # Remove padding before returning
+
+

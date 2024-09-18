@@ -198,6 +198,10 @@ def import_multiple_avg_files(window):
 
 
 def open_xlsx_file(window, file_path=None):
+    """
+    Opens an Excel file, loads its data, and updates the application's state accordingly.
+    If a corresponding JSON file exists, it loads data from there instead.
+    """
     print("Starting open_xlsx_file function")
     if file_path is None:
         with wx.FileDialog(window, "Open XLSX file", wildcard="Excel files (*.xlsx)|*.xlsx",
@@ -298,6 +302,10 @@ def open_xlsx_file(window, file_path=None):
         wx.MessageBox(f"Error reading file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 def convert_from_serializable(obj):
+    """
+    Recursively converts a serializable object (list or dict) back into its original structure.
+    This is used to restore complex data structures that were serialized to JSON.
+    """
     if isinstance(obj, list):
         return [convert_from_serializable(item) for item in obj]
     elif isinstance(obj, dict):
@@ -306,6 +314,9 @@ def convert_from_serializable(obj):
         return obj
 
 def update_recent_files(window, file_path):
+    """
+    Updates the list of recently opened files, adding the new file to the top and removing duplicates.
+    """
     if file_path in window.recent_files:
         window.recent_files.remove(file_path)
     window.recent_files.insert(0, file_path)
@@ -314,6 +325,9 @@ def update_recent_files(window, file_path):
     save_recent_files_to_config(window)
 
 def update_recent_files_menu(window):
+    """
+    Refreshes the 'Recent Files' menu with the updated list of recently opened files.
+    """
     if hasattr(window, 'recent_files_menu'):
         # Remove all existing menu items
         for item in window.recent_files_menu.GetMenuItems():
@@ -325,11 +339,11 @@ def update_recent_files_menu(window):
             window.Bind(wx.EVT_MENU, lambda evt, fp=file_path: open_xlsx_file(window, fp), item)
 
 def save_recent_files_to_config(window):
+    """
+    Saves the updated list of recently opened files to the application's configuration.
+    """
     window.recent_files = window.recent_files[:window.max_recent_files]
     window.save_config()
-    # config = window.load_config()
-    # config['recent_files'] = window.recent_files
-    # window.save_config(config)
 
 
 def open_vamas_file_dialog(window):
