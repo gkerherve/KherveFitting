@@ -305,6 +305,26 @@ def update_sheet_names(window):
 
 
 def rename_sheet(window, new_sheet_name):
+    """
+    Rename a selected sheet in one or more Excel files.
+
+    This function renames a specified sheet in selected Excel files. It iterates through
+    the selected files, reads the content of the specified sheet, and writes it back
+    with the new sheet name. Other sheets in the file remain unchanged.
+
+    Args:
+        window: The main application window object, containing necessary UI elements.
+        new_sheet_name (str): The new name to be given to the selected sheet.
+
+    Note:
+        This function assumes the existence of certain attributes in the window object:
+        - file_listbox: A listbox containing selected file names.
+        - sheet_combobox: A combobox with the current sheet name.
+        - entry: An entry field containing the directory path of the files.
+
+    Raises:
+        Exceptions are caught and displayed in a message box.
+    """
     selected_indices = window.file_listbox.GetSelections()
     sheet_name = window.sheet_combobox.GetValue()
 
