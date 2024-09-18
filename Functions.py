@@ -359,6 +359,7 @@ def update_sheet_names(window):
 
 
 # I do not think it is necessary
+""""
 def rename_sheet(window, new_sheet_name):
     selected_indices = window.file_listbox.GetSelections()
     sheet_name = window.sheet_combobox.GetValue()
@@ -379,7 +380,7 @@ def rename_sheet(window, new_sheet_name):
                                 pd.read_excel(xls, sheet_name=sheet, engine='openpyxl').to_excel(writer, sheet_name=sheet, index=False)
             except Exception as e:
                 wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
-
+"""
 
 def on_exit(window, event):
     """Handles the Exit menu item."""
@@ -402,7 +403,7 @@ from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
 
 
 
-
+""""
 def convert_from_serializable(obj):
     if isinstance(obj, list):
         return [convert_from_serializable(item) for item in obj]
@@ -410,12 +411,10 @@ def convert_from_serializable(obj):
         return {k: convert_from_serializable(v) for k, v in obj.items()}
     else:
         return obj
+"""
 
 
-import wx
-import os
 import shutil
-import pandas as pd
 from vamas import Vamas
 from openpyxl import Workbook
 

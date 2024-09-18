@@ -370,6 +370,7 @@ class BackgroundCalculations:
 # ------------------------------ HISTORY CHECK -----------------------------------------------
 # --------------------------------------------------------------------------------------------
 
+"""
 def calculate_linear_background_FUNCTION(x, y, start_offset, end_offset):
     y_start = y[0] + start_offset
     y_end = y[-1] + end_offset
@@ -470,4 +471,4 @@ def calculate_shirley_background_FUNCTION(x, y, start_offset, end_offset, max_it
 
     return background[1:-1]  # Remove padding before returning
 
-
+"""

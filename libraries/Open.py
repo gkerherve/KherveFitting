@@ -592,6 +592,7 @@ def open_xlsx_file_vamas(window, file_path):
 # ------------------ HISTORRY DEF ---------------------------------------------------
 # -----------------------------------------------------------------------------------
 
+"""
 def open_xlsx_file_FUNCTION(window, file_path=None):
     print("Starting open_xlsx_file function")
     if file_path is None:
@@ -929,3 +930,5 @@ def open_xlsx_file_vamas_FUNCTION(window, file_path):
         import traceback
         traceback.print_exc()
         wx.MessageBox(f"Error reading Excel file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+"""

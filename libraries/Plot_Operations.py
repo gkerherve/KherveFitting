@@ -345,6 +345,27 @@ class PlotManager:
 
 
     def clear_and_replot(self, window):
+        """
+        Clears the current plot and redraws all elements for the selected sheet.
+
+        This function performs the following key operations:
+        1. Retrieves the current sheet name and plot limits.
+        2. Clears the existing plot and updates axis labels and formatting.
+        3. Plots raw data according to the selected energy scale (BE or KE).
+        4. Identifies and plots doublet peaks with appropriate coloring.
+        5. Plots fitted peaks using stored parameters, handling different fitting models.
+        6. Plots the background if available.
+        7. Updates overall fit and residuals for fitted data.
+        8. Handles special cases for survey/wide scans.
+        9. Updates the plot legend and restores or creates sheet name text.
+        10. Adjusts plot limits and spine widths for better visibility.
+        11. Redraws the canvas to reflect all changes.
+
+        The function adapts its behavior based on the sheet type (e.g., survey vs. core level),
+        energy scale, and fitting status of peaks. It ensures that all visual elements
+        are correctly positioned and formatted according to the current application state.
+        """
+
         sheet_name = window.sheet_combobox.GetValue()
         limits = window.plot_config.get_plot_limits(window, sheet_name)
         cst_unfit = ""
@@ -544,6 +565,10 @@ class PlotManager:
 
 
     def is_part_of_doublet(self, current_label, next_label):
+        """
+        Determines if two adjacent peaks form a doublet based on their labels.
+        Checks for matching core levels and appropriate spin-orbit components.
+        """
         current_parts = current_label.split()
         next_parts = next_label.split()
 
@@ -584,6 +609,10 @@ class PlotManager:
         return False
 
     def update_peak_plot(self, window, x, y, remove_old_peaks=True):
+        """
+        Updates the plot for a selected peak when its position or height is changed.
+        Recalculates the peak shape based on the current fitting model and parameters.
+        """
         if window.x_values is None or window.background is None:
             print("Error: x_values or background is None. Cannot update peak plot.")
             return
@@ -669,6 +698,10 @@ class PlotManager:
             self.canvas.draw_idle()
 
     def update_overall_fit_and_residuals(self, window):
+        """
+        Recalculates and updates the overall fit and residuals for all peaks.
+        Handles different fitting models for each peak and scales residuals for better visibility.
+        """
         # Calculate the overall fit as the sum of all peaks
         overall_fit = window.background.astype(float).copy()
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
