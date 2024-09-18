@@ -314,7 +314,7 @@ def rename_sheet(window, new_sheet_name):
 
     Args:
         window: The main application window object, containing necessary UI elements.
-        new_sheet_name (str): The new name to be given to the selected sheet.
+        new_sheet_name (str): The new names to be given to the selected sheet.
 
     Note:
         This function assumes the existence of certain attributes in the window object:
