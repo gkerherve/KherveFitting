@@ -5,6 +5,11 @@ import openpyxl
 import wx
 import re
 import pandas as pd
+import shutil
+from vamas import Vamas
+from openpyxl import Workbook
+from openpyxl.styles import Alignment
+
 from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
 from libraries.Save import update_undo_redo_state, save_state
 from libraries.Sheet_Operations import on_sheet_selected
@@ -15,8 +20,7 @@ class ExcelDropTarget(wx.FileDropTarget):
         self.window = window
 
     def OnDropFiles(self, x, y, filenames):
-        from Functions import open_vamas_file
-        from libraries.Open import open_xlsx_file
+        from libraries.Open import open_xlsx_file, open_vamas_file
         for file in filenames:
             if file.lower().endswith('.xlsx'):
                 wx.CallAfter(open_xlsx_file, self.window, file)
@@ -328,6 +332,248 @@ def save_recent_files_to_config(window):
     # window.save_config(config)
 
 
+def open_vamas_file_dialog(window):
+    """
+    Open a file dialog for selecting a VAMAS file and process it.
+
+    This function displays a file dialog for the user to select a VAMAS file,
+    then calls open_vamas_file to process the selected file.
+
+    Args:
+    window: The main application window object.
+    """
+    with wx.FileDialog(window, "Open VAMAS file", wildcard="VAMAS files (*.vms)|*.vms",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        file_path = fileDialog.GetPath()
+        open_vamas_file(window, file_path)
+
+def open_vamas_file(window, file_path):
+    """
+    Open and process a VAMAS file, converting it to an Excel file format.
+    This function reads a VAMAS file, extracts its data and metadata,
+    and creates a new Excel file with multiple sheets for each data block
+    and an additional sheet for experimental description.
+
+    Args:
+    window: The main application window object.
+    file_path: The path to the VAMAS file to be opened.
+    """
+    try:
+        # Clear undo and redo history
+        window.history = []
+        window.redo_stack = []
+        update_undo_redo_state(window)
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"The file {file_path} does not exist.")
+
+        # Copy VAMAS file to current working directory
+        vamas_filename = os.path.basename(file_path)
+        destination_path = os.path.join(os.getcwd(), vamas_filename)
+        shutil.copy2(file_path, destination_path)
+
+        # Read VAMAS file
+        vamas_data = Vamas(vamas_filename)
+
+        # Create new Excel workbook
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        exp_data = []  # Store experimental description data
+
+        # Process each block in the VAMAS file
+        for i, block in enumerate(vamas_data.blocks, start=1):
+            # Determine sheet name
+            if block.species_label.lower() == "wide" or block.transition_or_charge_state_label.lower() == "none":
+                sheet_name = block.species_label
+            else:
+                sheet_name = f"{block.species_label}{block.transition_or_charge_state_label}"
+            sheet_name = sheet_name.replace("/", "_")
+
+            # Create new sheet
+            ws = wb.create_sheet(title=sheet_name)
+
+            # Extract and process data
+            num_points = block.num_y_values
+            x_start = block.x_start
+            x_step = block.x_step
+            x_values = [x_start + i * x_step for i in range(num_points)]
+            y_values = block.corresponding_variables[0].y_values
+            y_unit = block.corresponding_variables[0].unit
+            num_scans = block.num_scans_to_compile_block
+
+            # Convert counts to counts per second if necessary
+            if y_unit != "c/s":
+                y_values = [y / num_scans for y in y_values]
+
+            # Convert to Binding Energy if necessary
+            if block.x_label == "Kinetic Energy":
+                x_values = [window.photons - x - window.workfunction for x in x_values]
+                x_label = "Binding Energy"
+            else:
+                x_label = block.x_label
+
+            # Write data to sheet
+            ws.append([x_label, "Intensity"])
+            for x, y in zip(x_values, y_values):
+                ws.append([x, y])
+
+            # Store experimental setup data
+            exp_data.append([
+                f"Block {i}",
+                block.sample_identifier,
+                f"{block.year}/{block.month}/{block.day}",
+                f"{block.hour}:{block.minute}:{block.second}",
+                block.technique,
+                f"{block.species_label} {block.transition_or_charge_state_label}",
+                block.num_scans_to_compile_block,
+                block.analysis_source_label,
+                block.analysis_source_characteristic_energy,
+                block.analysis_source_beam_width_x,
+                block.analysis_source_beam_width_y,
+                block.analyzer_pass_energy_or_retard_ratio_or_mass_res,
+                block.analyzer_work_function_or_acceptance_energy,
+                block.analyzer_mode,
+                block.sputtering_source_energy if hasattr(block, 'sputtering_source_energy') else 'N/A',
+                block.analyzer_axis_take_off_polar_angle,
+                block.analyzer_axis_take_off_azimuth,
+                block.target_bias,
+                block.analysis_width_x,
+                block.analysis_width_y,
+                block.x_label,
+                block.x_units,
+                block.x_start,
+                block.x_step,
+                block.num_y_values,
+                block.num_scans_to_compile_block,
+                block.signal_collection_time,
+                block.signal_time_correction,
+                y_unit,
+                block.num_lines_block_comment,
+                block.block_comment
+            ])
+
+        # Create "Experimental description" sheet
+        exp_sheet = wb.create_sheet(title="Experimental description")
+        exp_sheet.column_dimensions['A'].width = 50
+        exp_sheet.column_dimensions['B'].width = 100
+        left_aligned = Alignment(horizontal='left')
+
+        # Add VAMAS header information
+        exp_sheet.append(["VAMAS Header Information"])
+        for item in [
+            ("Format Identifier", vamas_data.header.format_identifier),
+            ("Institution Identifier", vamas_data.header.institution_identifier),
+            ("Instrument Model", vamas_data.header.instrument_model_identifier),
+            ("Operator Identifier", vamas_data.header.operator_identifier),
+            ("Experiment Identifier", vamas_data.header.experiment_identifier),
+            ("Number of Comment Lines", vamas_data.header.num_lines_comment),
+            ("Comment", vamas_data.header.comment),
+            ("Experiment Mode", vamas_data.header.experiment_mode),
+            ("Scan Mode", vamas_data.header.scan_mode),
+            ("Number of Spectral Regions", vamas_data.header.num_spectral_regions),
+            ("Number of Analysis Positions", vamas_data.header.num_analysis_positions),
+            ("Number of Discrete X Coordinates", vamas_data.header.num_discrete_x_coords_in_full_map),
+            ("Number of Discrete Y Coordinates", vamas_data.header.num_discrete_y_coords_in_full_map)
+        ]:
+            exp_sheet.append(item)
+
+        exp_sheet.append([])  # Add a blank row for separation
+
+        # Define the order of block information
+        block_info_order = [
+            "Sample ID", "Year/Month/Day", "Time HH,MM,SS", "Technique", "Species & Transition", "Number of scans",
+            "Source Label", "Source Energy", "Source width X", "Source width Y", "Pass Energy", "Work Function",
+            "Analyzer Mode", "Sputtering Energy", "Take-off Polar Angle", "Take-off Azimuth", "Target Bias",
+            "Analysis Width X", "Analysis Width Y", "X Label", "X Units", "X Start", "X Step", "Num Y Values",
+            "Num Scans", "Collection Time", "Time Correction", "Y Unit", "# Comment Lines", "Block Comment"
+        ]
+
+        # Add block information
+        for i, block_data in enumerate(exp_data, start=1):
+            exp_sheet.append([f"Block {i}", ""])
+            for j, info in enumerate(block_info_order):
+                exp_sheet.append([info, block_data[j + 1]])
+            exp_sheet.append([])  # Add a blank row between blocks
+
+        # Set alignment for all cells in column B
+        for row in exp_sheet.iter_rows(min_row=1, max_row=exp_sheet.max_row, min_col=2, max_col=2):
+            for cell in row:
+                cell.alignment = left_aligned
+
+        # Save Excel file
+        excel_filename = os.path.splitext(vamas_filename)[0] + ".xlsx"
+        excel_path = os.path.join(os.path.dirname(file_path), excel_filename)
+        wb.save(excel_path)
+
+        # Remove temporary VAMAS file
+        os.remove(destination_path)
+
+        # Update window.Data with the new Excel file
+        window.Data = Init_Measurement_Data(window)
+        window.Data['FilePath'] = excel_path
+
+        # Open the Excel file and populate window.Data
+        open_xlsx_file_vamas(window, excel_path)
+
+    except FileNotFoundError as e:
+        wx.MessageBox(f"File not found: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+    except Exception as e:
+        wx.MessageBox(f"Error processing VAMAS file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+def open_xlsx_file_vamas(window, file_path):
+    """
+    Open and process an Excel file created from a VAMAS file.
+
+    This function initializes the data structure, reads the Excel file,
+    populates the window.Data dictionary with core level information,
+    updates the GUI elements, and plots the data for the first sheet.
+
+    Args:
+    window: The main application window object.
+    file_path: The path to the Excel file to be opened.
+    """
+    try:
+        # Update status bar with the selected file path
+        window.SetStatusText(f"Selected File: {file_path}", 0)
+
+        # Initialize the measurement data structure
+        window.Data = Init_Measurement_Data(window)
+        window.Data['FilePath'] = file_path
+
+        # Read the Excel file
+        excel_file = pd.ExcelFile(file_path)
+
+        # Get sheet names, excluding the "Experimental description" sheet
+        sheet_names = [name for name in excel_file.sheet_names if name != "Experimental description"]
+
+        # Initialize the number of core levels
+        window.Data['Number of Core levels'] = 0
+
+        # Process each sheet (core level) in the Excel file
+        for sheet_name in sheet_names:
+            window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
+
+        print(f"Final number of core levels: {window.Data['Number of Core levels']}")
+
+        # Update GUI elements
+        window.sheet_combobox.Clear()
+        window.sheet_combobox.AppendItems(sheet_names)
+        window.sheet_combobox.SetValue(sheet_names[0])  # Set first sheet as default
+
+        # Plot the data for the first sheet
+        window.plot_manager.plot_data(window)
+
+    except Exception as e:
+        # Handle any errors that occur during file processing
+        print(f"Error in open_xlsx_file_vamas: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error reading Excel file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
 
 # ------------------ HISTORRY DEF ---------------------------------------------------
 # -----------------------------------------------------------------------------------
@@ -464,3 +710,208 @@ def save_recent_files_to_config_HISTORY(window):
     config = window.load_config()
     config['recent_files'] = window.recent_files
     window.save_config(config)
+
+def open_vamas_file_dialog_FUNCTION(window):
+    with wx.FileDialog(window, "Open VAMAS file", wildcard="VAMAS files (*.vms)|*.vms",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        file_path = fileDialog.GetPath()
+        open_vamas_file(window, file_path)
+
+def open_vamas_file_FUNCTION(window, file_path):
+    try:
+        # Clear undo and redo history
+        window.history = []
+        window.redo_stack = []
+        update_undo_redo_state(window)
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"The file {file_path} does not exist.")
+
+        vamas_filename = os.path.basename(file_path)
+        destination_path = os.path.join(os.getcwd(), vamas_filename)
+        shutil.copy2(file_path, destination_path)
+
+        vamas_data = Vamas(vamas_filename)
+
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        exp_data = []  # Store experimental description data
+
+        for i, block in enumerate(vamas_data.blocks, start=1):
+            if block.species_label.lower() == "wide" or block.transition_or_charge_state_label.lower() == "none":
+                sheet_name = block.species_label
+            else:
+                sheet_name = f"{block.species_label}{block.transition_or_charge_state_label}"
+
+            sheet_name = sheet_name.replace("/", "_")
+            ws = wb.create_sheet(title=sheet_name)
+
+            num_points = block.num_y_values
+            x_start = block.x_start
+            x_step = block.x_step
+            x_values = [x_start + i * x_step for i in range(num_points)]
+            y_values = block.corresponding_variables[0].y_values
+            y_unit = block.corresponding_variables[0].unit
+            num_scans = block.num_scans_to_compile_block
+
+            if y_unit != "c/s":
+                y_values = [y / num_scans for y in y_values]
+
+            if block.x_label == "Kinetic Energy":
+                x_values = [window.photons - x - window.workfunction for x in x_values]
+                x_label = "Binding Energy"
+            else:
+                x_label = block.x_label
+
+            ws.append([x_label, "Intensity"])
+            for x, y in zip(x_values, y_values):
+                ws.append([x, y])
+
+            # Store experimental setup data
+            comment = block.block_comment
+            # print(comment)
+            exp_data.append([
+                f"Block {i}",
+                block.sample_identifier,
+                str(block.year)+"/"+str(block.month)+"/"+str(block.day),
+                str(block.hour)+":"+str(block.minute)+":"+str(block.second),
+                block.technique,
+                block.species_label+" "+block.transition_or_charge_state_label,
+                block.num_scans_to_compile_block,
+                block.analysis_source_label,
+                block.analysis_source_characteristic_energy,
+                block.analysis_source_beam_width_x,
+                block.analysis_source_beam_width_y,
+                block.analyzer_pass_energy_or_retard_ratio_or_mass_res,
+                block.analyzer_work_function_or_acceptance_energy,
+                block.analyzer_mode,
+                block.sputtering_source_energy if hasattr(block, 'sputtering_source_energy') else 'N/A',
+                block.analyzer_axis_take_off_polar_angle,
+                block.analyzer_axis_take_off_azimuth,
+                block.target_bias,
+                block.analysis_width_x,
+                block.analysis_width_y,
+                block.x_label,
+                block.x_units,
+                block.x_start,
+                block.x_step,
+                block.num_y_values,
+                block.num_scans_to_compile_block,
+                block.signal_collection_time,
+                block.signal_time_correction,
+                y_unit,
+                block.num_lines_block_comment,
+                comment
+            ])
+
+        # Create the "Experimental description" sheet at the end
+        exp_sheet = wb.create_sheet(title="Experimental description")
+
+        # Set column A and B to be wider (adjust the width value as needed)
+        exp_sheet.column_dimensions['A'].width = 50  # You can adjust this value
+        from openpyxl.styles import Alignment
+        left_aligned = Alignment(horizontal='left')
+        exp_sheet.column_dimensions['B'].width = 100  # You can adjust this value
+
+        # Add VAMAS header information
+        exp_sheet.append(["VAMAS Header Information"])
+        exp_sheet.append(["Format Identifier", vamas_data.header.format_identifier])
+        exp_sheet.append(["Institution Identifier", vamas_data.header.institution_identifier])
+        exp_sheet.append(["Instrument Model", vamas_data.header.instrument_model_identifier])
+        exp_sheet.append(["Operator Identifier", vamas_data.header.operator_identifier])
+        exp_sheet.append(["Experiment Identifier", vamas_data.header.experiment_identifier])
+        exp_sheet.append(["Number of Comment Lines", vamas_data.header.num_lines_comment])
+        exp_sheet.append(["Comment", vamas_data.header.comment])
+        exp_sheet.append(["Experiment Mode", vamas_data.header.experiment_mode])
+        exp_sheet.append(["Scan Mode", vamas_data.header.scan_mode])
+        exp_sheet.append(["Number of Spectral Regions", vamas_data.header.num_spectral_regions])
+        exp_sheet.append(["Number of Analysis Positions", vamas_data.header.num_analysis_positions])
+        exp_sheet.append(["Number of Discrete X Coordinates", vamas_data.header.num_discrete_x_coords_in_full_map])
+        exp_sheet.append(["Number of Discrete Y Coordinates", vamas_data.header.num_discrete_y_coords_in_full_map])
+
+        # Add a blank row for separation
+        exp_sheet.append([])
+
+        # Define the order of block information
+        block_info_order = [
+            "Sample ID",
+            "Year/Month/Day", "Time HH,MM,SS",
+            "Technique",  "Species & Transition", "Number of scans",
+            "Source Label", "Source Energy", "Source width X",  "Source width Y",
+            "Pass Energy", "Work Function",
+            "Analyzer Mode", "Sputtering Energy", "Take-off Polar Angle",
+            "Take-off Azimuth", "Target Bias", "Analysis Width X", "Analysis Width Y",
+            "X Label", "X Units", "X Start", "X Step", "Num Y Values", "Num Scans",
+            "Collection Time", "Time Correction", "Y Unit", "# Comment Lines", "Block Comment"
+        ]
+
+        # Add block information
+        for i, block_data in enumerate(exp_data, start=1):
+            exp_sheet.append([f"Block {i}", ""])
+            for j, info in enumerate(block_info_order):
+                exp_sheet.append([info, block_data[j + 1]])  # j+1 because block number is at index 0
+            exp_sheet.append([])  # Add a blank row between blocks
+
+        # After adding all the data, set alignment for all cells in column B
+        for row in exp_sheet.iter_rows(min_row=1, max_row=exp_sheet.max_row, min_col=2, max_col=2):
+            for cell in row:
+                cell.alignment = left_aligned
+
+        excel_filename = os.path.splitext(vamas_filename)[0] + ".xlsx"
+        excel_path = os.path.join(os.path.dirname(file_path), excel_filename)
+        wb.save(excel_path)
+
+        os.remove(destination_path)
+
+        # Update window.Data with the new Excel file
+        window.Data = Init_Measurement_Data(window)
+        window.Data['FilePath'] = excel_path
+
+        # Open the Excel file and populate window.Data
+        open_xlsx_file_vamas(window, excel_path)
+
+    except FileNotFoundError as e:
+        wx.MessageBox(f"File not found: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+    except Exception as e:
+        wx.MessageBox(f"Error processing VAMAS file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+def open_xlsx_file_vamas_FUNCTION(window, file_path):
+    try:
+        window.SetStatusText(f"Selected File: {file_path}", 0)
+
+        # Initialize the measurement data
+        window.Data = Init_Measurement_Data(window)
+        window.Data['FilePath'] = file_path
+
+        excel_file = pd.ExcelFile(file_path)
+        sheet_names = [name for name in excel_file.sheet_names if name != "Experimental description"]
+
+
+        # Update number of core levels (sheets)
+        window.Data['Number of Core levels'] = 0  # Initialize to 0, we'll increment in add_core_level_Data
+
+        # Add core level data for each sheet
+        for sheet_name in sheet_names:
+            window.Data = add_core_level_Data(window.Data, window, file_path, sheet_name)
+
+        print(f"Final number of core levels: {window.Data['Number of Core levels']}")
+
+        # Update sheet names in the combobox
+        window.sheet_combobox.Clear()
+        window.sheet_combobox.AppendItems(sheet_names)
+        window.sheet_combobox.SetValue(sheet_names[0])  # Set first sheet as default
+
+        # Update other necessary GUI elements or data structures
+        # update_sheet_names(window)
+
+        # Plot the data for the first sheet
+        window.plot_manager.plot_data(window)
+
+    except Exception as e:
+        print(f"Error in open_xlsx_file_vamas: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(f"Error reading Excel file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
