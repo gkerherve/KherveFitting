@@ -95,61 +95,7 @@ def remove_peak(window):
 
 
 
-def plot_noise(window):
-    if window.noise_min_energy is not None and window.noise_max_energy is not None:
-        mask = (window.x_values >= window.noise_min_energy) & (window.x_values <= window.noise_max_energy)
-        x_values_filtered = window.x_values[mask]
-        y_values_filtered = window.y_values[mask]
 
-        if len(x_values_filtered) > 0 and len(y_values_filtered) > 0:
-            # Fit a linear line to the noise data
-            slope, intercept, r_value, p_value, std_err = linregress(x_values_filtered, y_values_filtered)
-            linear_fit = slope * x_values_filtered + intercept
-            noise_subtracted = y_values_filtered - linear_fit
-
-            # Calculate the standard deviation
-            std_value = np.std(noise_subtracted)
-            window.noise_std_value = std_value  # Save noise STD value in window instance
-
-            # Create the inset plot in the main window
-            if hasattr(window, 'noise_inset_ax') and window.noise_inset_ax:
-                window.noise_inset_ax.clear()
-            else:
-                window.noise_inset_ax = window.ax.inset_axes([0.05, 0.05, 0.2, 0.2])
-
-            window.noise_inset_ax.hist(noise_subtracted, bins=15, histtype='bar', edgecolor='black')
-            window.noise_inset_ax.tick_params(axis='both', which='major', labelsize=8)
-            window.noise_inset_ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-            window.noise_inset_ax.set_facecolor('none')
-
-            # Hide top, right, and left borders, and the y-axis
-            window.noise_inset_ax.spines['top'].set_visible(False)
-            window.noise_inset_ax.spines['right'].set_visible(False)
-            window.noise_inset_ax.spines['left'].set_visible(False)
-            window.noise_inset_ax.yaxis.set_visible(False)
-
-            # Add standard deviation text
-            std_value_int = int(std_value)
-            window.noise_inset_ax.text(0.5, 1.1, f'STD: {std_value_int} cts',
-                                       transform=window.noise_inset_ax.transAxes,
-                                       fontsize=8,
-                                       verticalalignment='top',
-                                       horizontalalignment='center')
-
-            window.canvas.draw()
-
-            # Return the data for the NoiseAnalysisWindow
-            return x_values_filtered, y_values_filtered, linear_fit, noise_subtracted, std_value
-
-    return None
-
-
-def remove_noise_inset(window):
-    if hasattr(window, 'noise_inset_ax') and window.noise_inset_ax:
-        window.noise_inset_ax.clear()
-        window.noise_inset_ax.remove()
-        window.noise_inset_ax = None
-        window.canvas.draw()
 
 def clear_plot(window):
     window.ax.clear()
@@ -358,8 +304,6 @@ def update_sheet_names(window):
         wx.MessageBox("No files selected.", "Information", wx.OK | wx.ICON_INFORMATION)
 
 
-# I do not think it is necessary
-""""
 def rename_sheet(window, new_sheet_name):
     selected_indices = window.file_listbox.GetSelections()
     sheet_name = window.sheet_combobox.GetValue()
@@ -380,7 +324,7 @@ def rename_sheet(window, new_sheet_name):
                                 pd.read_excel(xls, sheet_name=sheet, engine='openpyxl').to_excel(writer, sheet_name=sheet, index=False)
             except Exception as e:
                 wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
-"""
+
 
 def on_exit(window, event):
     """Handles the Exit menu item."""

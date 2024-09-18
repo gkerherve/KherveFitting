@@ -1,7 +1,8 @@
 import wx
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from Functions import plot_noise, remove_noise_inset
+from libraries.Plot_Operations import PlotManager
+# from Plot import plot_noise, remove_noise_inset
 
 
 
@@ -38,7 +39,7 @@ class NoiseAnalysisWindow2(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
     def on_noise(self, event):
-        result = plot_noise(self.parent)
+        result = PlotManager.plot_noise(self.parent)
         if result:
             x_values, y_values, linear_fit, noise_subtracted, std_value = result
             self.update_plots(x_values, y_values, linear_fit, noise_subtracted, std_value)
@@ -79,7 +80,7 @@ class NoiseAnalysisWindow2(wx.Frame):
 
 
     def on_clear_noise(self, event):
-        remove_noise_inset(self.parent)
+        PlotManager.remove_noise_inset(self.parent)
         # Clear the plots
         for ax in [self.ax1, self.ax2, self.ax3]:
             ax.clear()
@@ -93,7 +94,8 @@ class NoiseAnalysisWindow2(wx.Frame):
 import wx
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from Functions import plot_noise, remove_noise_inset
+# from Functions import plot_noise, remove_noise_inset
+from libraries.Plot_Operations import PlotManager
 
 class NoiseAnalysisWindow(wx.Frame):
     def __init__(self, parent):
@@ -137,7 +139,8 @@ class NoiseAnalysisWindow(wx.Frame):
 
     def on_noise(self, event):
         """Handle the Calculate Noise button click."""
-        result = plot_noise(self.parent)
+        # result = PlotManager.plot_noise(self.parent)
+        result = self.parent.plot_manager.plot_noise(self.parent)
         if result:
             x_values, y_values, linear_fit, noise_subtracted, std_value = result
             self.update_plots(x_values, y_values, linear_fit, noise_subtracted, std_value)
@@ -223,7 +226,7 @@ class NoiseAnalysisWindow(wx.Frame):
 
     def on_clear_noise(self, event):
         """Handle the Clear Noise button click."""
-        remove_noise_inset(self.parent)
+        self.parent.plot_manager.remove_noise_inset(self.parent)
         # Clear the plots
         for ax in [self.ax1, self.ax2, self.ax3]:
             ax.clear()
