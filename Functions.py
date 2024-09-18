@@ -347,7 +347,7 @@ def plot_background(window):
 def calculate_linear_background(x, y, start_offset, end_offset):
     y_start = y[0] + start_offset
     y_end = y[-1] + end_offset
-    return np.linspace(y_start, y_end, len(y))
+    return np.linspace(y_start, y_end,  len(y))
 
 def calculate_smart_background(x, y, offset_h, offset_l):
     # Calculate both backgrounds
