@@ -18,7 +18,7 @@ from scipy.ndimage import gaussian_filter
 import lmfit
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 from libraries.Peak_Functions import PeakFunctions
-from scipy.stats import linregress
+
 
 class PlotManager:
     def __init__(self, ax, canvas):
@@ -1050,75 +1050,7 @@ class PlotManager:
         self.peak_fill_enabled = not self.peak_fill_enabled
         return self.peak_fill_enabled  # Return the new state
 
-    def plot_noise(self, window):
-        """
-        Plot noise analysis in an inset axes.
 
-        Args:
-            window: The main application window
-
-        Returns:
-            tuple: Filtered x and y values, linear fit, noise subtracted, and standard deviation
-        """
-        if window.noise_min_energy is not None and window.noise_max_energy is not None:
-            mask = (window.x_values >= window.noise_min_energy) & (window.x_values <= window.noise_max_energy)
-            x_values_filtered = window.x_values[mask]
-            y_values_filtered = window.y_values[mask]
-
-            if len(x_values_filtered) > 0 and len(y_values_filtered) > 0:
-                # Fit a linear line to the noise data
-                slope, intercept, r_value, p_value, std_err = linregress(x_values_filtered, y_values_filtered)
-                linear_fit = slope * x_values_filtered + intercept
-                noise_subtracted = y_values_filtered - linear_fit
-
-                # Calculate the standard deviation
-                std_value = np.std(noise_subtracted)
-                window.noise_std_value = std_value  # Save noise STD value in window instance
-
-                # Create the inset plot in the main window
-                if hasattr(window, 'noise_inset_ax') and window.noise_inset_ax:
-                    window.noise_inset_ax.clear()
-                else:
-                    window.noise_inset_ax = self.ax.inset_axes([0.05, 0.05, 0.2, 0.2])
-
-                window.noise_inset_ax.hist(noise_subtracted, bins=15, histtype='bar', edgecolor='black')
-                window.noise_inset_ax.tick_params(axis='both', which='major', labelsize=8)
-                window.noise_inset_ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-                window.noise_inset_ax.set_facecolor('none')
-
-                # Hide top, right, and left borders, and the y-axis
-                window.noise_inset_ax.spines['top'].set_visible(False)
-                window.noise_inset_ax.spines['right'].set_visible(False)
-                window.noise_inset_ax.spines['left'].set_visible(False)
-                window.noise_inset_ax.yaxis.set_visible(False)
-
-                # Add standard deviation text
-                std_value_int = int(std_value)
-                window.noise_inset_ax.text(0.5, 1.1, f'STD: {std_value_int} cts',
-                                           transform=window.noise_inset_ax.transAxes,
-                                           fontsize=8,
-                                           verticalalignment='top',
-                                           horizontalalignment='center')
-
-                self.canvas.draw()
-
-                # Return the data for the NoiseAnalysisWindow
-                return x_values_filtered, y_values_filtered, linear_fit, noise_subtracted, std_value
-
-        return None
-
-    def remove_noise_inset(self, window):
-        """
-        Remove the noise inset plot.
-
-        Args:
-            window: The main application window
-        """
-        if hasattr(window, 'noise_inset_ax') and window.noise_inset_ax:
-            window.noise_inset_ax.clear()
-            window.noise_inset_ax.remove()
-            window.noise_inset_ax = None
-            self.canvas.draw()
 
 
 # --------------------- HISTORY --------------------------------------------------------------------
