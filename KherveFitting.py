@@ -63,6 +63,8 @@ class MyFrame(wx.Frame):
         self.panel = wx.Panel(self)
         self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white
 
+
+
         # Center the window on the screen
         self.Centre()
 
@@ -230,6 +232,9 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGING, self.on_peak_params_cell_changed)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         # self.peak_params_grid.Bind(wx.EVT_KEY_DOWN, self.on_grid_key)
+
+        # self.plot_manager = PlotManager(self.ax, self.canvas)
+
 
 
 
@@ -1279,7 +1284,7 @@ class MyFrame(wx.Frame):
 
             # Update background if in Adaptive Smart mode
             if self.background_method == "Adaptive Smart":
-                plot_background(self)
+                self.plot_manager.plot_background(self)
 
     def on_zoom_in_tool(self, event):
         self.plot_config.on_zoom_in_tool(self)

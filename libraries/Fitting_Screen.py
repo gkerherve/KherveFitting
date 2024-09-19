@@ -1,7 +1,8 @@
 
 import re
 import wx
-from Functions import fit_peaks, remove_peak, plot_background, clear_background
+from Functions import fit_peaks, remove_peak, clear_background
+from libraries.Plot_Operations import PlotManager
 
 from libraries.Save import save_state
 
@@ -9,6 +10,7 @@ class FittingWindow(wx.Frame):
     def __init__(self, parent, *args, **kw):
         super().__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent  # Store reference to MainFrame
+
 
         self.SetTitle("Peak Fitting")
         self.SetSize((270, 480))  # Increased height to accommodate new elements
@@ -43,6 +45,8 @@ class FittingWindow(wx.Frame):
         self.parent.peak_fitting_tab_selected = False
         self.parent.show_hide_vlines()
         self.parent.deselect_all_peaks()
+
+
 
     def init_background_tab(self, notebook):
         """Initialize the background tab in the notebook."""
@@ -323,7 +327,7 @@ class FittingWindow(wx.Frame):
         self.parent.clear_and_replot()
 
     def on_background(self, event):
-        plot_background(self.parent)
+        self.parent.plot_manager.plot_background(self.parent)
 
     def on_clear_background(self, event):
         clear_background(self.parent)

@@ -3,6 +3,7 @@
 import re
 import wx
 import os
+import lmfit
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
@@ -10,14 +11,10 @@ from matplotlib import colormaps
 from matplotlib.ticker import ScalarFormatter
 from itertools import cycle
 from PIL import Image, ImageDraw, ImageFont
-
 import matplotlib.colors as mcolors
-
 from scipy.ndimage import gaussian_filter
 
-import lmfit
-# from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
-from libraries.Peak_Functions import PeakFunctions
+from libraries.Peak_Functions import PeakFunctions, BackgroundCalculations
 
 
 class PlotManager:
@@ -1050,6 +1047,140 @@ class PlotManager:
         self.peak_fill_enabled = not self.peak_fill_enabled
         return self.peak_fill_enabled  # Return the new state
 
+    def plot_background(self, window):
+        """
+        Calculate and plot the background for the selected sheet.
+
+        This method computes the background using various methods (Adaptive Smart, Shirley, Linear, Smart)
+        based on the user's selection. It updates the background data in the window.Data structure
+        and plots the result on the main graph.
+
+        Args:
+            window: The main application window containing all necessary data and UI elements.
+
+        Raises:
+            ValueError: If an unknown background method is selected.
+        """
+        sheet_name = window.sheet_combobox.GetValue()
+        if sheet_name not in window.Data['Core levels']:
+            wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+
+        try:
+            # Extract x and y values for the current sheet
+            x_values = np.array(window.Data['Core levels'][sheet_name]['B.E.'], dtype=float)
+            y_values = np.array(window.Data['Core levels'][sheet_name]['Raw Data'], dtype=float)
+
+            # Remove any existing background lines from the plot
+            lines_to_remove = [line for line in self.ax.lines if line.get_label().startswith("Background")]
+            for line in lines_to_remove:
+                line.remove()
+
+            # Initialize or retrieve the background data
+            if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
+                    window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
+                window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = y_values.tolist()
+
+            method = window.background_method
+            offset_h = float(window.offset_h)
+            offset_l = float(window.offset_l)
+
+            # Calculate background based on the selected method
+            if method == "Adaptive Smart":
+                background_filtered, label = self._calculate_adaptive_smart_background(window, x_values, y_values,
+                                                                                       offset_h, offset_l)
+            else:
+                background_filtered, label = self._calculate_other_background(window, x_values, y_values, method,
+                                                                              offset_h, offset_l)
+
+            # Update the background data in the window.Data structure
+            self._update_background_data(window, sheet_name, x_values, background_filtered, method, offset_h, offset_l)
+
+            # Plot the calculated background
+            self.ax.plot(x_values, window.background, color='grey', linestyle='--', label=label)
+
+            # Replot everything if peaks exist
+            if window.peak_params_grid.GetNumberRows() > 0:
+                window.clear_and_replot()
+                self.update_legend(window)
+
+            self.ax.legend(loc='upper left')
+            self.canvas.draw()
+
+        except Exception as e:
+            print("Error in plot_background:", str(e))
+            import traceback
+            traceback.print_exc()
+            wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
+
+    def _calculate_adaptive_smart_background(self, window, x_values, y_values, offset_h, offset_l):
+        """Helper method to calculate Adaptive Smart background."""
+        bg_min_energy, bg_max_energy = min(x_values), max(x_values)
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = bg_min_energy
+        window.Data['Core levels'][sheet_name]['Background']['Bkg High'] = bg_max_energy
+
+        # Determine the adaptive range
+        if window.vline1 is not None and window.vline2 is not None:
+            vline1_x, vline2_x = window.vline1.get_xdata()[0], window.vline2.get_xdata()[0]
+            adaptive_range = (min(vline1_x, vline2_x), max(vline1_x, vline2_x))
+        else:
+            adaptive_range = (bg_min_energy, bg_max_energy)
+
+        current_background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+        background_filtered = BackgroundCalculations.calculate_adaptive_smart_background(
+            x_values, y_values, adaptive_range, current_background, offset_h, offset_l
+        )
+        return background_filtered, 'Background (Adaptive Smart)'
+
+    def _calculate_other_background(self, window, x_values, y_values, method, offset_h, offset_l):
+        """Helper method to calculate background for non-Adaptive Smart methods."""
+        sheet_name = window.sheet_combobox.GetValue()
+        bg_min_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg Low')
+        bg_max_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg High')
+
+        if bg_min_energy is None or bg_max_energy is None or bg_min_energy > bg_max_energy:
+            wx.MessageBox("Invalid energy range selected.", "Warning", wx.OK | wx.ICON_INFORMATION)
+            return None, None
+
+        mask = (x_values >= bg_min_energy) & (x_values <= bg_max_energy)
+        x_values_filtered = x_values[mask]
+        y_values_filtered = y_values[mask]
+
+        if method == "Shirley":
+            background_filtered = BackgroundCalculations.calculate_shirley_background(x_values_filtered,
+                                                                                      y_values_filtered, offset_h,
+                                                                                      offset_l)
+            label = 'Background (Shirley)'
+        elif method == "Linear":
+            background_filtered = BackgroundCalculations.calculate_linear_background(x_values_filtered,
+                                                                                     y_values_filtered, offset_h,
+                                                                                     offset_l)
+            label = 'Background (Linear)'
+        elif method == "Smart":
+            background_filtered = BackgroundCalculations.calculate_smart_background(x_values_filtered,
+                                                                                    y_values_filtered, offset_h,
+                                                                                    offset_l)
+            label = 'Background (Smart)'
+        else:
+            raise ValueError(f"Unknown background method: {method}")
+
+        new_background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+        new_background[mask] = background_filtered
+        return new_background, label
+
+    def _update_background_data(self, window, sheet_name, x_values, background, method, offset_h, offset_l):
+        """Helper method to update the background data in window.Data."""
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = background.tolist()
+        window.background = background
+        window.Data['Core levels'][sheet_name]['Background'].update({
+            'Bkg Type': method,
+            'Bkg Low': min(x_values),
+            'Bkg High': max(x_values),
+            'Bkg Offset Low': offset_l,
+            'Bkg Offset High': offset_h,
+            'Bkg X': x_values.tolist()
+        })
+
 
 
 
@@ -1057,59 +1188,114 @@ class PlotManager:
 # --------------------------------------------------------------------------------------------------
 
 """
-def plot_noise_FUNCTIONS(window):
-    if window.noise_min_energy is not None and window.noise_max_energy is not None:
-        mask = (window.x_values >= window.noise_min_energy) & (window.x_values <= window.noise_max_energy)
-        x_values_filtered = window.x_values[mask]
-        y_values_filtered = window.y_values[mask]
+def plot_background_FUNCTIONS(window):
+    sheet_name = window.sheet_combobox.GetValue()
+    if sheet_name not in window.Data['Core levels']:
+        wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
+        return
 
-        if len(x_values_filtered) > 0 and len(y_values_filtered) > 0:
-            # Fit a linear line to the noise data
-            slope, intercept, r_value, p_value, std_err = linregress(x_values_filtered, y_values_filtered)
-            linear_fit = slope * x_values_filtered + intercept
-            noise_subtracted = y_values_filtered - linear_fit
+    try:
+        x_values = np.array(window.Data['Core levels'][sheet_name]['B.E.'], dtype=float)
+        y_values = np.array(window.Data['Core levels'][sheet_name]['Raw Data'], dtype=float)
 
-            # Calculate the standard deviation
-            std_value = np.std(noise_subtracted)
-            window.noise_std_value = std_value  # Save noise STD value in window instance
+        # Remove previous background lines
+        lines_to_remove = [line for line in window.ax.lines if line.get_label().startswith("Background")]
+        for line in lines_to_remove:
+            line.remove()
 
-            # Create the inset plot in the main window
-            if hasattr(window, 'noise_inset_ax') and window.noise_inset_ax:
-                window.noise_inset_ax.clear()
+        # Initialize full-size background array with raw data if not already present
+        if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
+                window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = y_values.tolist()
+
+        method = window.background_method
+        offset_h = float(window.offset_h)
+        offset_l = float(window.offset_l)
+
+        if method == "Adaptive Smart":
+            bg_min_energy = min(x_values)
+            bg_max_energy = max(x_values)
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = bg_min_energy
+            window.Data['Core levels'][sheet_name]['Background']['Bkg High'] = bg_max_energy
+
+            # Get the current positions of vlines for the adaptive range
+            if window.vline1 is not None and window.vline2 is not None:
+                vline1_x = window.vline1.get_xdata()[0]
+                vline2_x = window.vline2.get_xdata()[0]
+                adaptive_range = (min(vline1_x, vline2_x), max(vline1_x, vline2_x))
             else:
-                window.noise_inset_ax = window.ax.inset_axes([0.05, 0.05, 0.2, 0.2])
+                adaptive_range = (bg_min_energy, bg_max_energy)
 
-            window.noise_inset_ax.hist(noise_subtracted, bins=15, histtype='bar', edgecolor='black')
-            window.noise_inset_ax.tick_params(axis='both', which='major', labelsize=8)
-            window.noise_inset_ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-            window.noise_inset_ax.set_facecolor('none')
+            # Use the existing background as the starting point
+            current_background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
 
-            # Hide top, right, and left borders, and the y-axis
-            window.noise_inset_ax.spines['top'].set_visible(False)
-            window.noise_inset_ax.spines['right'].set_visible(False)
-            window.noise_inset_ax.spines['left'].set_visible(False)
-            window.noise_inset_ax.yaxis.set_visible(False)
+            background_filtered = BackgroundCalculations.calculate_adaptive_smart_background(
+                x_values, y_values, adaptive_range, current_background, offset_h, offset_l
+            )
+            label = 'Background (Adaptive Smart)'
+        else:
+            bg_min_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg Low')
+            bg_max_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg High')
 
-            # Add standard deviation text
-            std_value_int = int(std_value)
-            window.noise_inset_ax.text(0.5, 1.1, f'STD: {std_value_int} cts',
-                                       transform=window.noise_inset_ax.transAxes,
-                                       fontsize=8,
-                                       verticalalignment='top',
-                                       horizontalalignment='center')
+            if bg_min_energy is None or bg_max_energy is None or bg_min_energy > bg_max_energy:
+                wx.MessageBox("Invalid energy range selected.", "Warning", wx.OK | wx.ICON_INFORMATION)
+                return
 
-            window.canvas.draw()
+            mask = (x_values >= bg_min_energy) & (x_values <= bg_max_energy)
+            x_values_filtered = x_values[mask]
+            y_values_filtered = y_values[mask]
 
-            # Return the data for the NoiseAnalysisWindow
-            return x_values_filtered, y_values_filtered, linear_fit, noise_subtracted, std_value
+            if method == "Shirley":
+                background_filtered = BackgroundCalculations.calculate_shirley_background(x_values_filtered, y_values_filtered,
+                                                                   offset_h, offset_l)
+                label = 'Background (Shirley)'
+            elif method == "Linear":
+                background_filtered = BackgroundCalculations.calculate_linear_background(x_values_filtered, y_values_filtered,
+                                                                  offset_h, offset_l)
+                label = 'Background (Linear)'
+            elif method == "Smart":
+                background_filtered = BackgroundCalculations.calculate_smart_background(x_values_filtered, y_values_filtered,
+                                                                 offset_h, offset_l)
+                label = 'Background (Smart)'
+            else:
+                raise ValueError(f"Unknown background method: {method}")
 
-    return None
+        # Create a new background array
+        new_background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+        if method == "Adaptive Smart":
+            new_background = background_filtered
+        else:
+            new_background[mask] = background_filtered
 
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = new_background.tolist()
+        window.background = new_background
 
-def remove_noise_inset_FUNCTIONS(window):
-    if hasattr(window, 'noise_inset_ax') and window.noise_inset_ax:
-        window.noise_inset_ax.clear()
-        window.noise_inset_ax.remove()
-        window.noise_inset_ax = None
+        # Update the background information in the data dictionary
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Type'] = method
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = bg_min_energy
+        window.Data['Core levels'][sheet_name]['Background']['Bkg High'] = bg_max_energy
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Offset Low'] = offset_l
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Offset High'] = offset_h
+        window.Data['Core levels'][sheet_name]['Background']['Bkg X'] = x_values.tolist()
+
+        # Plot the full background
+        window.ax.plot(x_values, window.background, color='grey', linestyle='--', label=label)
+
+        # Check if peak 1 exists and tick/untick it
+        if window.peak_params_grid.GetNumberRows() > 0:
+            # Call the method to clear and replot everything
+            window.clear_and_replot()
+
+            # Update the legend
+            window.plot_manager.update_legend(window)
+
+        window.ax.legend(loc='upper left')
         window.canvas.draw()
+
+    except Exception as e:
+        print("Error in plot_background:", str(e))
+        import traceback
+        traceback.print_exc()
+        wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
+
 """

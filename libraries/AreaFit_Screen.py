@@ -1,5 +1,6 @@
 import wx
-from Functions import plot_background, clear_background
+from Functions import clear_background
+from libraries.Plot_Operations import PlotManager
 import numpy as np
 
 class BackgroundWindow(wx.Frame):
@@ -72,7 +73,7 @@ class BackgroundWindow(wx.Frame):
     def on_background(self, event):
         try:
             # Define the background behavior here
-            plot_background(self.parent)
+            PlotManager.plot_background(self.parent)
 
             # Calculate the area between data and background
             sheet_name = self.parent.sheet_combobox.GetValue()

@@ -180,7 +180,7 @@ def clear_background(window):
         wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
 
-def plot_background(window):
+def plot_background_FUNCTIONS(window):
     sheet_name = window.sheet_combobox.GetValue()
     if sheet_name not in window.Data['Core levels']:
         wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
