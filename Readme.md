@@ -68,7 +68,8 @@ background range.
 
 - **Linear Background:** Y = mx + b
 - **Shirley Background:** B(E) = k × ∫<sub>E</sub><sup>E<sub>max</sub></sup> I(E') dE'
-- Adaptive Shirley
+- **Smart Background:** Using linear and Shirley background depending on decreasing and increasing background
+- **Adaptive Shirley**
 
 
 Use high BE and low BE controls to apply offsets at range boundaries.
@@ -133,7 +134,7 @@ Export fitted peak parameters, areas, and atomic percentages to a summary table 
 - Integrated areas for each peak
 - Relative sensitivity factors (RSF) used
 - Calculated atomic percentages
-- Options to export as CSV, Excel, PNG, PDF, SVG
+- Options to export as Excel, PNG, PDF, SVG
 
 ## Noise Analysis
 
@@ -149,8 +150,8 @@ KherveFitting is distributed under the BSD-3 License. See the [LICENSE](LICENSE)
 
 ## Contact
 
-[Include contact information or links to project pages/repositories]
+Gwilherm Kerherve: g.kerherve@imperial.ac.uk
 
 ## Acknowledgements
 
-[Include any acknowledgements or credits]
+This work was supported by Imperial College London and the Group of Prof. David J. Payne
