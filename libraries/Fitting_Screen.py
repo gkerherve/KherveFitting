@@ -1,7 +1,7 @@
 
 import re
 import wx
-from Functions import fit_peaks, remove_peak, clear_background
+from Functions import fit_peaks, remove_peak
 from libraries.Plot_Operations import PlotManager
 
 from libraries.Save import save_state
@@ -330,7 +330,7 @@ class FittingWindow(wx.Frame):
         self.parent.plot_manager.plot_background(self.parent)
 
     def on_clear_background(self, event):
-        clear_background(self.parent)
+        self.parent.plot_manager.clear_background(self.parent)
 
     def on_offset_h_change(self, event):
         offset_h_value = self.offset_h_text.GetValue()

@@ -1181,7 +1181,89 @@ class PlotManager:
             'Bkg X': x_values.tolist()
         })
 
+    def clear_background(self, window):
+        """
+        Clear the background and reset related data for the current sheet.
 
+        This method resets the background to the raw data, clears all peak information,
+        and resets various plot-related parameters. It's used when the user wants to
+        start fresh with background subtraction and peak fitting.
+
+        Args:
+            window: The main application window containing all necessary data and UI elements.
+
+        Raises:
+            Exception: If any error occurs during the clearing process.
+        """
+        sheet_name = window.sheet_combobox.GetValue()
+
+        if sheet_name not in window.Data['Core levels']:
+            wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+
+        try:
+            # Clear the current plot
+            self.ax.clear()
+
+            # Retrieve raw data for the current sheet
+            x_values = window.Data['Core levels'][sheet_name]['B.E.']
+            y_values = window.Data['Core levels'][sheet_name]['Raw Data']
+
+            # Plot the raw data
+            self.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=15, edgecolors='black',
+                            label='Raw Data')
+
+            # Update main window's x and y values
+            window.x_values = np.array(x_values)
+            window.y_values = np.array(y_values)
+
+            # Reset background to raw data
+            window.Data['Core levels'][sheet_name]['Background']['Bkg X'] = x_values
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = y_values
+            window.background = np.array(y_values)
+
+            # Reset background parameters
+            window.Data['Core levels'][sheet_name]['Background'].update({
+                'Bkg Type': '',
+                'Bkg Low': '',
+                'Bkg High': '',
+                'Bkg Offset Low': '',
+                'Bkg Offset High': ''
+            })
+
+            # Set plot limits and formatting
+            self.ax.set_xlim([max(window.x_values), min(window.x_values)])
+            self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+            self.ax.legend(loc='upper left')
+
+            # Hide the peak selection cross if it exists
+            if hasattr(window, 'cross') and window.cross:
+                window.cross.set_visible(False)
+
+            # Reset vertical lines used for background selection
+            window.vline1 = window.vline2 = window.vline3 = window.vline4 = None
+            window.show_hide_vlines()
+
+            # Clear all peak data from the grid
+            num_rows = window.peak_params_grid.GetNumberRows()
+            if num_rows > 0:
+                window.peak_params_grid.DeleteRows(0, num_rows)
+
+            # Reset peak-related variables
+            window.peak_count = 0
+            window.selected_peak_index = None
+
+            # Clear fitting data from window.Data
+            if 'Fitting' in window.Data['Core levels'][sheet_name]:
+                window.Data['Core levels'][sheet_name]['Fitting'] = {}
+
+            # Redraw the canvas and update layout
+            self.canvas.draw_idle()
+            window.panel.Layout()
+
+        except Exception as e:
+            wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
 
 # --------------------- HISTORY --------------------------------------------------------------------
@@ -1298,4 +1380,79 @@ def plot_background_FUNCTIONS(window):
         traceback.print_exc()
         wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
+def clear_background_FUNCTIONS(window):
+    sheet_name = window.sheet_combobox.GetValue()
+
+    if sheet_name not in window.Data['Core levels']:
+        wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
+        return
+
+    try:
+        window.ax.clear()
+
+        x_values = window.Data['Core levels'][sheet_name]['B.E.']
+        y_values = window.Data['Core levels'][sheet_name]['Raw Data']
+
+        # Plot the raw data with unfilled circle markers
+        window.ax.scatter(x_values, y_values, facecolors='black', marker='o', s=15, edgecolors='black', label='Raw Data')
+
+        # Update window.x_values and window.y_values
+        window.x_values = np.array(x_values)
+        window.y_values = np.array(y_values)
+
+        # Initialize background to raw data
+        window.Data['Core levels'][sheet_name]['Background']['Bkg X'] = x_values
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = y_values
+        window.background = np.array(y_values)
+
+        # Reset background parameters
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Type'] = ''
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = ''
+        window.Data['Core levels'][sheet_name]['Background']['Bkg High'] = ''
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Offset Low'] = ''
+        window.Data['Core levels'][sheet_name]['Background']['Bkg Offset High'] = ''
+
+        # Set x-axis limits to reverse the direction and match the min and max of the data
+        window.ax.set_xlim([max(window.x_values), min(window.x_values)])
+
+        window.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+        window.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
+        window.ax.legend(loc='upper left')
+
+        # Hide the cross if it exists
+        if hasattr(window, 'cross') and window.cross:
+            window.cross.set_visible(False)
+
+        # Switch to "None" ticked box and hide background lines
+        window.vline1 = None
+        window.vline2 = None
+        window.vline3 = None
+        window.vline4 = None
+        window.show_hide_vlines()
+
+        # Clear all peak data from the grid
+        num_rows = window.peak_params_grid.GetNumberRows()
+        if num_rows > 0:
+            window.peak_params_grid.DeleteRows(0, num_rows)
+
+        # Reset peak count and selected peak index
+        window.peak_count = 0
+        window.selected_peak_index = None
+
+        # Clear fitting data from window.Data
+        if 'Fitting' in window.Data['Core levels'][sheet_name]:
+            window.Data['Core levels'][sheet_name]['Fitting'] = {}
+
+        # Redraw the canvas
+        window.canvas.draw_idle()
+
+        # Layout the updated panel
+        window.panel.Layout()
+
+    except Exception as e:
+        wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)    
+
+
 """
+
