@@ -273,6 +273,11 @@ class FittingWindow(wx.Frame):
             height_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.1"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, height_constraint)
 
+            # Area constraint
+            Area_factor = {'p': 0.5, 'd': 0.667, 'f': 0.75}
+            Area_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.1"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 6, Area_constraint)
+
             # Position constraint
             splitting = self.doublet_splittings.get(first_word, 0)
             position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"

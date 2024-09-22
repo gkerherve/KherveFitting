@@ -1356,15 +1356,8 @@ class MyFrame(wx.Frame):
                 event.Veto()
                 return
             elif col in [8]:  # Height, FWHM, L/G, RSF columns
-                # height = float(self.results_grid.GetCellValue(row, 2))
-                # fwhm = float(self.results_grid.GetCellValue(row, 3))
                 rsf = float(self.results_grid.GetCellValue(row, 8))
-                # tail_E = float(self.results_grid.GetCellValue(row, 11))
-                # tail_M = float(self.results_grid.GetCellValue(row, 12))
                 new_area = float(self.results_grid.GetCellValue(row, 5))
-
-                # Recalculate the area
-                # new_area = height * fwhm * (np.sqrt(2 * np.pi) / 2.355)
                 self.results_grid.SetCellValue(row, 5, f"{new_area:.2f}")
 
                 # Recalculate the relative area
@@ -1463,7 +1456,7 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
 
-        if col in [0,6, 9,10,11]:
+        if col in [0,9,10,11]:
             event.Veto()
             return
         # Allow only numeric input for specific columns in non-constraint rows
