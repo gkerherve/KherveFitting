@@ -389,7 +389,7 @@ def fit_peaks(window, peak_params_grid):
                     params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary, brute_step=area * 0.01)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary, brute_step=0.1)
                     params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary, brute_step=sigma * 0.01)
-                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary, brute_step=0.01)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary, brute_step=gamma*0.01)
 
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
@@ -484,7 +484,7 @@ def fit_peaks(window, peak_params_grid):
                         height = PeakFunctions.get_voigt_height(amplitude, sigma, gamma)
                         fwhm = PeakFunctions.voigt_fwhm(sigma, gamma)
                         fraction = gamma / (sigma * np.sqrt(2 * np.log(2))) * 100
-                        area = amplitude * (sigma * np.sqrt(2 * np.pi))
+                        area = amplitude # * (sigma * np.sqrt(2 * np.pi))
                     elif peak_model_choice == "Pseudo-Voigt":
                         amplitude = result.params[f'{prefix}area'].value
                         sigma = result.params[f'{prefix}sigma'].value
@@ -581,6 +581,10 @@ def get_peak_value(peak_params_grid, peak_name, param_name):
                 return float(peak_params_grid.GetCellValue(i, 5))
             elif param_name == 'area':
                 return float(peak_params_grid.GetCellValue(i, 6))
+            elif param_name == 'sigma':
+                return float(peak_params_grid.GetCellValue(i, 7))
+            elif param_name == 'gamma':
+                return float(peak_params_grid.GetCellValue(i, 8))
 
     return None
 
