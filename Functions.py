@@ -376,14 +376,43 @@ def fit_peaks(window, peak_params_grid):
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
+
                 elif peak_model_choice == "Pseudo-Voigt":
+                    peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
+                    sigma = fwhm / 2.
+
+                    # Center parameter
+                    params.add(f'{prefix}center', value=center,
+                               min=center_min, max=center_max,
+                               vary=center_vary, brute_step=0.1)
+
+                    # Amplitude parameter
+                    fraction = lg_ratio / 100  # Assuming lg_ratio is in percentage
+                    amplitude = height / ((1 - fraction) / (sigma * np.sqrt(2 * np.pi)) + fraction / (np.pi * sigma))
+                    params.add(f'{prefix}amplitude', value=amplitude,
+                               min=height_min / (
+                                           (1 - fraction) / (sigma * np.sqrt(2 * np.pi)) + fraction / (np.pi * sigma)),
+                               max=height_max / (
+                                           (1 - fraction) / (sigma * np.sqrt(2 * np.pi)) + fraction / (np.pi * sigma)),
+                               brute_step=amplitude * 0.01)
+
+                    # Sigma parameter
+                    params.add(f'{prefix}sigma', value=sigma,
+                               min=fwhm_min / 2. if fwhm_min else None,
+                               max=fwhm_max / 2. if fwhm_max else None,
+                               vary=fwhm_vary, brute_step=sigma * 0.01)
+
+                    # Fraction parameter
+                    params.add(f'{prefix}fraction', value=lg_ratio / 100,
+                               min=lg_ratio_min / 100, max=lg_ratio_max / 100,
+                               vary=lg_ratio_vary, brute_step=0.01)
+
+                elif peak_model_choice == "Pseudo-Voigt2":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     # sigma = fwhm / 2.355
                     sigma = fwhm / 2.
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}amplitude', value=height * sigma * np.sqrt(2 * np.pi), min=height_min * sigma * np.sqrt(2*np.pi), max=height_max* sigma * np.sqrt(2 * np.pi))
-                    # params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2.355 if fwhm_min else None,
-                    #            max=fwhm_max / 2.355 if fwhm_max else None, vary=fwhm_vary)
                     params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2. if fwhm_min else None,
                                max=fwhm_max / 2. if fwhm_max else None, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio/100, min=lg_ratio_min/100, max=lg_ratio_max/100,

@@ -13,6 +13,7 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 from matplotlib.ticker import ScalarFormatter
 import lmfit
+import wx.lib.agw.aui as aui
 from libraries.Fitting_Screen import *
 from libraries.AreaFit_Screen import *
 from libraries.Save import *
@@ -39,9 +40,12 @@ from libraries.Widgets_Toolbars import create_statusbar, update_statusbar
 from libraries.Open import open_xlsx_file
 
 
+
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
         super().__init__(parent, title=title, size=(1600, 700))
+
+
 
         # Get the directory of the current script
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +58,10 @@ class MyFrame(wx.Frame):
         wx.SystemOptions.SetOption("mac.scrollbar-autohide", 0)
         wx.SystemOptions.SetOption("osx.opengl.force-enable-angle", 0)
         wx.SystemOptions.SetOption("mac.listctrl.always_use_generic", "1")    # ChatGPT recommendation
+
+        if 'wxMac' in wx.PlatformInfo:
+            self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
+
 
         # Set the icon
         icon = wx.Icon(icon_path, wx.BITMAP_TYPE_ICO)
