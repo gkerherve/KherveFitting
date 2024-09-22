@@ -361,7 +361,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 3, f"{peak_y:.2f}")
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "30")
-        self.peak_params_grid.SetCellValue(row, 6, "")  # Area, initially empty
+        self.peak_params_grid.SetCellValue(row, 6, f"{peak_y*1.6*1.064:.2f}")  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 7, "0")  # Tail E
         self.peak_params_grid.SetCellValue(row, 8, '0')  # Tail M
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
@@ -388,6 +388,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 3, "1,1e7")
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
+        self.peak_params_grid.SetCellValue(row + 1, 6, "1,1e7")
         self.peak_params_grid.SetCellValue(row + 1, 7, "Fixed")
         self.peak_params_grid.SetCellValue(row + 1, 8, "Fixed")
         self.peak_params_grid.ForceRefresh()

@@ -326,6 +326,7 @@ def fit_peaks(window, peak_params_grid):
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
+                area = float(peak_params_grid.GetCellValue(row, 6))
                 peak_model_choice = peak_params_grid.GetCellValue(row, 12)
 
                 try:
@@ -351,11 +352,15 @@ def fit_peaks(window, peak_params_grid):
                                                                   fwhm, peak_params_grid, i, "FWHM")
                 lg_ratio_min, lg_ratio_max, lg_ratio_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 5),
                                                                               lg_ratio, peak_params_grid, i, "L/G")
+                area_min, area_max, area_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 6),
+                                                                  area, peak_params_grid, i, "area")
 
                 center_min = evaluate_constraint(center_min, peak_params_grid, 'center', center)
                 center_max = evaluate_constraint(center_max, peak_params_grid, 'center', center)
                 height_min = evaluate_constraint(height_min, peak_params_grid, 'height', height)
                 height_max = evaluate_constraint(height_max, peak_params_grid, 'height', height)
+                area_min = evaluate_constraint(area_min, peak_params_grid, 'area', area)
+                area_max = evaluate_constraint(area_max, peak_params_grid, 'area', area)
                 fwhm_min = evaluate_constraint(fwhm_min, peak_params_grid, 'fwhm', fwhm)
                 fwhm_max = evaluate_constraint(fwhm_max, peak_params_grid, 'fwhm', fwhm)
                 lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
@@ -372,7 +377,7 @@ def fit_peaks(window, peak_params_grid):
 
                 if peak_model_choice == "Voigt":
                     peak_model = lmfit.models.VoigtModel(prefix=prefix)
-                    params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
+                    params.add(f'{prefix}amplitude', value=area, min=area_min, max=area_max, vary=area_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
@@ -387,14 +392,10 @@ def fit_peaks(window, peak_params_grid):
                                vary=center_vary, brute_step=0.1)
 
                     # Amplitude parameter
-                    fraction = lg_ratio / 100  # Assuming lg_ratio is in percentage
-                    amplitude = height / ((1 - fraction) / (sigma * np.sqrt(2 * np.pi)) + fraction / (np.pi * sigma))
-                    params.add(f'{prefix}amplitude', value=amplitude,
-                               min=height_min / (
-                                           (1 - fraction) / (sigma * np.sqrt(2 * np.pi)) + fraction / (np.pi * sigma)),
-                               max=height_max / (
-                                           (1 - fraction) / (sigma * np.sqrt(2 * np.pi)) + fraction / (np.pi * sigma)),
-                               brute_step=amplitude * 0.01)
+                    params.add(f'{prefix}amplitude', value=area,
+                               min=area_min,
+                               max=area_max,
+                               brute_step=area * 0.01)
 
                     # Sigma parameter
                     params.add(f'{prefix}sigma', value=sigma,
@@ -564,6 +565,9 @@ def get_peak_value(peak_params_grid, peak_name, param_name):
                 return float(peak_params_grid.GetCellValue(i, 4))
             elif param_name == 'lg_ratio':
                 return float(peak_params_grid.GetCellValue(i, 5))
+            elif param_name == 'area':
+                return float(peak_params_grid.GetCellValue(i, 6))
+
     return None
 
 
