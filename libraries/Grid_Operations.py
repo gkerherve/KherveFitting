@@ -23,7 +23,7 @@ def populate_results_grid(window):
         #                  "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
         # Set column labels
         column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-                         "Rel. Area", "Tail E", "Tail M", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
+                         "Rel. Area", "Sigma", "Gamma", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
                          "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint",
                          "L/G Constraint"]
         for col, label in enumerate(column_labels):
@@ -48,8 +48,8 @@ def populate_results_grid(window):
             window.results_grid.SetCellValue(row, 8, f"{peak_data['RSF']:.2f}")
             window.results_grid.SetCellValue(row, 9, peak_data['Fitting Model'])
             window.results_grid.SetCellValue(row, 10, f"{peak_data['Rel. Area']:.2f}")
-            window.results_grid.SetCellValue(row, 11, peak_data['Tail E'])
-            window.results_grid.SetCellValue(row, 12, peak_data['Tail M'])
+            window.results_grid.SetCellValue(row, 11, peak_data['Sigma'])
+            window.results_grid.SetCellValue(row, 12, peak_data['Gamma'])
             window.results_grid.SetCellValue(row, 13, peak_data.get('Bkg Type', ''))  # Bkg Type
             window.results_grid.SetCellValue(row, 14, str(peak_data['Bkg Low']))
             window.results_grid.SetCellValue(row, 15, str(peak_data['Bkg High']))

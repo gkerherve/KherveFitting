@@ -526,8 +526,8 @@ def fit_peaks(window, peak_params_grid):
                         'FWHM': fwhm,
                         'L/G': fraction,
                         'Area': area,
-                        'sigma': sigma,
-                        'gamma': gamma,
+                        'Sigma': sigma,
+                        'Gamma': gamma,
                         'Fitting Model': peak_model_choice
                     })
                 else:

@@ -177,8 +177,7 @@ class PlotManager:
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif fitting_model == "GL":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y, tail_mix=tail_M,
-                                            tail_exp=tail_E)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif fitting_model == "SGL":
             peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -744,7 +743,7 @@ class PlotManager:
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio/100)
             elif fitting_model == "GL":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y, tail_mix=tail_m, tail_exp=tail_e)
+                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
             elif fitting_model == "SGL":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)

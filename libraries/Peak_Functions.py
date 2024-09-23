@@ -20,7 +20,7 @@ class PeakFunctions:
             fraction/100 * PeakFunctions.lorentzian(x, center, fwhm, 100))
 
     @staticmethod
-    def gauss_lorentz(x, center , fwhm, fraction, amplitude, tail_mix, tail_exp):
+    def gauss_lorentz(x, center , fwhm, fraction, amplitude):
         peak = amplitude * (
                 PeakFunctions.gaussian(x, center, fwhm, fraction * 1) *
                 PeakFunctions.lorentzian(x, center, fwhm, fraction * 1))
@@ -32,6 +32,8 @@ class PeakFunctions:
         # else:
         #     return peak*filter + amplitude * tail
 
+
+    # SHALL NOT BE USEFUL
     @staticmethod
     def tail(x, center, tail_mix, tail_exp, fwhm):
 
