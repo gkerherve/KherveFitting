@@ -510,7 +510,7 @@ def fit_peaks(window, peak_params_grid):
                     fraction = round(float(fraction), 2)
                     area = round(float(area), 2)
                     sigma = round(float(sigma), 2)
-                    sigma = round(float(gamma), 2)
+                    gamma = round(float(gamma), 2)
 
                     peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
                     peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")

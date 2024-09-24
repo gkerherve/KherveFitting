@@ -283,6 +283,18 @@ class FittingWindow(wx.Frame):
             position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
 
+            # Sigma constraint
+            sigma_constraint = f"{chr(65 + first_peak)}*1"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 7, sigma_constraint)
+
+            # Gamma constraint
+            gamma_constraint = f"{chr(65 + first_peak)}*1"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 8, gamma_constraint)
+
+            # Update the constraints in the Data structure
+            new_peaks[peak2_name]['Constraints']['Sigma'] = sigma_constraint
+            new_peaks[peak2_name]['Constraints']['Gamma'] = gamma_constraint
+
             # Calculate peak numbers
             peak_number1 = first_peak + 1
             peak_number2 = second_peak + 1
@@ -323,7 +335,9 @@ class FittingWindow(wx.Frame):
                             'Position': position_constraint,
                             'Height': height_constraint,
                             'FWHM': fwhm_constraint,
-                            'L/G': lg_constraint
+                            'L/G': lg_constraint,
+                            'Sigma': sigma_constraint,
+                            'Gamma': gamma_constraint
                         }
                     else:
                         new_peaks[key] = value

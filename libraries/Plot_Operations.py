@@ -142,12 +142,12 @@ class PlotManager:
         x = peak_params['position']
         y = peak_params['height']
         peak_label = peak_params['label']
-        try:
-            sigma = float(peak_params.get('Sigma', 0.2))
-            gamma = float(peak_params.get('Gamma', 0.3))
-        except ValueError:
-            sigma = 0.2
-            gamma = 0.3
+        # try:
+        #     sigma = float(peak_params.get('Sigma', 0.47))
+        #     gamma = float(peak_params.get('Gamma', 0.06))
+        # except ValueError:
+        #     sigma = 0.47
+        #     gamma = 0.06
 
 
         # Format the peak label for matplotlib
@@ -156,17 +156,18 @@ class PlotManager:
         # Get the fitting model for this specific peak
         fitting_model = peak_params.get('fitting_model', "GL")  # Default to GL if not specified
 
-        sigma = fwhm / 2.355
+        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         # sigma = fwhm / 2
-        gamma = lg_ratio/100 * sigma
+        # gamma = lg_ratio/100 * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
         if fitting_model == "Unfitted":
             # We've already handled this in clear_and_replot, so just return
             return
         elif fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
-            sigma = float(peak_params.get('Sigma', 0.2))
-            gamma = float(peak_params.get('Gamma', 0.3))
+            sigma = float(peak_params.get('sigma', 0.47))
+            gamma = float(peak_params.get('gamma', 0.06))
+            # amplitude = float(peak_params.get('amplitude', 0))
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
         elif fitting_model == "Pseudo-Voigt":
@@ -174,9 +175,9 @@ class PlotManager:
             peak_model = lmfit.models.PseudoVoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio/100, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio/100)
-        elif fitting_model == "GL2":
-            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+        # elif fitting_model == "GL2":
+        #     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
+        #     params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif fitting_model == "GL":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -651,9 +652,6 @@ class PlotManager:
             elif window.selected_fitting_method == "GL":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-            # elif window.selected_fitting_method == "GLT":
-            #     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-            #     params = peak_model.make_params(center=x, amplitude=y, sigma=sigma, gamma=gamma)                                               gamma=gamma)
             elif window.selected_fitting_method == "SGL":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -711,8 +709,8 @@ class PlotManager:
             height_str = window.peak_params_grid.GetCellValue(row, 3)  # Height
             fwhm_str = window.peak_params_grid.GetCellValue(row, 4)  # FWHM
             lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)  # L/G
-            tail_e = window.peak_params_grid.GetCellValue(row, 7)
-            tail_m = window.peak_params_grid.GetCellValue(row, 7)
+            # sigma = window.peak_params_grid.GetCellValue(row, 7)
+            # gamma = window.peak_params_grid.GetCellValue(row, 8)
             fitting_model = window.peak_params_grid.GetCellValue(row, 12)  # Fitting Model
 
             # Check if any of the cells are empty
@@ -729,12 +727,14 @@ class PlotManager:
                 print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
                 continue
 
-            sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-            gamma = lg_ratio/100 * sigma
+            # sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+            # gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - peak_x))]
 
             if fitting_model == "Voigt":
                 peak_model = lmfit.models.VoigtModel()
+                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
             elif fitting_model == "Pseudo-Voigt":

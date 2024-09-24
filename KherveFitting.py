@@ -362,8 +362,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "30")
         self.peak_params_grid.SetCellValue(row, 6, f"{peak_y*1.6*1.064:.2f}")  # Area, initially empty
-        self.peak_params_grid.SetCellValue(row, 7, "0.2")  # Tail E
-        self.peak_params_grid.SetCellValue(row, 8, '0.3')  # Tail M
+        self.peak_params_grid.SetCellValue(row, 7, "0.47")  # Tail E
+        self.peak_params_grid.SetCellValue(row, 8, '0.06')  # Tail M
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 11, '')  # Split, initially empty
@@ -389,8 +389,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
         self.peak_params_grid.SetCellValue(row + 1, 6, "1,1e7")
-        self.peak_params_grid.SetCellValue(row + 1, 7, "0.1:0.5")
-        self.peak_params_grid.SetCellValue(row + 1, 8, "0.1:0.5")
+        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:0.6")
+        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:0.6")
         self.peak_params_grid.ForceRefresh()
 
         # Set selected_peak_index to the index of the new peak
@@ -408,8 +408,8 @@ class MyFrame(wx.Frame):
             'FWHM': 1.6,
             'L/G': 30,
             'Area': '',
-            'Sigma': 0.3,
-            'Gamma': 0.2,
+            'Sigma': 0.47,
+            'Gamma': 0.06,
             'Fitting Model': self.selected_fitting_method,
             'Bkg Type': self.background_method,
             'Bkg Low': self.bg_min_energy,
@@ -421,8 +421,8 @@ class MyFrame(wx.Frame):
                 'Height': "1,1e7",
                 'FWHM': "0.3,3.5",
                 'L/G': "2,80",
-                'Sigma': "0.1:0.5",
-                'Gamma': "0.1:0.5"
+                'Sigma': "0.01:0.6",
+                'Gamma': "0.01:0.6"
             }
         }
         # print(self.Data)
@@ -435,26 +435,26 @@ class MyFrame(wx.Frame):
 
 
     # SHOULD BE MODEL BUT CALLED IT MODEL£ TO SEE IF IT WAS USED
-    def get_peak_model3(self, peak_x, peak_y, fwhm, lg_ratio):
-        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-        gamma = lg_ratio * sigma
-
-        if self.selected_fitting_method == "Voigt":
-            peak_model = lmfit.models.VoigtModel()
-            params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, gamma=gamma)
-        elif self.selected_fitting_method == "Pseudo-Voigt":
-            peak_model = lmfit.models.PseudoVoigtModel()
-            params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, fraction=lg_ratio)
-        elif self.selected_fitting_method == "GL":
-            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-            params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-        elif self.selected_fitting_method == "SGL":
-            peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
-            params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-        else:
-            raise ValueError(f"Unknown fitting method: {self.selected_fitting_method}")
-
-        return peak_model, params
+    # def get_peak_model3(self, peak_x, peak_y, fwhm, lg_ratio):
+    #     sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+    #     gamma = lg_ratio * sigma
+    #
+    #     if self.selected_fitting_method == "Voigt":
+    #         peak_model = lmfit.models.VoigtModel()
+    #         params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, gamma=gamma)
+    #     elif self.selected_fitting_method == "Pseudo-Voigt":
+    #         peak_model = lmfit.models.PseudoVoigtModel()
+    #         params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, fraction=lg_ratio)
+    #     elif self.selected_fitting_method == "GL":
+    #         peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
+    #         params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+    #     elif self.selected_fitting_method == "SGL":
+    #         peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
+    #         params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+    #     else:
+    #         raise ValueError(f"Unknown fitting method: {self.selected_fitting_method}")
+    #
+    #     return peak_model, params
 
 
 
@@ -1559,8 +1559,8 @@ class MyFrame(wx.Frame):
                                 'Height': '1:1e7',
                                 'FWHM': '0.3:3.5',
                                 'L/G': '5:80',
-                                'Sigma': '0.1:0.5',
-                                'Gamma': '0.1:0.5'
+                                'Sigma': '0.01:0.6',
+                                'Gamma': '0.01:0.6'
                             }
                             new_value = default_constraints[constraint_key]
                             self.peak_params_grid.SetCellValue(row, col, new_value)
