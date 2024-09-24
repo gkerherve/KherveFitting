@@ -143,11 +143,11 @@ class PlotManager:
         y = peak_params['height']
         peak_label = peak_params['label']
         try:
-            tail_M = float(peak_params.get('Tail M', 0))
-            tail_E = float(peak_params.get('Tail E', 0))
+            sigma = float(peak_params.get('Sigma', 0.2))
+            gamma = float(peak_params.get('Gamma', 0.3))
         except ValueError:
-            tail_M = 0.0
-            tail_E = 0.0
+            sigma = 0.2
+            gamma = 0.3
 
 
         # Format the peak label for matplotlib
@@ -165,6 +165,8 @@ class PlotManager:
             return
         elif fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
+            sigma = float(peak_params.get('Sigma', 0.2))
+            gamma = float(peak_params.get('Gamma', 0.3))
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
         elif fitting_model == "Pseudo-Voigt":
@@ -441,8 +443,8 @@ class PlotManager:
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
-                tail_e = float(window.peak_params_grid.GetCellValue(row, 7))
-                tail_m = float(window.peak_params_grid.GetCellValue(row, 8))
+                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 label = window.peak_params_grid.GetCellValue(row, 1)
                 fitting_model = window.peak_params_grid.GetCellValue(row, 12)
             except ValueError:
@@ -478,8 +480,8 @@ class PlotManager:
                     'height': height,
                     'fwhm': fwhm,
                     'lg_ratio': fraction,
-                    'Tail M': tail_m,
-                    'Tail E': tail_e,
+                    'sigma': sigma,
+                    'gamma': gamma,
                     'label': label,
                     'fitting_model': fitting_model
                 }
@@ -631,8 +633,8 @@ class PlotManager:
             gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - x))]
 
-            tail_e = float(window.peak_params_grid.GetCellValue(row, 7))
-            tail_m = float(window.peak_params_grid.GetCellValue(row, 8))
+            sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(window.peak_params_grid.GetCellValue(row, 8))
 
             # Ensure height is not negative
             y = max(y, 0)
@@ -649,10 +651,9 @@ class PlotManager:
             elif window.selected_fitting_method == "GL":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-            elif window.selected_fitting_method == "GLT":
-                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-                params = peak_model.make_params(center=x, amplitude=y, sigma=sigma, gamma=gamma, tail_mix=tail_m,
-                                                tail_exp=tail_e)
+            # elif window.selected_fitting_method == "GLT":
+            #     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
+            #     params = peak_model.make_params(center=x, amplitude=y, sigma=sigma, gamma=gamma)                                               gamma=gamma)
             elif window.selected_fitting_method == "SGL":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)

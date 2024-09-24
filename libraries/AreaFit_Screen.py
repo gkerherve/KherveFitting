@@ -107,11 +107,11 @@ class BackgroundWindow(wx.Frame):
 
                 # Default constraints
                 position_constraint = "0,1e3"
-                height_constraint = "0,1e7"
+                height_constraint = "1,1e7"
                 fwhm_constraint = "0.3,3.5"
                 lg_constraint = "0,0.5"
-                tail_e_constraint = "Fixed"
-                tail_m_constraint = "Fixed"
+                sigma_constraint = "0.1,0.5"
+                gamma_constraint = "0.1,0.5"
 
                 # Update peak fitting parameter grid
                 grid = self.parent.peak_params_grid
@@ -138,8 +138,8 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(1, 3, height_constraint)
                 grid.SetCellValue(1, 4, fwhm_constraint)
                 grid.SetCellValue(1, 5, lg_constraint)
-                grid.SetCellValue(1, 7, tail_e_constraint)
-                grid.SetCellValue(1, 7, tail_m_constraint)
+                grid.SetCellValue(1, 7, sigma_constraint)
+                grid.SetCellValue(1, 8, gamma_constraint)
 
                 # Save peak data in window.Data
                 if 'Fitting' not in self.parent.Data['Core levels'][sheet_name]:

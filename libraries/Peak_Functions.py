@@ -25,12 +25,7 @@ class PeakFunctions:
                 PeakFunctions.gaussian(x, center, fwhm, fraction * 1) *
                 PeakFunctions.lorentzian(x, center, fwhm, fraction * 1))
         return peak
-        # tail = PeakFunctions.tail(x, center, tail_mix, tail_exp, fwhm)
-        # filter = PeakFunctions.filter_func(x,center)
-        # if tail_mix == 0 or tail_exp == 0:
-        #     return peak
-        # else:
-        #     return peak*filter + amplitude * tail
+
 
 
     # SHALL NOT BE USEFUL

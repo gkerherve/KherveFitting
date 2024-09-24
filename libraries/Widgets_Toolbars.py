@@ -119,7 +119,7 @@ def create_peak_params_grid(window, parent):
     window.peak_params_grid.CreateGrid(0, 18)
 
     # Set column labels and sizes
-    column_labels = ["ID", "Label", "Position", "Height", "FWHM", "L/G", "Area", "Tail E", "Tail M",
+    column_labels = ["ID", "Label", "Position", "Height", "FWHM", "L/G", "Area", "Sigma", "Gamma",
                      "I ratio", "A ratio", "Split", "Fitting Model", "Bkg Type", "Bkg Low", "Bkg High",
                      "Bkg Offset Low", "Bkg Offset High"]
     for i, label in enumerate(column_labels):
@@ -157,7 +157,7 @@ def create_results_grid(window, parent):
 
     # Set column labels and properties for results grid
     column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-                     "Rel. Area", "Tail E", "Tail M", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
+                     "Rel. Area", "Sigma", "Gamma", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
                      "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint",
                      "L/G Constraint"]
     for i, label in enumerate(column_labels):
@@ -622,8 +622,8 @@ def create_widgets_MAIN(self):
     self.peak_params_grid.SetColLabelValue(4, "FWHM")
     self.peak_params_grid.SetColLabelValue(5, "L/G")
     self.peak_params_grid.SetColLabelValue(6, "Area")
-    self.peak_params_grid.SetColLabelValue(7, "Tail E")
-    self.peak_params_grid.SetColLabelValue(8, "Tail M")
+    self.peak_params_grid.SetColLabelValue(7, "Sigma")
+    self.peak_params_grid.SetColLabelValue(8, "Gamma")
     self.peak_params_grid.SetColLabelValue(9, "I ratio")
     self.peak_params_grid.SetColLabelValue(10, "A ratio")
     self.peak_params_grid.SetColLabelValue(11, "Split")
@@ -674,7 +674,7 @@ def create_widgets_MAIN(self):
 
     # Set column labels and properties for results grid
     column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-                     "Rel. Area", "Tail E", "Tail M", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
+                     "Rel. Area", "Sigma", "Gamma", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
                      "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
     for i, label in enumerate(column_labels):
         self.results_grid.SetColLabelValue(i, label)
