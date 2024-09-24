@@ -393,9 +393,6 @@ def fit_peaks(window, peak_params_grid):
 
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
-                    # Debug print
-                    print(f"Peak {i}: Sigma = {sigma}, Gamma = {gamma}")
-
                 elif peak_model_choice == "Pseudo-Voigt":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     sigma = fwhm / 2.

@@ -382,6 +382,16 @@ class MyFrame(wx.Frame):
             # self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
             self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(200,245,228))
 
+        # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
+        if self.selected_fitting_method == "Voigt":
+            for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
+                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(220,220,220))
+                self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
+        else:
+            for col in [7,8]:  # Columns for Height, FWHM, L/G ratio
+                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(220,220,220))
+                self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
+
         # Set position constraint to background range
         position_constraint = f"{self.bg_min_energy:.2f},{self.bg_max_energy:.2f}"
         self.peak_params_grid.SetCellValue(row + 1, 2, position_constraint)
