@@ -270,12 +270,12 @@ class FittingWindow(wx.Frame):
 
             # Height constraint
             height_factor = {'p': 0.5, 'd': 0.667, 'f': 0.75}
-            height_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.1"
+            height_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.05"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, height_constraint)
 
             # Area constraint
             Area_factor = {'p': 0.5, 'd': 0.667, 'f': 0.75}
-            Area_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.1"
+            Area_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.05"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 6, Area_constraint)
 
             # Position constraint
@@ -290,10 +290,6 @@ class FittingWindow(wx.Frame):
             # Gamma constraint
             gamma_constraint = f"{chr(65 + first_peak)}*1"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 8, gamma_constraint)
-
-            # Update the constraints in the Data structure
-            new_peaks[peak2_name]['Constraints']['Sigma'] = sigma_constraint
-            new_peaks[peak2_name]['Constraints']['Gamma'] = gamma_constraint
 
             # Calculate peak numbers
             peak_number1 = first_peak + 1
