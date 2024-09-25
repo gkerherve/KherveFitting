@@ -376,6 +376,17 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 16, f"{self.offset_l:.2f}")  # Bkg Offset Low
         self.peak_params_grid.SetCellValue(row, 17, f"{self.offset_h:.2f}")  # Bkg Offset High
 
+        # Set position constraint to background range
+        position_constraint = f"{self.bg_min_energy:.2f},{self.bg_max_energy:.2f}"
+        self.peak_params_grid.SetCellValue(row + 1, 2, position_constraint)
+        self.peak_params_grid.SetCellValue(row + 1, 3, "1,1e7")
+        self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
+        self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
+        self.peak_params_grid.SetCellValue(row + 1, 6, "1,1e7")
+        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:2")
+        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:2")
+        self.peak_params_grid.ForceRefresh()
+
         # Set constraint values
         self.peak_params_grid.SetReadOnly(row + 1, 0)
         for col in range(15):  # Assuming you have 15 columns in total
@@ -387,21 +398,32 @@ class MyFrame(wx.Frame):
             for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
                 # self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
-        else:
-            for col in [7,8]:  # Columns for Height, FWHM, L/G ratio
+                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
+        elif self.selected_fitting_method == "Pseudo-Voigt":
+            for col in [3]:  # Height
+                # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(200,245,228))
+                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
+            for col in [7,8]:  # Columns for Area, sigma and gamma
                 self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
-                # self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
+                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(240,240,240))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
+        else:
+            for col in [6]:  # Columns for Area, sigma and gamma
+                # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
+            for col in [7,8]:  # Columns for Area, sigma and gamma
+                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(240,240,240))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
 
-        # Set position constraint to background range
-        position_constraint = f"{self.bg_min_energy:.2f},{self.bg_max_energy:.2f}"
-        self.peak_params_grid.SetCellValue(row + 1, 2, position_constraint)
-        self.peak_params_grid.SetCellValue(row + 1, 3, "1,1e7")
-        self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
-        self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
-        self.peak_params_grid.SetCellValue(row + 1, 6, "1,1e7")
-        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:2")
-        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:2")
-        self.peak_params_grid.ForceRefresh()
 
         # Set selected_peak_index to the index of the new peak
         self.selected_peak_index = num_peaks

@@ -374,9 +374,10 @@ def fit_peaks(window, peak_params_grid):
                         gamma = lg_ratio / 100 * sigma  # Default calculation if value is invalid
 
                     # Parse constraints for sigma and gamma
-                    sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 7),
+                    sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
+                                                                                                       7)/2.355,
                                                                          sigma, peak_params_grid, i, "Sigma")
-                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8),
+                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8)/2,
                                                                          gamma, peak_params_grid, i, "Gamma")
 
                     # Evaluate constraints
