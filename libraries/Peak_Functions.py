@@ -52,6 +52,10 @@ class PeakFunctions:
         return peak * (1 - tail_mix) + amplitude * tail
 
     @staticmethod
+    def gaussian_other(x, E, F, m):
+        return np.exp(-4 * np.log(2) * ((x - E) / F)**2) * (1 - m / 100)
+
+    @staticmethod
     def gaussian(x, E, F, m):
         return np.exp(-4 * np.log(2) * (1 - m / 100) * ((x - E) / F)**2)
 

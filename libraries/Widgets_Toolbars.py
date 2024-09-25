@@ -119,7 +119,7 @@ def create_peak_params_grid(window, parent):
     window.peak_params_grid.CreateGrid(0, 18)
 
     # Set column labels and sizes
-    column_labels = ["ID", "Label", "Position", "Height", "FWHM", "L/G", "Area", "Sigma", "Gamma",
+    column_labels = ["ID", "Label", "Position", "Height", "FWHM", "L/G", "Area", "2.355\u00B7\u03C3", "2\u00B7\u03B3",
                      "I ratio", "A ratio", "Split", "Fitting Model", "Bkg Type", "Bkg Low", "Bkg High",
                      "Bkg Offset Low", "Bkg Offset High"]
     for i, label in enumerate(column_labels):
@@ -622,7 +622,8 @@ def create_widgets_MAIN(self):
     self.peak_params_grid.SetColLabelValue(4, "FWHM")
     self.peak_params_grid.SetColLabelValue(5, "L/G")
     self.peak_params_grid.SetColLabelValue(6, "Area")
-    self.peak_params_grid.SetColLabelValue(7, "Sigma")
+    self.peak_params_grid.SetColLabelValue(7, "\u03C3")
+    # self.peak_params_grid.SetColLabelValue(7, "Sigma")
     self.peak_params_grid.SetColLabelValue(8, "Gamma")
     self.peak_params_grid.SetColLabelValue(9, "I ratio")
     self.peak_params_grid.SetColLabelValue(10, "A ratio")

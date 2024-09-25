@@ -165,8 +165,8 @@ class PlotManager:
             return
         elif fitting_model == "Voigt":
             peak_model = lmfit.models.VoigtModel()
-            sigma = float(peak_params.get('sigma', 0.47))
-            gamma = float(peak_params.get('gamma', 0.06))
+            sigma = float(peak_params.get('sigma', 0.47))/2.355
+            gamma = float(peak_params.get('gamma', 0.06))/2
             # amplitude = float(peak_params.get('amplitude', 0))
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
@@ -733,8 +733,8 @@ class PlotManager:
 
             if fitting_model == "Voigt":
                 peak_model = lmfit.models.VoigtModel()
-                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
-                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+                sigma = float(window.peak_params_grid.GetCellValue(row, 7))/2.355
+                gamma = float(window.peak_params_grid.GetCellValue(row, 8))/2
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
             elif fitting_model == "Pseudo-Voigt":
@@ -1115,6 +1115,7 @@ class PlotManager:
 
     def _calculate_adaptive_smart_background(self, window, x_values, y_values, offset_h, offset_l):
         """Helper method to calculate Adaptive Smart background."""
+        sheet_name = window.sheet_combobox.GetValue()  # Get the current sheet name
         bg_min_energy, bg_max_energy = min(x_values), max(x_values)
         window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = bg_min_energy
         window.Data['Core levels'][sheet_name]['Background']['Bkg High'] = bg_max_energy

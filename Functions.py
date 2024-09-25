@@ -356,19 +356,19 @@ def fit_peaks(window, peak_params_grid):
                 lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
                 lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio)
 
-                sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
-                sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
-                sigma_vary = fwhm_vary / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary is not None else None
-                gamma_min = lg_ratio_min/100 * sigma_min if lg_ratio_min is not None and sigma_min is not None else None
-                gamma_max = lg_ratio_max/100 * sigma_max if lg_ratio_max is not None and sigma_max is not None else None
-                gamma_vary = lg_ratio_vary/100 * sigma_vary if lg_ratio_vary is not None and sigma_vary is not None else None
+                # sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
+                # sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
+                # sigma_vary = fwhm_vary / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary is not None else None
+                # gamma_min = lg_ratio_min/100 * sigma_min if lg_ratio_min is not None and sigma_min is not None else None
+                # gamma_max = lg_ratio_max/100 * sigma_max if lg_ratio_max is not None and sigma_max is not None else None
+                # gamma_vary = lg_ratio_vary/100 * sigma_vary if lg_ratio_vary is not None and sigma_vary is not None else None
 
                 prefix = f'peak{i}_'
 
                 if peak_model_choice == "Voigt":
                     try:
-                        sigma = float(peak_params_grid.GetCellValue(row, 7))
-                        gamma = float(peak_params_grid.GetCellValue(row, 8))
+                        sigma = float(peak_params_grid.GetCellValue(row, 7)) / 2.355
+                        gamma = float(peak_params_grid.GetCellValue(row, 8)) / 2
                     except ValueError:
                         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))  # Default calculation if value is invalid
                         gamma = lg_ratio / 100 * sigma  # Default calculation if value is invalid
@@ -506,8 +506,8 @@ def fit_peaks(window, peak_params_grid):
                     fwhm = round(float(fwhm), 2)
                     fraction = round(float(fraction), 2)
                     area = round(float(area), 2)
-                    sigma = round(float(sigma), 2)
-                    gamma = round(float(gamma), 2)
+                    sigma = round(float(sigma*2.355), 2)
+                    gamma = round(float(gamma*2), 2)
 
                     peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
                     peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")
@@ -579,9 +579,9 @@ def get_peak_value(peak_params_grid, peak_name, param_name):
             elif param_name == 'area':
                 return float(peak_params_grid.GetCellValue(i, 6))
             elif param_name == 'sigma':
-                return float(peak_params_grid.GetCellValue(i, 7))
+                return float(peak_params_grid.GetCellValue(i, 7))/2.355
             elif param_name == 'gamma':
-                return float(peak_params_grid.GetCellValue(i, 8))
+                return float(peak_params_grid.GetCellValue(i, 8))/2
 
     return None
 

@@ -362,8 +362,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "30")
         self.peak_params_grid.SetCellValue(row, 6, f"{peak_y*1.6*1.064:.2f}")  # Area, initially empty
-        self.peak_params_grid.SetCellValue(row, 7, "0.47")  # Tail E
-        self.peak_params_grid.SetCellValue(row, 8, '0.06')  # Tail M
+        self.peak_params_grid.SetCellValue(row, 7, "1")  # Tail E
+        self.peak_params_grid.SetCellValue(row, 8, '0.15')  # Tail M
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 11, '')  # Split, initially empty
@@ -385,12 +385,12 @@ class MyFrame(wx.Frame):
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
         if self.selected_fitting_method == "Voigt":
             for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
-                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(220,220,220))
-                self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
+                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                # self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
         else:
             for col in [7,8]:  # Columns for Height, FWHM, L/G ratio
-                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(220,220,220))
-                self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
+                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                # self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
 
         # Set position constraint to background range
         position_constraint = f"{self.bg_min_energy:.2f},{self.bg_max_energy:.2f}"
@@ -399,8 +399,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
         self.peak_params_grid.SetCellValue(row + 1, 6, "1,1e7")
-        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:0.6")
-        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:0.6")
+        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:2")
+        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:2")
         self.peak_params_grid.ForceRefresh()
 
         # Set selected_peak_index to the index of the new peak
