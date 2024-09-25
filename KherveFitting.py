@@ -383,8 +383,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3,3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "2,80")
         self.peak_params_grid.SetCellValue(row + 1, 6, "1,1e7")
-        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:2")
-        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:2")
+        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:3")
+        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:3")
         self.peak_params_grid.ForceRefresh()
 
         # Set constraint values
@@ -396,7 +396,7 @@ class MyFrame(wx.Frame):
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
         if self.selected_fitting_method == "Voigt":
             for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
-                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
                 # self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
@@ -408,9 +408,9 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [7,8]:  # Columns for Area, sigma and gamma
-                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
-                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(240,240,240))
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(255,255,255))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
         else:
             for col in [6]:  # Columns for Area, sigma and gamma
@@ -419,9 +419,9 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [7,8]:  # Columns for Area, sigma and gamma
-                self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
-                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(240,240,240))
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(255,255,255))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
 
 
@@ -741,12 +741,16 @@ class MyFrame(wx.Frame):
                     self.update_peak_grid(self.selected_peak_index, x, y)
 
                     # Recalculate the area
+                    model = self.peak_params_grid.GetCellValue(row, 12)
                     height = float(self.peak_params_grid.GetCellValue(row, 3))
                     fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                     fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                    sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                    gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-                    model = self.peak_params_grid.GetCellValue(row, 12)
+                    if model == "Voigt":
+                        sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                        gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                    else:
+                        sigma = 0
+                        gamma = 0
                     area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma)
                     self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
 
@@ -1542,12 +1546,17 @@ class MyFrame(wx.Frame):
                     elif col == 2:  # Position
                         peaks[correct_peak_key]['Position'] = float(new_value)
                     elif col in [3, 4, 5, 7, 8]:  # Height, FWHM, or L/G changed
+                        model = peaks[correct_peak_key]['Fitting Model']
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                        sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                        gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-                        model = peaks[correct_peak_key]['Fitting Model']
+                        if model == "Voigt":
+                            sigma = float(self.peak_params_grid.GetCellValue(row, 7))/2.355
+                            gamma = float(self.peak_params_grid.GetCellValue(row, 8))/2
+                        else:
+                            sigma = 0
+                            gamma = 0
+
 
                         # Recalculate area
                         area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma)
@@ -1566,11 +1575,16 @@ class MyFrame(wx.Frame):
                         peaks[correct_peak_key]['Fitting Model'] = new_value
 
                         # Recalculate area with new model
+                        model = peaks[correct_peak_key]['Fitting Model']
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                        sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                        gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                        if model == "Voigt":
+                            sigma = float(self.peak_params_grid.GetCellValue(row, 7)) / 2.355
+                            gamma = float(self.peak_params_grid.GetCellValue(row, 8)) / 2
+                        else:
+                            sigma = 0
+                            gamma = 0
                         area = self.calculate_peak_area(new_value, height, fwhm, fraction, sigma, gamma)
 
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")

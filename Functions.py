@@ -375,9 +375,10 @@ def fit_peaks(window, peak_params_grid):
 
                     # Parse constraints for sigma and gamma
                     sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
-                                                                                                       7)/2.355,
+                                                                                                       7),
                                                                          sigma, peak_params_grid, i, "Sigma")
-                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8)/2,
+                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
+                                                                                                           8),
                                                                          gamma, peak_params_grid, i, "Gamma")
 
                     # Evaluate constraints
@@ -389,8 +390,10 @@ def fit_peaks(window, peak_params_grid):
                     peak_model = lmfit.models.VoigtModel(prefix=prefix)
                     params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary, brute_step=area * 0.01)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary, brute_step=0.1)
-                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary, brute_step=sigma * 0.01)
-                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary, brute_step=gamma*0.01)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max,
+                               vary=sigma_vary, brute_step=sigma * 0.01)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary,
+                               brute_step=gamma*0.01)
 
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
@@ -481,7 +484,7 @@ def fit_peaks(window, peak_params_grid):
                         gamma = result.params[f'{prefix}gamma'].value
                         height = PeakFunctions.get_voigt_height(amplitude, sigma, gamma)
                         fwhm = PeakFunctions.voigt_fwhm(sigma, gamma)
-                        fraction = gamma / (sigma * np.sqrt(2 * np.log(2))) * 100
+                        fraction = (2*gamma) / (sigma*2.355 + 2*gamma) * 100
                         area = amplitude # * (sigma * np.sqrt(2 * np.pi))
                     elif peak_model_choice == "Pseudo-Voigt":
                         amplitude = result.params[f'{prefix}area'].value
@@ -515,9 +518,14 @@ def fit_peaks(window, peak_params_grid):
                     peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")
                     peak_params_grid.SetCellValue(row, 5, f"{fraction:.2f}")
                     peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
-                    peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
-                    peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
-
+                    if peak_model_choice == "Voigt":
+                        peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
+                        peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
+                    else:
+                        peak_params_grid.SetCellValue(row, 7, "")
+                        peak_params_grid.SetCellValue(row, 8, "")
+                        peak_params_grid.SetCellValue(row+1, 7, "")
+                        peak_params_grid.SetCellValue(row+1, 8, "")
                     existing_peaks[peak_label].update({
                         'Position': center,
                         'Height': height,

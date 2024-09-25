@@ -142,13 +142,6 @@ class PlotManager:
         x = peak_params['position']
         y = peak_params['height']
         peak_label = peak_params['label']
-        # try:
-        #     sigma = float(peak_params.get('Sigma', 0.47))
-        #     gamma = float(peak_params.get('Gamma', 0.06))
-        # except ValueError:
-        #     sigma = 0.47
-        #     gamma = 0.06
-
 
         # Format the peak label for matplotlib
         formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', peak_label)
@@ -175,9 +168,6 @@ class PlotManager:
             peak_model = lmfit.models.PseudoVoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio/100, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio/100)
-        # elif fitting_model == "GL2":
-        #     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-        #     params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif fitting_model == "GL":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -440,14 +430,19 @@ class PlotManager:
 
             # Get all necessary values, with error checking
             try:
+                fitting_model = window.peak_params_grid.GetCellValue(row, 12)
                 position = float(window.peak_params_grid.GetCellValue(row, 2))
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
-                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
-                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+                if fitting_model == "Voigt":
+                    sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+                    gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+                else:
+                    sigma = 0
+                    gamma = 0
                 label = window.peak_params_grid.GetCellValue(row, 1)
-                fitting_model = window.peak_params_grid.GetCellValue(row, 12)
+
             except ValueError:
                 print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
                 continue
