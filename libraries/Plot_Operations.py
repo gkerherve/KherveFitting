@@ -543,11 +543,14 @@ class PlotManager:
 
         # Update the legend only if necessary
         if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
+            self.ax.legend().remove()  # Remove the legend for survey or wide scans
             pass
         else:
-            self.ax.legend(loc='upper left')
 
-        self.update_legend(window)
+            self.ax.legend(loc='upper left')
+            self.update_legend(window)
+
+
 
         # Restore sheet name text or create new one if it doesn't exist
         if sheet_name_text is None:

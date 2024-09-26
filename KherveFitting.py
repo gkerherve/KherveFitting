@@ -400,7 +400,7 @@ class MyFrame(wx.Frame):
 
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
         if self.selected_fitting_method == "Voigt":
-            for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
+            for col in [3, 4]:  # Columns for Height, FWHM, L/G ratio
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
                 # self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")

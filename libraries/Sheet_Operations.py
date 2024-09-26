@@ -77,8 +77,39 @@ def on_sheet_selected(window, event):
 
                     # Set background color for constraint rows
                     for col in range(window.peak_params_grid.GetNumberCols()+1):
-                        # window.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
                         window.peak_params_grid.SetCellBackgroundColour(row + 1, col-1, wx.Colour(200,245,228))
+
+                    window.selected_fitting_method = window.peak_params_grid.GetCellValue(row, 12)
+                    # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
+                    if window.selected_fitting_method == "Voigt":
+                        for col in [3, 4]:  # Columns for Height, FWHM, L/G ratio
+                            # window.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                            # window.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
+                            window.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                            window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(128, 128, 128))
+                            window.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
+                    elif window.selected_fitting_method == "Pseudo-Voigt":
+                        for col in [3]:  # Height
+                            # window.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(200,245,228))
+                            window.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                            window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(128, 128, 128))
+                            window.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
+                        for col in [7, 8]:  # Columns for Area, sigma and gamma
+                            # window.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                            window.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                            window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(255, 255, 255))
+                            window.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
+                    else:
+                        for col in [6]:  # Columns for Area, sigma and gamma
+                            # window.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                            window.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                            window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(128, 128, 128))
+                            window.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
+                        for col in [7, 8]:  # Columns for Area, sigma and gamma
+                            # window.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
+                            window.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                            window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(255, 255, 255))
+                            window.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
 
                 # Update background information if available
                 if 'Background' in core_level_data:

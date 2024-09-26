@@ -356,16 +356,60 @@ def fit_peaks(window, peak_params_grid):
                 lg_ratio_min = evaluate_constraint(lg_ratio_min, peak_params_grid, 'lg_ratio', lg_ratio)
                 lg_ratio_max = evaluate_constraint(lg_ratio_max, peak_params_grid, 'lg_ratio', lg_ratio)
 
-                # sigma_min = fwhm_min / (2 * np.sqrt(2 * np.log(2))) if fwhm_min is not None else None
-                # sigma_max = fwhm_max / (2 * np.sqrt(2 * np.log(2))) if fwhm_max is not None else None
-                # sigma_vary = fwhm_vary / (2 * np.sqrt(2 * np.log(2))) if fwhm_vary is not None else None
-                # gamma_min = lg_ratio_min/100 * sigma_min if lg_ratio_min is not None and sigma_min is not None else None
-                # gamma_max = lg_ratio_max/100 * sigma_max if lg_ratio_max is not None and sigma_max is not None else None
-                # gamma_vary = lg_ratio_vary/100 * sigma_vary if lg_ratio_vary is not None and sigma_vary is not None else None
-
                 prefix = f'peak{i}_'
-
                 if peak_model_choice == "Voigt":
+                    try:
+                        sigma = float(peak_params_grid.GetCellValue(row, 7)) / 2.355
+                        fraction = float(peak_params_grid.GetCellValue(row, 5))  # L/G ratio
+                    except ValueError:
+                        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+                        fraction = lg_ratio
+
+                    # Parse constraints for sigma
+                    sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 7),
+                                                                         sigma, peak_params_grid, i, "Sigma")
+                    fraction_min, fraction_max, fraction_vary = parse_constraints(
+                        peak_params_grid.GetCellValue(row + 1, 5),
+                        fraction, peak_params_grid, i, "lg_ratio")
+
+                    # Evaluate constraints
+                    sigma_min = evaluate_constraint(sigma_min, peak_params_grid, 'sigma', sigma)
+                    sigma_max = evaluate_constraint(sigma_max, peak_params_grid, 'sigma', sigma)
+                    fraction_min = evaluate_constraint(fraction_min, peak_params_grid, 'lg_ratio', fraction)
+                    fraction_max = evaluate_constraint(fraction_max, peak_params_grid, 'lg_ratio', fraction)
+
+                    # Calculate gamma, gamma_min, and gamma_max
+                    def calc_gamma(f, s):
+                        return (f * 2.355 * s) / (200 - 2 * f)
+
+                    GAMMA_TOLERANCE = 1e-6  # Small tolerance value
+
+                    # In your gamma calculation section:
+                    gamma = calc_gamma(fraction, sigma)
+                    gamma_min = calc_gamma(fraction_min, sigma)
+                    gamma_max = calc_gamma(fraction_max, sigma)
+
+                    # Ensure gamma_min and gamma_max are different
+                    if abs(gamma_max - gamma_min) < GAMMA_TOLERANCE:
+                        gamma_min = max(0, gamma - GAMMA_TOLERANCE)
+                        gamma_max = gamma + GAMMA_TOLERANCE
+
+                    # Ensure gamma is within the range
+                    gamma = max(gamma_min, min(gamma, gamma_max))
+
+                    peak_model = lmfit.models.VoigtModel(prefix=prefix)
+                    params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary,
+                               brute_step=area * 0.01)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary,
+                               brute_step=0.1)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max,
+                               vary=sigma_vary, brute_step=sigma * 0.01)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=fraction_vary,
+                               brute_step=gamma * 0.01)
+
+                    params.add(f'{prefix}amplitude', expr=f'{prefix}area')
+
+                elif peak_model_choice == "Voigt with \u03C3 & \u03B3":
                     try:
                         sigma = float(peak_params_grid.GetCellValue(row, 7)) / 2.355
                         gamma = float(peak_params_grid.GetCellValue(row, 8)) / 2
