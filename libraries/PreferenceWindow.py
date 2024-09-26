@@ -10,9 +10,9 @@ class PreferenceWindow(wx.Frame):
         self.parent = parent
 
         self.SetTitle("Preferences")
-        self.SetSize((490, 570))
-        self.SetMinSize((490, 570))
-        self.SetMaxSize((490, 570))
+        self.SetSize((490, 600))
+        self.SetMinSize((490, 600))
+        self.SetMaxSize((490, 600))
 
         self.temp_peak_colors = self.parent.peak_colors.copy()
 
@@ -166,17 +166,33 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(peak_line_style_label, pos=(11, 4), flag=wx.ALL, border=5)
         sizer.Add(self.peak_line_style_combo, pos=(11, 5), flag=wx.ALL, border=5)
 
+        # Peak line pattern
+        peak_line_pattern_label = wx.StaticText(panel, label="Peak Line Pattern:")
+        self.peak_line_pattern_combo = wx.ComboBox(panel, choices=["-", "--", "-.", ":"], style=wx.CB_READONLY)
+        sizer.Add(peak_line_pattern_label, pos=(12, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_pattern_combo, pos=(12, 5), flag=wx.ALL, border=5)
+
+        # Peak line thickness
+        self.peak_line_thickness_label = wx.StaticText(panel, label="Peak Line Thickness:")
+        self.peak_line_thickness_spin = wx.SpinCtrl(panel, value="1", min=1, max=5)
+        sizer.Add(self.peak_line_thickness_label, pos=(13, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_thickness_spin, pos=(13, 5), flag=wx.ALL, border=5)
+
+
         # Peak line alpha
         self.peak_line_alpha_label = wx.StaticText(panel, label="Peak Line Alpha:")
         self.peak_line_alpha_spin = wx.SpinCtrlDouble(panel, value="0.7", min=0, max=1, inc=0.1)
-        sizer.Add(self.peak_line_alpha_label, pos=(12, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_line_alpha_spin, pos=(12, 5), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_alpha_label, pos=(14, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_alpha_spin, pos=(14, 5), flag=wx.ALL, border=5)
+
+
+
 
         # Save button (moved to the bottom)
         save_button = wx.Button(panel, label="Save")
         save_button.SetMinSize((190, 40))
         save_button.Bind(wx.EVT_BUTTON, self.OnSave)
-        sizer.Add(save_button, pos=(13, 0), span=(2, 2), flag=wx.ALL | wx.ALIGN_CENTER, border=5)
+        sizer.Add(save_button, pos=(14, 0), span=(2, 2), flag=wx.ALL | wx.ALIGN_CENTER, border=5)
 
         # Bind the spin control to update the color picker
         self.peak_number_spin.Bind(wx.EVT_SPINCTRL, self.OnPeakNumberChange)
@@ -210,6 +226,9 @@ class PreferenceWindow(wx.Frame):
 
         self.peak_line_style_combo.SetValue(self.parent.peak_line_style)
         self.peak_line_alpha_spin.SetValue(self.parent.peak_line_alpha)
+        self.peak_line_thickness_spin.SetValue(self.parent.peak_line_thickness)
+        self.peak_line_pattern_combo.SetValue(self.parent.peak_line_pattern)
+
         # Load the first peak color
         self.temp_peak_colors = self.parent.peak_colors.copy()
         if self.parent.peak_colors:
@@ -249,6 +268,10 @@ class PreferenceWindow(wx.Frame):
         else:
             self.temp_peak_colors.append(new_color)
 
+    def update_plot(self):
+        self.parent.update_plot_preferences()
+        self.parent.clear_and_replot()
+
     def OnSave(self, event):
         self.parent.plot_style = "scatter" if self.plot_style.GetSelection() == 0 else "line"
         self.parent.scatter_size = self.point_size_spin.GetValue()
@@ -274,6 +297,8 @@ class PreferenceWindow(wx.Frame):
 
         self.parent.peak_line_style = self.peak_line_style_combo.GetValue()
         self.parent.peak_line_alpha = self.peak_line_alpha_spin.GetValue()
+        self.parent.peak_line_thickness = self.peak_line_thickness_spin.GetValue()
+        self.parent.peak_line_pattern = self.peak_line_pattern_combo.GetValue()
 
         # Save the current color of the selected peak
         current_peak = self.peak_number_spin.GetValue() - 1

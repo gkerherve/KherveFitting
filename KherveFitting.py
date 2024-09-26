@@ -213,10 +213,12 @@ class MyFrame(wx.Frame):
 
         self.peak_line_style = "Same Color"  # Options: "no_line", "black", "same_color", "grey"
         self.peak_line_alpha = 0.7
+        self.peak_line_thickness = 1
+        self.peak_line_pattern = '-'  # Options: '-', '--', '-.', ':'
 
         # Most recent File Initialisation
         self.recent_files = []
-        self.max_recent_files = 5  # Maximum number of recent files to keep
+        self.max_recent_files = 10  # Maximum number of recent files to keep
 
         # Load config if exists
         self.load_config()
@@ -1913,6 +1915,8 @@ class MyFrame(wx.Frame):
                 self.peak_alpha = config.get('peak_alpha', self.peak_alpha)
                 self.peak_line_style = config.get('peak_line_style', 'Same Color')
                 self.peak_line_alpha = config.get('peak_line_alpha', 0.7)
+                self.peak_line_thickness = config.get('peak_line_thickness', 1)
+                self.peak_line_pattern = config.get('peak_line_pattern', '-')
                 self.recent_files = config.get('recent_files', [])
         else:
             config = {}
@@ -1944,6 +1948,8 @@ class MyFrame(wx.Frame):
             'peak_alpha': self.peak_alpha,
             'peak_line_style': self.peak_line_style,
             'peak_line_alpha': self.peak_line_alpha,
+            'peak_line_thickness': self.peak_line_thickness,
+            'peak_line_pattern': self.peak_line_pattern,
             'recent_files': self.recent_files
         }
 
