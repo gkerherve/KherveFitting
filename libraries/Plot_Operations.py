@@ -191,7 +191,17 @@ class PlotManager:
             else:
                 self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, interpolate=True,
                                      edgecolor='none', label=peak_label)
-            # self.ax.plot(x_values, peak_y, color=color, alpha=line_alpha)
+                print(window.peak_line_style)
+                if window.peak_line_style != "No Line":
+                    if window.peak_line_style == "Black":
+                        line_color = "black"
+                    elif window.peak_line_style == "Grey":
+                        line_color = "grey"
+                    else:  # same_color
+                        line_color = color
+
+                    self.ax.plot(x_values, peak_y, color=line_color, alpha=window.peak_line_alpha)
+
         else:
             if self.energy_scale == 'KE':
                 self.ax.plot(window.photons - x_values, peak_y, color=color, alpha=line_alpha, label=peak_label)

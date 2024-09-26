@@ -159,6 +159,19 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.peak_alpha_label, pos=(10, 4), flag=wx.ALL, border=5)
         sizer.Add(self.peak_alpha_spin, pos=(10, 5), flag=wx.ALL, border=5)
 
+        # Peak line style
+        peak_line_style_label = wx.StaticText(panel, label="Peak Line Style:")
+        self.peak_line_style_combo = wx.ComboBox(panel, choices=["No Line", "Black", "Same Color", "Grey"],
+                                                 style=wx.CB_READONLY)
+        sizer.Add(peak_line_style_label, pos=(11, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_style_combo, pos=(11, 5), flag=wx.ALL, border=5)
+
+        # Peak line alpha
+        self.peak_line_alpha_label = wx.StaticText(panel, label="Peak Line Alpha:")
+        self.peak_line_alpha_spin = wx.SpinCtrlDouble(panel, value="0.7", min=0, max=1, inc=0.1)
+        sizer.Add(self.peak_line_alpha_label, pos=(12, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_alpha_spin, pos=(12, 5), flag=wx.ALL, border=5)
+
         # Save button (moved to the bottom)
         save_button = wx.Button(panel, label="Save")
         save_button.SetMinSize((190, 40))
@@ -195,6 +208,8 @@ class PreferenceWindow(wx.Frame):
         self.residual_linestyle.SetSelection(["", "-", "--", "-.", ":"].index(self.parent.residual_linestyle))
         self.raw_data_linestyle.SetSelection(["", "-", "--", "-.", ":"].index(self.parent.raw_data_linestyle))
 
+        self.peak_line_style_combo.SetValue(self.parent.peak_line_style)
+        self.peak_line_alpha_spin.SetValue(self.parent.peak_line_alpha)
         # Load the first peak color
         self.temp_peak_colors = self.parent.peak_colors.copy()
         if self.parent.peak_colors:
@@ -256,6 +271,9 @@ class PreferenceWindow(wx.Frame):
         self.parent.residual_linestyle = ["", "-", "--", "-.", ":"][self.residual_linestyle.GetSelection()]
 
         self.parent.raw_data_linestyle = ["", "-", "--", "-.", ":"][self.raw_data_linestyle.GetSelection()]
+
+        self.parent.peak_line_style = self.peak_line_style_combo.GetValue()
+        self.parent.peak_line_alpha = self.peak_line_alpha_spin.GetValue()
 
         # Save the current color of the selected peak
         current_peak = self.peak_number_spin.GetValue() - 1
