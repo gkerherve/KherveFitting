@@ -153,13 +153,13 @@ def create_results_grid(window, parent):
     results_sizer_inner = wx.BoxSizer(wx.VERTICAL)
 
     window.results_grid = wx.grid.Grid(window.results_frame)
-    window.results_grid.CreateGrid(0, 23)
+    window.results_grid.CreateGrid(0, 26)
 
     # Set column labels and properties for results grid
     column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
                      "Rel. Area", "Sigma", "Gamma", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
                      "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint",
-                     "L/G Constraint"]
+                     "L/G Constraint", "Area Constraint", "Sigma Constraint", "Gamma Constraint"]
     for i, label in enumerate(column_labels):
         window.results_grid.SetColLabelValue(i, label)
 
@@ -171,7 +171,8 @@ def create_results_grid(window, parent):
     window.results_grid.SetDefaultCellBackgroundColour(window.results_grid.GetLabelBackgroundColour())
 
     # Adjust specific column sizes
-    col_sizes = [120, 70, 70, 70, 50, 80, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70, 100, 100, 80, 120, 120, 120, 120]
+    col_sizes = [120, 70, 70, 70, 50, 80, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70, 100, 100, 80, 120, 120, 120, 120,
+                 70,70,70]
     for i, size in enumerate(col_sizes):
         window.results_grid.SetColSize(i, size)
 
@@ -676,7 +677,8 @@ def create_widgets_MAIN(self):
     # Set column labels and properties for results grid
     column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
                      "Rel. Area", "Sigma", "Gamma", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
-                     "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
+                     "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint",
+                     "L/G Constraint", "Area Constraint", "Sigma Constraint", "Gamma Constraint"]
     for i, label in enumerate(column_labels):
         self.results_grid.SetColLabelValue(i, label)
 
@@ -688,7 +690,8 @@ def create_widgets_MAIN(self):
     self.results_grid.SetDefaultCellBackgroundColour(self.results_grid.GetLabelBackgroundColour())
 
     # Adjust specific column sizes
-    col_sizes = [120, 70, 70, 70, 50, 80, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 120, 120, 120, 120]
+    col_sizes = [120, 70, 70, 70, 50, 80, 50, 20, 50, 90, 90, 50, 50, 80, 70, 70,100,100, 80, 120, 120, 120, 120, 70,
+                 70,70]
     for i, size in enumerate(col_sizes):
         self.results_grid.SetColSize(i, size)
 

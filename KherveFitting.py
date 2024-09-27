@@ -367,8 +367,8 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "30")
         self.peak_params_grid.SetCellValue(row, 6, f"{peak_y*1.6*1.064:.2f}")  # Area, initially empty
-        self.peak_params_grid.SetCellValue(row, 7, "1")  # Tail E
-        self.peak_params_grid.SetCellValue(row, 8, '0.15')  # Tail M
+        self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
+        self.peak_params_grid.SetCellValue(row, 8, '0.15')  # gamma
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 11, '')  # Split, initially empty
@@ -401,8 +401,7 @@ class MyFrame(wx.Frame):
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
         if self.selected_fitting_method == "Voigt (Area, L/G, \u03C3)":
             for col in [3, 4]:  # Columns for Height, FWHM, L/G ratio
-                print("PASS MODEL VOIGT")
-                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [5, 6, 7, 8]:  # Columns for Height, FWHM, L/G ratio
@@ -410,7 +409,7 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
         elif self.selected_fitting_method == "Voigt (Area, \u03C3, \u03B3)":
             for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
-                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [6, 7, 8]:  # Columns for Height, FWHM
@@ -419,13 +418,14 @@ class MyFrame(wx.Frame):
         elif self.selected_fitting_method == "Pseudo-Voigt (Area)":
             for col in [3]:  # Height
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(200,245,228))
-                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [7,8]:  # Columns for Area, sigma and gamma
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
-                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
-                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(255,255,255))
+                self.peak_params_grid.SetCellValue(row , col, "0")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(0,0,0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [4, 5, 6]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
@@ -433,12 +433,12 @@ class MyFrame(wx.Frame):
         else:
             for col in [6]:  # Columns for Area, sigma and gamma
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
-                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [7,8]:  # Columns for Area, sigma and gamma
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
-                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(255,255,255))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
@@ -460,8 +460,8 @@ class MyFrame(wx.Frame):
             'FWHM': 1.6,
             'L/G': 30,
             'Area': '',
-            'Sigma': 0.47,
-            'Gamma': 0.06,
+            'Sigma': 1,
+            'Gamma': 0.2,
             'Fitting Model': self.selected_fitting_method,
             'Bkg Type': self.background_method,
             'Bkg Low': self.bg_min_energy,
@@ -588,7 +588,7 @@ class MyFrame(wx.Frame):
     def update_overall_fit_and_residuals(self):
         self.plot_manager.update_overall_fit_and_residuals(self)
 
-    def plot_peak(self, x, y, index):
+    def plot_peak_NOT_SURE(self, x, y, index):
         row = index * 2
         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
         lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))

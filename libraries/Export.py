@@ -114,11 +114,17 @@ def _extract_peak_parameters(window, row, rsf_dict):
         'fwhm': float(window.peak_params_grid.GetCellValue(row, 4)),
         'lg_ratio': float(window.peak_params_grid.GetCellValue(row, 5)),
         'rsf': rsf,
+        'area': float(window.peak_params_grid.GetCellValue(row, 6)),
+        'sigma': float(window.peak_params_grid.GetCellValue(row, 7)),
+        'gamma': float(window.peak_params_grid.GetCellValue(row, 8)),
         'constraints': {
             'position': window.peak_params_grid.GetCellValue(row + 1, 2),
             'height': window.peak_params_grid.GetCellValue(row + 1, 3),
             'fwhm': window.peak_params_grid.GetCellValue(row + 1, 4),
-            'lg_ratio': window.peak_params_grid.GetCellValue(row + 1, 5)
+            'lg_ratio': window.peak_params_grid.GetCellValue(row + 1, 5),
+            'area': window.peak_params_grid.GetCellValue(row+1, 6),
+            'sigma': window.peak_params_grid.GetCellValue(row+1, 7),
+            'gamma': window.peak_params_grid.GetCellValue(row+1, 8)
         }
     }
 
@@ -169,8 +175,8 @@ def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model
     window.results_grid.SetCellValue(row, 8, f"{peak_params['rsf']:.2f}")
     window.results_grid.SetCellValue(row, 9, fitting_model)
     window.results_grid.SetCellValue(row, 10, f"{rel_area:.2f}")
-    window.results_grid.SetCellValue(row, 11, "")  # Tail E
-    window.results_grid.SetCellValue(row, 12, "")  # Tail M
+    window.results_grid.SetCellValue(row, 11, "")  # Sigma
+    window.results_grid.SetCellValue(row, 12, "")  # Gamma
     window.results_grid.SetCellValue(row, 13, f"{window.bg_min_energy:.2f}" if window.bg_min_energy is not None else "")
     window.results_grid.SetCellValue(row, 14, f"{window.bg_max_energy:.2f}" if window.bg_max_energy is not None else "")
     window.results_grid.SetCellValue(row, 15, window.sheet_combobox.GetValue())
@@ -225,8 +231,8 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
         'RSF': peak_params['rsf'],
         'Fitting Model': fitting_model,
         'Rel. Area': rel_area,
-        'Tail E': "",
-        'Tail M': "",
+        'Sigma': peak_params['sigma'],
+        'Gamma': peak_params['gamma'],
         'Bkg Low': window.bg_min_energy,
         'Bkg High': window.bg_max_energy,
         'Sheetname': sheet_name,

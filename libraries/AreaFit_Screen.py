@@ -127,8 +127,8 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(0, 4, f"{fwhm:.2f}")
                 grid.SetCellValue(0, 5, "0.00")  # L/G
                 grid.SetCellValue(0, 6, f"{area:.2f}")
-                grid.SetCellValue(0, 7, "0.00")  # Tail E
-                grid.SetCellValue(0, 8, "0.00")  # Tail_M
+                grid.SetCellValue(0, 7, "0.00")  # Sigma
+                grid.SetCellValue(0, 8, "0.00")  # Gamma
                 grid.SetCellValue(0, 12, "Unfitted")  # Fitting Model
 
                 # Set constraints and color
@@ -153,16 +153,16 @@ class BackgroundWindow(wx.Frame):
                     'FWHM': fwhm,
                     'L/G': 0.00,
                     'Area': area,
-                    'Tail M': 0,
-                    'Tail E': 0,
+                    'Sigma': 0,
+                    'Gamma': 0,
                     'Fitting Model': "Unfitted",
                     'Constraints': {
                         'Position': position_constraint,
                         'Height': height_constraint,
                         'FWHM': fwhm_constraint,
                         'L/G': lg_constraint,
-                        'Tail M': tail_m_constraint,
-                        'Tail E': tail_m_constraint
+                        'Sigma': sigma_constraint,
+                        'Gamma': il_m_constraint
                     }
                 }
 

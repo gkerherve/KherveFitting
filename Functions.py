@@ -236,7 +236,7 @@ def on_save_all_sheets(window, event):
 def toggle_Col_1(window):
     # List of columns to toggle
     columns1 = [12, 13, 14, 15,16, 17]
-    columns2 = [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]
+    columns2 = [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
 
 
     # Check if the first column in the list is hidden or shown

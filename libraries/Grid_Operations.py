@@ -11,21 +11,16 @@ def populate_results_grid(window):
 
         # Resize the grid if necessary
         num_rows = len(results)
-        num_cols = 23  # Based on your Export.py structure
+        num_cols = 26  # Based on your Export.py structure
         if window.results_grid.GetNumberRows() < num_rows:
             window.results_grid.AppendRows(num_rows - window.results_grid.GetNumberRows())
         if window.results_grid.GetNumberCols() < num_cols:
             window.results_grid.AppendCols(num_cols - window.results_grid.GetNumberCols())
 
-
-        # column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
-        #                  "Rel. Area", "Tail E", "Tail M", "Bkg Low", "Bkg High", "Sheetname",
-        #                  "Pos. Constraint", "Height Constraint", "FWHM Constraint", "L/G Constraint"]
-        # Set column labels
         column_labels = ["Peak", "Position", "Height", "FWHM", "L/G", "Area", "at. %", " ", "RSF", "Fitting Model",
                          "Rel. Area", "Sigma", "Gamma", "Bkg Type", "Bkg Low", "Bkg High", "Bkg Offset Low",
                          "Bkg Offset High", "Sheetname", "Pos. Constraint", "Height Constraint", "FWHM Constraint",
-                         "L/G Constraint"]
+                         "L/G Constraint", "Area Constraint", "Sigma Constraint", "Gamma Constraint"]
         for col, label in enumerate(column_labels):
             window.results_grid.SetColLabelValue(col, label)
 
@@ -48,8 +43,8 @@ def populate_results_grid(window):
             window.results_grid.SetCellValue(row, 8, f"{peak_data['RSF']:.2f}")
             window.results_grid.SetCellValue(row, 9, peak_data['Fitting Model'])
             window.results_grid.SetCellValue(row, 10, f"{peak_data['Rel. Area']:.2f}")
-            window.results_grid.SetCellValue(row, 11, peak_data['Sigma'])
-            window.results_grid.SetCellValue(row, 12, peak_data['Gamma'])
+            window.results_grid.SetCellValue(row, 11, str(peak_data['Sigma']))
+            window.results_grid.SetCellValue(row, 12, str(peak_data['Gamma']))
             window.results_grid.SetCellValue(row, 13, peak_data.get('Bkg Type', ''))  # Bkg Type
             window.results_grid.SetCellValue(row, 14, str(peak_data['Bkg Low']))
             window.results_grid.SetCellValue(row, 15, str(peak_data['Bkg High']))
@@ -60,6 +55,9 @@ def populate_results_grid(window):
             window.results_grid.SetCellValue(row, 20, peak_data['Height Constraint'])
             window.results_grid.SetCellValue(row, 21, peak_data['FWHM Constraint'])
             window.results_grid.SetCellValue(row, 22, peak_data['L/G Constraint'])
+            window.results_grid.SetCellValue(row, 23, peak_data['Area Constraint'])
+            window.results_grid.SetCellValue(row, 24, peak_data['Sigma Constraint'])
+            window.results_grid.SetCellValue(row, 25, peak_data['Gamma Constraint'])
 
         # Bind events
         # window.results_grid.Bind(wx.grid.EVT_GRID_CELL_LEFT_CLICK, window.on_checkbox_update)
