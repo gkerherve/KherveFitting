@@ -13,9 +13,9 @@ class FittingWindow(wx.Frame):
 
 
         self.SetTitle("Peak Fitting")
-        self.SetSize((270, 480))  # Increased height to accommodate new elements
-        self.SetMinSize((270, 480))
-        self.SetMaxSize((270, 480))
+        self.SetSize((305, 480))  # Increased height to accommodate new elements
+        self.SetMinSize((305, 480))
+        self.SetMaxSize((305, 480))
 
         self.init_ui()
 
@@ -54,7 +54,7 @@ class FittingWindow(wx.Frame):
         background_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
         method_label = wx.StaticText(background_panel, label="Method:")
-        self.method_combobox = wx.ComboBox(background_panel, choices=["Shirley", "Linear", "Smart", "Smart2", "Adaptive Smart"],
+        self.method_combobox = wx.ComboBox(background_panel, choices=["Multiple Regions Smart", "Smart", "Shirley", "Linear"],
                                            style=wx.CB_READONLY)
         method_index = self.method_combobox.FindString(self.parent.background_method)
         self.method_combobox.SetSelection(method_index)
@@ -69,11 +69,11 @@ class FittingWindow(wx.Frame):
         self.offset_l_text.Bind(wx.EVT_TEXT, self.on_offset_l_change)
 
         background_button = wx.Button(background_panel, label="Background")
-        background_button.SetMinSize((110, 40))
+        background_button.SetMinSize((125, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
         clear_background_button = wx.Button(background_panel, label="Clear All")
-        clear_background_button.SetMinSize((110, 40))
+        clear_background_button.SetMinSize((125, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
         # Layout Background Tab
@@ -95,8 +95,9 @@ class FittingWindow(wx.Frame):
         fitting_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
         self.model_combobox = wx.ComboBox(fitting_panel,
-                                          choices=["Pseudo-Voigt", "GL", "SGL",
-                                                   "Voigt"], style=wx.CB_READONLY)
+                                          choices=["GL (Height)", "SGL (Height)","Pseudo-Voigt (Area)",
+                                                   "Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"],
+                                          style=wx.CB_READONLY)
         model_index = self.model_combobox.FindString(self.parent.selected_fitting_method)
         self.model_combobox.SetSelection(model_index)
         self.model_combobox.Bind(wx.EVT_COMBOBOX, self.on_method_change)
@@ -120,27 +121,27 @@ class FittingWindow(wx.Frame):
         self.current_fit_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
 
         add_peak_button = wx.Button(fitting_panel, label="Add Single Peak")
-        add_peak_button.SetMinSize((110, 40))
+        add_peak_button.SetMinSize((125, 40))
         add_peak_button.Bind(wx.EVT_BUTTON, self.on_add_peak)
 
         add_doublet_button = wx.Button(fitting_panel, label="Add Doublet")
-        add_doublet_button.SetMinSize((110, 40))
+        add_doublet_button.SetMinSize((125, 40))
         add_doublet_button.Bind(wx.EVT_BUTTON, self.on_add_doublet)
 
         remove_peak_button = wx.Button(fitting_panel, label="Remove Peak")
-        remove_peak_button.SetMinSize((110, 40))
+        remove_peak_button.SetMinSize((125, 40))
         remove_peak_button.Bind(wx.EVT_BUTTON, self.on_remove_peak)
 
         export_button = wx.Button(fitting_panel, label="Export")
-        export_button.SetMinSize((110, 40))
+        export_button.SetMinSize((125, 40))
         export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 
         fit_button = wx.Button(fitting_panel, label="Fit Once")
-        fit_button.SetMinSize((110, 40))
+        fit_button.SetMinSize((125, 40))
         fit_button.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
 
         fit_multi_button = wx.Button(fitting_panel, label="Fit Multi")
-        fit_multi_button.SetMinSize((110, 40))
+        fit_multi_button.SetMinSize((125, 40))
         fit_multi_button.Bind(wx.EVT_BUTTON, self.on_fit_multi)
 
         fitting_sizer.Add(wx.StaticText(fitting_panel, label="Fitting Model:"), pos=(0, 0),

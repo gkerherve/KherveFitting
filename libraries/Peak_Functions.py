@@ -1,7 +1,7 @@
 
 import numpy as np
 import lmfit
-
+from lmfit.models import VoigtModel
 
 import numpy as np
 
@@ -141,6 +141,7 @@ class PeakFunctions:
         fl = 2 * gamma
         return 0.5346 * fl + np.sqrt(0.2166 * fl ** 2 + fg ** 2)
 
+
     @staticmethod
     def pseudo_voigt_amplitude_to_height(amplitude, sigma, fraction):
         """
@@ -193,6 +194,23 @@ class PeakFunctions:
 
         return amplitude
 
+    def voigt_area(height, sigma, gamma):
+        from scipy.special import wofz
+
+        # Convert sigma to Gaussian FWHM
+        fwhm_g = 2 * sigma * np.sqrt(2 * np.log(2))
+
+        # Convert gamma to Lorentzian FWHM
+        fwhm_l = 2 * gamma
+
+        # Calculate the Voigt function at its center
+        voigt_max = np.real(wofz((0 + 1j * gamma) / (sigma * np.sqrt(2))))
+
+        # Calculate the area
+        area = height * (np.pi * fwhm_l / 2 + np.sqrt(np.pi * np.log(2)) * fwhm_g) / voigt_max
+
+        return area
+
     @staticmethod
     def get_voigt_height(amplitude, sigma, gamma):
         """
@@ -201,6 +219,17 @@ class PeakFunctions:
         model = lmfit.models.VoigtModel()
         params = model.make_params(amplitude=amplitude, center=0, sigma=sigma, gamma=gamma)
         return model.eval(params, x=0)
+
+    @staticmethod
+    def voigt_height_to_area(height, sigma, gamma):
+        voigt = VoigtModel()
+        x = np.linspace(-10 * sigma, 10 * sigma, 1000)
+        params = voigt.make_params(center=0, sigma=sigma, gamma=gamma, amplitude=1)
+        y = voigt.eval(params, x=x)
+        max_y = np.max(y)
+        amplitude = height / max_y
+        return amplitude  # For distribution models, amplitude is equivalent to area
+
 
     @staticmethod
     def get_pseudo_voigt_height(amplitude, sigma, fraction):

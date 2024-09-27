@@ -27,7 +27,7 @@ from libraries.Peak_Functions import PeakFunctions
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
 from libraries.Sheet_Operations import on_sheet_selected
-from libraries.Sheet_Operations import CheckboxRenderer
+from libraries.Sheet_Operations import CheckboxRenderer, on_sheet_selected
 from libraries.SplashScreen import show_splash
 from libraries.Save import save_state, undo, redo
 from libraries.Open import ExcelDropTarget
@@ -140,16 +140,16 @@ class MyFrame(wx.Frame):
         # Initial max iteration value
         self.max_iterations = 50
         # Initial fitting method
-        self.selected_fitting_method = "GL"
+        self.selected_fitting_method = "GL (Height)"
 
         # self.fitting_results_visible = False
 
-        self.background_method = "Shirley"
+        self.background_method = "Multiple Regions Smart"
         self.offset_h = 0
         self.offset_l = 0
 
         # Initial background method
-        self.selected_bkg_method  = "Shirley"
+        self.selected_bkg_method  = "Multiple Regions Smart"
 
 
         # Zoom initialisation variables
@@ -397,16 +397,26 @@ class MyFrame(wx.Frame):
         for col in range(15):  # Assuming you have 15 columns in total
             # self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
             self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(200,245,228))
-
+        print("method  "+self.selected_fitting_method)
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
-        if self.selected_fitting_method == "Voigt":
+        if self.selected_fitting_method == "Voigt (Area, L/G, \u03C3)":
             for col in [3, 4]:  # Columns for Height, FWHM, L/G ratio
-                # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
-                # self.peak_params_grid.SetCellBackgroundColour(row+1, col, wx.Colour(220, 220, 220))
+                print("PASS MODEL VOIGT")
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
-        elif self.selected_fitting_method == "Pseudo-Voigt":
+            for col in [5, 6, 7, 8]:  # Columns for Height, FWHM, L/G ratio
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
+        elif self.selected_fitting_method == "Voigt (Area, \u03C3, \u03B3)":
+            for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
+                self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
+            for col in [6, 7, 8]:  # Columns for Height, FWHM
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
+        elif self.selected_fitting_method == "Pseudo-Voigt (Area)":
             for col in [3]:  # Height
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(200,245,228))
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
@@ -417,6 +427,9 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(255,255,255))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
+            for col in [4, 5, 6]:  # Columns for Height, FWHM, L/G ratio
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
         else:
             for col in [6]:  # Columns for Area, sigma and gamma
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
@@ -428,7 +441,9 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellValue(row + 1, col, "N/A")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(255,255,255))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
-
+            for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
 
         # Set selected_peak_index to the index of the new peak
         self.selected_peak_index = num_peaks
@@ -469,29 +484,6 @@ class MyFrame(wx.Frame):
         self.clear_and_replot()
 
         return self.peak_count - 1  # Return the index of the added peak
-
-
-    # SHOULD BE MODEL BUT CALLED IT MODEL£ TO SEE IF IT WAS USED
-    # def get_peak_model3(self, peak_x, peak_y, fwhm, lg_ratio):
-    #     sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-    #     gamma = lg_ratio * sigma
-    #
-    #     if self.selected_fitting_method == "Voigt":
-    #         peak_model = lmfit.models.VoigtModel()
-    #         params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, gamma=gamma)
-    #     elif self.selected_fitting_method == "Pseudo-Voigt":
-    #         peak_model = lmfit.models.PseudoVoigtModel()
-    #         params = peak_model.make_params(center=peak_x, amplitude=peak_y, sigma=sigma, fraction=lg_ratio)
-    #     elif self.selected_fitting_method == "GL":
-    #         peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-    #         params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-    #     elif self.selected_fitting_method == "SGL":
-    #         peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
-    #         params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-    #     else:
-    #         raise ValueError(f"Unknown fitting method: {self.selected_fitting_method}")
-    #
-    #     return peak_model, params
 
 
 
@@ -750,7 +742,7 @@ class MyFrame(wx.Frame):
                     height = float(self.peak_params_grid.GetCellValue(row, 3))
                     fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                     fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                    if model == "Voigt":
+                    if model == "Voigt (Area, L/G, \u03C3)":
                         sigma = float(self.peak_params_grid.GetCellValue(row, 7))
                         gamma = float(self.peak_params_grid.GetCellValue(row, 8))
                     else:
@@ -1479,14 +1471,14 @@ class MyFrame(wx.Frame):
                 wx.MessageBox("Invalid height value", "Error", wx.OK | wx.ICON_ERROR)
 
     def calculate_peak_area(self, model, height, fwhm, fraction, sigma, gamma):
-        if model == "Voigt":
-            amplitude = height / PeakFunctions.get_voigt_height(1, sigma, gamma)
-            area = amplitude  * (sigma * np.sqrt(2 * np.pi))  # I DO NOT THINK THIS EQUATION SHOULD BE HERE
-        elif model == "Pseudo-Voigt":
+        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+            area = PeakFunctions.voigt_height_to_area(height, sigma/2.355, gamma/2)
+
+        elif model == "Pseudo-Voigt (Area)":
             sigma = fwhm / 2
             amplitude = height / PeakFunctions.get_pseudo_voigt_height(1, sigma, fraction)
             area = amplitude
-        elif model in ["GL", "SGL", "Unfitted"]:
+        elif model in ["GL (Height)", "SGL (Height)", "Unfitted"]:
             area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
         else:
             raise ValueError(f"Unknown fitting model: {model}")
@@ -1555,9 +1547,9 @@ class MyFrame(wx.Frame):
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                        if model == "Voigt":
-                            sigma = float(self.peak_params_grid.GetCellValue(row, 7))/2.355
-                            gamma = float(self.peak_params_grid.GetCellValue(row, 8))/2
+                        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+                            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
                         else:
                             sigma = 0
                             gamma = 0
@@ -1584,9 +1576,9 @@ class MyFrame(wx.Frame):
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                        if model == "Voigt":
-                            sigma = float(self.peak_params_grid.GetCellValue(row, 7)) / 2.355
-                            gamma = float(self.peak_params_grid.GetCellValue(row, 8)) / 2
+                        if model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)"]:
+                            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
                         else:
                             sigma = 0
                             gamma = 0
@@ -1594,6 +1586,8 @@ class MyFrame(wx.Frame):
 
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
                         peaks[correct_peak_key]['Area'] = area
+
+                        on_sheet_selected(self, sheet_name)
                 else:  # Constraint row
                     if col in [2, 3, 4, 5, 7, 8]:
                         constraint_keys = ['Position', 'Height', 'FWHM', 'L/G', 'Sigma', 'Gamma']

@@ -16,7 +16,7 @@ class BackgroundWindow(wx.Frame):
 
         # Create controls
         method_label = wx.StaticText(panel, label="Method:")
-        self.method_combobox = wx.ComboBox(panel, choices=["Shirley", "Linear", "Smart", "Smart2", "Adaptive Smart"], style=wx.CB_READONLY)
+        self.method_combobox = wx.ComboBox(panel, choices=["Multiple Regions Smart", "Smart", "Shirley", "Linear"], style=wx.CB_READONLY)
         self.method_combobox.SetSelection(0)  # Default to Shirley
 
         offset_h_label = wx.StaticText(panel, label="Offset (H):")

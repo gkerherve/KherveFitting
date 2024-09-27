@@ -147,7 +147,7 @@ class PlotManager:
         formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', peak_label)
 
         # Get the fitting model for this specific peak
-        fitting_model = peak_params.get('fitting_model', "GL")  # Default to GL if not specified
+        fitting_model = peak_params.get('fitting_model', "GL (Height)")  # Default to GL if not specified
 
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
         # sigma = fwhm / 2
@@ -156,22 +156,22 @@ class PlotManager:
         if fitting_model == "Unfitted":
             # We've already handled this in clear_and_replot, so just return
             return
-        elif fitting_model == "Voigt":
+        elif fitting_model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)"]:
             peak_model = lmfit.models.VoigtModel()
             sigma = float(peak_params.get('sigma', 0.47))/2.355
             gamma = float(peak_params.get('gamma', 0.06))/2
             # amplitude = float(peak_params.get('amplitude', 0))
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-        elif fitting_model == "Pseudo-Voigt":
+        elif fitting_model == "Pseudo-Voigt (Area)":
             sigma = fwhm / 2
             peak_model = lmfit.models.PseudoVoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio/100, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio/100)
-        elif fitting_model == "GL":
+        elif fitting_model == "GL (Height)":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-        elif fitting_model == "SGL":
+        elif fitting_model == "SGL (Height)":
             peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
 
@@ -446,7 +446,7 @@ class PlotManager:
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
-                if fitting_model == "Voigt":
+                if fitting_model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)"]:
                     sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                     gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 else:
@@ -652,18 +652,18 @@ class PlotManager:
             y = max(y, 0)
 
             # Create the selected peak using updated position and height
-            if window.selected_fitting_method == "Voigt":
+            if window.selected_fitting_method in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
                 peak_model = lmfit.models.VoigtModel()
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif window.selected_fitting_method == "Pseudo-Voigt":
+            elif window.selected_fitting_method == "Pseudo-Voigt (Area)":
                 peak_model = lmfit.models.PseudoVoigtModel()
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
                 params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-            elif window.selected_fitting_method == "GL":
+            elif window.selected_fitting_method == "GL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-            elif window.selected_fitting_method == "SGL":
+            elif window.selected_fitting_method == "SGL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
             else:  # Add GL which is the safe bet
@@ -742,21 +742,21 @@ class PlotManager:
             # gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - peak_x))]
 
-            if fitting_model == "Voigt":
+            if fitting_model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
                 peak_model = lmfit.models.VoigtModel()
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))/2.355
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))/2
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif fitting_model == "Pseudo-Voigt":
+            elif fitting_model == "Pseudo-Voigt (Area)":
                 sigma = fwhm / 2
                 peak_model = lmfit.models.PseudoVoigtModel()
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio/100, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio/100)
-            elif fitting_model == "GL":
+            elif fitting_model == "GL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-            elif fitting_model == "SGL":
+            elif fitting_model == "SGL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
             else:
@@ -1097,7 +1097,7 @@ class PlotManager:
             offset_l = float(window.offset_l)
 
             # Calculate background based on the selected method
-            if method == "Adaptive Smart":
+            if method == "Multiple Regions Smart":
                 background_filtered, label = self._calculate_adaptive_smart_background(window, x_values, y_values,
                                                                                        offset_h, offset_l)
             else:
@@ -1168,7 +1168,7 @@ class PlotManager:
                                                                                      y_values_filtered, offset_h,
                                                                                      offset_l)
             label = 'Background (Linear)'
-        elif method == "Smart":
+        elif method in ["Smart", "Multiple Regions Smart"]:
             background_filtered = BackgroundCalculations.calculate_smart_background(x_values_filtered,
                                                                                     y_values_filtered, offset_h,
                                                                                     offset_l)
