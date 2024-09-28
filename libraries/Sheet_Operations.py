@@ -68,12 +68,13 @@ def on_sheet_selected(window, event):
                     # Set constraints if available
                     if 'Constraints' in peak_data:
                         constraints = peak_data['Constraints']
-                        window.peak_params_grid.SetCellValue(row + 1, 2, str(constraints.get('Position', 'N/A')))
-                        window.peak_params_grid.SetCellValue(row + 1, 3, str(constraints.get('Height', 'N/A')))
-                        window.peak_params_grid.SetCellValue(row + 1, 4, str(constraints.get('FWHM', 'N/A')))
-                        window.peak_params_grid.SetCellValue(row + 1, 5, str(constraints.get('L/G', 'N/A')))
-                        window.peak_params_grid.SetCellValue(row + 1, 7, str(constraints.get('Sigma', 'N/A')))
-                        window.peak_params_grid.SetCellValue(row + 1, 8, str(constraints.get('Gamma', 'N/A')))
+                        window.peak_params_grid.SetCellValue(row + 1, 2, str(constraints.get('Position', '1:1200')))
+                        window.peak_params_grid.SetCellValue(row + 1, 3, str(constraints.get('Height', '1:1e7')))
+                        window.peak_params_grid.SetCellValue(row + 1, 4, str(constraints.get('FWHM', '0.4:3')))
+                        window.peak_params_grid.SetCellValue(row + 1, 5, str(constraints.get('L/G', '10:90')))
+                        window.peak_params_grid.SetCellValue(row + 1, 6, str(constraints.get('Area', '1:1e7')))
+                        window.peak_params_grid.SetCellValue(row + 1, 7, str(constraints.get('Sigma', '0.01:1')))
+                        window.peak_params_grid.SetCellValue(row + 1, 8, str(constraints.get('Gamma', '0.01:1')))
 
                     # Set background color for constraint rows
                     for col in range(window.peak_params_grid.GetNumberCols()+1):

@@ -15,6 +15,7 @@ import matplotlib.colors as mcolors
 from scipy.ndimage import gaussian_filter
 
 from libraries.Peak_Functions import PeakFunctions, BackgroundCalculations
+from libraries.Save import save_state
 
 
 class PlotManager:
@@ -1277,7 +1278,30 @@ class PlotManager:
         except Exception as e:
             wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
+    def clear_background_only(self, window):
+        sheet_name = window.sheet_combobox.GetValue()
+        if sheet_name in window.Data['Core levels']:
+            # Reset background to raw data
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = window.Data['Core levels'][sheet_name][
+                'Raw Data']
+            window.background = np.array(window.Data['Core levels'][sheet_name]['Raw Data'])
 
+            # Reset background parameters
+            window.Data['Core levels'][sheet_name]['Background'].update({
+                'Bkg Type': '',
+                'Bkg Low': '',
+                'Bkg High': '',
+                'Bkg Offset Low': '',
+                'Bkg Offset High': ''
+            })
+
+            # Reset vlines
+            window.vline1 = None
+            window.vline2 = None
+            window.show_hide_vlines()
+
+            # Redraw the plot
+            self.clear_and_replot(window)
 # --------------------- HISTORY --------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
 

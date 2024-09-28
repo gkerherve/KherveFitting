@@ -80,6 +80,10 @@ class FittingWindow(wx.Frame):
         reset_vlines_button.SetMinSize((125, 40))
         reset_vlines_button.Bind(wx.EVT_BUTTON, self.on_reset_vlines)
 
+        clear_background_only_button = wx.Button(background_panel, label="Clear\nBackground")
+        clear_background_only_button.SetMinSize((125, 40))
+        clear_background_only_button.Bind(wx.EVT_BUTTON, self.on_clear_background_only)
+
         # Layout Background Tab
         background_sizer.Add(method_label, pos=(0, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(self.method_combobox, pos=(1, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
@@ -87,9 +91,10 @@ class FittingWindow(wx.Frame):
         background_sizer.Add(self.offset_h_text, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(offset_l_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         background_sizer.Add(self.offset_l_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(background_button, pos=(4, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(clear_background_button, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(reset_vlines_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(background_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(reset_vlines_button, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_only_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         background_panel.SetSizer(background_sizer)
         notebook.AddPage(background_panel, "Background")
@@ -194,6 +199,11 @@ class FittingWindow(wx.Frame):
     def on_bkg_method_change(self, event):
         new_method = self.method_combobox.GetValue()
         self.parent.set_background_method(new_method)
+
+    def on_clear_background_only(self, event):
+        self.parent.plot_manager.clear_background_only(self.parent)
+
+
 
     def on_reset_vlines(self, event):
         self.parent.vline1 = None
@@ -345,6 +355,7 @@ class FittingWindow(wx.Frame):
                             'Height': height_constraint,
                             'FWHM': fwhm_constraint,
                             'L/G': lg_constraint,
+                            'Area': area_constraint,
                             'Sigma': sigma_constraint,
                             'Gamma': gamma_constraint
                         }
@@ -356,9 +367,11 @@ class FittingWindow(wx.Frame):
 
     def on_background(self, event):
         self.parent.plot_manager.plot_background(self.parent)
+        save_state(self.parent)
 
     def on_clear_background(self, event):
         self.parent.plot_manager.clear_background(self.parent)
+        save_state(self.parent)
 
     def on_offset_h_change(self, event):
         offset_h_value = self.offset_h_text.GetValue()

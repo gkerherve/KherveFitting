@@ -1,5 +1,6 @@
 import wx
 from libraries.Plot_Operations import PlotManager
+from libraries.Save import save_state
 import numpy as np
 
 class BackgroundWindow(wx.Frame):
@@ -110,8 +111,8 @@ class BackgroundWindow(wx.Frame):
                 height_constraint = "1,1e7"
                 fwhm_constraint = "0.3,3.5"
                 lg_constraint = "0,0.5"
-                sigma_constraint = "0.1,0.5"
-                gamma_constraint = "0.1,0.5"
+                sigma_constraint = "0.1,1"
+                gamma_constraint = "0.1,1"
 
                 # Update peak fitting parameter grid
                 grid = self.parent.peak_params_grid
@@ -162,7 +163,7 @@ class BackgroundWindow(wx.Frame):
                         'FWHM': fwhm_constraint,
                         'L/G': lg_constraint,
                         'Sigma': sigma_constraint,
-                        'Gamma': il_m_constraint
+                        'Gamma': gamma_constraint
                     }
                 }
 
@@ -186,15 +187,19 @@ class BackgroundWindow(wx.Frame):
                 print(f"FWHM: {fwhm:.2f} eV")
                 print(f"Area: {area:.2f}")
 
+                save_state(self.parent)
+
         except Exception as e:
             print(f"Error calculating background: {str(e)}")
 
     def on_clear_background(self, event):
         # Define the clear background behavior here
         self.parent.plot_manager.clear_background(self.parent)
+        save_state(self.parent)
 
     def on_export_results(self, event):
         self.parent.export_results()
+        save_state(self.parent)
 
     def on_offset_changed(self, event):
         try:
@@ -202,5 +207,6 @@ class BackgroundWindow(wx.Frame):
             offset_l = float(self.offset_l_text.GetValue())
             self.parent.set_offset_h(offset_h)
             self.parent.set_offset_l(offset_l)
+            save_state(self.parent)
         except ValueError:
             print("Invalid offset value")
