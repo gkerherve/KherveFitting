@@ -297,10 +297,10 @@ def create_menu(window):
     window.toggle_energy_item = toggle_energy_item
 
     # Tools menu items
-    Area_item = tools_menu.Append(wx.NewId(), "Calculate Area\tCtrl+A")
+    Area_item = tools_menu.Append(wx.NewId(), "Calculate Area Under Curve\tCtrl+A")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
 
-    Fitting_item = tools_menu.Append(wx.NewId(), "Peak Fitting\tCtrl+P")
+    Fitting_item = tools_menu.Append(wx.NewId(), "Create Peak Model\tCtrl+P")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_fitting_window(), Fitting_item)
 
     Noise_item = tools_menu.Append(wx.NewId(), "Noise Analysis")
@@ -390,15 +390,20 @@ def create_horizontal_toolbar(window):
     toolbar.AddSeparator()
 
     # Analysis tools
-    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area \tCtrl+A")
-    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Fitting Window \tCtrl+P")
+    bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-25.png"),
+                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Calculate Area "
+                                                                                                 "Under Curve\tCtrl+A")
+    fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s-25.png"),
+                                                                   wx.BITMAP_TYPE_PNG), shortHelp="Create Peaks "
+                                                                                                  "Model \tCtrl+P")
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
     toolbar.AddSeparator()
     add_vertical_separator(toolbar, separators)
     toolbar.AddSeparator()
 
-    id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Element identifications")
+    id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
+                              shortHelp="Element identifications (ID)")
 
     toolbar.AddStretchableSpace()
 

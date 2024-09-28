@@ -73,6 +73,12 @@ def _ensure_results_grid_columns(window):
         window.results_grid.SetColLabelValue(10, "Rel. Area")
 
 
+def safe_float(value, default=0.0):
+    try:
+        return float(value) if value.strip() else default
+    except (ValueError, AttributeError):
+        return default
+
 def _extract_peak_parameters(window, row, rsf_dict):
     peak_name = window.peak_params_grid.GetCellValue(row, 1)  # Label
 
@@ -109,14 +115,14 @@ def _extract_peak_parameters(window, row, rsf_dict):
 
     return {
         'name': peak_name,
-        'position': float(window.peak_params_grid.GetCellValue(row, 2)),
-        'height': float(window.peak_params_grid.GetCellValue(row, 3)),
-        'fwhm': float(window.peak_params_grid.GetCellValue(row, 4)),
-        'lg_ratio': float(window.peak_params_grid.GetCellValue(row, 5)),
+        'position': safe_float(window.peak_params_grid.GetCellValue(row, 2)),
+        'height': safe_float(window.peak_params_grid.GetCellValue(row, 3)),
+        'fwhm': safe_float(window.peak_params_grid.GetCellValue(row, 4)),
+        'lg_ratio': safe_float(window.peak_params_grid.GetCellValue(row, 5)),
         'rsf': rsf,
-        'area': float(window.peak_params_grid.GetCellValue(row, 6)),
-        'sigma': float(window.peak_params_grid.GetCellValue(row, 7)),
-        'gamma': float(window.peak_params_grid.GetCellValue(row, 8)),
+        'area': safe_float(window.peak_params_grid.GetCellValue(row, 6)),
+        'sigma': safe_float(window.peak_params_grid.GetCellValue(row, 7)),
+        'gamma': safe_float(window.peak_params_grid.GetCellValue(row, 8)),
         'constraints': {
             'position': window.peak_params_grid.GetCellValue(row + 1, 2),
             'height': window.peak_params_grid.GetCellValue(row + 1, 3),
@@ -240,6 +246,9 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
         'Height Constraint': peak_params['constraints']['height'],
         'FWHM Constraint': peak_params['constraints']['fwhm'],
         'L/G Constraint': peak_params['constraints']['lg_ratio'],
+        'Area Constraint': peak_params['constraints']['area'],
+        'Sigma Constraint':peak_params['constraints']['sigma'],
+        'Gamma Constraint':peak_params['constraints']['gamma'],
         'Checkbox': results.get(peak_label, {}).get('Checkbox', '0')  # Preserve existing checkbox state if available
     }
 

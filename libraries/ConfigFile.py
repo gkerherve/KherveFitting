@@ -34,10 +34,13 @@ def Init_Measurement_Data2(window):
                     'Rel. Area': 0,
                     'Sigma': 0.2,
                     'Gamma': 0.3,
-                    'Pos. Constraint': '0,1e3',
-                    'Height Constraint': '0,1e7',
+                    'Pos. Constraint': '1,1.1e3',
+                    'Height Constraint': '1,1e7',
                     'FWHM Constraint': '0.2,3.5',
-                    'L/G Constraint': '0.1,0.5'
+                    'L/G Constraint': '0.1,0.5',
+                    'Area Constraint':'1,1e7',
+                    'Sigma Constraint': '0.01:2',
+                    'Gamma Constraint': '0.01:1'
                 }
             }
         },
@@ -58,7 +61,10 @@ def Init_Measurement_Data2(window):
                 'Pos. Constraint': '0,1e3',
                 'Height Constraint': '0,1e7',
                 'FWHM Constraint': '0.2,3.5',
-                'L/G Constraint': '0.1,0.5'
+                'L/G Constraint': '0.1,0.5',
+                'Area Constraint': '1,1e7',
+                'Sigma Constraint': '0.01:2',
+                'Gamma Constraint': '0.01:1'
             }
         }
 

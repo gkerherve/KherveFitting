@@ -79,12 +79,13 @@ def save_data(window, data):
         with open(json_file_path, 'w') as json_file:
             json.dump(json_data, json_file, indent=2)
 
+        print(json.dumps(window.Data['Results']['Peak'], indent=2))
         print("Data Saved")
     except Exception as e:
         wx.MessageBox(f"Error saving data: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
-def convert_to_serializable_and_round(obj, decimal_places=2):
+def convert_to_serializable_and_round2(obj, decimal_places=2):
     try:
         if isinstance(obj, (float, np.float32, np.float64)):
             return round(float(obj), decimal_places)
@@ -110,6 +111,68 @@ def convert_to_serializable_and_round(obj, decimal_places=2):
             return obj
     except Exception as e:
         return str(obj)  # Return a string representation as a fallback
+
+def convert_to_serializable_and_round(obj, decimal_places=2):
+    try:
+        if isinstance(obj, (float, np.float32, np.float64)):
+            return round(float(obj), decimal_places)
+        elif isinstance(obj, (int, np.int32, np.int64)):
+            return int(obj)
+        elif isinstance(obj, np.ndarray):
+            return [convert_to_serializable_and_round(item, decimal_places) for item in obj.tolist()]
+        elif isinstance(obj, list):
+            return [convert_to_serializable_and_round(item, decimal_places) for item in obj]
+        elif isinstance(obj, dict):
+            return {k: convert_to_serializable_and_round(v, decimal_places) for k, v in obj.items()}
+        elif isinstance(obj, wx.grid.Grid):
+            if obj == window.results_grid:
+                return {
+                    "rows": obj.GetNumberRows(),
+                    "cols": obj.GetNumberCols(),
+                    "data": [{
+                        "Label": f"Peak_{row}",
+                        "Name": obj.GetCellValue(row, 0),
+                        "Position": convert_to_serializable_and_round(obj.GetCellValue(row, 1), decimal_places),
+                        "Height": convert_to_serializable_and_round(obj.GetCellValue(row, 2), decimal_places),
+                        "FWHM": convert_to_serializable_and_round(obj.GetCellValue(row, 3), decimal_places),
+                        "L/G": convert_to_serializable_and_round(obj.GetCellValue(row, 4), decimal_places),
+                        "Area": convert_to_serializable_and_round(obj.GetCellValue(row, 5), decimal_places),
+                        "at. %": convert_to_serializable_and_round(obj.GetCellValue(row, 6), decimal_places),
+                        "Checkbox": obj.GetCellValue(row, 7),
+                        "RSF": convert_to_serializable_and_round(obj.GetCellValue(row, 8), decimal_places),
+                        "Fitting Model": obj.GetCellValue(row, 9),
+                        "Rel. Area": convert_to_serializable_and_round(obj.GetCellValue(row, 10), decimal_places),
+                        "Sigma": convert_to_serializable_and_round(obj.GetCellValue(row, 11), decimal_places),
+                        "Gamma": convert_to_serializable_and_round(obj.GetCellValue(row, 12), decimal_places),
+                        "Bkg Type": obj.GetCellValue(row, 13),
+                        "Bkg Low": convert_to_serializable_and_round(obj.GetCellValue(row, 14), decimal_places),
+                        "Bkg High": convert_to_serializable_and_round(obj.GetCellValue(row, 15), decimal_places),
+                        "Bkg Offset Low": obj.GetCellValue(row, 16),
+                        "Bkg Offset High": obj.GetCellValue(row, 17),
+                        "Sheetname": obj.GetCellValue(row, 18),
+                        "Pos. Constraint": obj.GetCellValue(row, 19),
+                        "Height Constraint": obj.GetCellValue(row, 20),
+                        "FWHM Constraint": obj.GetCellValue(row, 21),
+                        "L/G Constraint": obj.GetCellValue(row, 22),
+                        "Area Constraint": obj.GetCellValue(row, 23),
+                        "Sigma Constraint": obj.GetCellValue(row, 24),
+                        "Gamma Constraint": obj.GetCellValue(row, 25)
+                    } for row in range(obj.GetNumberRows())]
+                }
+            else:
+                return {
+                    "rows": obj.GetNumberRows(),
+                    "cols": obj.GetNumberCols(),
+                    "data": [[convert_to_serializable_and_round(obj.GetCellValue(row, col), decimal_places)
+                              for col in range(obj.GetNumberCols())]
+                             for row in range(obj.GetNumberRows())]
+                }
+        elif hasattr(obj, 'tolist'):
+            return convert_to_serializable_and_round(obj.tolist(), decimal_places)
+        else:
+            return obj
+    except Exception as e:
+        return str(obj)
 
 def convert_to_serializable(obj):
     if isinstance(obj, np.ndarray):

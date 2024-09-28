@@ -36,7 +36,7 @@ class BackgroundWindow(wx.Frame):
         clear_background_button.SetMinSize((110, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
-        export_button = wx.Button(panel, label="Export")
+        export_button = wx.Button(panel, label="Accept")
         export_button.SetMinSize((60, 40))
         export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 

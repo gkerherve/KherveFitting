@@ -76,6 +76,10 @@ class FittingWindow(wx.Frame):
         clear_background_button.SetMinSize((125, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
+        reset_vlines_button = wx.Button(background_panel, label="Reset \nVertical Lines")
+        reset_vlines_button.SetMinSize((125, 40))
+        reset_vlines_button.Bind(wx.EVT_BUTTON, self.on_reset_vlines)
+
         # Layout Background Tab
         background_sizer.Add(method_label, pos=(0, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(self.method_combobox, pos=(1, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
@@ -85,6 +89,7 @@ class FittingWindow(wx.Frame):
         background_sizer.Add(self.offset_l_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(background_button, pos=(4, 0), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(clear_background_button, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(reset_vlines_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         background_panel.SetSizer(background_sizer)
         notebook.AddPage(background_panel, "Background")
@@ -120,11 +125,11 @@ class FittingWindow(wx.Frame):
         self.current_fit_label = wx.StaticText(fitting_panel, label="Current Fit:")
         self.current_fit_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
 
-        add_peak_button = wx.Button(fitting_panel, label="Add Single Peak")
+        add_peak_button = wx.Button(fitting_panel, label="Add 1 Peak\nSinglet")
         add_peak_button.SetMinSize((125, 40))
         add_peak_button.Bind(wx.EVT_BUTTON, self.on_add_peak)
 
-        add_doublet_button = wx.Button(fitting_panel, label="Add Doublet")
+        add_doublet_button = wx.Button(fitting_panel, label="Add 2 Peaks\nDoublet")
         add_doublet_button.SetMinSize((125, 40))
         add_doublet_button.Bind(wx.EVT_BUTTON, self.on_add_doublet)
 
@@ -132,15 +137,15 @@ class FittingWindow(wx.Frame):
         remove_peak_button.SetMinSize((125, 40))
         remove_peak_button.Bind(wx.EVT_BUTTON, self.on_remove_peak)
 
-        export_button = wx.Button(fitting_panel, label="Export")
+        export_button = wx.Button(fitting_panel, label="Accept")
         export_button.SetMinSize((125, 40))
         export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 
-        fit_button = wx.Button(fitting_panel, label="Fit Once")
+        fit_button = wx.Button(fitting_panel, label="Fit \nOne Time")
         fit_button.SetMinSize((125, 40))
         fit_button.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
 
-        fit_multi_button = wx.Button(fitting_panel, label="Fit Multi")
+        fit_multi_button = wx.Button(fitting_panel, label="Fit \nMultiple Times")
         fit_multi_button.SetMinSize((125, 40))
         fit_multi_button.Bind(wx.EVT_BUTTON, self.on_fit_multi)
 
@@ -189,6 +194,13 @@ class FittingWindow(wx.Frame):
     def on_bkg_method_change(self, event):
         new_method = self.method_combobox.GetValue()
         self.parent.set_background_method(new_method)
+
+    def on_reset_vlines(self, event):
+        self.parent.vline1 = None
+        self.parent.vline2 = None
+        self.parent.show_hide_vlines()
+        self.parent.plot_manager.clear_and_replot(self.parent)
+
 
     def on_add_peak(self, event):
         self.parent.add_peak_params()

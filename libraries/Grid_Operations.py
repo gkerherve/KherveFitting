@@ -66,6 +66,7 @@ def populate_results_grid(window):
         # Refresh the grid
         window.results_grid.ForceRefresh()
         window.results_grid.Refresh()
+
     else:
         print("No results data found in window.Data")
 
