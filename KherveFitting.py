@@ -813,7 +813,13 @@ class MyFrame(wx.Frame):
         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
         model = self.peak_params_grid.GetCellValue(row, 12)
 
-        area = self.calculate_peak_area(model, height, fwhm, fraction)
+        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+            area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma)
+        else:
+            area = self.calculate_peak_area(model, height, fwhm, fraction)
+
         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
 
     def show_hide_vlines(self):
@@ -1502,10 +1508,11 @@ class MyFrame(wx.Frame):
             except ValueError:
                 wx.MessageBox("Invalid height value", "Error", wx.OK | wx.ICON_ERROR)
 
-    def calculate_peak_area(self, model, height, fwhm, fraction, sigma, gamma):
+    def calculate_peak_area(self, model, height, fwhm, fraction, sigma=None, gamma=None):
         if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
-            area = PeakFunctions.voigt_height_to_area(height, sigma/2.355, gamma/2)
-
+            if sigma is None or gamma is None:
+                raise ValueError("Sigma and gamma are required for Voigt models")
+            area = PeakFunctions.voigt_height_to_area(height, sigma / 2.355, gamma / 2)
         elif model == "Pseudo-Voigt (Area)":
             sigma = fwhm / 2
             amplitude = height / PeakFunctions.get_pseudo_voigt_height(1, sigma, fraction)
