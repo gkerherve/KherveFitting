@@ -717,6 +717,7 @@ class MyFrame(wx.Frame):
 
             x = event.xdata
             y = event.ydata
+            bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
 
             if event.button == 1:  # Left button release
                 if event.key == 'shift':  # SHIFT + left click release for FWHM change
@@ -727,7 +728,6 @@ class MyFrame(wx.Frame):
                     for linked_peak in linked_peaks:
                         self.update_linked_peak_fwhm(linked_peak, new_fwhm)
                 else:
-                    bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
                     y = max(y - bkg_y, 0)  # Ensure height is not negative
 
                     self.update_peak(self.selected_peak_index, x, y)
@@ -833,6 +833,31 @@ class MyFrame(wx.Frame):
             peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
             if peak_label in peaks:
                 peaks[peak_label]['FWHM'] = new_linked_fwhm
+
+    def update_peak_fwhm(self, x):
+        if self.initial_fwhm is not None and self.initial_x is not None:
+            row = self.selected_peak_index * 2
+            peak_label = self.peak_params_grid.GetCellValue(row, 1)
+
+            delta_x = x - self.initial_x
+            new_fwhm = max(self.initial_fwhm + delta_x * 1, 0.3)  # Ensure minimum FWHM of 0.3 eV
+
+            self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")
+
+            # Update FWHM in window.Data
+            sheet_name = self.sheet_combobox.GetValue()
+            if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
+                sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
+                peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+                if peak_label in peaks:
+                    peaks[peak_label]['FWHM'] = new_fwhm
+
+            # Recalculate area
+            self.recalculate_peak_area(self.selected_peak_index)
+
+            return new_fwhm
+
+        return None
 
     def recalculate_peak_area(self, peak_index):
         row = peak_index * 2
