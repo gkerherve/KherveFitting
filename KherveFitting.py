@@ -732,24 +732,25 @@ class MyFrame(wx.Frame):
                     for linked_peak in linked_peaks:
                         self.update_linked_peak(linked_peak, x, y)
 
-            # Remove old cross
-            self.remove_cross_from_peak()
+                # Remove old cross
+                self.remove_cross_from_peak()
 
-            # Create new cross at final position
-            self.cross, = self.ax.plot(x, y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)
+                # Create new cross at final position
+                self.cross = \
+                self.ax.plot(x, y + bkg_y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)[0]
 
-            self.canvas.draw_idle()
+                self.canvas.draw_idle()
 
-            # Safely disconnect event handlers
-            if hasattr(self, 'motion_cid'):
-                self.canvas.mpl_disconnect(self.motion_cid)
-                delattr(self, 'motion_cid')
-            if hasattr(self, 'release_cid'):
-                self.canvas.mpl_disconnect(self.release_cid)
-                delattr(self, 'release_cid')  # Corrected line, added closing quotation mark
+        # Safely disconnect event handlers
+        if hasattr(self, 'motion_cid'):
+            self.canvas.mpl_disconnect(self.motion_cid)
+            delattr(self, 'motion_cid')
+        if hasattr(self, 'release_cid'):
+            self.canvas.mpl_disconnect(self.release_cid)
+            delattr(self, 'release_cid')
 
-            # Refresh the grid to ensure it reflects the current state of self.Data
-            self.refresh_peak_params_grid()
+        # Refresh the grid to ensure it reflects the current state of self.Data
+        self.refresh_peak_params_grid()
 
     def get_linked_peaks(self, peak_index):
         linked_peaks = []
