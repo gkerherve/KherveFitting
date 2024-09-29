@@ -773,25 +773,74 @@ class MyFrame(wx.Frame):
         constraint_row = row + 1
         position_constraint = self.peak_params_grid.GetCellValue(constraint_row, 2)
         height_constraint = self.peak_params_grid.GetCellValue(constraint_row, 3)
+        area_constraint = self.peak_params_grid.GetCellValue(constraint_row, 6)
 
-        # Update position
-        if '+' in position_constraint:
-            offset = float(position_constraint.split('+')[1].split('#')[0])
-            new_position = new_x + offset
-        elif '*' in position_constraint:
-            factor = float(position_constraint.split('*')[1].split('#')[0])
-            new_position = new_x * factor
-        else:
-            new_position = new_x
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+        peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
 
-        # Update height
-        if '*' in height_constraint:
-            factor = float(height_constraint.split('*')[1].split('#')[0])
-            new_linked_height = new_height * factor
-        else:
-            new_linked_height = new_height
+        # Update position if constrained
+        if position_constraint.startswith(chr(65 + self.selected_peak_index)):
+            if '+' in position_constraint:
+                offset = float(position_constraint.split('+')[1].split('#')[0])
+                new_position = new_x + offset
+            elif '*' in position_constraint:
+                factor = float(position_constraint.split('*')[1].split('#')[0])
+                new_position = new_x * factor
+            else:
+                new_position = new_x
 
-        self.update_peak(peak_index, new_position, new_linked_height)
+            self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Position'] = new_position
+
+        # Update height if constrained
+        if height_constraint.startswith(chr(65 + self.selected_peak_index)):
+            if '*' in height_constraint:
+                factor = float(height_constraint.split('*')[1].split('#')[0])
+                new_linked_height = new_height * factor
+            else:
+                new_linked_height = new_height
+
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Height'] = new_linked_height
+
+        # Update area if constrained
+        elif area_constraint.startswith(chr(65 + self.selected_peak_index)):
+            current_area = float(self.peak_params_grid.GetCellValue(self.selected_peak_index * 2, 6))
+            if '*' in area_constraint:
+                factor = float(area_constraint.split('*')[1].split('#')[0])
+                new_linked_area = current_area * factor
+            else:
+                new_linked_area = current_area
+
+            self.peak_params_grid.SetCellValue(row, 6, f"{new_linked_area:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Area'] = new_linked_area
+
+            # Recalculate height based on new area
+            fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+            model = self.peak_params_grid.GetCellValue(row, 12)
+            new_linked_height = self.calculate_height_from_area(new_linked_area, fwhm, model)
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Height'] = new_linked_height
+
+        # Recalculate area if height or position changed
+        if position_constraint.startswith(chr(65 + self.selected_peak_index)) or \
+                height_constraint.startswith(chr(65 + self.selected_peak_index)):
+            self.recalculate_peak_area(peak_index)
+
+    def calculate_height_from_area(self, area, fwhm, model):
+        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+            # For Voigt, this is an approximation
+            return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
+        elif model == "Pseudo-Voigt (Area)":
+            # For Pseudo-Voigt, this is also an approximation
+            return area / (fwhm * np.pi / 2)
+        else:  # GL, SGL, or other models
+            return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
 
     def update_peak(self, peak_index, new_x, new_height):
         row = peak_index * 2
