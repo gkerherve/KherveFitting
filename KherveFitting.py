@@ -365,7 +365,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 2, f"{peak_x:.2f}")
         self.peak_params_grid.SetCellValue(row, 3, f"{peak_y:.2f}")
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
-        self.peak_params_grid.SetCellValue(row, 5, "30")
+        self.peak_params_grid.SetCellValue(row, 5, "20")
         self.peak_params_grid.SetCellValue(row, 6, f"{peak_y*1.6*1.064:.2f}")  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
         self.peak_params_grid.SetCellValue(row, 8, '0.15')  # gamma
@@ -470,12 +470,12 @@ class MyFrame(wx.Frame):
             'Bkg Offset High': self.offset_h,
             'Constraints': {
                 'Position': position_constraint,
-                'Height': "1,1e7",
-                'FWHM': "0.3,3.5",
-                'L/G': "2,80",
-                'Area':'1,1e7',
-                'Sigma': "0.01:0.6",
-                'Gamma': "0.01:0.6"
+                'Height': "1:1e7",
+                'FWHM': "0.3:3.5",
+                'L/G': "2:80",
+                'Area':'1:1e7',
+                'Sigma': "0.01:1",
+                'Gamma': "0.01:1"
             }
         }
         # print(self.Data)
@@ -574,12 +574,6 @@ class MyFrame(wx.Frame):
         self.noise_tab_selected = False
         self.show_hide_vlines()
 
-
-    # END OPEN WINDOW ----------------------------------------------------------------------------------
-    # --------------------------------------------------------------------------------------------------
-
-    # --------------------------------------------------------------------------------------------------
-    # MOVE TO PLOT OPERATIONS --------------------------------------------------------------------------
     def clear_and_replot(self):
         self.plot_manager.clear_and_replot(self)
 
@@ -1707,14 +1701,14 @@ class MyFrame(wx.Frame):
                 # self.peak_params_grid.SetCellValue(row, 6, f"{peak_data['Area']:.2f}")
                 self.peak_params_grid.SetCellValue(row, 7, f"{peak_data['Sigma']:.2f}")
                 self.peak_params_grid.SetCellValue(row, 8, f"{peak_data['Gamma']:.2f}")
-                # if 'Constraints' in peak_data:
-                #     self.peak_params_grid.SetCellValue(row + 1, 2, str(peak_data['Constraints'].get('Position', '')))
-                #     self.peak_params_grid.SetCellValue(row + 1, 3, str(peak_data['Constraints'].get('Height', '')))
-                #     self.peak_params_grid.SetCellValue(row + 1, 4, str(peak_data['Constraints'].get('FWHM', '')))
-                #     self.peak_params_grid.SetCellValue(row + 1, 5, str(peak_data['Constraints'].get('L/G', '')))
-                #     self.peak_params_grid.SetCellValue(row + 1, 6, str(peak_data['Constraints'].get('Area', '')))
-                #     self.peak_params_grid.SetCellValue(row + 1, 7, str(peak_data['Constraints'].get('Sigma', '')))
-                #     self.peak_params_grid.SetCellValue(row + 1, 8, str(peak_data['Constraints'].get('Gamma', '')))
+                if 'Constraints' in peak_data:
+                    self.peak_params_grid.SetCellValue(row + 1, 2, str(peak_data['Constraints'].get('Position', '')))
+                    self.peak_params_grid.SetCellValue(row + 1, 3, str(peak_data['Constraints'].get('Height', '')))
+                    self.peak_params_grid.SetCellValue(row + 1, 4, str(peak_data['Constraints'].get('FWHM', '')))
+                    self.peak_params_grid.SetCellValue(row + 1, 5, str(peak_data['Constraints'].get('L/G', '')))
+                    self.peak_params_grid.SetCellValue(row + 1, 6, str(peak_data['Constraints'].get('Area', '')))
+                    self.peak_params_grid.SetCellValue(row + 1, 7, str(peak_data['Constraints'].get('Sigma', '')))
+                    self.peak_params_grid.SetCellValue(row + 1, 8, str(peak_data['Constraints'].get('Gamma', '')))
         self.peak_params_grid.ForceRefresh()
 
     def on_checkbox_update(self, event):
