@@ -684,19 +684,13 @@ class MyFrame(wx.Frame):
                         new_x = event.xdata
                         new_height = max(event.ydata - bkg_y, 0)
 
-                        # Update the grid
-                        self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")
-                        self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
+                        # Update the selected peak
+                        self.update_peak(self.selected_peak_index, new_x, new_height)
 
-                        # Update the Data structure
-                        sheet_name = self.sheet_combobox.GetValue()
-                        peak_label = self.peak_params_grid.GetCellValue(row, 1)
-                        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
-                            sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
-                            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-                            if peak_label in peaks:
-                                peaks[peak_label]['Position'] = new_x
-                                peaks[peak_label]['Height'] = new_height
+                        # Update linked peaks
+                        linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                        for linked_peak in linked_peaks:
+                            self.update_linked_peak(linked_peak, new_x, new_height)
 
                         # Call the function that updates all split values
                         self.update_ratios()
@@ -730,46 +724,19 @@ class MyFrame(wx.Frame):
                     x = event.xdata
                     y = max(event.ydata - bkg_y, 0)  # Ensure height is not negative
 
-                    self.update_peak_grid(self.selected_peak_index, x, y)
+                    self.update_peak(self.selected_peak_index, x, y)
 
-                    # Recalculate the area
-                    model = self.peak_params_grid.GetCellValue(row, 12)
-                    height = float(self.peak_params_grid.GetCellValue(row, 3))
-                    fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
-                    fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                    if model == "Voigt (Area, L/G, \u03C3)":
-                        sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                        gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-                    else:
-                        sigma = 0
-                        gamma = 0
-                    area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma)
-                    self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+                    # Update linked peaks
+                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                    for linked_peak in linked_peaks:
+                        self.update_linked_peak(linked_peak, x, y)
 
-                    # Remove old cross
-                    self.remove_cross_from_peak()
+                # Remove old cross
+                self.remove_cross_from_peak()
 
-                    # Create new cross at final position
-                    self.cross, = self.ax.plot(x, event.ydata, 'bx', markersize=15, markerfacecolor='none', picker=5,
-                                               linewidth=3)
-
-                    # self.update_peak_plot(x, y)
-
-                    # Update the Data structure with the current label and new values
-                    if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
-                        sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
-                        peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-                        if peak_label in peaks:
-                            peaks[peak_label]['Position'] = x
-                            peaks[peak_label]['Height'] = y
-                        else:
-                            # If the label doesn't exist, find the correct peak by index and update its label
-                            old_labels = list(peaks.keys())
-                            if self.selected_peak_index < len(old_labels):
-                                old_label = old_labels[self.selected_peak_index]
-                                peaks[peak_label] = peaks.pop(old_label)
-                                peaks[peak_label]['Position'] = x
-                                peaks[peak_label]['Height'] = y
+                # Create new cross at final position
+                self.cross, = self.ax.plot(x, event.ydata, 'bx', markersize=15, markerfacecolor='none', picker=5,
+                                           linewidth=3)
 
             self.canvas.draw_idle()
 
@@ -784,7 +751,70 @@ class MyFrame(wx.Frame):
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
 
+    def get_linked_peaks(self, peak_index):
+        linked_peaks = []
+        row = peak_index * 2
+        for i in range(self.peak_params_grid.GetNumberRows() // 2):
+            constraint_row = i * 2 + 1
+            position_constraint = self.peak_params_grid.GetCellValue(constraint_row, 2)
+            if position_constraint.startswith(chr(65 + peak_index)):
+                linked_peaks.append(i)
+        return linked_peaks
 
+    def update_linked_peak(self, peak_index, new_x, new_height):
+        row = peak_index * 2
+        constraint_row = row + 1
+        position_constraint = self.peak_params_grid.GetCellValue(constraint_row, 2)
+        height_constraint = self.peak_params_grid.GetCellValue(constraint_row, 3)
+
+        # Update position
+        if '+' in position_constraint:
+            offset = float(position_constraint.split('+')[1].split('#')[0])
+            new_position = new_x + offset
+        elif '*' in position_constraint:
+            factor = float(position_constraint.split('*')[1].split('#')[0])
+            new_position = new_x * factor
+        else:
+            new_position = new_x
+
+        # Update height
+        if '*' in height_constraint:
+            factor = float(height_constraint.split('*')[1].split('#')[0])
+            new_linked_height = new_height * factor
+        else:
+            new_linked_height = new_height
+
+        self.update_peak(peak_index, new_position, new_linked_height)
+
+    def update_peak(self, peak_index, new_x, new_height):
+        row = peak_index * 2
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+
+        # Update the grid
+        self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")
+        self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
+
+        # Update the Data structure
+        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
+                self.Data['Core levels'][sheet_name]['Fitting']:
+            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+            if peak_label in peaks:
+                peaks[peak_label]['Position'] = new_x
+                peaks[peak_label]['Height'] = new_height
+
+        # Recalculate area
+        self.recalculate_peak_area(peak_index)
+
+    def recalculate_peak_area(self, peak_index):
+        row = peak_index * 2
+        height = float(self.peak_params_grid.GetCellValue(row, 3))
+        fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+        fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+        model = self.peak_params_grid.GetCellValue(row, 12)
+
+        area = self.calculate_peak_area(model, height, fwhm, fraction)
+        self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
 
     def show_hide_vlines(self):
         background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected
