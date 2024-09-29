@@ -678,10 +678,11 @@ class MyFrame(wx.Frame):
                     if event.key == 'shift':
                         new_fwhm = self.update_peak_fwhm(event.xdata)
 
-                        # Update FWHM for linked peaks
-                        linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                        for linked_peak in linked_peaks:
-                            self.update_linked_peak_fwhm(linked_peak, new_fwhm)
+                        if new_fwhm is not None:
+                            # Update FWHM for linked peaks
+                            linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                            for linked_peak in linked_peaks:
+                                self.update_linked_peak_fwhm(linked_peak, new_fwhm)
 
                     elif self.is_mouse_on_peak(event):
                         closest_index = np.argmin(np.abs(self.x_values - event.xdata))
