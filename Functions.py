@@ -646,6 +646,7 @@ import re
 
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
     constraint_str = constraint_str.strip()
+
     small_error = 0.05
 
     # Pattern to match A+1.5#0.5 format
