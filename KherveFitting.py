@@ -705,11 +705,14 @@ class MyFrame(wx.Frame):
     def on_cross_release(self, event):
         save_state(self)
         if event.inaxes and self.selected_peak_index is not None:
-            if event.button == 1:  # Left button release
-                row = self.selected_peak_index * 2
-                peak_label = self.peak_params_grid.GetCellValue(row, 1)
-                sheet_name = self.sheet_combobox.GetValue()
+            row = self.selected_peak_index * 2
+            peak_label = self.peak_params_grid.GetCellValue(row, 1)
+            sheet_name = self.sheet_combobox.GetValue()
 
+            x = event.xdata
+            y = event.ydata
+
+            if event.button == 1:  # Left button release
                 if event.key == 'shift':  # SHIFT + left click release for FWHM change
                     # Store the current FWHM in window.Data
                     current_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
@@ -718,11 +721,9 @@ class MyFrame(wx.Frame):
                         peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
                         if peak_label in peaks:
                             peaks[peak_label]['FWHM'] = current_fwhm
-
                 else:
-                    bkg_y = self.background[np.argmin(np.abs(self.x_values - event.xdata))]
-                    x = event.xdata
-                    y = max(event.ydata - bkg_y, 0)  # Ensure height is not negative
+                    bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
+                    y = max(y - bkg_y, 0)  # Ensure height is not negative
 
                     self.update_peak(self.selected_peak_index, x, y)
 
@@ -731,25 +732,24 @@ class MyFrame(wx.Frame):
                     for linked_peak in linked_peaks:
                         self.update_linked_peak(linked_peak, x, y)
 
-                # Remove old cross
-                self.remove_cross_from_peak()
+            # Remove old cross
+            self.remove_cross_from_peak()
 
-                # Create new cross at final position
-                self.cross, = self.ax.plot(x, event.ydata, 'bx', markersize=15, markerfacecolor='none', picker=5,
-                                           linewidth=3)
+            # Create new cross at final position
+            self.cross, = self.ax.plot(x, y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)
 
             self.canvas.draw_idle()
 
-        # Safely disconnect event handlers
-        if hasattr(self, 'motion_cid'):
-            self.canvas.mpl_disconnect(self.motion_cid)
-            delattr(self, 'motion_cid')
-        if hasattr(self, 'release_cid'):
-            self.canvas.mpl_disconnect(self.release_cid)
-            delattr(self, 'release_cid')
+            # Safely disconnect event handlers
+            if hasattr(self, 'motion_cid'):
+                self.canvas.mpl_disconnect(self.motion_cid)
+                delattr(self, 'motion_cid')
+            if hasattr(self, 'release_cid'):
+                self.canvas.mpl_disconnect(self.release_cid)
+                delattr(self, 'release_cid')  # Corrected line, added closing quotation mark
 
-        # Refresh the grid to ensure it reflects the current state of self.Data
-        self.refresh_peak_params_grid()
+            # Refresh the grid to ensure it reflects the current state of self.Data
+            self.refresh_peak_params_grid()
 
     def get_linked_peaks(self, peak_index):
         linked_peaks = []
