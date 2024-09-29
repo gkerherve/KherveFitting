@@ -43,7 +43,7 @@ from libraries.Open import open_xlsx_file
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(1600, 700))
+        super().__init__(parent, title=title, size=(1680, 780))
 
 
 
@@ -425,7 +425,7 @@ class MyFrame(wx.Frame):
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(240,240,240))
                 self.peak_params_grid.SetCellValue(row , col, "0")
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
-                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(0,0,0))
+                self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(255,255,255))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [4, 5, 6]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
@@ -459,7 +459,7 @@ class MyFrame(wx.Frame):
             'Height': peak_y,
             'FWHM': 1.6,
             'L/G': 30,
-            'Area': '',
+            'Area': peak_y*1.6*1.064,
             'Sigma': 1,
             'Gamma': 0.2,
             'Fitting Model': self.selected_fitting_method,
@@ -473,6 +473,7 @@ class MyFrame(wx.Frame):
                 'Height': "1,1e7",
                 'FWHM': "0.3,3.5",
                 'L/G': "2,80",
+                'Area':'1,1e7',
                 'Sigma': "0.01:0.6",
                 'Gamma': "0.01:0.6"
             }
@@ -1310,9 +1311,16 @@ class MyFrame(wx.Frame):
                     'Height': peak_y,
                     'FWHM': float(self.peak_params_grid.GetCellValue(row, 4)),
                     'L/G': float(self.peak_params_grid.GetCellValue(row, 5)),
+                    'Area': try_float(self.peak_params_grid.GetCellValue(row, 6), 0.0),
                     'Sigma': float(self.peak_params_grid.GetCellValue(row, 7)),
                     'Gamma': float(self.peak_params_grid.GetCellValue(row, 8))
                 }
+
+                def try_float(value, default=0.0):
+                    try:
+                        return float(value)
+                    except ValueError:
+                        return default
 
         self.selected_peak_index = None
         self.canvas.draw_idle()
@@ -1694,7 +1702,7 @@ class MyFrame(wx.Frame):
                     area_value = float(peak_data['Area'])
                     self.peak_params_grid.SetCellValue(row, 6, f"{area_value:.2f}")
                 except (ValueError, KeyError):
-                    self.peak_params_grid.SetCellValue(row, 6, "")
+                    self.peak_params_grid.SetCellValue(row, 6, "ER! REFRESH PEAK")
                 # self.peak_params_grid.SetCellValue(row, 6, f"{float(peak_data['Area']):.2f}")
                 # self.peak_params_grid.SetCellValue(row, 6, f"{peak_data['Area']:.2f}")
                 self.peak_params_grid.SetCellValue(row, 7, f"{peak_data['Sigma']:.2f}")

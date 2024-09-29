@@ -326,7 +326,10 @@ def fit_peaks(window, peak_params_grid):
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
-                area = float(peak_params_grid.GetCellValue(row, 6))
+                try:
+                    area = float(peak_params_grid.GetCellValue(row, 6))
+                except ValueError:
+                    area = 0  # Or any default value you prefer
                 peak_model_choice = peak_params_grid.GetCellValue(row, 12)
 
                 sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
