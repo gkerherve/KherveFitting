@@ -676,7 +676,13 @@ class MyFrame(wx.Frame):
             if event.button == 1:
                 try:
                     if event.key == 'shift':
-                        self.update_peak_fwhm(event.xdata)
+                        new_fwhm = self.update_peak_fwhm(event.xdata)
+
+                        # Update FWHM for linked peaks
+                        linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                        for linked_peak in linked_peaks:
+                            self.update_linked_peak_fwhm(linked_peak, new_fwhm)
+
                     elif self.is_mouse_on_peak(event):
                         closest_index = np.argmin(np.abs(self.x_values - event.xdata))
                         bkg_y = self.background[closest_index]
@@ -692,12 +698,12 @@ class MyFrame(wx.Frame):
                         for linked_peak in linked_peaks:
                             self.update_linked_peak(linked_peak, new_x, new_height)
 
-                        # Call the function that updates all split values
-                        self.update_ratios()
+                    # Call the function that updates all split values
+                    self.update_ratios()
 
-                        self.clear_and_replot()
-                        self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
-                        self.canvas.draw_idle()
+                    self.clear_and_replot()
+                    self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
+                    self.canvas.draw_idle()
 
                 except Exception as e:
                     print(f"Error during cross drag: {e}")
@@ -714,13 +720,12 @@ class MyFrame(wx.Frame):
 
             if event.button == 1:  # Left button release
                 if event.key == 'shift':  # SHIFT + left click release for FWHM change
-                    # Store the current FWHM in window.Data
-                    current_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
-                    if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
-                        sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
-                        peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-                        if peak_label in peaks:
-                            peaks[peak_label]['FWHM'] = current_fwhm
+                    new_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+
+                    # Update FWHM for linked peaks
+                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                    for linked_peak in linked_peaks:
+                        self.update_linked_peak_fwhm(linked_peak, new_fwhm)
                 else:
                     bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
                     y = max(y - bkg_y, 0)  # Ensure height is not negative
@@ -732,14 +737,14 @@ class MyFrame(wx.Frame):
                     for linked_peak in linked_peaks:
                         self.update_linked_peak(linked_peak, x, y)
 
-                # Remove old cross
-                self.remove_cross_from_peak()
+            # Remove old cross
+            self.remove_cross_from_peak()
 
-                # Create new cross at final position
-                self.cross = \
-                self.ax.plot(x, y + bkg_y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)[0]
+            # Create new cross at final position
+            self.cross = self.ax.plot(x, y + bkg_y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)[
+                0]
 
-                self.canvas.draw_idle()
+            self.canvas.draw_idle()
 
         # Safely disconnect event handlers
         if hasattr(self, 'motion_cid'):
@@ -806,6 +811,28 @@ class MyFrame(wx.Frame):
 
         # Recalculate area
         self.recalculate_peak_area(peak_index)
+
+    def update_linked_peak_fwhm(self, peak_index, new_fwhm):
+        row = peak_index * 2
+        constraint_row = row + 1
+        fwhm_constraint = self.peak_params_grid.GetCellValue(constraint_row, 4)
+
+        if '*' in fwhm_constraint:
+            factor = float(fwhm_constraint.split('*')[1].split('#')[0])
+            new_linked_fwhm = new_fwhm * factor
+        else:
+            new_linked_fwhm = new_fwhm
+
+        self.peak_params_grid.SetCellValue(row, 4, f"{new_linked_fwhm:.2f}")
+        self.recalculate_peak_area(peak_index)
+
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
+                self.Data['Core levels'][sheet_name]['Fitting']:
+            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+            if peak_label in peaks:
+                peaks[peak_label]['FWHM'] = new_linked_fwhm
 
     def recalculate_peak_area(self, peak_index):
         row = peak_index * 2
