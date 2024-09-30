@@ -7,6 +7,19 @@ import numpy as np
 
 
 class PeakFunctions:
+
+    @staticmethod
+    def gaussian_other(x, E, F, m):
+        return np.exp(-4 * np.log(2) * ((x - E) / F)**2) * (1 - m / 100)
+
+    @staticmethod
+    def gaussian(x, E, F, m):
+        return np.exp(-4 * np.log(2) * (1 - m / 100) * ((x - E) / F)**2)
+
+    @staticmethod
+    def lorentzian(x, E, F, m):
+        return 1 / (1 + 4 * m / 100 * ((x - E) / F)**2)
+
     @staticmethod
     def gauss_lorentz_OLD(x, center, fwhm, fraction, amplitude):
         return amplitude * (
@@ -26,6 +39,22 @@ class PeakFunctions:
                 PeakFunctions.lorentzian(x, center, fwhm, fraction * 1))
         return peak
 
+
+    @staticmethod
+    def gauss_lorentz_Area(x, center, area, fwhm, fraction):
+        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        height = area / (sigma * np.sqrt(2 * np.pi))
+        return height * (
+                PeakFunctions.gaussian(x, center, fwhm, fraction * 1) *
+                PeakFunctions.lorentzian(x, center, fwhm, fraction * 1))
+
+    @staticmethod
+    def S_gauss_lorentz_Area(x, center, area, fwhm, fraction):
+        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+        height = area / (sigma * np.sqrt(2 * np.pi))
+        return height * (
+                (1 - fraction / 100) * PeakFunctions.gaussian(x, center, fwhm, 0) +
+                fraction / 100 * PeakFunctions.lorentzian(x, center, fwhm, 100))
 
 
     # SHALL NOT BE USEFUL
@@ -50,18 +79,6 @@ class PeakFunctions:
                 fraction/100 * PeakFunctions.lorentzian(x, center, fwhm, 100))
         tail = PeakFunctions.tail(x, center, tail_mix, tail_exp)
         return peak * (1 - tail_mix) + amplitude * tail
-
-    @staticmethod
-    def gaussian_other(x, E, F, m):
-        return np.exp(-4 * np.log(2) * ((x - E) / F)**2) * (1 - m / 100)
-
-    @staticmethod
-    def gaussian(x, E, F, m):
-        return np.exp(-4 * np.log(2) * (1 - m / 100) * ((x - E) / F)**2)
-
-    @staticmethod
-    def lorentzian(x, E, F, m):
-        return 1 / (1 + 4 * m / 100 * ((x - E) / F)**2)
 
     @staticmethod
     def pseudo_voigt(x, center, amplitude, sigma, fraction):

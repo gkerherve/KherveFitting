@@ -474,6 +474,22 @@ def fit_peaks(window, peak_params_grid):
                     # Define amplitude as an expression based on area
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
+
+                elif peak_model_choice == "GL (Area)":
+                    peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area, prefix=prefix)
+                    params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
+                               vary=lg_ratio_vary)
+                elif peak_model_choice == "SGL (Area)":
+                    peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area, prefix=prefix)
+                    params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
+                               vary=lg_ratio_vary)
+
                 elif peak_model_choice == "GL (Height)":
                     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz, prefix=prefix)
                     params.add(f'{prefix}amplitude', value=height, min=height_min, max=height_max, vary=height_vary)
@@ -537,18 +553,22 @@ def fit_peaks(window, peak_params_grid):
                         amplitude = result.params[f'{prefix}area'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         fraction = result.params[f'{prefix}fraction'].value * 100
-
                         # fwhm = sigma * 2.355
                         fwhm = sigma * 2
                         height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
                         area = amplitude
-
-
                     elif peak_model_choice in ["GL (Height)", "SGL (Height)"]:
                         height = result.params[f'{prefix}amplitude'].value
                         fwhm = result.params[f'{prefix}fwhm'].value
                         fraction = result.params[f'{prefix}fraction'].value
                         area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+                    elif peak_model_choice in ["GL (Area)", "SGL (Area)"]:
+                        area = result.params[f'{prefix}area'].value
+                        fwhm = result.params[f'{prefix}fwhm'].value
+                        fraction = result.params[f'{prefix}fraction'].value
+                        # sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+                        # height = area / (sigma * np.sqrt(2 * np.pi))
+                        height =  area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
                     else:
                         raise ValueError(f"Unknown fitting model: {peak_model_choice} for peak {peak_label}")
 

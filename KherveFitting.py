@@ -415,7 +415,7 @@ class MyFrame(wx.Frame):
             for col in [6, 7, 8]:  # Columns for Height, FWHM
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
-        elif self.selected_fitting_method == "Pseudo-Voigt (Area)":
+        elif self.selected_fitting_method in  ["Pseudo-Voigt (Area)", "GL (Area)", "SGL (Area)"]:
             for col in [3]:  # Height
                 # self.peak_params_grid.SetCellBackgroundColour(row, col, wx.Colour(200,245,228))
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
@@ -839,6 +839,13 @@ class MyFrame(wx.Frame):
         elif model == "Pseudo-Voigt (Area)":
             # For Pseudo-Voigt, this is also an approximation
             return area / (fwhm * np.pi / 2)
+        elif model in ["GL (Area)", "SGL (Area)"]:
+            # For Gaussian-Lorentzian models, whether area-based or height-based
+            # sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+            # return area / (sigma * np.sqrt(2 * np.pi))
+            return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
+        elif model in ["GL (Height)", "SGL (Height)"]:
+            return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
         else:  # GL, SGL, or other models
             return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
 
@@ -1622,6 +1629,10 @@ class MyFrame(wx.Frame):
             area = amplitude
         elif model in ["GL (Height)", "SGL (Height)", "Unfitted"]:
             area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+        elif model in ["GL (Area)", "SGL (Area)"]:
+            # For area-based models, the area is already provided
+            # area = height
+            area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
         else:
             raise ValueError(f"Unknown fitting model: {model}")
         return round(area, 2)
@@ -1691,6 +1702,7 @@ class MyFrame(wx.Frame):
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
                         # area = float(self.peak_params_grid.GetCellValue(row, 6))
                         if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+                            area = float(self.peak_params_grid.GetCellValue(row, 6))
                             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
                             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
                         else:
@@ -1698,6 +1710,12 @@ class MyFrame(wx.Frame):
                             gamma = 0
                         if model == "Pseudo-Voigt (Area)":
                             area = float(self.peak_params_grid.GetCellValue(row, 6))
+                        if model in ["GL (Area)", "SGL (Area)"]:
+                            area = float(self.peak_params_grid.GetCellValue(row, 6))
+                            # For area-based models, recalculate height
+                            sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+                            height = area / (sigma * np.sqrt(2 * np.pi))
+                            self.peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")
                         else:
                             # Recalculate area
                             area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma)

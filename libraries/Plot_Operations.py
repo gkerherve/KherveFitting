@@ -136,54 +136,58 @@ class PlotManager:
         self.ax.set_ylabel('Intensity (CPS)')
         self.canvas.draw()
 
-    def plot_peak(self, x_values, background, peak_params, sheet_name,window, color=None, alpha=0.3):
+    def plot_peak(self, x_values, background, peak_params, sheet_name, window, color=None, alpha=0.3):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
         lg_ratio = peak_params['lg_ratio']
         x = peak_params['position']
         y = peak_params['height']
         peak_label = peak_params['label']
+        area = peak_params.get('area', 0)  # Get area if available
 
-        # Format the peak label for matplotlib
         formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', peak_label)
 
-        # Get the fitting model for this specific peak
-        fitting_model = peak_params.get('fitting_model', "GL (Height)")  # Default to GL if not specified
+        fitting_model = peak_params.get('fitting_model', "GL (Height)")
 
         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-        # sigma = fwhm / 2
-        # gamma = lg_ratio/100 * sigma
         bkg_y = background[np.argmin(np.abs(x_values - x))]
         if fitting_model == "Unfitted":
-            # We've already handled this in clear_and_replot, so just return
             return
-        elif fitting_model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)"]:
+        elif fitting_model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
             peak_model = lmfit.models.VoigtModel()
-            sigma = float(peak_params.get('sigma', 1.2))/2.355
-            gamma = float(peak_params.get('gamma', 0.06))/2
-            # amplitude = float(peak_params.get('amplitude', 0))
+            sigma = float(peak_params.get('sigma', 1.2)) / 2.355
+            gamma = float(peak_params.get('gamma', 0.06)) / 2
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
         elif fitting_model == "Pseudo-Voigt (Area)":
             sigma = fwhm / 2
             peak_model = lmfit.models.PseudoVoigtModel()
-            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio/100, x=0)
-            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio/100)
+            amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
+            params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio / 100)
         elif fitting_model == "GL (Height)":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif fitting_model == "SGL (Height)":
             peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
+        elif fitting_model == "GL (Area)":
+            peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, area=area)
+        elif fitting_model == "SGL (Area)":
+            peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area)
+            params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, area=area)
+        else:
+            raise ValueError(f"Unknown fitting model: {fitting_model}")
 
         peak_y = peak_model.eval(params, x=x_values) + background
 
+        # Rest of the function remains the same
         if color is None:
             color = self.peak_colors[len(self.ax.lines) % len(self.peak_colors)]
         if alpha is None:
             alpha = self.peak_alpha
 
-        line_alpha = min(alpha +0.1, 1)
+        line_alpha = min(alpha + 0.1, 1)
         if self.peak_fill_enabled:
             label = peak_label
             if window.energy_scale == 'KE':
@@ -193,16 +197,16 @@ class PlotManager:
                 self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, interpolate=True,
                                      edgecolor='none', label=peak_label)
 
-                if window.peak_line_style != "No Line":
-                    if window.peak_line_style == "Black":
-                        line_color = "black"
-                    elif window.peak_line_style == "Grey":
-                        line_color = "grey"
-                    else:  # same_color
-                        line_color = color
+            if window.peak_line_style != "No Line":
+                if window.peak_line_style == "Black":
+                    line_color = "black"
+                elif window.peak_line_style == "Grey":
+                    line_color = "grey"
+                else:  # same_color
+                    line_color = color
 
-                    self.ax.plot(x_values, peak_y, color=line_color, alpha=window.peak_line_alpha,
-                                 linewidth=window.peak_line_thickness, linestyle=window.peak_line_pattern)
+                self.ax.plot(x_values, peak_y, color=line_color, alpha=window.peak_line_alpha,
+                             linewidth=window.peak_line_thickness, linestyle=window.peak_line_pattern)
 
         else:
             if self.energy_scale == 'KE':
@@ -667,7 +671,15 @@ class PlotManager:
             elif window.selected_fitting_method == "SGL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
-            else:  # Add GL which is the safe bet
+            elif window.selected_fitting_method == "GL (Area)":
+                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area)
+                area = y * fwhm * np.sqrt(np.pi / (4 * np.log(2)))  # Calculate area from height and FWHM
+                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, area=area)
+            elif window.selected_fitting_method == "SGL (Area)":
+                peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area)
+                area = y * fwhm * np.sqrt(np.pi / (4 * np.log(2)))  # Calculate area from height and FWHM
+                params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, area=area)
+            else:  # Default to GL (Height) as a safe bet
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
 
@@ -745,21 +757,30 @@ class PlotManager:
 
             if fitting_model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
                 peak_model = lmfit.models.VoigtModel()
-                sigma = float(window.peak_params_grid.GetCellValue(row, 7))/2.355
-                gamma = float(window.peak_params_grid.GetCellValue(row, 8))/2
+                sigma = float(window.peak_params_grid.GetCellValue(row, 7)) / 2.355
+                gamma = float(window.peak_params_grid.GetCellValue(row, 8)) / 2
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
             elif fitting_model == "Pseudo-Voigt (Area)":
                 sigma = fwhm / 2
                 peak_model = lmfit.models.PseudoVoigtModel()
-                amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio/100, x=0)
-                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio/100)
+                amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
+                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma,
+                                                fraction=lg_ratio / 100)
             elif fitting_model == "GL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
             elif fitting_model == "SGL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
+            elif fitting_model == "GL (Area)":
+                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area)
+                area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
+                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, area=area)
+            elif fitting_model == "SGL (Area)":
+                peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area)
+                area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
+                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, area=area)
             else:
                 print(f"Warning: Unknown fitting model '{fitting_model}' for peak {i + 1}. Skipping this peak.")
                 continue

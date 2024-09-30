@@ -150,6 +150,9 @@ def _calculate_peak_areas2(peak_params, fitting_model):
     elif fitting_model in ["GL (Height)", "SGL (Height)", "Unfitted"]:
         # Area calculation for Gaussian-Lorentzian profiles
         area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+    elif fitting_model in ["GL (Area)", "SGL (Area)"]:
+        # For area-based models, area is already provided
+        pass  # We don't need to calculate area as it's already given
     else:
         raise ValueError(f"Unknown fitting model: {fitting_model}")
 
