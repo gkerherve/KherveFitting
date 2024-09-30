@@ -679,10 +679,8 @@ class MyFrame(wx.Frame):
                         new_fwhm = self.update_peak_fwhm(event.xdata)
 
                         if new_fwhm is not None:
-                            # Update FWHM for linked peaks
-                            linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                            for linked_peak in linked_peaks:
-                                self.update_linked_peak_fwhm(linked_peak, new_fwhm)
+                            # Update FWHM for linked peaks recursively
+                            self.update_linked_fwhm_recursive(self.selected_peak_index, new_fwhm)
 
                     elif self.is_mouse_on_peak(event):
                         closest_index = np.argmin(np.abs(self.x_values - event.xdata))
@@ -694,10 +692,8 @@ class MyFrame(wx.Frame):
                         # Update the selected peak
                         self.update_peak(self.selected_peak_index, new_x, new_height)
 
-                        # Update linked peaks
-                        linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                        for linked_peak in linked_peaks:
-                            self.update_linked_peak(linked_peak, new_x, new_height)
+                        # Update linked peaks recursively
+                        self.update_linked_peaks_recursive(self.selected_peak_index, new_x, new_height)
 
                     # Call the function that updates all split values
                     self.update_ratios()
@@ -724,19 +720,15 @@ class MyFrame(wx.Frame):
                 if event.key == 'shift':  # SHIFT + left click release for FWHM change
                     new_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
 
-                    # Update FWHM for linked peaks
-                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                    for linked_peak in linked_peaks:
-                        self.update_linked_peak_fwhm(linked_peak, new_fwhm)
+                    # Update FWHM for linked peaks recursively
+                    self.update_linked_fwhm_recursive(self.selected_peak_index, new_fwhm)
                 else:
                     y = max(y - bkg_y, 0)  # Ensure height is not negative
 
                     self.update_peak(self.selected_peak_index, x, y)
 
-                    # Update linked peaks
-                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                    for linked_peak in linked_peaks:
-                        self.update_linked_peak(linked_peak, x, y)
+                    # Update linked peaks recursively
+                    self.update_linked_peaks_recursive(self.selected_peak_index, x, y)
 
             # Remove old cross
             self.remove_cross_from_peak()
@@ -890,6 +882,43 @@ class MyFrame(wx.Frame):
             peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
             if peak_label in peaks:
                 peaks[peak_label]['FWHM'] = new_linked_fwhm
+
+    def update_linked_peaks_recursive(self, peak_index, new_x, new_height, visited=None):
+        if visited is None:
+            visited = set()
+
+        if peak_index in visited:
+            return
+
+        visited.add(peak_index)
+
+        self.update_linked_peak(peak_index, new_x, new_height)
+
+        linked_peaks = self.get_linked_peaks(peak_index)
+        for linked_peak in linked_peaks:
+            if linked_peak not in visited:
+                row = linked_peak * 2
+                linked_x = float(self.peak_params_grid.GetCellValue(row, 2))
+                linked_height = float(self.peak_params_grid.GetCellValue(row, 3))
+                self.update_linked_peaks_recursive(linked_peak, linked_x, linked_height, visited)
+
+    def update_linked_fwhm_recursive(self, peak_index, new_fwhm, visited=None):
+        if visited is None:
+            visited = set()
+
+        if peak_index in visited:
+            return
+
+        visited.add(peak_index)
+
+        self.update_linked_peak_fwhm(peak_index, new_fwhm)
+
+        linked_peaks = self.get_linked_peaks(peak_index)
+        for linked_peak in linked_peaks:
+            if linked_peak not in visited:
+                row = linked_peak * 2
+                linked_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                self.update_linked_fwhm_recursive(linked_peak, linked_fwhm, visited)
 
     def update_peak_fwhm(self, x):
         if self.initial_fwhm is not None and self.initial_x is not None:
@@ -1644,9 +1673,24 @@ class MyFrame(wx.Frame):
         sheet_name = self.sheet_combobox.GetValue()
         peak_index = row // 2
 
+        # Define default constraint values
+        default_constraints = {
+            2: '0:1000',  # Position
+            3: '1:1e7',  # Height
+            4: '0.3:3.5',  # FWHM
+            5: '5:80',  # L/G
+            6: '1:1e7',  # Area
+            7: '0.01:1',  # Sigma
+            8: '0.01:1'  # Gamma
+        }
+
         if col in [0,9,10,11]:
             event.Veto()
             return
+        elif col not in [1, 12, 13] and row % 2 == 1:  # Constraint row
+            if not new_value:  # If the cell is empty
+                new_value = default_constraints.get(col, '')
+                self.peak_params_grid.SetCellValue(row, col, new_value)
         # Allow only numeric input for specific columns in non-constraint rows
         elif col not in [1, 12, 13] and row % 2 == 0:
             try:

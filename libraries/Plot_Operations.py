@@ -144,6 +144,7 @@ class PlotManager:
         y = peak_params['height']
         peak_label = peak_params['label']
         area = peak_params.get('area', 0)  # Get area if available
+        # print('Plot_peak Area = '+str(area))
 
         formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', peak_label)
 
@@ -172,9 +173,11 @@ class PlotManager:
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
         elif fitting_model == "GL (Area)":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area)
+            area = y * (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, area=area)
         elif fitting_model == "SGL (Area)":
             peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area)
+            area = y * (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, area=area)
         else:
             raise ValueError(f"Unknown fitting model: {fitting_model}")
@@ -650,8 +653,14 @@ class PlotManager:
             gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - x))]
 
-            sigma = float(window.peak_params_grid.GetCellValue(row, 7))
-            gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+            sigma = try_float(window.peak_params_grid.GetCellValue(row, 7),0)
+            gamma = try_float(window.peak_params_grid.GetCellValue(row, 8),0)
+
+            def try_float(value, default=0.0):
+                try:
+                    return float(value)
+                except ValueError:
+                    return default
 
             # Ensure height is not negative
             y = max(y, 0)
