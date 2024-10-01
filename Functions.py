@@ -677,23 +677,34 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
     match_simple = re.match(pattern_simple, constraint_str)
 
     if constraint_str in ['Fixed']:
-        small_error3=0.001
-        if param_name=="L/G":
+        small_error3 = 0.001
+        if param_name == "L/G":
             return current_value - 0.5, current_value + 0.5, False
         else:
-            return current_value - small_error3, current_value +small_error3, False
+            return current_value - small_error3, current_value + small_error3, False
     elif match:
         ref_peak, operator, value, delta = match.groups()
         value = float(value)
         delta = float(delta)
-        if operator in ['+', '-', '*', '/']:
-            return f"{ref_peak}{operator}{value - delta}", f"{ref_peak}{operator}{value + delta}", True
+        if operator in ['+', '-']:
+            if param_name in ['Position', 'FWHM', 'L/G']:
+                return f"{ref_peak}{operator}{value} - {delta}", f"{ref_peak}{operator}{value} + {delta}", True
+            else:  # for Area or Height
+                delta_percent = delta ** value / 100
+                return (f"{ref_peak}{operator}"
+                        f"{value} - {delta_percent}"), f"{ref_peak}{operator}{value} +{delta_percent}", True
+        elif operator in ['*', '/']:
+            return f"{ref_peak}{operator}{value} - {delta}", f"{ref_peak}{operator}{value} + {delta}", True
 
     elif match_simple:
         ref_peak, operator, value = match_simple.groups()
         value = float(value)
         if operator in ['+', '-']:
-            return f"{ref_peak}{operator}{value - small_error}", f"{ref_peak}{operator}{value + small_error}", True
+            if param_name in ['Position', 'FWHM', 'L/G']:
+                return f"{ref_peak}{operator}{value - small_error}", f"{ref_peak}{operator}{value + small_error}", True
+            else:  # for Area or Height
+                delta_percent = small_error ** value / 100
+                return f"{ref_peak}{operator}{value} - {delta_percent}", f"{ref_peak}{operator}{value} + {delta_percent}", True
         elif operator in ['*', '/']:
             small_error2 = 0.0001
             return f"{ref_peak}{operator}{value - small_error2}", f"{ref_peak}{operator}{value + small_error2}", True
