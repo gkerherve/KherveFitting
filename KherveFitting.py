@@ -1292,11 +1292,18 @@ class MyFrame(wx.Frame):
             on_sheet_selected(self, mock_event)
             save_state(self)
 
-
     def highlight_selected_peak(self):
         if self.selected_peak_index is not None:
             print('SELECTED PEAK IS NOT NONE')
             num_peaks = self.peak_params_grid.GetNumberRows() // 2
+
+            # Check if selected_peak_index is valid
+            if self.selected_peak_index >= num_peaks:
+                print(
+                    f"Warning: selected_peak_index ({self.selected_peak_index}) is out of range. Max index: {num_peaks - 1}")
+                self.selected_peak_index = None
+                return
+
             for i in range(num_peaks):
                 row = i * 2
                 is_selected = (i == self.selected_peak_index)
@@ -1305,41 +1312,50 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellBackgroundColour(row + 1, 0, wx.LIGHT_GREY if is_selected else wx.WHITE)
 
             row = self.selected_peak_index * 2
-            peak_label = self.peak_params_grid.GetCellValue(row, 1)  # Get the current label
-            x_str = self.peak_params_grid.GetCellValue(row, 2)
-            y_str = self.peak_params_grid.GetCellValue(row, 3)
 
-            if x_str and y_str:
-                try:
-                    x = float(x_str)
-                    y = float(y_str)
-                    y += self.background[np.argmin(np.abs(self.x_values - x))]
+            # Check if the row exists in the grid
+            if row < self.peak_params_grid.GetNumberRows():
+                peak_label = self.peak_params_grid.GetCellValue(row, 1)  # Get the current label
+                x_str = self.peak_params_grid.GetCellValue(row, 2)
+                y_str = self.peak_params_grid.GetCellValue(row, 3)
 
-                    self.remove_cross_from_peak()
-                    self.cross, = self.ax.plot(x, y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)
+                if x_str and y_str:
+                    try:
+                        x = float(x_str)
+                        y = float(y_str)
+                        y += self.background[np.argmin(np.abs(self.x_values - x))]
 
-                    self.peak_params_grid.ClearSelection()
-                    self.peak_params_grid.SelectRow(row, addToSelected=False)
+                        self.remove_cross_from_peak()
+                        self.cross, = self.ax.plot(x, y, 'bx', markersize=15, markerfacecolor='none', picker=5,
+                                                   linewidth=3)
 
-                    self.peak_params_grid.Refresh()
-                    self.canvas.draw_idle()
+                        self.peak_params_grid.ClearSelection()
+                        self.peak_params_grid.SelectRow(row, addToSelected=False)
 
-                    # Update the Data structure with the current label
+                        self.peak_params_grid.Refresh()
+                        self.canvas.draw_idle()
 
-                    sheet_name = self.sheet_combobox.GetValue()
-                    if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
-                        sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
-                        peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-                        old_label = list(peaks.keys())[self.selected_peak_index]
-                        if old_label != peak_label:
-                            peaks[peak_label] = peaks.pop(old_label)
+                        # Update the Data structure with the current label
+                        sheet_name = self.sheet_combobox.GetValue()
+                        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][
+                            sheet_name] and 'Peaks' in self.Data['Core levels'][sheet_name]['Fitting']:
+                            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+                            if self.selected_peak_index < len(peaks):
+                                old_label = list(peaks.keys())[self.selected_peak_index]
+                                if old_label != peak_label:
+                                    peaks[peak_label] = peaks.pop(old_label)
+                            else:
+                                print(
+                                    f"Warning: selected_peak_index ({self.selected_peak_index}) is out of range for peaks in Data structure")
 
-                    self.canvas.mpl_connect('motion_notify_event', self.on_cross_drag)
-                    self.canvas.mpl_connect('button_release_event', self.on_cross_release)
-                except ValueError as e:
-                    print(f"Warning: Invalid data for selected peak. Cannot highlight. Error: {e}")
+                        self.canvas.mpl_connect('motion_notify_event', self.on_cross_drag)
+                        self.canvas.mpl_connect('button_release_event', self.on_cross_release)
+                    except ValueError as e:
+                        print(f"Warning: Invalid data for selected peak. Cannot highlight. Error: {e}")
+                else:
+                    print(f"Warning: Empty data for selected peak. Cannot highlight.")
             else:
-                print(f"Warning: Empty data for selected peak. Cannot highlight.")
+                print(f"Warning: Row {row} does not exist in peak_params_grid")
 
             self.peak_params_grid.Refresh()
         else:
