@@ -666,15 +666,14 @@ import re
 
 def parse_constraints(constraint_str, current_value, peak_params_grid, peak_index, param_name):
     constraint_str = constraint_str.strip()
-
     small_error = 0.05
 
     # Pattern to match A+1.5#0.5 format
-    pattern = r'^([A-P])([+*])(\d+\.?\d*)#([\d\.]+)$'
+    pattern = r'^([A-P])([+\-*/])(\d+\.?\d*)#([\d\.]+)$'
     match = re.match(pattern, constraint_str)
 
-    # Pattern for A+2 or A*2 format
-    pattern_simple = r'^([A-P])([+*])(\d+\.?\d*)$'
+    # Pattern for A+2 or A*2 or A/2 or A-2 format
+    pattern_simple = r'^([A-P])([+\-*/])(\d+\.?\d*)$'
     match_simple = re.match(pattern_simple, constraint_str)
 
     if constraint_str in ['Fixed']:
@@ -687,19 +686,17 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
         ref_peak, operator, value, delta = match.groups()
         value = float(value)
         delta = float(delta)
-        if operator == '+':
-            return f"{ref_peak}+{value - delta}", f"{ref_peak}+{value + delta}", True
-        elif operator == '*':
-            return f"{ref_peak}*{value - delta}", f"{ref_peak}*{value + delta}", True
+        if operator in ['+', '-', '*', '/']:
+            return f"{ref_peak}{operator}{value - delta}", f"{ref_peak}{operator}{value + delta}", True
 
     elif match_simple:
         ref_peak, operator, value = match_simple.groups()
         value = float(value)
-        if operator == '+':
-            return f"{ref_peak}+{value - small_error}", f"{ref_peak}+{value + small_error}", True
-        elif operator == '*':
+        if operator in ['+', '-']:
+            return f"{ref_peak}{operator}{value - small_error}", f"{ref_peak}{operator}{value + small_error}", True
+        elif operator in ['*', '/']:
             small_error2 = 0.0001
-            return f"{ref_peak}*{value - small_error2}", f"{ref_peak}*{value + small_error2}", True
+            return f"{ref_peak}{operator}{value - small_error2}", f"{ref_peak}{operator}{value + small_error2}", True
 
     # If it's a simple number or range
     if ',' in constraint_str:
@@ -708,7 +705,6 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
     if ':' in constraint_str:
         min_val, max_val = map(float, constraint_str.split(':'))
         return min_val, max_val, True
-
 
     try:
         value = float(constraint_str)
@@ -719,15 +715,14 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
     # If we can't parse it, return the current value with a small range
     return current_value - 0.1, current_value + 0.1, True
 
-
 def evaluate_constraint(constraint, peak_params_grid, param_name, current_value):
     if isinstance(constraint, (int, float)):
         return constraint
     if constraint is None:
         return None
 
-    # Handle the case A+1.5 or A*1.5
-    match = re.match(r'([A-J])([+*])(-?\d+\.?\d*)', constraint)
+    # Handle the case A+1.5 or A*1.5 or A/1.5 or A-1.5
+    match = re.match(r'([A-J])([+\-*/])(-?\d+\.?\d*)', constraint)
     if match:
         peak, op, value = match.groups()
         peak_value = get_peak_value(peak_params_grid, peak, param_name)
@@ -735,8 +730,12 @@ def evaluate_constraint(constraint, peak_params_grid, param_name, current_value)
             value = float(value)
             if op == '+':
                 return peak_value + value
+            elif op == '-':
+                return peak_value - value
             elif op == '*':
                 return peak_value * value
+            elif op == '/':
+                return peak_value / value if value != 0 else current_value
 
     # Handle simple numeric constraints
     try:
