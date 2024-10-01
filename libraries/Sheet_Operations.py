@@ -98,7 +98,7 @@ def on_sheet_selected(window, event):
                         for col in [6,7,8]:  # Columns for Height, FWHM
                             window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                             window.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
-                    elif window.selected_fitting_method == "Pseudo-Voigt (Area)":
+                    elif window.selected_fitting_method in ["Pseudo-Voigt (Area)", "GL (Area)", "SGL (Area)"]:
                         for col in [3]:  # Height
                             window.peak_params_grid.SetCellValue(row + 1, col, "0")
                             window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(128, 128, 128))

@@ -79,7 +79,7 @@ def save_data(window, data):
         with open(json_file_path, 'w') as json_file:
             json.dump(json_data, json_file, indent=2)
 
-        print(json.dumps(window.Data['Results']['Peak'], indent=2))
+        # print(json.dumps(window.Data['Results']['Peak'], indent=2))
         print("Data Saved")
     except Exception as e:
         wx.MessageBox(f"Error saving data: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)

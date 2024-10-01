@@ -670,6 +670,94 @@ class MyFrame(wx.Frame):
         row = index * 2  # Assuming each peak uses two rows in the grid
         self.peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")  # Update FWHM
 
+    def on_cross_drag_OLD(self, event):
+        if event.inaxes and self.selected_peak_index is not None:
+            row = self.selected_peak_index * 2
+            if event.button == 1:
+                try:
+                    if event.key == 'shift':
+                        new_fwhm = self.update_peak_fwhm(event.xdata)
+
+                        if new_fwhm is not None:
+                            # Update FWHM for linked peaks
+                            linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                            for linked_peak in linked_peaks:
+                                self.update_linked_peak_fwhm(linked_peak, new_fwhm)
+
+                    elif self.is_mouse_on_peak(event):
+                        closest_index = np.argmin(np.abs(self.x_values - event.xdata))
+                        bkg_y = self.background[closest_index]
+
+                        new_x = event.xdata
+                        new_height = max(event.ydata - bkg_y, 0)
+
+                        # Update the selected peak
+                        self.update_peak(self.selected_peak_index, new_x, new_height)
+
+                        # Update linked peaks
+                        linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                        for linked_peak in linked_peaks:
+                            self.update_linked_peak(linked_peak, new_x, new_height)
+
+                    # Call the function that updates all split values
+                    self.update_ratios()
+
+                    self.clear_and_replot()
+                    self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
+                    self.canvas.draw_idle()
+
+                except Exception as e:
+                    print(f"Error during cross drag: {e}")
+
+    def on_cross_release_OLD(self, event):
+        save_state(self)
+        if event.inaxes and self.selected_peak_index is not None:
+            row = self.selected_peak_index * 2
+            peak_label = self.peak_params_grid.GetCellValue(row, 1)
+            sheet_name = self.sheet_combobox.GetValue()
+
+            x = event.xdata
+            y = event.ydata
+            bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
+
+            if event.button == 1:  # Left button release
+                if event.key == 'shift':  # SHIFT + left click release for FWHM change
+                    new_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+
+                    # Update FWHM for linked peaks
+                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                    for linked_peak in linked_peaks:
+                        self.update_linked_peak_fwhm(linked_peak, new_fwhm)
+                else:
+                    y = max(y - bkg_y, 0)  # Ensure height is not negative
+
+                    self.update_peak(self.selected_peak_index, x, y)
+
+                    # Update linked peaks
+                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
+                    for linked_peak in linked_peaks:
+                        self.update_linked_peak(linked_peak, x, y)
+
+            # Remove old cross
+            self.remove_cross_from_peak()
+
+            # Create new cross at final position
+            self.cross = self.ax.plot(x, y + bkg_y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)[
+                0]
+
+            self.canvas.draw_idle()
+
+        # Safely disconnect event handlers
+        if hasattr(self, 'motion_cid'):
+            self.canvas.mpl_disconnect(self.motion_cid)
+            delattr(self, 'motion_cid')
+        if hasattr(self, 'release_cid'):
+            self.canvas.mpl_disconnect(self.release_cid)
+            delattr(self, 'release_cid')
+
+        # Refresh the grid to ensure it reflects the current state of self.Data
+        self.refresh_peak_params_grid()
+
     def on_cross_drag(self, event):
         if event.inaxes and self.selected_peak_index is not None:
             row = self.selected_peak_index * 2
@@ -760,7 +848,72 @@ class MyFrame(wx.Frame):
                 linked_peaks.append(i)
         return linked_peaks
 
-    def update_linked_peak(self, peak_index, new_x, new_height):
+    def update_linked_peak(self, peak_index, new_x, new_height, original_peak_index):
+        row = peak_index * 2
+        constraint_row = row + 1
+        position_constraint = self.peak_params_grid.GetCellValue(constraint_row, 2)
+        height_constraint = self.peak_params_grid.GetCellValue(constraint_row, 3)
+        area_constraint = self.peak_params_grid.GetCellValue(constraint_row, 6)
+
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+        peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+
+        original_peak_letter = chr(65 + original_peak_index)
+
+        # Update position if constrained
+        if position_constraint.startswith(original_peak_letter):
+            if '+' in position_constraint:
+                offset = float(position_constraint.split('+')[1].split('#')[0])
+                new_position = new_x + offset
+            elif '*' in position_constraint:
+                factor = float(position_constraint.split('*')[1].split('#')[0])
+                new_position = new_x * factor
+            else:
+                new_position = new_x
+
+            self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Position'] = new_position
+
+        # Update height if constrained
+        if height_constraint.startswith(original_peak_letter):
+            if '*' in height_constraint:
+                factor = float(height_constraint.split('*')[1].split('#')[0])
+                new_linked_height = new_height * factor
+            else:
+                new_linked_height = new_height
+
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Height'] = new_linked_height
+
+        # Update area if constrained
+        elif area_constraint.startswith(original_peak_letter):
+            current_area = float(self.peak_params_grid.GetCellValue(original_peak_index * 2, 6))
+            if '*' in area_constraint:
+                factor = float(area_constraint.split('*')[1].split('#')[0])
+                new_linked_area = current_area * factor
+            else:
+                new_linked_area = current_area
+
+            self.peak_params_grid.SetCellValue(row, 6, f"{new_linked_area:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Area'] = new_linked_area
+
+            # Recalculate height based on new area
+            fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+            model = self.peak_params_grid.GetCellValue(row, 12)
+            new_linked_height = self.calculate_height_from_area(new_linked_area, fwhm, model)
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Height'] = new_linked_height
+
+        # Recalculate area if height or position changed
+        if position_constraint.startswith(original_peak_letter) or height_constraint.startswith(original_peak_letter):
+            self.recalculate_peak_area(peak_index)
+
+    def update_linked_peak_OLD(self, peak_index, new_x, new_height):
         row = peak_index * 2
         constraint_row = row + 1
         position_constraint = self.peak_params_grid.GetCellValue(constraint_row, 2)
@@ -883,23 +1036,21 @@ class MyFrame(wx.Frame):
             if peak_label in peaks:
                 peaks[peak_label]['FWHM'] = new_linked_fwhm
 
-    def update_linked_peaks_recursive(self, peak_index, new_x, new_height, visited=None):
+    def update_linked_peaks_recursive(self, original_peak_index, new_x, new_height, visited=None):
         if visited is None:
             visited = set()
 
-        if peak_index in visited:
+        if original_peak_index in visited:
             return
 
-        visited.add(peak_index)
+        visited.add(original_peak_index)
 
-        self.update_linked_peak(peak_index, new_x, new_height)
-
-        linked_peaks = self.get_linked_peaks(peak_index)
+        linked_peaks = self.get_linked_peaks(original_peak_index)
         for linked_peak in linked_peaks:
             if linked_peak not in visited:
-                row = linked_peak * 2
-                linked_x = float(self.peak_params_grid.GetCellValue(row, 2))
-                linked_height = float(self.peak_params_grid.GetCellValue(row, 3))
+                self.update_linked_peak(linked_peak, new_x, new_height, original_peak_index)
+                linked_x = float(self.peak_params_grid.GetCellValue(linked_peak * 2, 2))
+                linked_height = float(self.peak_params_grid.GetCellValue(linked_peak * 2, 3))
                 self.update_linked_peaks_recursive(linked_peak, linked_x, linked_height, visited)
 
     def update_linked_fwhm_recursive(self, peak_index, new_fwhm, visited=None):
@@ -1144,6 +1295,7 @@ class MyFrame(wx.Frame):
 
     def highlight_selected_peak(self):
         if self.selected_peak_index is not None:
+            print('SELECTED PEAK IS NOT NONE')
             num_peaks = self.peak_params_grid.GetNumberRows() // 2
             for i in range(num_peaks):
                 row = i * 2
@@ -1896,6 +2048,7 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellValue(row, 5, f"{peak_data['L/G']:.2f}")
                 try:
                     area_value = float(peak_data['Area'])
+                    print('Area Value 1:  '+ str(area_value))
                     self.peak_params_grid.SetCellValue(row, 6, f"{area_value:.2f}")
                 except (ValueError, KeyError):
                     self.peak_params_grid.SetCellValue(row, 6, "ER! REFRESH PEAK")
