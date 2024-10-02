@@ -1098,6 +1098,9 @@ class MyFrame(wx.Frame):
 
     def recalculate_peak_area(self, peak_index):
         row = peak_index * 2
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+
         height = float(self.peak_params_grid.GetCellValue(row, 3))
         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
@@ -1111,6 +1114,14 @@ class MyFrame(wx.Frame):
             area = self.calculate_peak_area(model, height, fwhm, fraction)
 
         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+
+        # Update area in self.Data
+        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
+                self.Data['Core levels'][sheet_name]['Fitting']:
+            if peak_label in self.Data['Core levels'][sheet_name]['Fitting']['Peaks']:
+                self.Data['Core levels'][sheet_name]['Fitting']['Peaks'][peak_label]['Area'] = area
+
+        return area
 
     def show_hide_vlines(self):
         background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected
@@ -1294,7 +1305,6 @@ class MyFrame(wx.Frame):
 
     def highlight_selected_peak(self):
         if self.selected_peak_index is not None:
-            print('SELECTED PEAK IS NOT NONE')
             num_peaks = self.peak_params_grid.GetNumberRows() // 2
 
             # Check if selected_peak_index is valid
@@ -2064,7 +2074,6 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellValue(row, 5, f"{peak_data['L/G']:.2f}")
                 try:
                     area_value = float(peak_data['Area'])
-                    print('Area Value 1:  '+ str(area_value))
                     self.peak_params_grid.SetCellValue(row, 6, f"{area_value:.2f}")
                 except (ValueError, KeyError):
                     self.peak_params_grid.SetCellValue(row, 6, "ER! REFRESH PEAK")

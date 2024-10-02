@@ -687,66 +687,42 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
         ref_peak, operator, value, delta = match.groups()
         value = float(value)
         delta = float(delta)
-        ref_peak_value = get_peak_value(peak_params_grid, ref_peak, param_name)
-        if ref_peak_value is None:
-            return current_value - small_error, current_value + small_error, True
-
         if operator in ['+', '-']:
-            return f"{ref_peak_value}{operator}{value} - {delta}", f"{ref_peak_value}{operator}{value} + {delta}", True
+            return (f"{ref_peak}{operator}{value - delta}", f"{ref_peak}{operator}{value + delta}", True)
         elif operator in ['*', '/']:
-            if param_name in ['Position', 'FWHM', 'L/G']:
-                return f"{ref_peak_value}{operator}{value} - {delta}", f"{ref_peak_value}{operator}{value} + {delta}", True
-            else:  # for Area or Height
-                delta_percent = delta * value / 100
-                return (f"{ref_peak_value}{operator}{value} - {delta_percent}",
-                        f"{ref_peak_value}{operator}{value} + {delta_percent}", True)
+            if param_name in ['POSITION','FWHM', 'L/G']:
+                delta_percent = delta
+                # return (f"{ref_peak}{operator}{value} - {delta}", f"{ref_peak}{operator}{value} + {delta}", True)
+                return (f"{ref_peak}{operator}{value - delta_percent}", f"{ref_peak}{operator}{value + delta_percent}",True)
+            else:
+                return (f"{ref_peak}{operator}{value-delta}", f"{ref_peak}{operator}{value+delta}", True)
 
     elif match_simple:
         ref_peak, operator, value = match_simple.groups()
         value = float(value)
-        ref_peak_value = get_peak_value(peak_params_grid, ref_peak, param_name)
-        if ref_peak_value is None:
-            return current_value - small_error, current_value + small_error, True
-
         if operator in ['+', '-']:
-            return f"{ref_peak_value}{operator}{value - small_error}", f"{ref_peak_value}{operator}{value + small_error}", True
+            return f"{ref_peak}{operator}{value - small_error}", f"{ref_peak}{operator}{value + small_error}", True
         elif operator in ['*', '/']:
             small_error2 = 0.0001
-            return f"{ref_peak_value}{operator}{value - small_error2}", f"{ref_peak_value}{operator}{value + small_error2}", True
+            return f"{ref_peak}{operator}{value - small_error2}", f"{ref_peak}{operator}{value + small_error2}", True
 
     # If it's a simple number or range
     if ',' in constraint_str:
         min_val, max_val = map(float, constraint_str.split(','))
-        if min_val == max_val:
-            max_val += small_error
         return min_val, max_val, True
     if ':' in constraint_str:
         min_val, max_val = map(float, constraint_str.split(':'))
-        if min_val == max_val:
-            max_val += small_error
         return min_val, max_val, True
 
     try:
         value = float(constraint_str)
-        return value - small_error, value + small_error, True
+        return value - 0.1, value + 0.1, True
     except ValueError:
         pass
 
     # If we can't parse it, return the current value with a small range
-    return current_value - small_error, current_value + small_error, True
+    return current_value - 0.1, current_value + 0.1, True
 
-
-def get_peak_value(peak_params_grid, peak_letter, param_name):
-    peak_index = ord(peak_letter.upper()) - ord('A')
-    row = peak_index * 2
-    param_map = {'position': 2, 'height': 3, 'fwhm': 4, 'l/g': 5, 'area': 6}
-    col = param_map.get(param_name.lower())
-    if col is None:
-        return None
-    try:
-        return float(peak_params_grid.GetCellValue(row, col))
-    except ValueError:
-        return None
 
 def evaluate_constraint(constraint, peak_params_grid, param_name, current_value):
     if isinstance(constraint, (int, float)):
