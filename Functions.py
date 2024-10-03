@@ -5,6 +5,7 @@ import wx.grid
 
 import numpy as np
 import lmfit
+
 import sys
 from scipy.stats import linregress
 
@@ -276,6 +277,7 @@ def fit_peaks(window, peak_params_grid):
     """
     Perform peak fitting on the spectral data and update the peak parameters.
     """
+    global fraction
     if peak_params_grid is None or peak_params_grid.GetNumberRows() == 0:
         wx.MessageBox("No peak parameters defined. Please add at least one peak before fitting.", "Error",
                       wx.OK | wx.ICON_ERROR)
@@ -444,6 +446,35 @@ def fit_peaks(window, peak_params_grid):
 
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
+
+                elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
+                    try:
+                        sigma = float(peak_params_grid.GetCellValue(row, 7)) / 1
+                        gamma = float(peak_params_grid.GetCellValue(row, 8)) / 1
+                    except ValueError:
+                        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))  # Default calculation if value is invalid
+                        gamma = lg_ratio / 100 * sigma  # Default calculation if value is invalid
+
+                    # Parse constraints for sigma and gamma
+                    sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
+                                                                                                       7),
+                                                                         sigma, peak_params_grid, i, "Sigma")
+                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
+                                                                                                           8),
+                                                                         gamma, peak_params_grid, i, "Gamma")
+
+                    # Evaluate constraints
+                    sigma_min = evaluate_constraint(sigma_min, peak_params_grid, 'sigma', sigma)
+                    sigma_max = evaluate_constraint(sigma_max, peak_params_grid, 'sigma', sigma)
+                    gamma_min = evaluate_constraint(gamma_min, peak_params_grid, 'gamma', gamma)
+                    gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
+
+                    peak_model = lmfit.models.ExponentialGaussianModel(prefix=prefix)
+                    params.add(f'{prefix}amplitude', value=area, min=area_min, max=area_max, vary=area_vary, brute_step=area * 0.01)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary, brute_step=0.1)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary, brute_step=sigma * 0.01)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary, brute_step=gamma*0.01)
+
                 elif peak_model_choice == "Pseudo-Voigt (Area)":
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     sigma = fwhm / 2.
@@ -557,6 +588,79 @@ def fit_peaks(window, peak_params_grid):
                         fwhm = sigma * 2
                         height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
                         area = amplitude
+
+                    elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
+                        amplitude = result.params[f'{prefix}amplitude'].value
+                        center = result.params[f'{prefix}center'].value
+                        sigma = result.params[f'{prefix}sigma'].value
+                        gamma = result.params[f'{prefix}gamma'].value
+
+                        # Calculate height numerically
+                        x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
+
+                        # Create the model
+                        model = lmfit.models.ExponentialGaussianModel()
+
+                        # Evaluate the model
+                        y_values = model.eval(x=x_values, amplitude=amplitude, center=center, sigma=sigma, gamma=gamma)
+                        # y_values = lmfit.models.ExponentialGaussianModel(amplitude, center, sigma, gamma)
+                        height = np.max(y_values)
+
+                        # Estimate FWHM numerically
+                        half_max = height / 2
+                        indices = np.where(y_values >= half_max)[0]
+                    elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
+                        amplitude = result.params[f'{prefix}amplitude'].value
+                        center = result.params[f'{prefix}center'].value
+                        sigma = result.params[f'{prefix}sigma'].value
+                        gamma = result.params[f'{prefix}gamma'].value
+
+                        # Calculate height numerically
+                        x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
+
+                        # Create the model
+                        model = lmfit.models.ExponentialGaussianModel()
+
+                        # Evaluate the model
+                        y_values = model.eval(x=x_range, amplitude=amplitude, center=center, sigma=sigma, gamma=gamma)
+                        # y_values = lmfit.models.ExponentialGaussianModel(amplitude, center, sigma, gamma)
+                        height = np.max(y_values)
+
+                        # Estimate FWHM numerically
+                        half_max = height / 2
+                        indices = np.where(y_values >= half_max)[0]
+                        fwhm = x_range[indices[-1]] - x_range[indices[0]]
+
+                        # There's no direct equivalent to 'fraction' for this model
+                        fraction = 0  # or you could use gamma/sigma as a rough analog                    elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
+                        amplitude = result.params[f'{prefix}amplitude'].value
+                        center = result.params[f'{prefix}center'].value
+                        sigma = result.params[f'{prefix}sigma'].value
+                        gamma = result.params[f'{prefix}gamma'].value
+
+                        # Calculate height numerically
+                        x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
+
+                        # Create the model
+                        model = lmfit.models.ExponentialGaussianModel()
+
+                        # Evaluate the model
+                        y_values = model.eval(x=x_range, amplitude=amplitude, center=center, sigma=sigma, gamma=gamma)
+                        # y_values = lmfit.models.ExponentialGaussianModel(amplitude, center, sigma, gamma)
+                        height = np.max(y_values)
+
+                        # Estimate FWHM numerically
+                        half_max = height / 2
+                        indices = np.where(y_values >= half_max)[0]
+                        if len(indices) >= 2:
+                            fwhm = x_values[indices[-1]] - x_values[indices[0]]
+                        else:
+                            fwhm = None  # or some default value
+
+                        # There's no direct equivalent to 'fraction' for this model
+                        fraction = 0  # or you could use gamma/sigma as a rough analog
+
+                        area = amplitude  # For area-based models, amplitude represents the area
                     elif peak_model_choice in ["GL (Height)", "SGL (Height)"]:
                         height = result.params[f'{prefix}amplitude'].value
                         fwhm = result.params[f'{prefix}fwhm'].value
@@ -575,7 +679,11 @@ def fit_peaks(window, peak_params_grid):
                     center = round(float(center), 2)
                     height = round(float(height), 2)
                     fwhm = round(float(fwhm), 2)
-                    fraction = round(float(fraction), 2)
+                    if peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
+                        # Exponential Gaussian doesn't use fraction
+                        fraction = 0  # or None, or any default value
+                    else:
+                        fraction = round(float(fraction), 2)
                     area = round(float(area), 2)
                     sigma = round(float(sigma*2.355), 2)
                     gamma = round(float(gamma*2), 2)
@@ -585,7 +693,7 @@ def fit_peaks(window, peak_params_grid):
                     peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")
                     peak_params_grid.SetCellValue(row, 5, f"{fraction:.2f}")
                     peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
-                    if peak_model_choice in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+                    if peak_model_choice in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
                         peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
                         peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
                     else:

@@ -160,6 +160,12 @@ class PlotManager:
             gamma = float(peak_params.get('gamma', 0.06)) / 2
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
+        elif fitting_model == "ExpGauss.(Area, \u03C3, \u03B3)":
+            peak_model = lmfit.models.ExponentialGaussianModel()
+            sigma = float(peak_params.get('sigma', 1.2))
+            gamma = float(peak_params.get('gamma', 0.06))
+            area = float(peak_params.get('area', y))  # Use 'area' instead of 'y' for height
+            params = peak_model.make_params(center=x, amplitude=area, sigma=sigma, gamma=gamma)
         elif fitting_model == "Pseudo-Voigt (Area)":
             sigma = fwhm / 2
             peak_model = lmfit.models.PseudoVoigtModel()
@@ -454,7 +460,7 @@ class PlotManager:
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
-                if fitting_model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)"]:
+                if fitting_model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
                     sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                     gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 else:
@@ -670,6 +676,11 @@ class PlotManager:
                 peak_model = lmfit.models.VoigtModel()
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
+            elif window.selected_fitting_method in ["ExpGauss.(Area, \u03C3, \u03B3)"]:
+                peak_model = lmfit.models.VoigtModel()
+                amplitude = float(window.peak_params_grid.GetCellValue(row, 6))
+                # amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
+                params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
             elif window.selected_fitting_method == "Pseudo-Voigt (Area)":
                 peak_model = lmfit.models.PseudoVoigtModel()
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
@@ -769,6 +780,13 @@ class PlotManager:
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7)) / 2.355
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8)) / 2
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
+                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
+            elif fitting_model == "ExpGauss.(Area, \u03C3, \u03B3)":
+                peak_model = lmfit.models.ExponentialGaussianModel()
+                area = float(window.peak_params_grid.GetCellValue(row, 6))
+                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+                amplitude = area  # Use area directly as amplitude for area-based model
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
             elif fitting_model == "Pseudo-Voigt (Area)":
                 sigma = fwhm / 2

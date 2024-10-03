@@ -367,8 +367,12 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, "1.6")
         self.peak_params_grid.SetCellValue(row, 5, "20")
         self.peak_params_grid.SetCellValue(row, 6, f"{peak_y*1.6*1.064:.2f}")  # Area, initially empty
-        self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
-        self.peak_params_grid.SetCellValue(row, 8, '0.15')  # gamma
+        if self.selected_fitting_method == "ExpGauss.(Area, \u03C3, \u03B3)":
+            self.peak_params_grid.SetCellValue(row, 7, "0.3")  # sigma
+            self.peak_params_grid.SetCellValue(row, 8, '1')  # gamma
+        else:
+            self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
+            self.peak_params_grid.SetCellValue(row, 8, '0.15')  # gamma
         self.peak_params_grid.SetCellValue(row, 9, '')  # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 10, '') # Area, initially empty
         self.peak_params_grid.SetCellValue(row, 11, '')  # Split, initially empty
@@ -397,7 +401,7 @@ class MyFrame(wx.Frame):
         for col in range(self.peak_params_grid.GetNumberCols()+1):  # Assuming you have 15 columns in total
             # self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
             self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(200,245,228))
-        print("method  "+self.selected_fitting_method)
+
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
         if self.selected_fitting_method == "Voigt (Area, L/G, \u03C3)":
             for col in [3, 4]:  # Columns for Height, FWHM, L/G ratio
@@ -407,7 +411,7 @@ class MyFrame(wx.Frame):
             for col in [5, 6, 7, 8]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
-        elif self.selected_fitting_method == "Voigt (Area, \u03C3, \u03B3)":
+        elif self.selected_fitting_method in ["Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
             for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
@@ -981,6 +985,21 @@ class MyFrame(wx.Frame):
         if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
             # For Voigt, this is an approximation
             return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
+
+        elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
+            amplitude = float(self.peak_params_grid.GetCellValue(row, 6))
+            center = float(self.peak_params_grid.GetCellValue(row, 4))
+            sigma = result.params[f'{prefix}sigma'].value
+            gamma = result.params[f'{prefix}gamma'].value
+            # Calculate height numerically
+            x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
+            y_values = lmfit.models.exponential_gaussian(x_range, amplitude, center, sigma, gamma)
+            height = np.max(y_values)
+
+            # Estimate FWHM numerically
+            half_max = height / 2
+            indices = np.where(y_values >= half_max)[0]
+            fwhm = x_range[indices[-1]] - x_range[indices[0]]
         elif model == "Pseudo-Voigt (Area)":
             # For Pseudo-Voigt, this is also an approximation
             return area / (fwhm * np.pi / 2)
@@ -1106,7 +1125,7 @@ class MyFrame(wx.Frame):
         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
         model = self.peak_params_grid.GetCellValue(row, 12)
 
-        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
             area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma)
@@ -1840,6 +1859,8 @@ class MyFrame(wx.Frame):
             # For area-based models, the area is already provided
             # area = height
             area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
+        elif model == "ExpGauss.(Area, \u03C3, \u03B3)":
+            area = height * sigma * np.sqrt(2 * np.pi) * np.exp(gamma ** 2 * sigma ** 2 / 4)
         else:
             raise ValueError(f"Unknown fitting model: {model}")
         return round(area, 2)
@@ -1923,7 +1944,7 @@ class MyFrame(wx.Frame):
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
                         # area = float(self.peak_params_grid.GetCellValue(row, 6))
-                        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+                        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
                             area = float(self.peak_params_grid.GetCellValue(row, 6))
                             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
                             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
@@ -1932,7 +1953,7 @@ class MyFrame(wx.Frame):
                             gamma = 0
                         if model == "Pseudo-Voigt (Area)":
                             area = float(self.peak_params_grid.GetCellValue(row, 6))
-                        if model in ["GL (Area)", "SGL (Area)"]:
+                        elif model in ["GL (Area)", "SGL (Area)"]:
                             area = float(self.peak_params_grid.GetCellValue(row, 6))
                             # For area-based models, recalculate height
                             sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
@@ -2054,8 +2075,8 @@ class MyFrame(wx.Frame):
             split = position - first_position
 
             # Update grid
-            self.peak_params_grid.SetCellValue(row, 9, f"{i_ratio * 100:.0f}")
-            self.peak_params_grid.SetCellValue(row, 10, f"{a_ratio * 100:.0f}")
+            self.peak_params_grid.SetCellValue(row, 9, f"{i_ratio * 100:.1f}")
+            self.peak_params_grid.SetCellValue(row, 10, f"{a_ratio * 100:.1f}")
             self.peak_params_grid.SetCellValue(row, 11, f"{split:.2f}")
 
         self.peak_params_grid.ForceRefresh()
