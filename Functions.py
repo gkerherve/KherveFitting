@@ -452,6 +452,7 @@ def fit_peaks(window, peak_params_grid):
                         sigma = float(peak_params_grid.GetCellValue(row, 7)) / 1
                         gamma = float(peak_params_grid.GetCellValue(row, 8)) / 1
                     except ValueError:
+                        print("ERROR CANNOT GET GAMMA")
                         sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))  # Default calculation if value is invalid
                         gamma = lg_ratio / 100 * sigma  # Default calculation if value is invalid
 
@@ -606,11 +607,8 @@ def fit_peaks(window, peak_params_grid):
                             fwhm = abs(x_values[indices[-1]] - x_values[indices[0]])
                         else:
                             fwhm = None  # or some default value
-                        print("FWHM of peak: " + str(fwhm))
                         fraction = gamma / (sigma + gamma) * 100
-                        print("L/G of peak: " + str(fraction))
                         area = amplitude  # For area-based models, amplitude represents the area
-                        print("Area of peak: "+str(area))
 
                     elif peak_model_choice in ["GL (Height)", "SGL (Height)"]:
                         height = result.params[f'{prefix}amplitude'].value
@@ -632,12 +630,16 @@ def fit_peaks(window, peak_params_grid):
                     fwhm = round(float(fwhm), 2)
                     if peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
                         # Exponential Gaussian doesn't use fraction
-                        fraction = 0  # or None, or any default value
+                        sigma = round(float(sigma * 1), 2)
+                        gamma = round(float(gamma * 1), 2)
+                        fraction = gamma / (sigma + gamma) * 100
+                        area = round(float(area), 2)
                     else:
+                        sigma = round(float(sigma * 2.355), 2)
+                        gamma = round(float(gamma * 2), 2)
                         fraction = round(float(fraction), 2)
-                    area = round(float(area), 2)
-                    sigma = round(float(sigma*2.355), 2)
-                    gamma = round(float(gamma*2), 2)
+                        area = round(float(area), 2)
+
 
                     peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
                     peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")

@@ -162,10 +162,22 @@ class PlotManager:
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
         elif fitting_model == "ExpGauss.(Area, \u03C3, \u03B3)":
             peak_model = lmfit.models.ExponentialGaussianModel()
-            sigma = float(peak_params.get('sigma', 0.2))
-            gamma = float(peak_params.get('gamma', 1))
-            area = float(peak_params.get('area', peak_params.get('amplitude', y)))
+            sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+            area = float(window.peak_params_grid.GetCellValue(row, 6))
             params = peak_model.make_params(center=x, amplitude=area, sigma=sigma, gamma=gamma)
+            peak_y = peak_model.eval(params, x=x_values)
+            # Calculate height numerically
+            y_values = peak_model.eval(params, x=x_values)
+            height = np.max(y_values)
+            # Estimate FWHM numerically
+            half_max = height / 2
+            indices = np.where(y_values >= half_max)[0]
+            if len(indices) >= 2:
+                fwhm = abs(x_values[indices[-1]] - x_values[indices[0]])
+            else:
+                fwhm = None  # or some default value
+            fraction = gamma / (sigma + gamma) * 100
         elif fitting_model == "Pseudo-Voigt (Area)":
             sigma = fwhm / 2
             peak_model = lmfit.models.PseudoVoigtModel()
