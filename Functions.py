@@ -584,7 +584,6 @@ def fit_peaks(window, peak_params_grid):
                         amplitude = result.params[f'{prefix}area'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         fraction = result.params[f'{prefix}fraction'].value * 100
-                        # fwhm = sigma * 2.355
                         fwhm = sigma * 2
                         height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
                         area = amplitude
@@ -594,73 +593,25 @@ def fit_peaks(window, peak_params_grid):
                         center = result.params[f'{prefix}center'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         gamma = result.params[f'{prefix}gamma'].value
-
                         # Calculate height numerically
-                        x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
-
                         # Create the model
                         model = lmfit.models.ExponentialGaussianModel()
-
                         # Evaluate the model
                         y_values = model.eval(x=x_values, amplitude=amplitude, center=center, sigma=sigma, gamma=gamma)
-                        # y_values = lmfit.models.ExponentialGaussianModel(amplitude, center, sigma, gamma)
                         height = np.max(y_values)
-
-                        # Estimate FWHM numerically
-                        half_max = height / 2
-                        indices = np.where(y_values >= half_max)[0]
-                    elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
-                        amplitude = result.params[f'{prefix}amplitude'].value
-                        center = result.params[f'{prefix}center'].value
-                        sigma = result.params[f'{prefix}sigma'].value
-                        gamma = result.params[f'{prefix}gamma'].value
-
-                        # Calculate height numerically
-                        x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
-
-                        # Create the model
-                        model = lmfit.models.ExponentialGaussianModel()
-
-                        # Evaluate the model
-                        y_values = model.eval(x=x_range, amplitude=amplitude, center=center, sigma=sigma, gamma=gamma)
-                        # y_values = lmfit.models.ExponentialGaussianModel(amplitude, center, sigma, gamma)
-                        height = np.max(y_values)
-
-                        # Estimate FWHM numerically
-                        half_max = height / 2
-                        indices = np.where(y_values >= half_max)[0]
-                        fwhm = x_range[indices[-1]] - x_range[indices[0]]
-
-                        # There's no direct equivalent to 'fraction' for this model
-                        fraction = 0  # or you could use gamma/sigma as a rough analog                    elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
-                        amplitude = result.params[f'{prefix}amplitude'].value
-                        center = result.params[f'{prefix}center'].value
-                        sigma = result.params[f'{prefix}sigma'].value
-                        gamma = result.params[f'{prefix}gamma'].value
-
-                        # Calculate height numerically
-                        x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
-
-                        # Create the model
-                        model = lmfit.models.ExponentialGaussianModel()
-
-                        # Evaluate the model
-                        y_values = model.eval(x=x_range, amplitude=amplitude, center=center, sigma=sigma, gamma=gamma)
-                        # y_values = lmfit.models.ExponentialGaussianModel(amplitude, center, sigma, gamma)
-                        height = np.max(y_values)
-
                         # Estimate FWHM numerically
                         half_max = height / 2
                         indices = np.where(y_values >= half_max)[0]
                         if len(indices) >= 2:
-                            fwhm = x_values[indices[-1]] - x_values[indices[0]]
+                            fwhm = abs(x_values[indices[-1]] - x_values[indices[0]])
                         else:
                             fwhm = None  # or some default value
-
-                        # There's no direct equivalent to 'fraction' for this model
-                        fraction = 0  # or you could use gamma/sigma as a rough analog
-
+                        print("FWHM of peak: " + str(fwhm))
+                        fraction = gamma / (sigma + gamma) * 100
+                        print("L/G of peak: " + str(fraction))
                         area = amplitude  # For area-based models, amplitude represents the area
+                        print("Area of peak: "+str(area))
+
                     elif peak_model_choice in ["GL (Height)", "SGL (Height)"]:
                         height = result.params[f'{prefix}amplitude'].value
                         fwhm = result.params[f'{prefix}fwhm'].value

@@ -162,9 +162,9 @@ class PlotManager:
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
         elif fitting_model == "ExpGauss.(Area, \u03C3, \u03B3)":
             peak_model = lmfit.models.ExponentialGaussianModel()
-            sigma = float(peak_params.get('sigma', 1.2))
-            gamma = float(peak_params.get('gamma', 0.06))
-            area = float(peak_params.get('area', y))  # Use 'area' instead of 'y' for height
+            sigma = float(peak_params.get('sigma', 0.2))
+            gamma = float(peak_params.get('gamma', 1))
+            area = float(peak_params.get('area', peak_params.get('amplitude', y)))
             params = peak_model.make_params(center=x, amplitude=area, sigma=sigma, gamma=gamma)
         elif fitting_model == "Pseudo-Voigt (Area)":
             sigma = fwhm / 2
