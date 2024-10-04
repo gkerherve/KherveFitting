@@ -106,8 +106,8 @@ class FittingWindow(wx.Frame):
 
         self.model_combobox = wx.ComboBox(fitting_panel,
                                           choices=["GL (Height)", "SGL (Height)", "GL (Area)", "SGL (Area)",
-                                                   "Pseudo-Voigt (Area)", "Voigt (Area, L/G, \u03C3)", "Voigt (Area, "
-                                                   "\u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"],
+                                                   "Pseudo-Voigt (Area)", "Voigt (Area, L/G, \u03C3)", "Voigt (Area,\u03C3, \u03B3)",
+                                                   "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"],
                                           style=wx.CB_READONLY)
         model_index = self.model_combobox.FindString(self.parent.selected_fitting_method)
         self.model_combobox.SetSelection(model_index)

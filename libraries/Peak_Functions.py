@@ -257,6 +257,14 @@ class PeakFunctions:
         params = model.make_params(amplitude=amplitude, center=0, sigma=sigma, fraction=fraction/100)
         return model.eval(params, x=0)
 
+    @staticmethod
+    def LA(x, center, amplitude, fwhm, sigma, gamma):
+        return amplitude * np.where(
+            x <= center,
+            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma,
+            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma
+        )
+
 
 import numpy as np
 from scipy.signal import savgol_filter

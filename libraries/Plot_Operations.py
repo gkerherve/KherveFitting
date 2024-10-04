@@ -183,6 +183,20 @@ class PlotManager:
             peak_model = lmfit.models.PseudoVoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio / 100)
+        elif fitting_model == "LA (Area, \u03C3, \u03B3)":
+            peak_model = lmfit.Model(PeakFunctions.LA)
+            sigma = float(peak_params.get('sigma', 1.2))
+            gamma = float(peak_params.get('gamma', 0.06))
+            area = float(peak_params.get('area', y * fwhm))  # Estimate area if not provided
+            params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+
+            # Calculate height numerically
+            x_range = np.linspace(x - 5 * fwhm, x + 5 * fwhm, 1000)
+            y_values = peak_model.eval(params, x=x_range)
+            height = np.max(y_values)
+
+            # No direct equivalent to 'fraction' for LA model
+            fraction = (sigma + gamma) / 2  # You could define it differently if needed
         elif fitting_model == "GL (Height)":
             peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
             params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -697,6 +711,12 @@ class PlotManager:
                 peak_model = lmfit.models.PseudoVoigtModel()
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
                 params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
+            elif window.selected_fitting_method == "LA (Area, \u03C3, \u03B3)":
+                peak_model = lmfit.Model(PeakFunctions.LA)
+                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+                area = float(window.peak_params_grid.GetCellValue(row, 6))
+                params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
             elif window.selected_fitting_method == "GL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -806,6 +826,14 @@ class PlotManager:
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma,
                                                 fraction=lg_ratio / 100)
+            elif fitting_model == "LA (Area, \u03C3, \u03B3)":
+                peak_model = lmfit.Model(PeakFunctions.LA)
+                area = float(window.peak_params_grid.GetCellValue(row, 6))
+                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+                params = peak_model.make_params(center=peak_x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+                peak_fit = peak_model.eval(params, x=window.x_values)
+                overall_fit += peak_fit
             elif fitting_model == "GL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)

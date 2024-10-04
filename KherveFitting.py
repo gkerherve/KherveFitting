@@ -415,7 +415,8 @@ class MyFrame(wx.Frame):
             for col in [5, 6, 7, 8]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
-        elif self.selected_fitting_method in ["Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
+        elif self.selected_fitting_method in ["Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)",
+                                              "LA (Area, \u03C3, \u03B3)" ]:
             for col in [3, 4, 5]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
@@ -966,6 +967,17 @@ class MyFrame(wx.Frame):
         elif model == "Pseudo-Voigt (Area)":
             # For Pseudo-Voigt, this is also an approximation
             return area / (fwhm * np.pi / 2)
+        elif model == "LA (Area, \u03C3, \u03B3)":
+            center = float(self.peak_params_grid.GetCellValue(row, 2))
+            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+
+            # Calculate height numerically
+            x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
+            y_values = PeakFunctions.LA(x_range, center, area, fwhm, sigma, gamma)
+            height = np.max(y_values)
+
+            return height
         elif model in ["GL (Area)", "SGL (Area)"]:
             # For Gaussian-Lorentzian models, whether area-based or height-based
             # sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
@@ -1824,6 +1836,19 @@ class MyFrame(wx.Frame):
             area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
         elif model == "ExpGauss.(Area, \u03C3, \u03B3)":
             area = height * sigma * np.sqrt(2 * np.pi) * np.exp(gamma ** 2 * sigma ** 2 / 4)
+        elif model == "LA (Area, \u03C3, \u03B3)":
+            if sigma is None or gamma is None:
+                raise ValueError("Sigma and gamma are required for LA model")
+
+            # Use the peak maximum as an approximation for the center
+            center_approx = 0  # Assuming the peak is centered at 0 for integration purposes
+
+            # Numerical integration to calculate area
+            x_range = np.linspace(center_approx - 10 * fwhm, center_approx + 10 * fwhm, 10000)
+            y_values = PeakFunctions.LA(x_range, center_approx, height, fwhm, sigma, gamma)
+            area = np.trapz(y_values, x_range)
+
+            return round(area, 2)
         else:
             raise ValueError(f"Unknown fitting model: {model}")
         return round(area, 2)
@@ -1907,7 +1932,8 @@ class MyFrame(wx.Frame):
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
                         # area = float(self.peak_params_grid.GetCellValue(row, 6))
-                        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
+                        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)",
+                                     "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
                             area = float(self.peak_params_grid.GetCellValue(row, 6))
                             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
                             gamma = float(self.peak_params_grid.GetCellValue(row, 8))

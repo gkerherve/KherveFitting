@@ -90,7 +90,8 @@ def on_sheet_selected(window, event):
                         for col in [5,6,7,8]:  # Columns for Height, FWHM, L/G ratio
                             window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                             window.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
-                    elif window.selected_fitting_method in ["Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
+                    elif window.selected_fitting_method in ["Voigt (Area, \u03C3, \u03B3)",
+                                        "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
                         for col in [3, 4,5]:  # Columns for Height, FWHM, L/G ratio
                             window.peak_params_grid.SetCellValue(row + 1, col, "0")
                             window.peak_params_grid.SetCellTextColour(row, col, wx.Colour(128, 128, 128))

@@ -147,6 +147,16 @@ def _calculate_peak_areas2(peak_params, fitting_model):
     elif fitting_model == "Pseudo-Voigt (Area)":
         # Area calculation for Pseudo-Voigt profile
         area = height * fwhm * np.pi / 2
+    elif fitting_model == "LA (Area, \u03C3, \u03B3)":
+        # For LA model, area is directly provided
+        area = peak_params['area']
+        # If area is not provided in peak_params, you can calculate it numerically:
+        # if 'area' not in peak_params:
+        #     sigma = peak_params['sigma']
+        #     gamma = peak_params['gamma']
+        #     x_range = np.linspace(peak_params['center'] - 5*fwhm, peak_params['center'] + 5*fwhm, 1000)
+        #     y_values = PeakFunctions.LA(x_range, peak_params['center'], height, fwhm, sigma, gamma)
+        #     area = np.trapz(y_values, x_range)
     elif fitting_model in ["GL (Height)", "SGL (Height)", "Unfitted"]:
         # Area calculation for Gaussian-Lorentzian profiles
         area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))

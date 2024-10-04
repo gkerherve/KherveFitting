@@ -424,11 +424,9 @@ def fit_peaks(window, peak_params_grid):
 
                     # Parse constraints for sigma and gamma
                     sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
-                                                                                                       7),
-                                                                         sigma, peak_params_grid, i, "Sigma")
+                                        7),sigma, peak_params_grid, i, "Sigma")
                     gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
-                                                                                                           8),
-                                                                         gamma, peak_params_grid, i, "Gamma")
+                                        8), gamma, peak_params_grid, i, "Gamma")
 
                     # Evaluate constraints
                     sigma_min = evaluate_constraint(sigma_min, peak_params_grid, 'sigma', sigma)
@@ -480,33 +478,37 @@ def fit_peaks(window, peak_params_grid):
                     peak_model = lmfit.models.PseudoVoigtModel(prefix=prefix)
                     sigma = fwhm / 2.
 
-                    # Center parameter
-                    params.add(f'{prefix}center', value=center,
-                               min=center_min, max=center_max,
-                               vary=center_vary, brute_step=0.1)
-
-                    # Amplitude parameter
-                    params.add(f'{prefix}area', value=area,
-                               min=area_min,
-                               max=area_max,
-                               vary=area_vary,
-                               brute_step=area * 0.01)
-
-                    # Sigma parameter
-                    params.add(f'{prefix}sigma', value=sigma,
-                               min=fwhm_min / 2. if fwhm_min else None,
-                               max=fwhm_max / 2. if fwhm_max else None,
-                               vary=fwhm_vary, brute_step=sigma * 0.01)
-
-                    # Fraction parameter
-                    params.add(f'{prefix}fraction', value=lg_ratio / 100,
-                               min=lg_ratio_min / 100, max=lg_ratio_max / 100,
+                    params.add(f'{prefix}center', value=center,min=center_min, max=center_max,vary=center_vary, brute_step=0.1)
+                    params.add(f'{prefix}area', value=area,min=area_min,max=area_max,vary=area_vary,brute_step=area * 0.01)
+                    params.add(f'{prefix}sigma', value=sigma, min=fwhm_min / 2. if fwhm_min else None,
+                        max=fwhm_max / 2. if fwhm_max else None, vary=fwhm_vary, brute_step=sigma * 0.01)
+                    params.add(f'{prefix}fraction', value=lg_ratio / 100, min=lg_ratio_min / 100, max=lg_ratio_max / 100,
                                vary=lg_ratio_vary, brute_step=0.01)
-
-                    # Define amplitude as an expression based on area
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
 
+                elif peak_model_choice == "LA (Area, \u03C3, \u03B3)":
+                    peak_model = lmfit.Model(PeakFunctions.LA, prefix=prefix)
+                    sigma = float(peak_params_grid.GetCellValue(row, 7))
+                    gamma = float(peak_params_grid.GetCellValue(row, 8))
+
+                    # Parse constraints for sigma and gamma
+                    sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,7),
+                                                                         sigma, peak_params_grid, i, "Sigma")
+                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,8),
+                                                                         gamma, peak_params_grid, i, "Gamma")
+
+                    # Evaluate constraints
+                    sigma_min = evaluate_constraint(sigma_min, peak_params_grid, 'sigma', sigma)
+                    sigma_max = evaluate_constraint(sigma_max, peak_params_grid, 'sigma', sigma)
+                    gamma_min = evaluate_constraint(gamma_min, peak_params_grid, 'gamma', gamma)
+                    gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
+
+                    params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
                 elif peak_model_choice == "GL (Area)":
                     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area, prefix=prefix)
                     params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary)
@@ -588,7 +590,6 @@ def fit_peaks(window, peak_params_grid):
                         fwhm = sigma * 2
                         height = PeakFunctions.get_pseudo_voigt_height(amplitude, sigma, fraction)
                         area = amplitude
-
                     elif peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
                         amplitude = result.params[f'{prefix}amplitude'].value
                         center = result.params[f'{prefix}center'].value
@@ -609,7 +610,20 @@ def fit_peaks(window, peak_params_grid):
                             fwhm = None  # or some default value
                         fraction = gamma / (sigma + gamma) * 100
                         area = amplitude  # For area-based models, amplitude represents the area
+                    elif peak_model_choice == "LA (Area, \u03C3, \u03B3)":
+                        area = result.params[f'{prefix}area'].value
+                        center = result.params[f'{prefix}center'].value
+                        fwhm = result.params[f'{prefix}fwhm'].value
+                        sigma = result.params[f'{prefix}sigma'].value
+                        gamma = result.params[f'{prefix}gamma'].value
 
+                        # Calculate height numerically
+                        x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
+                        y_values = PeakFunctions.LA(x_range, center, area, fwhm, sigma, gamma)
+                        height = np.max(y_values)
+
+                        # No direct equivalent to 'fraction' for LA model
+                        fraction = 99.9  # or you could use (sigma + gamma) / 2 as a measure of asymmetry
                     elif peak_model_choice in ["GL (Height)", "SGL (Height)"]:
                         height = result.params[f'{prefix}amplitude'].value
                         fwhm = result.params[f'{prefix}fwhm'].value
@@ -646,7 +660,8 @@ def fit_peaks(window, peak_params_grid):
                     peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")
                     peak_params_grid.SetCellValue(row, 5, f"{fraction:.2f}")
                     peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
-                    if peak_model_choice in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
+                    if peak_model_choice in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)",
+                                             "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
                         peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
                         peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
                     else:
