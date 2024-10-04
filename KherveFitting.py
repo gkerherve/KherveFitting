@@ -369,7 +369,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 6, f"{peak_y*1.6*1.064:.2f}")  # Area, initially empty
         if self.selected_fitting_method == "ExpGauss.(Area, \u03C3, \u03B3)":
             self.peak_params_grid.SetCellValue(row, 7, "0.3")  # sigma
-            self.peak_params_grid.SetCellValue(row, 8, '1')  # gamma
+            self.peak_params_grid.SetCellValue(row, 8, '1.2')  # gamma
         else:
             self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
             self.peak_params_grid.SetCellValue(row, 8, '0.15')  # gamma
@@ -392,8 +392,12 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row + 1, 4, "0.3:3.5")
         self.peak_params_grid.SetCellValue(row + 1, 5, "2:80")
         self.peak_params_grid.SetCellValue(row + 1, 6, "1:1e7")
-        self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:3")
-        self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:3")
+        if self.selected_fitting_method == "ExpGauss.(Area, \u03C3, \u03B3)":
+            self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:1")
+            self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:3")
+        else:
+            self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:3")
+            self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:3")
         self.peak_params_grid.ForceRefresh()
 
         # Set constraint values
@@ -479,7 +483,7 @@ class MyFrame(wx.Frame):
                 'L/G': "2:80",
                 'Area':'1:1e7',
                 'Sigma': "0.01:1",
-                'Gamma': "0.01:1"
+                'Gamma': "0.01:3"
             }
         }
         # print(self.Data)
