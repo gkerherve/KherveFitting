@@ -489,6 +489,7 @@ def fit_peaks(window, peak_params_grid):
 
                 elif peak_model_choice == "LA (Area, \u03C3, \u03B3)":
                     peak_model = lmfit.Model(PeakFunctions.LA, prefix=prefix)
+                    amplitude = float(peak_params_grid.GetCellValue(row, 6))
                     sigma = float(peak_params_grid.GetCellValue(row, 7))
                     gamma = float(peak_params_grid.GetCellValue(row, 8))
 
@@ -504,7 +505,7 @@ def fit_peaks(window, peak_params_grid):
                     gamma_min = evaluate_constraint(gamma_min, peak_params_grid, 'gamma', gamma)
                     gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
 
-                    params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max, vary=sigma_vary)
@@ -611,15 +612,15 @@ def fit_peaks(window, peak_params_grid):
                         fraction = gamma / (sigma + gamma) * 100
                         area = amplitude  # For area-based models, amplitude represents the area
                     elif peak_model_choice == "LA (Area, \u03C3, \u03B3)":
-                        area = result.params[f'{prefix}area'].value
+                        area = result.params[f'{prefix}amplitude'].value
                         center = result.params[f'{prefix}center'].value
                         fwhm = result.params[f'{prefix}fwhm'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         gamma = result.params[f'{prefix}gamma'].value
 
                         # Calculate height numerically
-                        x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
-                        y_values = PeakFunctions.LA(x_range, center, area, fwhm, sigma, gamma)
+                        # x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
+                        y_values = PeakFunctions.LA(x_values, center, area, fwhm, sigma, gamma)
                         height = np.max(y_values)
 
                         # No direct equivalent to 'fraction' for LA model
@@ -642,7 +643,7 @@ def fit_peaks(window, peak_params_grid):
                     center = round(float(center), 2)
                     height = round(float(height), 2)
                     fwhm = round(float(fwhm), 2)
-                    if peak_model_choice == "ExpGauss.(Area, \u03C3, \u03B3)":
+                    if peak_model_choice in ["ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
                         # Exponential Gaussian doesn't use fraction
                         sigma = round(float(sigma * 1), 2)
                         gamma = round(float(gamma * 1), 2)

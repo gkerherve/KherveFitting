@@ -162,9 +162,9 @@ class PlotManager:
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
         elif fitting_model == "ExpGauss.(Area, \u03C3, \u03B3)":
             peak_model = lmfit.models.ExponentialGaussianModel()
+            area = float(window.peak_params_grid.GetCellValue(row, 6))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
             gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-            area = float(window.peak_params_grid.GetCellValue(row, 6))
             params = peak_model.make_params(center=x, amplitude=area, sigma=sigma, gamma=gamma)
             peak_y = peak_model.eval(params, x=x_values)
             # Calculate height numerically
@@ -185,9 +185,9 @@ class PlotManager:
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio / 100)
         elif fitting_model == "LA (Area, \u03C3, \u03B3)":
             peak_model = lmfit.Model(PeakFunctions.LA)
-            sigma = float(peak_params.get('sigma', 1.2))
-            gamma = float(peak_params.get('gamma', 0.06))
-            area = float(peak_params.get('area', y * fwhm))  # Estimate area if not provided
+            area = float(window.peak_params_grid.GetCellValue(row, 6))
+            sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(window.peak_params_grid.GetCellValue(row, 8))
             params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
 
             # Calculate height numerically
@@ -832,8 +832,6 @@ class PlotManager:
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 params = peak_model.make_params(center=peak_x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
-                peak_fit = peak_model.eval(params, x=window.x_values)
-                overall_fit += peak_fit
             elif fitting_model == "GL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
