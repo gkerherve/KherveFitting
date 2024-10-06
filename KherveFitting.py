@@ -374,8 +374,9 @@ class MyFrame(wx.Frame):
             self.peak_params_grid.SetCellValue(row, 7, "0.3")  # sigma
             self.peak_params_grid.SetCellValue(row, 8, '1.2')  # gamma
         elif self.selected_fitting_method == "LA (Area, \u03C3, \u03B3)":
-            self.peak_params_grid.SetCellValue(row, 7, "2")  # sigma
-            self.peak_params_grid.SetCellValue(row, 8, '1')  # gamma
+            self.peak_params_grid.SetCellValue(row, 5, "50")
+            self.peak_params_grid.SetCellValue(row, 7, "2.7")  # sigma
+            self.peak_params_grid.SetCellValue(row, 8, '2.7')  # gamma
         else:
             self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
             self.peak_params_grid.SetCellValue(row, 8, '0.15')  # gamma
@@ -481,7 +482,7 @@ class MyFrame(wx.Frame):
             'Position': peak_x,
             'Height': peak_y,
             'FWHM': 1.6,
-            'L/G': 30,
+            'L/G': 20,
             'Area': peak_y*1.6*1.064,
             'Sigma': 1,
             'Gamma': 0.2,
@@ -1883,11 +1884,11 @@ class MyFrame(wx.Frame):
             4: '0.3:3.5',  # FWHM
             5: '5:80',  # L/G
             6: '1:1e7',  # Area
-            7: '0.01:1',  # Sigma
-            8: '0.01:1'  # Gamma
+            7: '0.01:3',  # Sigma
+            8: '0.01:3'  # Gamma
         }
 
-        if col in [0,9,10,11]:
+        if col in [0, 9, 10, 11]:
             event.Veto()
             return
         elif col not in [1, 12, 13] and row % 2 == 1:  # Constraint row
@@ -1907,8 +1908,9 @@ class MyFrame(wx.Frame):
         elif new_value == 'F':
             new_value = 'F*1'
         elif new_value.startswith('#'):
-            peak_value = float(self.peak_params_grid.GetCellValue(row-1, col))
-            new_value = str(round(peak_value-float(new_value[1:]),2))+':'+str(round(peak_value+float(new_value[1:]),2))
+            peak_value = float(self.peak_params_grid.GetCellValue(row - 1, col))
+            new_value = str(round(peak_value - float(new_value[1:]), 2)) + ':' + str(
+                round(peak_value + float(new_value[1:]), 2))
         # Convert lowercase letters to uppercase
         elif new_value.lower() in 'abcdefghijklmnop':
             new_value = new_value.upper() + '*1'
@@ -1942,24 +1944,28 @@ class MyFrame(wx.Frame):
                         self.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = new_peaks
                     elif col == 2:  # Position
                         peaks[correct_peak_key]['Position'] = float(new_value)
-                    elif col in [3, 4, 5,6, 7, 8]:  # Height, FWHM, or L/G changed
+                    elif col in [3, 4, 5, 6, 7, 8]:  # Height, FWHM, L/G, Area, Sigma, Gamma changed
                         model = peaks[correct_peak_key]['Fitting Model']
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                        # area = float(self.peak_params_grid.GetCellValue(row, 6))
-                        if model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)",
-                                     "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
-                            area = float(self.peak_params_grid.GetCellValue(row, 6))
-                            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-                        else:
-                            sigma = 0
-                            gamma = 0
-                        if model == "Pseudo-Voigt (Area)":
-                            area = float(self.peak_params_grid.GetCellValue(row, 6))
-                        elif model in ["GL (Area)", "SGL (Area)","ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
-                            area = float(self.peak_params_grid.GetCellValue(row, 6))
+                        area = float(self.peak_params_grid.GetCellValue(row, 6))
+                        sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                        gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+
+                        if model == "LA (Area, \u03C3, \u03B3)":
+                            if col == 5:  # L/G ratio changed
+                                gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                                sigma = (fraction / 100) * gamma / (1 - fraction / 100)
+                                self.peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
+                            elif col == 7:  # Sigma changed
+                                fraction = 100 * sigma / (sigma + gamma)
+                                self.peak_params_grid.SetCellValue(row, 5, f"{fraction:.2f}")
+                            elif col == 8:  # Gamma changed
+                                sigma = (fraction / 100) * gamma / (1 - fraction / 100)
+                                self.peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
+
+                        if model in ["GL (Area)", "SGL (Area)"]:
                             # For area-based models, recalculate height
                             sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                             height = area / (sigma * np.sqrt(2 * np.pi))
@@ -1967,16 +1973,17 @@ class MyFrame(wx.Frame):
                         else:
                             # Recalculate area
                             area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma)
+                            self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
+
                         self.update_ratios()
                         # Update grid and data
-                        self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
                         peaks[correct_peak_key].update({
                             'Height': round(height, 2),
                             'FWHM': round(fwhm, 2),
                             'L/G': round(fraction, 2),
-                            'Area': round(area,2),
-                            'Sigma': round(sigma,2),
-                            'Gamma': round(gamma,2)
+                            'Area': round(area, 2),
+                            'Sigma': round(sigma, 2),
+                            'Gamma': round(gamma, 2)
                         })
                     elif col == 12:  # Fitting Model changed
                         peaks[correct_peak_key]['Fitting Model'] = new_value
@@ -1986,12 +1993,8 @@ class MyFrame(wx.Frame):
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
-                        if model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)"]:
-                            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-                        else:
-                            sigma = 0
-                            gamma = 0
+                        sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                        gamma = float(self.peak_params_grid.GetCellValue(row, 8))
                         area = self.calculate_peak_area(new_value, height, fwhm, fraction, sigma, gamma)
 
                         self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")
@@ -2000,7 +2003,7 @@ class MyFrame(wx.Frame):
                         on_sheet_selected(self, sheet_name)
                 else:  # Constraint row
                     if col in [2, 3, 4, 5, 6, 7, 8]:
-                        constraint_keys = ['Position', 'Height', 'FWHM', 'L/G','Area', 'Sigma', 'Gamma']
+                        constraint_keys = ['Position', 'Height', 'FWHM', 'L/G', 'Area', 'Sigma', 'Gamma']
                         column_to_constraint = {2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5, 8: 6}
                         constraint_key = constraint_keys[column_to_constraint[col]]
 
@@ -2015,8 +2018,8 @@ class MyFrame(wx.Frame):
                                 'FWHM': '0.3:3.5',
                                 'L/G': '5:80',
                                 'Area': '1:1e7',
-                                'Sigma': '0.01:1',
-                                'Gamma': '0.01:1'
+                                'Sigma': '0.01:4',
+                                'Gamma': '0.01:4'
                             }
                             new_value = default_constraints[constraint_key]
                             self.peak_params_grid.SetCellValue(row, col, new_value)
@@ -2024,7 +2027,7 @@ class MyFrame(wx.Frame):
                         peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 
             # Ensure numeric values are displayed with 2 decimal places
-        if col in [2, 3, 4, 5,6,7,8] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
+        if col in [2, 3, 4, 5, 6, 7, 8] and row % 2 == 0:  # Only for main parameter rows, not constraint rows
             try:
                 formatted_value = f"{float(new_value):.2f}"
                 self.peak_params_grid.SetCellValue(row, col, formatted_value)

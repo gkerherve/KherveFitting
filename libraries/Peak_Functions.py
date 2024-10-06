@@ -261,8 +261,8 @@ class PeakFunctions:
     def LA(x, center, amplitude, fwhm, sigma, gamma):
         return amplitude * np.where(
             x <= center,
-            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma,
-            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma
+            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma,
+            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma
         )
 
 
