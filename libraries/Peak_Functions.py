@@ -259,6 +259,7 @@ class PeakFunctions:
 
     @staticmethod
     def LA(x, center, amplitude, fwhm, sigma, gamma):
+        # print("LA FWHM: "+str(fwhm))
         return amplitude * np.where(
             x <= center,
             1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma,

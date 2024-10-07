@@ -627,6 +627,13 @@ def fit_peaks(window, peak_params_grid):
                         y_values = PeakFunctions.LA(x_values, center, area, fwhm, sigma, gamma)
                         height = np.max(y_values)
 
+                        # Calculate FWHM numerically
+                        half_max = height / 2
+                        left_idx = np.argmax(y_values >= half_max)
+                        right_idx = len(y_values) - np.argmax(y_values[::-1] >= half_max) - 1
+                        fwhm2 = abs(x_values[right_idx] - x_values[left_idx])
+                        print("Fit_FWHM: "+str(fwhm2))
+
                         # No direct equivalent to 'fraction' for LA model
                         fraction = sigma / (sigma + gamma) * 100
                     elif peak_model_choice in ["GL (Height)", "SGL (Height)"]:
