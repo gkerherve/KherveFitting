@@ -140,7 +140,7 @@ class MyFrame(wx.Frame):
         # Initial max iteration value
         self.max_iterations = 50
         # Initial fitting method
-        self.selected_fitting_method = "GL (Height)"
+        self.selected_fitting_method = "GL (Area)"
 
         # self.fitting_results_visible = False
 

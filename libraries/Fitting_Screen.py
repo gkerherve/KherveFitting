@@ -104,55 +104,46 @@ class FittingWindow(wx.Frame):
         fitting_panel = wx.Panel(notebook)
         fitting_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
-        class CustomComboBox(wx.ComboBox):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self.green_items = []
-
-            def SetGreenItems(self, items):
-                self.green_items = items
-
-            def GetGreenItems(self):
-                return self.green_items
-
-            def OnDrawItem(self, dc, rect, item, flags):
-                if flags & wx.CONTROL_SELECTED:
-                    dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
-                    dc.SetBrush(wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT), wx.BRUSHSTYLE_SOLID))
-                else:
-                    dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT))
-                    dc.SetBrush(wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW), wx.BRUSHSTYLE_SOLID))
-
-                dc.DrawRectangle(rect)
-                text = self.GetString(item)
-                if text in self.green_items:
-                    dc.SetTextForeground(wx.GREEN)
-                dc.DrawText(text, rect.x + 3, rect.y + 2)
-
-            def OnMeasureItem(self, item):
-                return 24
-
         # self.model_combobox = wx.ComboBox(fitting_panel,
         #                                   choices=["GL (Height)", "SGL (Height)", "GL (Area)", "SGL (Area)",
-        #                                            "Pseudo-Voigt (Area)", "Voigt (Area, L/G, \u03C3)", "Voigt (Area,\u03C3, \u03B3)",
+        #                                            "Pseudo-Voigt (Area)", "Voigt (Area, L/G, \u03C3)",
+        #                                            "Voigt (Area,\u03C3, \u03B3)" ,
         #                                            "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"],
         #                                   style=wx.CB_READONLY)
 
         self.model_combobox = CustomComboBox(fitting_panel, style=wx.CB_READONLY)
 
         # Set items and green items
-        items = ["GL (Height)", "SGL (Height)", "GL (Area)", "SGL (Area)",
-                 "Pseudo-Voigt (Area)", "Voigt (Area, L/G, σ)", "Voigt (Area, σ, γ)",
-                 "---------- Height Based ----------",
-                 "---------- Area Based ----------"]
-        green_items = ["---------- Height Based ----------", "---------- Area Based ----------"]
+        items = ["--- Area Based ---",
+                 "GL (Area)",
+                 "SGL (Area)",
+                 "Voigt (Area,\u03C3, \u03B3)",
+                 "Voigt (Area, L/G, \u03C3)",
+                 "Pseudo-Voigt (Area)",
+
+                 "--- Height Based ---",
+                 "GL (Height)",
+                 "SGL (Height)",
+
+                 "--- Under Test ---",
+                 "ExpGauss.(Area, \u03C3, \u03B3)",
+                 "LA (Area, \u03C3, \u03B3)"]
+
+
+        green_items = ["--- Area Based ---", "--- Height Based ---", "--- Under Test ---"]
         self.model_combobox.SetItems(items)
         self.model_combobox.SetGreenItems(green_items)
 
+        # Set default selection to "GL (Area)"
+        default_index = items.index("GL (Area)")
+        self.model_combobox.SetSelection(default_index)
+        self.model_combobox.SetValue("GL (Area)")
+        self.parent.set_fitting_method("GL (Area)")
 
 
-        model_index = self.model_combobox.FindString(self.parent.selected_fitting_method)
-        self.model_combobox.SetSelection(model_index)
+
+        # model_index = self.model_combobox.FindString(self.parent.selected_fitting_method)
+        # self.model_combobox.SetSelection(model_index)
         self.model_combobox.Bind(wx.EVT_COMBOBOX, self.on_method_change)
 
         self.max_iter_spin = wx.SpinCtrl(fitting_panel, value=str(self.parent.max_iterations), min=1, max=10000)
@@ -241,9 +232,9 @@ class FittingWindow(wx.Frame):
     def on_max_iter_change(self, event):
         self.parent.set_max_iterations(self.max_iter_spin.GetValue())
 
-    def on_method_change(self, event):
-        new_method = self.model_combobox.GetValue()
-        self.parent.set_fitting_method(new_method)
+    # def on_method_change(self, event):
+    #     new_method = self.model_combobox.GetValue()
+    #     self.parent.set_fitting_method(new_method)
 
     def on_bkg_method_change(self, event):
         new_method = self.method_combobox.GetValue()
@@ -455,3 +446,38 @@ class FittingWindow(wx.Frame):
         self.Destroy()
 
 
+
+class CustomComboBox(wx.ComboBox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.green_items = []
+
+    def SetGreenItems(self, items):
+        self.green_items = items
+
+    def GetGreenItems(self):
+        return self.green_items
+
+    def OnDrawItem(self, dc, rect, item, flags):
+        if flags & wx.CONTROL_SELECTED:
+            dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
+            dc.SetBrush(wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT), wx.BRUSHSTYLE_SOLID))
+        else:
+            dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT))
+            dc.SetBrush(wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW), wx.BRUSHSTYLE_SOLID))
+
+        dc.DrawRectangle(rect)
+        text = self.GetString(item)
+        if text in self.green_items:
+            dc.SetTextForeground(wx.GREEN)
+        dc.DrawText(text, rect.x + 3, rect.y + 2)
+
+    def OnMeasureItem(self, item):
+        return 24
+
+    def OnSelect(self, event):
+        selection = self.GetStringSelection()
+        if selection in self.green_items:
+            wx.CallAfter(self.SetSelection, self.GetSelection())
+        else:
+            event.Skip()

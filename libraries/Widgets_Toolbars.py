@@ -120,7 +120,7 @@ def create_peak_params_grid(window, parent):
 
     # Set column labels and sizes
     column_labels = ["ID", "Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "L/G \n\u03C3/\u03B3 (%)", "Area\n(CPS.eV)",
-                     "\u03C3 or \u03B1\nW_g", "\u03B3 or \u03B2\nW_l",
+                     "\u03C3\nW_g", "\u03B3\nW_l",
                      "I/I\u1D00", "A/A\u1D00", "Split\n(eV)", "Fitting Model", "Bkg Type", "Bkg Low\n(eV)",
                      "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)", "Bkg Offset High\n(CPS)"]
     for i, label in enumerate(column_labels):
