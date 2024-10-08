@@ -13,9 +13,9 @@ class FittingWindow(wx.Frame):
 
 
         self.SetTitle("Peak Fitting")
-        self.SetSize((305, 480))  # Increased height to accommodate new elements
-        self.SetMinSize((305, 480))
-        self.SetMaxSize((305, 480))
+        self.SetSize((305, 550))  # Increased height to accommodate new elements
+        self.SetMinSize((305, 550))
+        self.SetMaxSize((305, 550))
 
         self.init_ui()
 
@@ -27,13 +27,17 @@ class FittingWindow(wx.Frame):
         panel = wx.Panel(self)
         panel.SetBackgroundColour(wx.Colour(255, 255, 255))
 
-        notebook = wx.Notebook(panel)
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # Add description text above the notebook
+        self.description_text = wx.StaticText(panel, label="Model Description")
+        main_sizer.Add(self.description_text, 0, wx.EXPAND | wx.ALL, 5)
+
+        notebook = wx.Notebook(panel)
         self.init_background_tab(notebook)
         self.init_fitting_tab(notebook)
 
-        # Set notebook as the main sizer
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        # Add notebook to the main sizer
         main_sizer.Add(notebook, 1, wx.EXPAND)
         panel.SetSizer(main_sizer)
 
@@ -45,6 +49,9 @@ class FittingWindow(wx.Frame):
         self.parent.peak_fitting_tab_selected = False
         self.parent.show_hide_vlines()
         self.parent.deselect_all_peaks()
+
+        # Initial description update
+        self.update_description(wx.BookCtrlEvent(wx.EVT_NOTEBOOK_PAGE_CHANGED.typeId))
 
 
 
@@ -421,13 +428,21 @@ class FittingWindow(wx.Frame):
         offset_l_value = self.offset_l_text.GetValue()
         self.parent.set_offset_l(offset_l_value)
 
-    def on_tab_change(self, event):
+    def update_description(self, event):
         selected_page = event.GetSelection()
-        self.parent.background_tab_selected = (selected_page == 0)  # Assuming background is the first tab
+        if selected_page == 0:  # Background tab
+            description = f"Background Model: {self.parent.background_method}"
+        else:  # Peak fitting tab
+            description = f"Fitting Model: {self.parent.selected_fitting_method}"
+        self.description_text.SetLabel(description)
+
+    def on_tab_change(self, event):
+        self.update_description(event)
+        selected_page = event.GetSelection()
+        self.parent.background_tab_selected = (selected_page == 0)
         self.parent.peak_fitting_tab_selected = (selected_page == 1)
         self.parent.show_hide_vlines()
 
-        # If switching to background tab, ensure vLines can be created
         if selected_page == 0:
             self.parent.enable_background_interaction()
         else:

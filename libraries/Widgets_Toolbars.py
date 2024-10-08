@@ -112,7 +112,7 @@ def create_peak_params_grid(window, parent):
     peak_params_sizer = wx.StaticBoxSizer(peak_params_frame_box, wx.VERTICAL)
 
     window.peak_params_frame = wx.Panel(peak_params_frame_box)
-    window.peak_params_frame.SetBackgroundColour(wx.Colour(255, 255, 255))
+    # window.peak_params_frame.SetBackgroundColour(wx.Colour(255, 255, 255))
     peak_params_sizer_inner = wx.BoxSizer(wx.VERTICAL)
 
     window.peak_params_grid = wx.grid.Grid(window.peak_params_frame)
@@ -126,14 +126,21 @@ def create_peak_params_grid(window, parent):
     for i, label in enumerate(column_labels):
         window.peak_params_grid.SetColLabelValue(i, label)
 
+
     # Set grid properties
     default_row_size = 25
     window.peak_params_grid.SetDefaultRowSize(default_row_size)
     window.peak_params_grid.SetColLabelSize(35)
     window.peak_params_grid.SetDefaultColSize(60)
-    window.peak_params_grid.SetLabelBackgroundColour(wx.Colour(255, 255, 255))
-    window.peak_params_grid.SetDefaultCellBackgroundColour(window.peak_params_grid.GetLabelBackgroundColour())
+    # window.peak_params_grid.SetLabelBackgroundColour(wx.Colour(230, 250, 230))  # Green background for column labels
+    window.peak_params_grid.SetDefaultCellBackgroundColour(wx.WHITE)  # White background for all cells
     window.peak_params_grid.SetRowLabelSize(25)
+
+    # Ensure all cells have white background
+    for row in range(window.peak_params_grid.GetNumberRows()):
+        for col in range(window.peak_params_grid.GetNumberCols()):
+            window.peak_params_grid.SetCellBackgroundColour(row, col, wx.WHITE)
+
 
     # Adjust individual column sizes
     col_sizes = [20, 90, 80, 80, 60, 50, 60, 60, 60, 40, 40, 40, 100, 80, 80, 80, 100, 100]
@@ -170,8 +177,8 @@ def create_results_grid(window, parent):
     window.results_grid.SetDefaultColSize(60)
     window.results_grid.SetRowLabelSize(25)
     window.results_grid.SetColLabelSize(35)
-    window.results_grid.SetLabelBackgroundColour(wx.Colour(255, 255, 255))
-    window.results_grid.SetDefaultCellBackgroundColour(window.results_grid.GetLabelBackgroundColour())
+    # window.results_grid.SetLabelBackgroundColour(wx.Colour(255, 255, 255))
+    window.results_grid.SetDefaultCellBackgroundColour(wx.WHITE)
 
     # Adjust specific column sizes
     col_sizes = [120, 70, 70, 70, 50, 80, 80, 20, 50, 90, 90, 50, 50, 80, 70, 70, 100, 100, 80, 120, 120, 120, 120,
