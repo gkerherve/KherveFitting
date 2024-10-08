@@ -1184,7 +1184,7 @@ class PlotManager:
             offset_l = float(window.offset_l)
 
             # Calculate background based on the selected method
-            if method == "Multiple Regions Smart":
+            if method == "Multi-Regions Smart":
                 background_filtered, label = self._calculate_adaptive_smart_background(window, x_values, y_values,
                                                                                        offset_h, offset_l)
             else:
@@ -1255,7 +1255,7 @@ class PlotManager:
                                                                                      y_values_filtered, offset_h,
                                                                                      offset_l)
             label = 'Background (Linear)'
-        elif method in ["Smart", "Multiple Regions Smart"]:
+        elif method in ["Smart", "Multi-Regions Smart"]:
             background_filtered = BackgroundCalculations.calculate_smart_background(x_values_filtered,
                                                                                     y_values_filtered, offset_h,
                                                                                     offset_l)

@@ -144,12 +144,12 @@ class MyFrame(wx.Frame):
 
         # self.fitting_results_visible = False
 
-        self.background_method = "Multiple Regions Smart"
+        self.background_method = "Multi-Regions Smart"
         self.offset_h = 0
         self.offset_l = 0
 
         # Initial background method
-        self.selected_bkg_method  = "Multiple Regions Smart"
+        self.selected_bkg_method  = "Multi-Regions Smart"
 
 
         # Zoom initialisation variables
@@ -2252,7 +2252,6 @@ class MyFrame(wx.Frame):
 
     def set_background_method(self, method):
         self.background_method = method
-
 
     # Method to update Offset (H)
     def set_offset_h(self, value):

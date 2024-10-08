@@ -13,9 +13,11 @@ class FittingWindow(wx.Frame):
 
 
         self.SetTitle("Peak Fitting")
-        self.SetSize((305, 550))  # Increased height to accommodate new elements
-        self.SetMinSize((305, 550))
-        self.SetMaxSize((305, 550))
+        self.SetSize((305, 490))  # Increased height to accommodate new elements
+        self.SetMinSize((305, 490))
+        self.SetMaxSize((305, 490))
+
+        #305 480
 
         self.init_ui()
 
@@ -23,77 +25,71 @@ class FittingWindow(wx.Frame):
         self.doublet_splittings = self.load_doublet_splittings("DS.lib")
 
     def init_ui(self):
-        """Initialize the user interface components."""
         panel = wx.Panel(self)
-        panel.SetBackgroundColour(wx.Colour(255, 255, 255))
+        # panel.SetBackgroundColour(wx.Colour(255, 255, 255))
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Add description text above the notebook
-        self.description_text = wx.StaticText(panel, label="Model Description")
-        main_sizer.Add(self.description_text, 0, wx.EXPAND | wx.ALL, 5)
 
         notebook = wx.Notebook(panel)
         self.init_background_tab(notebook)
         self.init_fitting_tab(notebook)
 
-        # Add notebook to the main sizer
-        main_sizer.Add(notebook, 1, wx.EXPAND)
+        main_sizer.Add(notebook, 1, wx.EXPAND,border=5)
         panel.SetSizer(main_sizer)
 
-        # Bind the tab change event
         notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_tab_change)
 
-        # Set initial state (background tab is selected by default)
         self.parent.background_tab_selected = True
         self.parent.peak_fitting_tab_selected = False
         self.parent.show_hide_vlines()
         self.parent.deselect_all_peaks()
 
-        # Initial description update
-        self.update_description(wx.BookCtrlEvent(wx.EVT_NOTEBOOK_PAGE_CHANGED.typeId))
-
 
 
     def init_background_tab(self, notebook):
         """Initialize the background tab in the notebook."""
-        background_panel = wx.Panel(notebook)
+        self.background_panel = wx.Panel(notebook)
         background_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
-        method_label = wx.StaticText(background_panel, label="Method:")
-        self.method_combobox = wx.ComboBox(background_panel, choices=["Multiple Regions Smart", "Smart", "Shirley", "Linear"],
+        method_label = wx.StaticText(self.background_panel, label="Method:")
+        self.method_combobox = wx.ComboBox(self.background_panel, choices=["Multi-Regions Smart", "Smart", "Shirley", "Linear"],
                                            style=wx.CB_READONLY)
         method_index = self.method_combobox.FindString(self.parent.background_method)
         self.method_combobox.SetSelection(method_index)
         self.method_combobox.Bind(wx.EVT_COMBOBOX, self.on_bkg_method_change)
 
-        offset_h_label = wx.StaticText(background_panel, label="Offset (H):")
-        self.offset_h_text = wx.TextCtrl(background_panel, value=str(self.parent.offset_h))
+        info_button = self.create_info_button(self.background_panel,
+                                              self.get_background_description(self.parent.background_method))
+
+        offset_h_label = wx.StaticText(self.background_panel, label="Offset (H):")
+        self.offset_h_text = wx.TextCtrl(self.background_panel, value=str(self.parent.offset_h))
         self.offset_h_text.Bind(wx.EVT_TEXT, self.on_offset_h_change)
 
-        offset_l_label = wx.StaticText(background_panel, label="Offset (L):")
-        self.offset_l_text = wx.TextCtrl(background_panel, value=str(self.parent.offset_l))
+        offset_l_label = wx.StaticText(self.background_panel, label="Offset (L):")
+        self.offset_l_text = wx.TextCtrl(self.background_panel, value=str(self.parent.offset_l))
         self.offset_l_text.Bind(wx.EVT_TEXT, self.on_offset_l_change)
 
-        background_button = wx.Button(background_panel, label="Background")
+        background_button = wx.Button(self.background_panel, label="Background")
         background_button.SetMinSize((125, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
-        clear_background_button = wx.Button(background_panel, label="Clear All")
+        clear_background_button = wx.Button(self.background_panel, label="Clear All")
         clear_background_button.SetMinSize((125, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
-        reset_vlines_button = wx.Button(background_panel, label="Reset \nVertical Lines")
+        reset_vlines_button = wx.Button(self.background_panel, label="Reset \nVertical Lines")
         reset_vlines_button.SetMinSize((125, 40))
         reset_vlines_button.Bind(wx.EVT_BUTTON, self.on_reset_vlines)
 
-        clear_background_only_button = wx.Button(background_panel, label="Clear\nBackground")
+        clear_background_only_button = wx.Button(self.background_panel, label="Clear\nBackground")
         clear_background_only_button.SetMinSize((125, 40))
         clear_background_only_button.Bind(wx.EVT_BUTTON, self.on_clear_background_only)
 
         # Layout Background Tab
-        background_sizer.Add(method_label, pos=(0, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(self.method_combobox, pos=(1, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(method_label, pos=(0, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        background_sizer.Add(self.method_combobox, pos=(0, 1), flag=wx.ALL | wx.EXPAND, border=0)
+        background_sizer.Add(info_button, pos=(1, 1), flag=wx.ALL, border=0)
         background_sizer.Add(offset_h_label, pos=(2, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         background_sizer.Add(self.offset_h_text, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(offset_l_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
@@ -103,22 +99,16 @@ class FittingWindow(wx.Frame):
         background_sizer.Add(clear_background_only_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(clear_background_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        background_panel.SetSizer(background_sizer)
-        notebook.AddPage(background_panel, "Background")
+        self.background_panel.SetSizer(background_sizer)
+        notebook.AddPage(self.background_panel, "Background")
 
     def init_fitting_tab(self, notebook):
         """Initialize the peak fitting tab in the notebook."""
-        fitting_panel = wx.Panel(notebook)
+        self.fitting_panel = wx.Panel(notebook)
         fitting_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
-        # self.model_combobox = wx.ComboBox(fitting_panel,
-        #                                   choices=["GL (Height)", "SGL (Height)", "GL (Area)", "SGL (Area)",
-        #                                            "Pseudo-Voigt (Area)", "Voigt (Area, L/G, \u03C3)",
-        #                                            "Voigt (Area,\u03C3, \u03B3)" ,
-        #                                            "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"],
-        #                                   style=wx.CB_READONLY)
 
-        self.model_combobox = CustomComboBox(fitting_panel, style=wx.CB_READONLY)
+        self.model_combobox = CustomComboBox(self.fitting_panel, style=wx.CB_READONLY)
 
         # Set items and green items
         items = ["--- Area Based ---",
@@ -153,88 +143,92 @@ class FittingWindow(wx.Frame):
         # self.model_combobox.SetSelection(model_index)
         self.model_combobox.Bind(wx.EVT_COMBOBOX, self.on_method_change)
 
-        self.max_iter_spin = wx.SpinCtrl(fitting_panel, value=str(self.parent.max_iterations), min=1, max=10000)
+        info_button = self.create_info_button(self.fitting_panel,
+                                              self.get_fitting_description(self.parent.selected_fitting_method))
+
+        self.max_iter_spin = wx.SpinCtrl(self.fitting_panel, value=str(self.parent.max_iterations), min=1, max=10000)
         self.max_iter_spin.Bind(wx.EVT_SPINCTRL, self.on_max_iter_change)
 
-        self.fit_iterations_spin = wx.SpinCtrl(fitting_panel, value="20", min=1, max=100)
+        self.fit_iterations_spin = wx.SpinCtrl(self.fitting_panel, value="20", min=1, max=100)
 
-        self.r_squared_label = wx.StaticText(fitting_panel, label="R²:")
-        self.r_squared_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
-        self.chi_squared_label = wx.StaticText(fitting_panel, label="Chi²:")
-        self.chi_squared_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
-        self.red_chi_squared_label = wx.StaticText(fitting_panel, label="Red. Chi²:")
-        self.red_chi_squared_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
+        self.r_squared_label = wx.StaticText(self.fitting_panel, label="R²:")
+        self.r_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
+        self.chi_squared_label = wx.StaticText(self.fitting_panel, label="Chi²:")
+        self.chi_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
+        self.red_chi_squared_label = wx.StaticText(self.fitting_panel, label="Red. Chi²:")
+        self.red_chi_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
 
-        self.actual_iter_label = wx.StaticText(fitting_panel, label="Actual Iterations:")
-        self.actual_iter_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
+        self.actual_iter_label = wx.StaticText(self.fitting_panel, label="Actual Iterations:")
+        self.actual_iter_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
 
-        self.current_fit_label = wx.StaticText(fitting_panel, label="Current Fit:")
-        self.current_fit_text = wx.TextCtrl(fitting_panel, style=wx.TE_READONLY)
+        self.current_fit_label = wx.StaticText(self.fitting_panel, label="Current Fit:")
+        self.current_fit_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
 
-        add_peak_button = wx.Button(fitting_panel, label="Add 1 Peak\nSinglet")
+        add_peak_button = wx.Button(self.fitting_panel, label="Add 1 Peak\nSinglet")
         add_peak_button.SetMinSize((125, 40))
         add_peak_button.Bind(wx.EVT_BUTTON, self.on_add_peak)
 
-        add_doublet_button = wx.Button(fitting_panel, label="Add 2 Peaks\nDoublet")
+        add_doublet_button = wx.Button(self.fitting_panel, label="Add 2 Peaks\nDoublet")
         add_doublet_button.SetMinSize((125, 40))
         add_doublet_button.Bind(wx.EVT_BUTTON, self.on_add_doublet)
 
-        remove_peak_button = wx.Button(fitting_panel, label="Remove Peak")
+        remove_peak_button = wx.Button(self.fitting_panel, label="Remove Peak")
         remove_peak_button.SetMinSize((125, 40))
         remove_peak_button.Bind(wx.EVT_BUTTON, self.on_remove_peak)
 
-        export_button = wx.Button(fitting_panel, label="Accept")
+        export_button = wx.Button(self.fitting_panel, label="Accept")
         export_button.SetMinSize((125, 40))
         export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 
-        fit_button = wx.Button(fitting_panel, label="Fit \nOne Time")
+        fit_button = wx.Button(self.fitting_panel, label="Fit \nOne Time")
         fit_button.SetMinSize((125, 40))
         fit_button.Bind(wx.EVT_BUTTON, self.on_fit_peaks)
 
-        fit_multi_button = wx.Button(fitting_panel, label="Fit \nMultiple Times")
+        fit_multi_button = wx.Button(self.fitting_panel, label="Fit \nMultiple Times")
         fit_multi_button.SetMinSize((125, 40))
         fit_multi_button.Bind(wx.EVT_BUTTON, self.on_fit_multi)
 
-        fitting_sizer.Add(wx.StaticText(fitting_panel, label="Fitting Model:"), pos=(0, 0),
+        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Fitting Model:"), pos=(0, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.model_combobox, pos=(0, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(wx.StaticText(fitting_panel, label="Max Iteration:"), pos=(1, 0),
+        fitting_sizer.Add(self.model_combobox, pos=(0, 1), flag=wx.ALL | wx.EXPAND, border=0)
+        fitting_sizer.Add(info_button, pos=(1, 1), flag=wx.ALL, border=0)
+
+        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Max Iteration:"), pos=(2, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.max_iter_spin, pos=(1, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(wx.StaticText(fitting_panel, label="Fit Iterations:"), pos=(2, 0),
+        fitting_sizer.Add(self.max_iter_spin, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Fit Iterations:"), pos=(3, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.fit_iterations_spin, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.fit_iterations_spin, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(self.r_squared_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.r_squared_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.chi_squared_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.chi_squared_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.red_chi_squared_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.red_chi_squared_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.r_squared_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.r_squared_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.chi_squared_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.chi_squared_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.red_chi_squared_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.red_chi_squared_text, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(self.actual_iter_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.actual_iter_text, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.current_fit_label, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.current_fit_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.actual_iter_label, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.actual_iter_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.current_fit_label, pos=(8, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.current_fit_text, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(add_peak_button, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(add_doublet_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_peak_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_doublet_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(remove_peak_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(export_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(remove_peak_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(export_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(fit_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(fit_multi_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_button, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_multi_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_panel.SetSizer(fitting_sizer)
-        notebook.AddPage(fitting_panel, "Peak Fitting")
+        self.fitting_panel.SetSizer(fitting_sizer)
+        notebook.AddPage(self.fitting_panel, "Peak Fitting")
 
     def on_method_change(self, event):
         new_method = self.model_combobox.GetValue()
-        if new_method not in self.model_combobox.GetGreenItems():
-            self.parent.set_fitting_method(new_method)
-        else:
-            self.model_combobox.SetValue(self.parent.selected_fitting_method)
+        old_method = self.parent.selected_fitting_method
+        self.parent.set_fitting_method(new_method)
+        self.update_fitting_info_button()
 
     def on_max_iter_change(self, event):
         self.parent.set_max_iterations(self.max_iter_spin.GetValue())
@@ -246,6 +240,7 @@ class FittingWindow(wx.Frame):
     def on_bkg_method_change(self, event):
         new_method = self.method_combobox.GetValue()
         self.parent.set_background_method(new_method)
+        self.update_background_info_button()
 
     def on_clear_background_only(self, event):
         self.parent.plot_manager.clear_background_only(self.parent)
@@ -428,16 +423,77 @@ class FittingWindow(wx.Frame):
         offset_l_value = self.offset_l_text.GetValue()
         self.parent.set_offset_l(offset_l_value)
 
-    def update_description(self, event):
-        selected_page = event.GetSelection()
-        if selected_page == 0:  # Background tab
-            description = f"Background Model: {self.parent.background_method}"
-        else:  # Peak fitting tab
-            description = f"Fitting Model: {self.parent.selected_fitting_method}"
-        self.description_text.SetLabel(description)
+
+    def get_background_description(self, method):
+        descriptions = {
+            "Multi-Regions Smart": "Same as the Smart background but not restricted to a single region",
+            "Smart": "Single region Smart background estimation. It applies a Shirley background "
+                     "when the intensity is going up and a linear background when the intensity is "
+                     "going down. If the calculated background is above the data then the "
+                     "background is set equal to the data.",
+            "Shirley": "Iterative background calculation. Reliable for on positive background when "
+            "the data contains symmetrical peak.",
+            "Linear": "Simple linear background. Usually used on negative background"
+        }
+        return descriptions.get(method, "No description available")
+
+    def get_fitting_description(self, model):
+        descriptions = {
+            "GL (Height)": "Gaussian-Lorentzian product function (height-based).\nEquation: I(x) = H * [exp(-ln(2) * ((x-x₀)/σ)²) * (1 / (1 + ((x-x₀)/γ)²))]",
+            "SGL (Height)": "Sum of Gaussian and Lorentzian functions (height-based).\nEquation: I(x) = H * [m * exp(-ln(2) * ((x-x₀)/σ)²) + (1-m) / (1 + ((x-x₀)/γ)²)]",
+            "GL (Area)": "Gaussian-Lorentzian product function (area-based).\nEquation: Similar to GL (Height), but normalized for area",
+            "SGL (Area)": "Sum of Gaussian and Lorentzian functions (area-based).\nEquation: Similar to SGL (Height), but normalized for area",
+            "Pseudo-Voigt (Area)": "Linear combination of Gaussian and Lorentzian.\nEquation: I(x) = A * [η * L(x) + (1-η) * G(x)]",
+            "Voigt (Area, L/G, \u03C3)": "Convolution of Gaussian and Lorentzian.\nEquation: I(x) = A * ∫G(x')L(x-x')dx'",
+            "Voigt (Area,\u03C3, \u03B3)": "Voigt function with separate Gaussian and Lorentzian widths.\nEquation: "
+                                           "I(x) = A * ∫G(x', σ)L(x-x', γ)dx'",
+            "ExpGauss.(Area, \u03C3, \u03B3)": "Gaussian shape model with asymmetric side. The asymmetry is modelled"
+                                               "using an exponential decay as per equation: ",
+            "LA (Area, \u03C3, \u03B3)": "Asymmetrical lorentzian similar to the model used in casa XPS"
+
+        }
+        return descriptions.get(model, "No description available")
+
+
+    def create_info_button(self, parent, tooltip):
+        info_button = wx.Button(parent, label="?", size=(20, 20))
+        info_button.SetToolTip(tooltip)
+        # info_button.Bind(wx.EVT_ENTER_WINDOW, self.on_info_hover)
+        info_button.Bind(wx.EVT_LEAVE_WINDOW, self.on_info_leave)
+        return info_button
+
+    def on_info_hover(self, event):
+        button = event.GetEventObject()
+        pos = button.ClientToScreen(button.GetPosition())
+        self.show_info_popup(pos, button.GetToolTip().GetTip())
+
+    def on_info_leave(self, event):
+        if hasattr(self, 'info_popup'):
+            self.info_popup.Destroy()
+
+    def show_info_popup(self, pos, text):
+        self.info_popup = wx.PopupWindow(self, wx.SIMPLE_BORDER)
+        panel = wx.Panel(self.info_popup)
+        st = wx.StaticText(panel, label=text, pos=(10, 10))
+        sz = st.GetBestSize()
+        self.info_popup.SetSize((sz.width + 20, sz.height + 20))
+        panel.SetSize(self.info_popup.GetSize())
+        self.info_popup.Position(pos, (0, 0))
+        self.info_popup.Show()
+
+    def update_background_info_button(self):
+        for child in self.background_panel.GetChildren():
+            if isinstance(child, wx.Button) and child.GetLabel() == "?":
+                child.SetToolTip(self.get_background_description(self.parent.background_method))
+                break
+
+    def update_fitting_info_button(self):
+        for child in self.fitting_panel.GetChildren():
+            if isinstance(child, wx.Button) and child.GetLabel() == "?":
+                child.SetToolTip(self.get_fitting_description(self.parent.selected_fitting_method))
+                break
 
     def on_tab_change(self, event):
-        self.update_description(event)
         selected_page = event.GetSelection()
         self.parent.background_tab_selected = (selected_page == 0)
         self.parent.peak_fitting_tab_selected = (selected_page == 1)

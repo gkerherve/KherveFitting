@@ -112,7 +112,7 @@ def create_peak_params_grid(window, parent):
     peak_params_sizer = wx.StaticBoxSizer(peak_params_frame_box, wx.VERTICAL)
 
     window.peak_params_frame = wx.Panel(peak_params_frame_box)
-    # window.peak_params_frame.SetBackgroundColour(wx.Colour(255, 255, 255))
+    window.peak_params_frame.SetBackgroundColour(wx.Colour(255, 255, 255))
     peak_params_sizer_inner = wx.BoxSizer(wx.VERTICAL)
 
     window.peak_params_grid = wx.grid.Grid(window.peak_params_frame)
@@ -143,7 +143,7 @@ def create_peak_params_grid(window, parent):
 
 
     # Adjust individual column sizes
-    col_sizes = [20, 90, 80, 80, 60, 50, 60, 60, 60, 40, 40, 40, 100, 80, 80, 80, 100, 100]
+    col_sizes = [20, 90, 80, 80, 60, 50, 60, 60, 60, 40, 40, 40, 130, 130, 80, 80, 100, 100]
     for i, size in enumerate(col_sizes):
         window.peak_params_grid.SetColSize(i, size)
 

@@ -347,7 +347,7 @@ class PeakFunctions:
         return value is not None and np.isfinite(value) and value > 0
 
     @staticmethod
-    def LA(x, center, amplitude, fwhm, sigma, gamma):
+    def LA_NEW(x, center, amplitude, fwhm, sigma, gamma):
         true_fwhm = min(fwhm, 20)
         # print(f"LA input: center={center}, amplitude={amplitude}, true_fwhm={true_fwhm}, sigma={sigma}, gamma={gamma}")
         if not PeakFunctions.is_valid_scalar(true_fwhm):
@@ -371,12 +371,12 @@ class PeakFunctions:
 
         return amplitude * np.where(
             x <= center,
-            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** gamma,
-            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** sigma
+            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** sigma,
+            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** gamma
         )
 
     @staticmethod
-    def LA_OLD(x, center, amplitude, fwhm, sigma, gamma):
+    def LA(x, center, amplitude, fwhm, sigma, gamma):
         # print("LA FWHM: "+str(fwhm))
         return amplitude * np.where(
             x <= center,
