@@ -2,6 +2,7 @@
 import numpy as np
 import lmfit
 from lmfit.models import VoigtModel
+from scipy.optimize import minimize_scalar, brentq
 
 import numpy as np
 
@@ -258,7 +259,124 @@ class PeakFunctions:
         return model.eval(params, x=0)
 
     @staticmethod
+    def find_lorentzian_fwhm(true_fwhm, center, amplitude, sigma, gamma, max_iterations=50):
+        def objective(lorentzian_fwhm):
+            return abs(PeakFunctions.calculate_true_fwhm(center, amplitude, lorentzian_fwhm, sigma, gamma) - true_fwhm)
+
+        if not PeakFunctions.is_valid_scalar(true_fwhm):
+            raise ValueError(f"Invalid true_fwhm: {true_fwhm}")
+
+        try:
+            result = minimize_scalar(objective, bounds=(true_fwhm * 0.1, true_fwhm * 10), method='bounded',
+                                     options={'maxiter': max_iterations})
+            return result.x
+        except Exception as e:
+            print(f"Error in minimize_scalar: {e}")
+            return true_fwhm  # Return the input FWHM as a fallback
+
+    @staticmethod
+    def calculate_true_fwhm(center, amplitude, fwhm, sigma, gamma, tolerance=1e-6, max_iterations=50):
+        def la_function(x):
+            return PeakFunctions.LA(x, center, amplitude, fwhm, sigma, gamma)
+
+        half_max = la_function(center) / 2
+
+        def find_half_max(x):
+            return la_function(x) - half_max
+
+        try:
+            left_x = brentq(find_half_max, center - 10 * fwhm, center, maxiter=max_iterations, xtol=tolerance)
+            right_x = brentq(find_half_max, center, center + 10 * fwhm, maxiter=max_iterations, xtol=tolerance)
+            return right_x - left_x
+        except ValueError as e:
+            print(f"Error in calculate_true_fwhm: {e}")
+            return fwhm  # Return the input FWHM as a fallback
+
+    @staticmethod
+    def LA(x, center, amplitude, true_fwhm, sigma, gamma):
+        true_fwhm = min(true_fwhm, 20)  # Limit true_fwhm to a maximum of 20
+
+        if not PeakFunctions.is_valid_scalar(true_fwhm):
+            raise ValueError(f"Invalid true_fwhm value: {true_fwhm}")
+        if not PeakFunctions.is_valid_scalar(center):
+            raise ValueError(f"Invalid center value: {center}")
+        if not PeakFunctions.is_valid_scalar(amplitude):
+            raise ValueError(f"Invalid amplitude value: {amplitude}")
+        if not PeakFunctions.is_valid_scalar(sigma):
+            raise ValueError(f"Invalid sigma value: {sigma}")
+        if not PeakFunctions.is_valid_scalar(gamma):
+            raise ValueError(f"Invalid gamma value: {gamma}")
+
+        try:
+            lorentzian_fwhm = PeakFunctions.estimate_lorentzian_fwhm(true_fwhm, sigma, gamma)
+        except Exception as e:
+            print(f"Error in estimate_lorentzian_fwhm: {e}")
+            lorentzian_fwhm = true_fwhm  # Fallback to true_fwhm if estimation fails
+
+        return amplitude * np.where(
+            x <= center,
+            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** gamma,
+            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** sigma
+        )
+
+    @staticmethod
+    def estimate_lorentzian_fwhm(true_fwhm, sigma, gamma, tolerance=1e-6, max_iterations=50):
+        def peak_function(x, fwhm):
+            return 1 / (1 + 4 * (x / fwhm) ** 2) ** ((sigma + gamma) / 2)
+
+        def find_half_max(fwhm):
+            half_max = peak_function(0, fwhm) / 2
+            try:
+                x_half = brentq(lambda x: peak_function(x, fwhm) - half_max, 0, fwhm * 10,
+                                xtol=tolerance, maxiter=max_iterations)
+                return 2 * x_half - true_fwhm
+            except ValueError:
+                return fwhm - true_fwhm  # Return a value that won't be zero to continue the search
+
+        try:
+            print("FWHM = "+str(true_fwhm))
+            lorentzian_fwhm = brentq(find_half_max, true_fwhm * 0.1, true_fwhm * 10,
+                                     xtol=tolerance, maxiter=max_iterations)
+            return lorentzian_fwhm
+        except ValueError:
+            print(f"Failed to estimate Lorentzian FWHM. Using true FWHM: {true_fwhm}")
+            return true_fwhm
+
+    @staticmethod
+    def is_valid_scalar(value):
+        return value is not None and np.isfinite(value) and value > 0
+
+    @staticmethod
     def LA(x, center, amplitude, fwhm, sigma, gamma):
+        true_fwhm = min(fwhm, 20)
+        # print(f"LA input: center={center}, amplitude={amplitude}, true_fwhm={true_fwhm}, sigma={sigma}, gamma={gamma}")
+        if not PeakFunctions.is_valid_scalar(true_fwhm):
+            raise ValueError(f"Invalid true_fwhm value: {true_fwhm}")
+        if not PeakFunctions.is_valid_scalar(center):
+            raise ValueError(f"Invalid center value: {center}")
+        if not PeakFunctions.is_valid_scalar(amplitude):
+            raise ValueError(f"Invalid amplitude value: {amplitude}")
+        if not PeakFunctions.is_valid_scalar(sigma):
+            raise ValueError(f"Invalid sigma value: {sigma}")
+        if not PeakFunctions.is_valid_scalar(gamma):
+            raise ValueError(f"Invalid gamma value: {gamma}")
+
+        try:
+            lorentzian_fwhm = PeakFunctions.find_lorentzian_fwhm(true_fwhm, center, amplitude, sigma, gamma)
+        except ValueError as e:
+            print(f"Error in find_lorentzian_fwhm: {e}")
+            print(f"Using true_fwhm as fallback: {true_fwhm}")
+            # lorentzian_fwhm = true_fwhm
+            lorentzian_fwhm = 1.4
+
+        return amplitude * np.where(
+            x <= center,
+            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** gamma,
+            1 / (1 + 4 * ((x - center) / lorentzian_fwhm) ** 2) ** sigma
+        )
+
+    @staticmethod
+    def LA_OLD(x, center, amplitude, fwhm, sigma, gamma):
         # print("LA FWHM: "+str(fwhm))
         return amplitude * np.where(
             x <= center,
