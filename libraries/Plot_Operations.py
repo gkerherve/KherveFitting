@@ -52,6 +52,9 @@ class PlotManager:
 
         self.energy_scale = 'BE'
 
+        self.residuals_visible = True
+        self.legend_visible = True
+
     def toggle_energy_scale(self, window):
         window.energy_scale = 'KE' if window.energy_scale == 'BE' else 'BE'
         self.clear_and_replot(window)
@@ -586,9 +589,14 @@ class PlotManager:
             self.ax.legend().remove()  # Remove the legend for survey or wide scans
             pass
         else:
+            # Update the legend
+            if self.legend_visible:
+                self.ax.legend(loc='upper left')
+                self.update_legend(window)
+            else:
+                self.ax.legend().set_visible(False)
 
-            self.ax.legend(loc='upper left')
-            self.update_legend(window)
+
 
 
 
@@ -962,9 +970,10 @@ class PlotManager:
             # You might want to show an error message to the user here
 
     def toggle_residuals(self):
+        self.residuals_visible = not self.residuals_visible
         for line in self.ax.get_lines():
             if line.get_label().startswith('Residuals'):
-                line.set_visible(not line.get_visible())
+                line.set_visible(self.residuals_visible)
         self.canvas.draw_idle()
 
     def toggle_fitting_results(self):
@@ -988,9 +997,10 @@ class PlotManager:
         self.fitting_results_text.set_visible(self.fitting_results_visible)
 
     def toggle_legend(self):
+        self.legend_visible = not self.legend_visible
         legend = self.ax.get_legend()
         if legend:
-            legend.set_visible(not legend.get_visible())
+            legend.set_visible(self.legend_visible)
         self.canvas.draw_idle()
 
     def update_legend2(self, window):
@@ -1090,6 +1100,11 @@ class PlotManager:
             self.ax.legend(ordered_handles, formatted_legend_order, loc='upper left')
         else:
             self.ax.legend().remove()
+
+        if self.legend_visible:
+            self.ax.legend(loc='upper left')
+        else:
+            self.ax.legend().set_visible(False)
         self.canvas.draw_idle()
 
 
