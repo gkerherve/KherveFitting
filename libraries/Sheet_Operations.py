@@ -16,6 +16,15 @@ def on_sheet_selected(window, event):
 
         window.remove_cross_from_peak()
 
+        # Reset RSD value
+        if 'fit_results' in window.__dict__:
+            window.fit_results['rsd'] = None
+
+        # Reset RSD text in PlotManager
+        if hasattr(window.plot_manager, 'rsd_text') and window.plot_manager.rsd_text:
+            window.plot_manager.rsd_text.remove()
+            window.plot_manager.rsd_text = None
+
         # Check if there's data for the selected sheet in window.Data
         if selected_sheet in window.Data['Core levels']:
             core_level_data = window.Data['Core levels'][selected_sheet]

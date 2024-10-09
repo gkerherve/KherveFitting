@@ -384,6 +384,17 @@ class PeakFunctions:
             1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma
         )
 
+    @staticmethod
+    def calculate_rsd(y_experimental, y_fitted):
+        residuals = y_experimental - y_fitted
+        n = len(residuals)
+        denominator = y_experimental
+        term = (residuals / np.sqrt(denominator)) ** 2
+        sum_term = np.sum(term)
+        rsd = np.sqrt(sum_term / n)
+        # print(f"RSD: {rsd}")
+        return rsd
+
 
 import numpy as np
 from scipy.signal import savgol_filter

@@ -153,8 +153,15 @@ class FittingWindow(wx.Frame):
 
         self.r_squared_label = wx.StaticText(self.fitting_panel, label="R²:")
         self.r_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
-        self.chi_squared_label = wx.StaticText(self.fitting_panel, label="Chi²:")
-        self.chi_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
+
+
+        # self.chi_squared_label = wx.StaticText(self.fitting_panel, label="Chi²:")
+        # self.chi_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
+
+        self.rsd_label = wx.StaticText(self.fitting_panel, label="RSD:")
+        self.rsd_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
+
+
         self.red_chi_squared_label = wx.StaticText(self.fitting_panel, label="Red. Chi²:")
         self.red_chi_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
 
@@ -202,8 +209,8 @@ class FittingWindow(wx.Frame):
 
         fitting_sizer.Add(self.r_squared_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         fitting_sizer.Add(self.r_squared_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.chi_squared_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.chi_squared_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.rsd_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.rsd_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
         fitting_sizer.Add(self.red_chi_squared_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         fitting_sizer.Add(self.red_chi_squared_text, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
@@ -267,28 +274,26 @@ class FittingWindow(wx.Frame):
             self.current_fit_text.SetValue(f"{i}/{iterations}")
             result = fit_peaks(self.parent, self.parent.peak_params_grid)
             if result:
-                r_squared, chi_square, red_chi_square = result
-                self.update_fit_indicators(r_squared, chi_square, red_chi_square)
+                r_squared, rsd, red_chi_square = result
+                self.update_fit_indicators(r_squared, rsd, red_chi_square)
                 self.actual_iter_text.SetValue(str(self.parent.fit_results['nfev']))
             self.parent.clear_and_replot()
             wx.Yield()
         self.current_fit_text.SetValue("Complete")
         save_state(self.parent)
 
-
-
     def on_fit_peaks(self, event):
         save_state(self.parent)
         result = fit_peaks(self.parent, self.parent.peak_params_grid)
         if result:
-            r_squared, chi_squared, red_chi_squared = result
-            self.update_fit_indicators(r_squared, chi_squared, red_chi_squared)
+            r_squared, rsd, red_chi_squared = result
+            self.update_fit_indicators(r_squared, rsd, red_chi_squared)
         else:
             print("Fitting failed or was cancelled.")
 
-    def update_fit_indicators(self, r_squared, chi_squared, red_chi_squared):
+    def update_fit_indicators(self, r_squared, rsd, red_chi_squared):
         self.r_squared_text.SetValue(f"{r_squared:.5f}")
-        self.chi_squared_text.SetValue(f"{chi_squared:.2f}")
+        self.rsd_text.SetValue(f"{rsd:.5f}")
         self.red_chi_squared_text.SetValue(f"{red_chi_squared:.2f}")
         self.Layout()
 
