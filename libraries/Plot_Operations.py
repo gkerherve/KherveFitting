@@ -901,7 +901,7 @@ class PlotManager:
 
         if rsd is not None:
             y_max = self.ax.get_ylim()[1]
-            residual_height = 1.05 * max(window.y_values)
+            residual_height = 1.07 * max(window.y_values)
             x_min = self.ax.get_xlim()[1] + 0.2
 
             if self.rsd_text:
@@ -910,7 +910,7 @@ class PlotManager:
             self.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
                                          horizontalalignment='right',
                                          verticalalignment='center',
-                                         fontsize=9,
+                                         fontsize=11,
                                          # color='grey',
                                          color=self.residual_color,
                                          bbox=dict(facecolor='white', edgecolor='none', alpha=self.residual_alpha))
