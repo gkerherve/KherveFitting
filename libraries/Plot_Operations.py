@@ -888,7 +888,6 @@ class PlotManager:
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.05 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
                                          alpha=self.residual_alpha, label='Residuals')
-            residual_line[0].set_visible(self.residuals_visible)
         else:
             self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
                     linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
@@ -896,36 +895,32 @@ class PlotManager:
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.05 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
                                          alpha=self.residual_alpha, label='Residuals')
-            residual_line[0].set_visible(self.residuals_visible)
 
-            rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
+        residual_line[0].set_visible(self.residuals_visible)
+        rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
 
-            if rsd is not None:
-                y_max = self.ax.get_ylim()[1]
-                residual_height = 1.05 * max(window.y_values)  # Assuming this is where residuals are plotted
-                x_min = self.ax.get_xlim()[1] +0.2 # For reversed x-axis, this is the right side of the plot
+        if rsd is not None:
+            y_max = self.ax.get_ylim()[1]
+            residual_height = 1.05 * max(window.y_values)
+            x_min = self.ax.get_xlim()[1] + 0.2
 
-                # Remove existing RSD text if it exists
-                if self.rsd_text:
-                    self.rsd_text.remove()
+            if self.rsd_text:
+                self.rsd_text.remove()
 
-                # Create new RSD text
-                self.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
-                                             horizontalalignment='right',
-                                             verticalalignment='center',
-                                             fontsize=9,
-                                             color='grey',
-                                             bbox=dict(facecolor='white', edgecolor='none', alpha=self.residual_alpha))
+            self.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
+                                         horizontalalignment='right',
+                                         verticalalignment='center',
+                                         fontsize=9,
+                                         # color='grey',
+                                         color=self.residual_color,
+                                         bbox=dict(facecolor='white', edgecolor='none', alpha=self.residual_alpha))
 
-                # Set visibility based on residual visibility
-                residual_visible = any(
-                    line.get_visible() for line in self.ax.get_lines() if line.get_label().startswith('Residuals'))
-                self.rsd_text.set_visible(residual_visible)
-            else:
-                # If RSD is None, remove the text if it exists
-                if self.rsd_text:
-                    self.rsd_text.remove()
-                    self.rsd_text = None
+            self.rsd_text.set_visible(self.residuals_visible)
+        else:
+            # If RSD is None, remove the text if it exists
+            if self.rsd_text:
+                self.rsd_text.remove()
+                self.rsd_text = None
 
 
 
@@ -1001,13 +996,13 @@ class PlotManager:
             # You might want to show an error message to the user here
 
     def toggle_residuals(self):
+        self.residuals_visible = not self.residuals_visible
         for line in self.ax.get_lines():
             if line.get_label().startswith('Residuals'):
-                line.set_visible(not line.get_visible())
+                line.set_visible(self.residuals_visible)
 
-        # Toggle RSD text visibility
         if self.rsd_text:
-            self.rsd_text.set_visible(not self.rsd_text.get_visible())
+            self.rsd_text.set_visible(self.residuals_visible)
 
         self.canvas.draw_idle()
 
