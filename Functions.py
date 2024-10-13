@@ -496,22 +496,23 @@ def fit_peaks(window, peak_params_grid):
                     sigma = (fraction / 100) * gamma / (1 - fraction / 100)  # Calculate sigma from L/G and gamma
 
                     # Parse constraints
-                    fraction_min, fraction_max, fraction_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1,
-                                                                                                             5),
-                                                                                  fraction, peak_params_grid, i, "L/G")
+                    # fraction_min, fraction_max, fraction_vary = parse_constraints(peak_params_grid.GetCellValue(row +
+                    #             1,5),fraction, peak_params_grid, i, "L/G")
                     gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8),
-                                                                         gamma, peak_params_grid, i, "Gamma")
+                                gamma, peak_params_grid, i, "Gamma")
 
                     # Evaluate constraints
-                    fraction_min = evaluate_constraint(fraction_min, peak_params_grid, 'fraction', lg_ratio)
-                    fraction_max = evaluate_constraint(fraction_max, peak_params_grid, 'fraction', lg_ratio)
+                    # fraction_min = evaluate_constraint(fraction_min, peak_params_grid, 'fraction', fraction)
+                    # fraction_max = evaluate_constraint(fraction_max, peak_params_grid, 'fraction', fraction)
+                    # print(f"Fraction_min: {fraction_min}   Fraction_max: {fraction_max}")
+                    # print(f"lg_min: {lg_ratio_min}   lg_max: {lg_ratio_max}")
                     gamma_min = evaluate_constraint(gamma_min, peak_params_grid, 'gamma', gamma)
                     gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
                     params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
-                    params.add(f'{prefix}fraction', value=fraction, min=fraction_min, max=fraction_max,vary=fraction_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,vary=lg_ratio_vary)
 
                     # Add constraint to calculate sigma from L/G ratio and gamma
                     params.add(f'{prefix}sigma', expr=f'({prefix}fraction / 100) * {prefix}gamma / (1 -{prefix}fraction / 100)')
@@ -796,7 +797,7 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
 
     if constraint_str in ['Fixed']:
         small_error3 = 0.001
-        if param_name == "L/G":
+        if param_name in ["L/G", "fraction"]:
             return current_value - 0.5, current_value + 0.5, False
         else:
             return current_value - small_error3, current_value + small_error3, False

@@ -184,6 +184,9 @@ class MyFrame(wx.Frame):
 
         self.be_correction = 0.00
 
+        self.current_instrument = 'Al'  # Default instrument
+        self.library_data = load_library_data()
+
         # Number of column to remove from the excel file
         self.num_fitted_columns = 15
 
@@ -1551,6 +1554,9 @@ class MyFrame(wx.Frame):
 
             # Update the plot
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+            # After zooming, update residuals
+            self.plot_manager.update_overall_fit_and_residuals(self)
+
             self.canvas.draw_idle()
             return  # Prevent event from propagating
         elif keycode in [wx.WXK_LEFT, wx.WXK_RIGHT] and event.ControlDown():
@@ -1571,6 +1577,8 @@ class MyFrame(wx.Frame):
 
             # Update the plot
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+            self.plot_manager.update_overall_fit_and_residuals(self)
+
             self.canvas.draw_idle()
             return
         elif keycode in [wx.WXK_UP, wx.WXK_DOWN] and event.ControlDown():
@@ -2538,6 +2546,16 @@ class MyFrame(wx.Frame):
         # Update the menu item check state
         menu_item = self.GetMenuBar().FindItemById(self.toggle_energy_item.GetId())
         menu_item.Check(self.energy_scale == 'KE')
+
+    def update_instrument(self, instrument):
+        self.current_instrument = instrument
+        # Recalculate peaks and update display
+        self.recalculate_peaks()
+
+    def recalculate_peaks(self):
+        # Implement logic to update RSF and doublet splitting for all peaks
+        # Then update peak fitting and display
+        pass
 
 
 if __name__ == '__main__':

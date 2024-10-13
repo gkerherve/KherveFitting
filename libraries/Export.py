@@ -3,12 +3,17 @@ import numpy as np
 import re
 from libraries.Utilities import load_rsf_data
 from libraries.Save import save_state
+from libraries.Open import load_library_data
 
 
-def export_results(window):
+def export_results_OLD(window):
     """
     Export peak fitting results to the results grid and update window.Data.
     """
+
+    library_data = load_library_data()
+    current_instrument = window.current_instrument  # Assume this is set in the main window
+
     # Load RSF data
     rsf_dict = load_rsf_data("RSF.txt")
 
@@ -63,7 +68,48 @@ def export_results(window):
     # undo and redo
     save_state(window)
 
+def export_results(window):
+    """
+    Export peak fitting results to the results grid and update window.Data.
+    """
+    library_data = load_library_data()
+    current_instrument = window.current_instrument
 
+    current_rows = window.results_grid.GetNumberRows()
+    start_row = current_rows  # Preserve existing data
+
+    _ensure_results_grid_columns(window)
+
+    peak_data = []
+    sheet_name = window.sheet_combobox.GetValue()
+    num_peaks = window.peak_params_grid.GetNumberRows() // 2
+
+    for i in range(num_peaks):
+        row = i * 2
+
+        peak_params = _extract_peak_parameters(window, row, library_data, current_instrument)
+        fitting_model = window.peak_params_grid.GetCellValue(row, 12)
+
+        area, normalized_area, rel_area = _calculate_peak_areas(window, peak_params, row)
+
+        peak_data.append((peak_params['name'], peak_params['position'], peak_params['height'],
+                          peak_params['fwhm'], peak_params['lg_ratio'], area, peak_params['rsf'], normalized_area))
+
+        peak_label = _update_data_structure(window, sheet_name, i, peak_params, area, rel_area, fitting_model)
+
+        if start_row + i >= current_rows:
+            window.results_grid.AppendRows(1)
+
+        _update_results_grid(window, start_row + i, peak_params, area, rel_area, fitting_model, peak_label)
+
+    window.results_grid.ForceRefresh()
+    window.update_checkboxes_from_data()
+
+    _bind_grid_events(window)
+
+    window.update_atomic_percentages()
+
+    save_state(window)
 
 def _ensure_results_grid_columns(window):
     """Ensure that all necessary columns exist in the results grid."""
@@ -79,7 +125,7 @@ def safe_float(value, default=0.0):
     except (ValueError, AttributeError):
         return default
 
-def _extract_peak_parameters(window, row, rsf_dict):
+def _extract_peak_parameters_OLD(window, row, rsf_dict):
     peak_name = window.peak_params_grid.GetCellValue(row, 1)  # Label
 
     # Use regex to extract element and orbital information
@@ -134,6 +180,69 @@ def _extract_peak_parameters(window, row, rsf_dict):
         }
     }
 
+def _extract_peak_parameters(window, row, library_data, current_instrument):
+    peak_name = window.peak_params_grid.GetCellValue(row, 1)  # Label
+
+    # Use regex to extract element and orbital information
+    match = re.match(r'([A-Z][a-z]*)(\d+[spdf])(?:(\d+/\d+))?', peak_name)
+    if match:
+        element, orbital, suborbital = match.groups()
+        core_level = element + orbital
+    else:
+        core_level = ''.join(filter(str.isalnum, peak_name.split()[0]))
+        element, orbital, suborbital = core_level, '', None
+
+    # Get RSF from library_data
+    rsf = get_rsf_from_library(library_data, element, orbital, current_instrument)
+
+    # Adjust RSF for doublets
+    if suborbital:
+        if orbital.endswith('p'):
+            total_electrons = 6
+            if suborbital == '3/2':
+                rsf *= 4 / total_electrons
+            elif suborbital == '1/2':
+                rsf *= 2 / total_electrons
+        elif orbital.endswith('d'):
+            total_electrons = 10
+            if suborbital == '5/2':
+                rsf *= 6 / total_electrons
+            elif suborbital == '3/2':
+                rsf *= 4 / total_electrons
+        elif orbital.endswith('f'):
+            total_electrons = 14
+            if suborbital == '7/2':
+                rsf *= 8 / total_electrons
+            elif suborbital == '5/2':
+                rsf *= 6 / total_electrons
+
+    return {
+        'name': peak_name,
+        'position': safe_float(window.peak_params_grid.GetCellValue(row, 2)),
+        'height': safe_float(window.peak_params_grid.GetCellValue(row, 3)),
+        'fwhm': safe_float(window.peak_params_grid.GetCellValue(row, 4)),
+        'lg_ratio': safe_float(window.peak_params_grid.GetCellValue(row, 5)),
+        'rsf': rsf,
+        'area': safe_float(window.peak_params_grid.GetCellValue(row, 6)),
+        'sigma': safe_float(window.peak_params_grid.GetCellValue(row, 7)),
+        'gamma': safe_float(window.peak_params_grid.GetCellValue(row, 8)),
+        'constraints': {
+            'position': window.peak_params_grid.GetCellValue(row + 1, 2),
+            'height': window.peak_params_grid.GetCellValue(row + 1, 3),
+            'fwhm': window.peak_params_grid.GetCellValue(row + 1, 4),
+            'lg_ratio': window.peak_params_grid.GetCellValue(row + 1, 5),
+            'area': window.peak_params_grid.GetCellValue(row+1, 6),
+            'sigma': window.peak_params_grid.GetCellValue(row+1, 7),
+            'gamma': window.peak_params_grid.GetCellValue(row+1, 8)
+        }
+    }
+
+
+def get_rsf_from_library(library_data, element, orbital, instrument):
+    key = (element, orbital)
+    if key in library_data and instrument in library_data[key]:
+        return library_data[key][instrument]['rsf']
+    return library_data[key]['Al']['rsf']  # Default to Al if not found
 
 def _calculate_peak_areas2(peak_params, fitting_model):
     """Calculate area, normalized area, and relative area for a peak."""

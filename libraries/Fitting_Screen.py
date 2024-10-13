@@ -3,6 +3,7 @@ import re
 import wx
 from Functions import fit_peaks, remove_peak
 from libraries.Plot_Operations import PlotManager
+from libraries.Open import load_library_data
 
 from libraries.Save import save_state
 
@@ -22,7 +23,9 @@ class FittingWindow(wx.Frame):
         self.init_ui()
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
-        self.doublet_splittings = self.load_doublet_splittings("DS.lib")
+        # self.doublet_splittings = self.load_doublet_splittings("DS.lib")
+        self.library_data = load_library_data()  # Load once when the window is created
+        self.doublet_splittings = self.load_doublet_splittings(self.library_data)
 
     def init_ui(self):
         panel = wx.Panel(self)
@@ -300,7 +303,7 @@ class FittingWindow(wx.Frame):
     def on_export_results(self, event):
         self.parent.export_results()
 
-    def load_doublet_splittings(self, filename):
+    def load_doublet_splittings_OLD(self, filename):
         splittings = {}
         with open(filename, 'r') as f:
             for line in f:
@@ -308,6 +311,30 @@ class FittingWindow(wx.Frame):
                 if len(parts) == 2:
                     splittings[parts[0]] = float(parts[1])
         return splittings
+
+    def load_doublet_splittings(self, library_data):
+        splittings = {}
+        for key, value in library_data.items():
+            element, orbital = key
+            if orbital.endswith(('p', 'd', 'f')):
+                splittings[f"{element}{orbital}"] = value['Al']['ds']  # Default to Al instrument
+        return splittings
+
+    def get_doublet_splitting(self, element, orbital, instrument):
+        # Try with the orbital as is
+        key = (element, orbital)
+        if key in self.library_data and instrument in self.library_data[key]:
+            return self.library_data[key][instrument]['ds']
+
+        # If not found, try prepending numbers to the orbital
+        for num in range(1, 6):  # Trying 1d, 2d, 3d, 4d, 5d
+            key = (element, f"{num}{orbital}")
+            if key in self.library_data and instrument in self.library_data[key]:
+                return self.library_data[key][instrument]['ds']
+
+        # If still not found, return a default value or raise an error
+        print(f"Warning: No doublet splitting found for {element} {orbital}")
+        return 0.0  # or whatever default value makes sense for your application
 
     def on_add_doublet(self, event):
         sheet_name = self.parent.sheet_combobox.GetValue()
@@ -349,7 +376,10 @@ class FittingWindow(wx.Frame):
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 6, area_constraint)
 
             # Position constraint
-            splitting = self.doublet_splittings.get(first_word, 0)
+            # splitting = self.doublet_splittings.get(first_word, 0)
+            element = re.match(r'([A-Z][a-z]*)', first_word).group(1)
+            splitting = self.get_doublet_splitting(element, orbital, self.parent.current_instrument)
+
             position_constraint = f"{chr(65 + first_peak)}+{splitting}#0.2"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
 
