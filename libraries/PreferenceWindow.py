@@ -9,9 +9,9 @@ class PreferenceWindow(wx.Frame):
         self.parent = parent
 
         self.SetTitle("Preferences")
-        self.SetSize((490, 600))
-        self.SetMinSize((490, 600))
-        self.SetMaxSize((490, 600))
+        self.SetSize((490, 630))
+        self.SetMinSize((490, 630))
+        self.SetMaxSize((490, 630))
 
         panel = wx.Panel(self)
 
@@ -42,7 +42,6 @@ class PreferenceWindow(wx.Frame):
 
         instruments = list(set(instr for data in self.parent.library_data.values() for instr in data.keys()))
         self.instrument_combo = wx.ComboBox(self.instrument_tab, choices=instruments, style=wx.CB_READONLY)
-        self.instrument_combo.SetValue(self.parent.current_instrument)
         self.instrument_combo.Bind(wx.EVT_COMBOBOX, self.on_instrument_change)
 
         sizer.Add(wx.StaticText(self.instrument_tab, label="Instrument:"), 0, wx.ALL, 5)
@@ -239,7 +238,7 @@ class PreferenceWindow(wx.Frame):
         self.Centre()
 
         # Load current settings
-        self.LoadSettings()
+        # self.LoadSettings()
 
     def LoadSettings(self):
         self.plot_style.SetSelection(0 if self.parent.plot_style == "scatter" else 1)
