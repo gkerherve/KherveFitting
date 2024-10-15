@@ -3,6 +3,8 @@ import numpy as np
 import lmfit
 from lmfit.models import VoigtModel
 from scipy.optimize import minimize_scalar, brentq
+from scipy.signal import convolve
+from scipy.interpolate import interp1d
 
 import numpy as np
 
@@ -293,7 +295,7 @@ class PeakFunctions:
             return fwhm  # Return the input FWHM as a fallback
 
     @staticmethod
-    def LA(x, center, amplitude, true_fwhm, sigma, gamma):
+    def LA_OTHER(x, center, amplitude, true_fwhm, sigma, gamma):
         true_fwhm = min(true_fwhm, 20)  # Limit true_fwhm to a maximum of 20
 
         if not PeakFunctions.is_valid_scalar(true_fwhm):
@@ -383,6 +385,35 @@ class PeakFunctions:
             1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma,
             1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma
         )
+
+
+
+
+    def LA_GAUSS(x, center, amplitude, fwhm, sigma, gamma):
+        # Define the LA function
+        gaussian_fwhm =0.1
+        def LA_N(x):
+            return np.where(
+                x <= center,
+                1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma,
+                1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma
+            )
+
+        # Define the Gaussian function
+        def gaussian(x, E, F):
+            return np.exp(-4 * np.log(2) * ((x - E) / F) ** 2)
+
+        x_high_res = np.linspace(x.min(), x.max(), len(x) * 10)
+
+        la = LA_N(x_high_res)
+        gauss = gaussian(x_high_res, center, gaussian_fwhm)
+
+        convolved = convolve(la, gauss, mode='same') / sum(gauss)
+
+        interpolator = interp1d(x_high_res, convolved, kind='linear')
+        result = interpolator(x)
+
+        return amplitude * result / np.max(result)
 
     @staticmethod
     def calculate_rsd(y_experimental, y_fitted):
