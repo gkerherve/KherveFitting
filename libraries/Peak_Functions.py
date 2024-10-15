@@ -378,7 +378,7 @@ class PeakFunctions:
         )
 
     @staticmethod
-    def LA(x, center, amplitude, fwhm, sigma, gamma):
+    def LA_WORKING(x, center, amplitude, fwhm, sigma, gamma):
         # print("LA FWHM: "+str(fwhm))
         return amplitude * np.where(
             x <= center,
@@ -389,29 +389,29 @@ class PeakFunctions:
 
 
 
-    def LA_GAUSS(x, center, amplitude, fwhm, sigma, gamma):
+    def LA(x, center, amplitude, fwhm, sigma, gamma):
         # Define the LA function
-        gaussian_fwhm =0.1
+        gaussian_fwhm =0.5
         def LA_N(x):
             return np.where(
-                x <= center,
-                1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma,
-                1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma
+                x <= 0,
+                1 / (1 + 4 * ((x ) / fwhm) ** 2) ** gamma,
+                1 / (1 + 4 * ((x ) / fwhm) ** 2) ** sigma
             )
 
         # Define the Gaussian function
-        def gaussian(x, E, F):
-            return np.exp(-4 * np.log(2) * ((x - E) / F) ** 2)
+        def gaussian(x, F):
+            return np.exp(-4 * np.log(2) * ((x ) / F) ** 2)
 
-        x_high_res = np.linspace(x.min(), x.max(), len(x) * 10)
+        x_range = max(x.max() - x.min(), 10 * fwhm)
+        x_high_res = np.linspace(- x_range / 2, + x_range / 2, len(x) * 10)
 
         la = LA_N(x_high_res)
-        gauss = gaussian(x_high_res, center, gaussian_fwhm)
+        gauss = gaussian(x_high_res, gaussian_fwhm)
 
         convolved = convolve(la, gauss, mode='same') / sum(gauss)
 
-        interpolator = interp1d(x_high_res, convolved, kind='linear')
-        result = interpolator(x)
+        result = np.interp(x - center, x_high_res, convolved)
 
         return amplitude * result / np.max(result)
 
