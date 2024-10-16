@@ -378,7 +378,7 @@ class PeakFunctions:
         )
 
     @staticmethod
-    def LA_WORKING(x, center, amplitude, fwhm, sigma, gamma):
+    def LA(x, center, amplitude, fwhm, sigma, gamma):
         # print("LA FWHM: "+str(fwhm))
         return amplitude * np.where(
             x <= center,
@@ -389,7 +389,7 @@ class PeakFunctions:
 
 
 
-    def LA(x, center, amplitude, fwhm, sigma, gamma):
+    def LAxG(x, center, amplitude, fwhm, sigma, gamma):
         # Define the LA function
         gaussian_fwhm =0.5
         def LA_N(x):
@@ -403,8 +403,8 @@ class PeakFunctions:
         def gaussian(x, F):
             return np.exp(-4 * np.log(2) * ((x ) / F) ** 2)
 
-        x_range = max(x.max() - x.min(), 10 * fwhm)
-        x_high_res = np.linspace(- x_range / 2, + x_range / 2, len(x) * 10)
+        x_range = max(x.max() - x.min(), 4 * fwhm)
+        x_high_res = np.linspace(- x_range / 2, + x_range / 2, len(x) * 4)
 
         la = LA_N(x_high_res)
         gauss = gaussian(x_high_res, gaussian_fwhm)
@@ -427,7 +427,7 @@ class PeakFunctions:
         return rsd
 
 
-import numpy as np
+
 from scipy.signal import savgol_filter
 
 

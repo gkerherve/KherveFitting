@@ -256,7 +256,7 @@ def _calculate_peak_areas2(peak_params, fitting_model):
     elif fitting_model == "Pseudo-Voigt (Area)":
         # Area calculation for Pseudo-Voigt profile
         area = height * fwhm * np.pi / 2
-    elif fitting_model == "LA (Area, \u03C3, \u03B3)":
+    elif fitting_model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)", "LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
         # For LA model, area is directly provided
         area = peak_params['area']
         # If area is not provided in peak_params, you can calculate it numerically:

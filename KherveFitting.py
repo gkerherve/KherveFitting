@@ -1021,7 +1021,7 @@ class MyFrame(wx.Frame):
             # For Pseudo-Voigt, this is also an approximation
             return area / (fwhm * np.pi / 2)
 
-        elif model == "LA (Area, \u03C3, \u03B3)":
+        elif model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)"]:
             if row is None:
                 raise ValueError("Row must be provided for LA model")
             center = float(self.peak_params_grid.GetCellValue(row, 2))
@@ -1031,6 +1031,18 @@ class MyFrame(wx.Frame):
             # Calculate height numerically
             x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
             y_values = PeakFunctions.LA(x_range, center, area, fwhm, sigma, gamma)
+            height = np.max(y_values)
+            return height
+        elif model in ["LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+            if row is None:
+                raise ValueError("Row must be provided for LA model")
+            center = float(self.peak_params_grid.GetCellValue(row, 2))
+            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+
+            # Calculate height numerically
+            x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
+            y_values = PeakFunctions.LAxG(x_range, center, area, fwhm, sigma, gamma)
             height = np.max(y_values)
             return height
 
@@ -1893,7 +1905,7 @@ class MyFrame(wx.Frame):
             area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
         elif model == "ExpGauss.(Area, \u03C3, \u03B3)":
             area = height * sigma * np.sqrt(2 * np.pi) * np.exp(gamma ** 2 * sigma ** 2 / 4)
-        elif model == "LA (Area, \u03C3, \u03B3)":
+        elif model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)"]:
             if sigma is None or gamma is None:
                 raise ValueError("Sigma and gamma are required for LA model")
 
@@ -1906,9 +1918,23 @@ class MyFrame(wx.Frame):
             area = np.trapz(y_values, x_range)
 
             return round(area, 2)
+        elif model in ["LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+            if sigma is None or gamma is None:
+                raise ValueError("Sigma and gamma are required for LA model")
+
+            # Use the peak maximum as an approximation for the center
+            center_approx = 0  # Assuming the peak is centered at 0 for integration purposes
+
+            # Numerical integration to calculate area
+            x_range = np.linspace(center_approx - 20 * fwhm, center_approx + 20 * fwhm, 40000)
+            y_values = PeakFunctions.LAxG(x_range, center_approx, height, fwhm, sigma, gamma)
+            area = np.trapz(y_values, x_range)
+
+            return round(area, 2)
         else:
             raise ValueError(f"Unknown fitting model: {model}")
         return round(area, 2)
+
 
     def on_peak_params_cell_changed(self, event):
         row = event.GetRow()

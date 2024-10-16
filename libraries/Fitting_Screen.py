@@ -117,7 +117,7 @@ class FittingWindow(wx.Frame):
         items = ["--- Area Based ---",
                  "GL (Area)",
                  "SGL (Area)",
-                 "Voigt (Area,\u03C3, \u03B3)",
+                 "Voigt (Area, \u03C3, \u03B3)",
                  "Voigt (Area, L/G, \u03C3)",
                  "Pseudo-Voigt (Area)",
 
@@ -127,7 +127,10 @@ class FittingWindow(wx.Frame):
 
                  "--- Under Test ---",
                  "ExpGauss.(Area, \u03C3, \u03B3)",
-                 "LA (Area, \u03C3, \u03B3)"]
+                 "LA (Area, \u03C3, \u03B3)",
+                 "LA (Area, \u03C3/\u03B3, \u03B3)",
+                 "LA*G (Area, \u03C3/\u03B3, \u03B3)"
+                 ]
 
 
         green_items = ["--- Area Based ---", "--- Height Based ---", "--- Under Test ---"]
@@ -484,7 +487,11 @@ class FittingWindow(wx.Frame):
                                            "I(x) = A * ∫G(x', σ)L(x-x', γ)dx'",
             "ExpGauss.(Area, \u03C3, \u03B3)": "Gaussian shape model with asymmetric side. The asymmetry is modelled"
                                                "using an exponential decay as per equation: ",
-            "LA (Area, \u03C3, \u03B3)": "Asymmetrical lorentzian similar to the model used in casa XPS"
+            "LA (Area, \u03C3, \u03B3)": "Asymmetrical lorentzian similar to the model used in casa XPS",
+            "LA (Area, \u03C3/\u03B3, \u03B3)": "Asymmetrical lorentzian with asymmetru controlled by the ratio "
+                                                "between \u03C3 and \u03B3 similar to the model used in casa XPS",
+            "LA*G (Area, \u03C3/\u03B3, \u03B3)": "Asymmetrical lorentzian convoluted with a gaussian peak of a certain width "
+                                           "similar to the model used in casa XPS"
 
         }
         return descriptions.get(model, "No description available")

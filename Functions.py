@@ -487,25 +487,40 @@ def fit_peaks(window, peak_params_grid):
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
 
-
                 elif peak_model_choice == "LA (Area, \u03C3, \u03B3)":
                     peak_model = lmfit.Model(PeakFunctions.LA, prefix=prefix)
                     amplitude = float(peak_params_grid.GetCellValue(row, 6))
                     fraction = float(peak_params_grid.GetCellValue(row, 5))  # L/G ratio
                     gamma = float(peak_params_grid.GetCellValue(row, 8))
-                    sigma = (fraction / 100) * gamma / (1 - fraction / 100)  # Calculate sigma from L/G and gamma
+                    sigma = float(peak_params_grid.GetCellValue(row, 7))
 
                     # Parse constraints
                     # fraction_min, fraction_max, fraction_vary = parse_constraints(peak_params_grid.GetCellValue(row +
                     #             1,5),fraction, peak_params_grid, i, "L/G")
                     gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8),
                                 gamma, peak_params_grid, i, "Gamma")
+                    sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 7),
+                                gamma, peak_params_grid, i, "Sigma")
 
-                    # Evaluate constraints
-                    # fraction_min = evaluate_constraint(fraction_min, peak_params_grid, 'fraction', fraction)
-                    # fraction_max = evaluate_constraint(fraction_max, peak_params_grid, 'fraction', fraction)
-                    # print(f"Fraction_min: {fraction_min}   Fraction_max: {fraction_max}")
-                    # print(f"lg_min: {lg_ratio_min}   lg_max: {lg_ratio_max}")
+
+                    gamma_min = evaluate_constraint(gamma_min, peak_params_grid, 'gamma', gamma)
+                    gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
+                    sigma_min = evaluate_constraint(gamma_min, peak_params_grid, 'sigma', sigma)
+                    sigma_max = evaluate_constraint(gamma_max, peak_params_grid, 'sigma', sigma)
+                    params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max,vary=sigma_vary)
+                elif peak_model_choice == "LA (Area, \u03C3/\u03B3, \u03B3)":
+                    peak_model = lmfit.Model(PeakFunctions.LA, prefix=prefix)
+                    amplitude = float(peak_params_grid.GetCellValue(row, 6))
+                    fraction = float(peak_params_grid.GetCellValue(row, 5))  # L/G ratio
+                    gamma = float(peak_params_grid.GetCellValue(row, 8))
+                    sigma = (fraction / 100) * gamma / (1 - fraction / 100)  # Calculate sigma from L/G and gamma
+                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8),
+                                gamma, peak_params_grid, i, "Gamma")
+
                     gamma_min = evaluate_constraint(gamma_min, peak_params_grid, 'gamma', gamma)
                     gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
                     params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
@@ -516,6 +531,27 @@ def fit_peaks(window, peak_params_grid):
 
                     # Add constraint to calculate sigma from L/G ratio and gamma
                     params.add(f'{prefix}sigma', expr=f'({prefix}fraction / 100) * {prefix}gamma / (1 -{prefix}fraction / 100)')
+                elif peak_model_choice == "LA*G (Area, \u03C3/\u03B3, \u03B3)":
+                    peak_model = lmfit.Model(PeakFunctions.LAxG, prefix=prefix)
+                    amplitude = float(peak_params_grid.GetCellValue(row, 6))
+                    fraction = float(peak_params_grid.GetCellValue(row, 5))  # L/G ratio
+                    gamma = float(peak_params_grid.GetCellValue(row, 8))
+                    sigma = (fraction / 100) * gamma / (1 - fraction / 100)  # Calculate sigma from L/G and gamma
+                    gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8),
+                                                                         gamma, peak_params_grid, i, "Gamma")
+
+                    gamma_min = evaluate_constraint(gamma_min, peak_params_grid, 'gamma', gamma)
+                    gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
+                    params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
+                    params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
+                    params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
+                               vary=lg_ratio_vary)
+
+                    # Add constraint to calculate sigma from L/G ratio and gamma
+                    params.add(f'{prefix}sigma',
+                               expr=f'({prefix}fraction / 100) * {prefix}gamma / (1 -{prefix}fraction / 100)')
                 elif peak_model_choice == "GL (Area)":
                     peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area, prefix=prefix)
                     params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary)
@@ -638,19 +674,32 @@ def fit_peaks(window, peak_params_grid):
 
                         # No direct equivalent to 'fraction' for LA model
                         fraction = sigma / (sigma + gamma) * 100
-                    elif peak_model_choice == "LA (Area, \u03C3, \u03B3)":
+                    elif peak_model_choice in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)"]:
                         area = result.params[f'{prefix}amplitude'].value
                         center = result.params[f'{prefix}center'].value
                         fwhm = result.params[f'{prefix}fwhm'].value
                         sigma = result.params[f'{prefix}sigma'].value
                         gamma = result.params[f'{prefix}gamma'].value
-                        fraction = result.params[f'{prefix}fraction'].value /100 #/ (
-                        #             result.params[f'{prefix}sigma'].value + result.params[f'{prefix}gamma'].value) * 1
-                        # print(f'FRACTION: {fraction}')
+                        fraction = result.params[f'{prefix}fraction'].value /100
 
-                        # Calculate height numerically
-                        # x_range = np.linspace(center - 5 * fwhm, center + 5 * fwhm, 1000)
                         y_values = PeakFunctions.LA(x_values, center, area, fwhm, sigma, gamma)
+                        height = np.max(y_values)
+
+                        # Calculate FWHM numerically
+                        half_max = height / 2
+                        left_idx = np.argmax(y_values >= half_max)
+                        right_idx = len(y_values) - np.argmax(y_values[::-1] >= half_max) - 1
+                        fwhm2 = abs(x_values[right_idx] - x_values[left_idx])
+                        print("Fit_FWHM: "+str(fwhm2))
+                    elif peak_model_choice in ["LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+                        area = result.params[f'{prefix}amplitude'].value
+                        center = result.params[f'{prefix}center'].value
+                        fwhm = result.params[f'{prefix}fwhm'].value
+                        sigma = result.params[f'{prefix}sigma'].value
+                        gamma = result.params[f'{prefix}gamma'].value
+                        fraction = result.params[f'{prefix}fraction'].value /100
+
+                        y_values = PeakFunctions.LAxG(x_values, center, area, fwhm, sigma, gamma)
                         height = np.max(y_values)
 
                         # Calculate FWHM numerically
