@@ -727,7 +727,8 @@ def fit_peaks(window, peak_params_grid):
                     center = round(float(center), 2)
                     height = round(float(height), 2)
                     fwhm = round(float(fwhm), 2)
-                    if peak_model_choice in ["ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
+                    if peak_model_choice in ["ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)",
+                                             "LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
                         # Exponential Gaussian doesn't use fraction
                         sigma = round(float(sigma * 1), 2)
                         gamma = round(float(gamma * 1), 2)
@@ -746,7 +747,8 @@ def fit_peaks(window, peak_params_grid):
                     peak_params_grid.SetCellValue(row, 5, f"{fraction:.2f}")
                     peak_params_grid.SetCellValue(row, 6, f"{area:.0f}")
                     if peak_model_choice in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)",
-                                             "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)"]:
+                                             "ExpGauss.(Area, \u03C3, \u03B3)", "LA (Area, \u03C3, \u03B3)",
+                                             "LA (Area, \u03C3/\u03B3, \u03B3)", "LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
                         peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
                         peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
                     else:

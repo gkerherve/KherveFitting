@@ -391,7 +391,7 @@ class PeakFunctions:
 
     def LAxG(x, center, amplitude, fwhm, sigma, gamma):
         # Define the LA function
-        gaussian_fwhm =0.5
+        gaussian_fwhm =0.64
         def LA_N(x):
             return np.where(
                 x <= 0,

@@ -23,9 +23,12 @@ class FittingWindow(wx.Frame):
         self.init_ui()
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.library_data = self.parent.library_data
+        self.doublet_splittings = self.load_doublet_splittings(self.parent.library_data)
+
+        # self.library_data = load_library_data()  # Load once when the window is created
+        # self.doublet_splittings = self.load_doublet_splittings(self.library_data)
         # self.doublet_splittings = self.load_doublet_splittings("DS.lib")
-        self.library_data = load_library_data()  # Load once when the window is created
-        self.doublet_splittings = self.load_doublet_splittings(self.library_data)
 
     def init_ui(self):
         panel = wx.Panel(self)

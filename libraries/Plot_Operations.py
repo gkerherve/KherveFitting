@@ -187,8 +187,22 @@ class PlotManager:
             peak_model = lmfit.models.PseudoVoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio / 100)
-        elif fitting_model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)", "LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+        elif fitting_model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)"]:
             peak_model = lmfit.Model(PeakFunctions.LA)
+            area = float(window.peak_params_grid.GetCellValue(row, 6))
+            sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+            params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+
+            # Calculate height numerically
+            x_range = np.linspace(x - 5 * fwhm, x + 5 * fwhm, 1000)
+            y_values = peak_model.eval(params, x=x_range)
+            height = np.max(y_values)
+
+            # No direct equivalent to 'fraction' for LA model
+            fraction = (sigma + gamma) / 2  # You could define it differently if needed
+        elif fitting_model in ["LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+            peak_model = lmfit.Model(PeakFunctions.LAxG)
             area = float(window.peak_params_grid.GetCellValue(row, 6))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
             gamma = float(window.peak_params_grid.GetCellValue(row, 8))
@@ -585,7 +599,7 @@ class PlotManager:
         for spine in self.ax.spines.values():
             spine.set_linewidth(1)  # Adjust this value to increase or decrease thickness
 
-        # Update the legend only if necessary
+        # Update the legend
         if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
             self.ax.legend().remove()  # Remove the legend for survey or wide scans
             pass
@@ -1046,7 +1060,7 @@ class PlotManager:
             legend.set_visible(self.legend_visible)
         self.canvas.draw_idle()
 
-    def update_legend2(self, window):
+    def update_legend(self, window):
         # Retrieve the current handles and labels
         handles, labels = self.ax.get_legend_handles_labels()
 
@@ -1065,21 +1079,22 @@ class PlotManager:
             # Remove LaTeX formatting temporarily for splitting
             clean_label = re.sub(r'\$.*?\$', '', label)
             split_label = clean_label.split()
-            print(f"Clean label: {clean_label}, Split label: {split_label}")
+            # print(f"Clean label: {clean_label}, Split label: {split_label}")
             if len(split_label) > 1:
                 # Check if the second part is not empty
                 if split_label[1].strip():
                     filtered_peak_labels.append(label)
             else:
+                pass
                 # Optionally, you can add logging or print a message for skipped labels
-                print(f"Skipping label '{label}' from legend as it doesn't have a second word")
+                # print(f"Skipping label '{label}' from legend as it doesn't have a second word")
 
         # Ensure filtered peaks are added to the end of the order
         legend_order += peak_labels
         legend_order2 += filtered_peak_labels
 
         # Update the legend with the ordered items from legend_order
-        if legend_order:
+        if legend_order and self.legend_visible:
             # Find handles for each label in legend_order
             ordered_handles = []
             for l in legend_order:
@@ -1095,9 +1110,11 @@ class PlotManager:
             self.ax.legend(ordered_handles, legend_order2, loc='upper left')
         else:
             self.ax.legend().remove()
+            self.ax.legend().set_visible(False)
+
         self.canvas.draw_idle()
 
-    def update_legend(self, window):
+    def update_legend_OLD(self, window):
         # Retrieve the current handles and labels
         handles, labels = self.ax.get_legend_handles_labels()
 
@@ -1313,7 +1330,7 @@ class PlotManager:
                                                                                      y_values_filtered, offset_h,
                                                                                      offset_l)
             label = 'Background (Linear)'
-        elif method in ["Smart", "Multi-Regions Smart"]:
+        elif method in ["Smart", "Multi-Regions Smart", "Multiple Regions Smart"]:
             background_filtered = BackgroundCalculations.calculate_smart_background(x_values_filtered,
                                                                                     y_values_filtered, offset_h,
                                                                                     offset_l)
