@@ -86,17 +86,22 @@ class PeriodicTableWindow(wx.Frame):
 
         sorted_transitions = sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
         return sorted_transitions
+
     def get_element_transitions(self, element):
         allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
         transitions = {}
         for (elem, orbital), data in self.library_data.items():
-            if elem == element and 'BE' in data['Al']:
+
+            if elem == element:
                 orbital_lower = orbital.lower()
                 main_orbital = ''.join([c for c in orbital_lower if c.isalpha() or c.isdigit()])[:2]
                 if main_orbital in allowed_orbitals:
-                    energy = float(data['Al']['BE'])
-                    if main_orbital not in transitions or energy > transitions[main_orbital]:
-                        transitions[main_orbital] = energy
+                    # Check if 'Al' key exists, if not, use the first available instrument
+                    instrument = 'Al' if 'Al' in data else next(iter(data))
+                    if 'position' in data[instrument]:
+                        energy = float(data[instrument]['position'])
+                        if main_orbital not in transitions or energy > transitions[main_orbital]:
+                            transitions[main_orbital] = energy
 
         sorted_transitions = sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
         return sorted_transitions
@@ -187,15 +192,18 @@ class PeriodicTableWindow(wx.Frame):
         rsf_values = []
         print(f"Searching RSF values for element: {element}")
         print(f"Orbitals to search for: {orbitals}")
-        with open('library.lib', 'r') as file:
-            for line in file:
-                parts = line.strip().split('\t')
-                if len(parts) >= 4 and parts[0] == element and parts[2] == 'BE':
-                    orbital = parts[1].lower()
-                    # print(f"Found RSF entry for orbital: {orbital}")
-                    if orbital in [o.lower() for o in orbitals]:
-                        rsf_values.append(float(parts[4]))
-                        # print(f"Added RSF value: {parts[4]}")
+
+        for (elem, orbital), data in self.library_data.items():
+            if elem == element:
+                orbital_lower = orbital.lower()
+                if orbital_lower in [o.lower() for o in orbitals]:
+                    # Check if 'Al' key exists, if not, use the first available instrument
+                    instrument = 'Al' if 'Al' in data else next(iter(data))
+                    print(data[instrument])
+                    if 'rsf' in data[instrument]:
+                        rsf_values.append(float(data[instrument]['rsf']))
+                        print(f"Added RSF value: {data[instrument]['rsf']} for orbital {orbital}")
+
         print(f"Final RSF values: {rsf_values}")
         return rsf_values
 
