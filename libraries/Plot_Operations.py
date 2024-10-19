@@ -705,14 +705,16 @@ class PlotManager:
             gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - x))]
 
-            sigma = try_float(window.peak_params_grid.GetCellValue(row, 7),0)
-            gamma = try_float(window.peak_params_grid.GetCellValue(row, 8),0)
-
             def try_float(value, default=0.0):
                 try:
                     return float(value)
                 except ValueError:
                     return default
+
+            sigma = try_float(window.peak_params_grid.GetCellValue(row, 7),0)
+            gamma = try_float(window.peak_params_grid.GetCellValue(row, 8),0)
+
+
 
             # Ensure height is not negative
             y = max(y, 0)
