@@ -92,7 +92,6 @@ def on_sheet_selected(window, event):
                         window.peak_params_grid.SetCellBackgroundColour(row + 1, col-1, wx.Colour(200,245,228))
 
                     window.selected_fitting_method = window.peak_params_grid.GetCellValue(row, 13)
-                    print(f" MODEL: {window.selected_fitting_method}")
                     # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
                     if window.selected_fitting_method == "Voigt (Area, L/G, \u03c3)":
                         for col in [3, 4]:  # Columns for Height, FWHM
