@@ -158,13 +158,13 @@ class PlotManager:
         bkg_y = background[np.argmin(np.abs(x_values - x))]
         if fitting_model == "Unfitted":
             return
-        elif fitting_model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+        elif fitting_model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
             peak_model = lmfit.models.VoigtModel()
             sigma = float(peak_params.get('sigma', 1.2)) / 2.355
             gamma = float(peak_params.get('gamma', 0.06)) / 2
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-        elif fitting_model == "ExpGauss.(Area, \u03C3, \u03B3)":
+        elif fitting_model == "ExpGauss.(Area, \u03c3, \u03b3)":
             peak_model = lmfit.models.ExponentialGaussianModel()
             area = float(window.peak_params_grid.GetCellValue(row, 6))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
@@ -187,7 +187,7 @@ class PlotManager:
             peak_model = lmfit.models.PseudoVoigtModel()
             amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio / 100)
-        elif fitting_model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)"]:
+        elif fitting_model in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)"]:
             peak_model = lmfit.Model(PeakFunctions.LA)
             area = float(window.peak_params_grid.GetCellValue(row, 6))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
@@ -201,7 +201,7 @@ class PlotManager:
 
             # No direct equivalent to 'fraction' for LA model
             fraction = (sigma + gamma) / 2  # You could define it differently if needed
-        elif fitting_model in ["LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+        elif fitting_model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             peak_model = lmfit.Model(PeakFunctions.LAxG)
             area = float(window.peak_params_grid.GetCellValue(row, 6))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
@@ -504,7 +504,7 @@ class PlotManager:
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
                 fraction = float(window.peak_params_grid.GetCellValue(row, 5))
-                if fitting_model in ["Voigt (Area, L/G, \u03C3)","Voigt (Area, \u03C3, \u03B3)", "ExpGauss.(Area, \u03C3, \u03B3)"]:
+                if fitting_model in ["Voigt (Area, L/G, \u03c3)","Voigt (Area, \u03c3, \u03b3)", "ExpGauss.(Area, \u03c3, \u03b3)"]:
                     sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                     gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 else:
@@ -720,11 +720,11 @@ class PlotManager:
             y = max(y, 0)
 
             # Create the selected peak using updated position and height
-            if window.selected_fitting_method in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+            if window.selected_fitting_method in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
                 peak_model = lmfit.models.VoigtModel()
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif window.selected_fitting_method in ["ExpGauss.(Area, \u03C3, \u03B3)"]:
+            elif window.selected_fitting_method in ["ExpGauss.(Area, \u03c3, \u03b3)"]:
                 peak_model = lmfit.models.VoigtModel()
                 amplitude = float(window.peak_params_grid.GetCellValue(row, 6))
                 # amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
@@ -733,13 +733,13 @@ class PlotManager:
                 peak_model = lmfit.models.PseudoVoigtModel()
                 amplitude = y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio, x=0)
                 params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio)
-            elif window.selected_fitting_method in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)"]:
+            elif window.selected_fitting_method in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)"]:
                 peak_model = lmfit.Model(PeakFunctions.LA)
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 area = float(window.peak_params_grid.GetCellValue(row, 6))
                 params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
-            elif window.selected_fitting_method in ["LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+            elif window.selected_fitting_method in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
                 peak_model = lmfit.Model(PeakFunctions.LAxG)
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))
@@ -835,13 +835,13 @@ class PlotManager:
             # gamma = lg_ratio/100 * sigma
             bkg_y = window.background[np.argmin(np.abs(window.x_values - peak_x))]
 
-            if fitting_model in ["Voigt (Area, L/G, \u03C3)", "Voigt (Area, \u03C3, \u03B3)"]:
+            if fitting_model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
                 peak_model = lmfit.models.VoigtModel()
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7)) / 2.355
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8)) / 2
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif fitting_model == "ExpGauss.(Area, \u03C3, \u03B3)":
+            elif fitting_model == "ExpGauss.(Area, \u03c3, \u03b3)":
                 peak_model = lmfit.models.ExponentialGaussianModel()
                 area = float(window.peak_params_grid.GetCellValue(row, 6))
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
@@ -854,13 +854,13 @@ class PlotManager:
                 amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
                 params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma,
                                                 fraction=lg_ratio / 100)
-            elif window.selected_fitting_method in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)"]:
+            elif fitting_model in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)"]:
                 peak_model = lmfit.Model(PeakFunctions.LA)
                 area = float(window.peak_params_grid.GetCellValue(row, 6))
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))
                 params = peak_model.make_params(center=peak_x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
-            elif window.selected_fitting_method in ["LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
+            elif fitting_model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
                 peak_model = lmfit.Model(PeakFunctions.LAxG)
                 area = float(window.peak_params_grid.GetCellValue(row, 6))
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))

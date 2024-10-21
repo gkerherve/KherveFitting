@@ -156,7 +156,8 @@ def convert_to_serializable_and_round(obj, decimal_places=2):
                         "L/G Constraint": obj.GetCellValue(row, 22),
                         "Area Constraint": obj.GetCellValue(row, 23),
                         "Sigma Constraint": obj.GetCellValue(row, 24),
-                        "Gamma Constraint": obj.GetCellValue(row, 25)
+                        "Gamma Constraint": obj.GetCellValue(row, 25),
+                        "Skew Constraint": obj.GetCellValue(row, 26)
                     } for row in range(obj.GetNumberRows())]
                 }
             else:

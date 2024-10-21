@@ -363,6 +363,7 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
         'Rel. Area': rel_area,
         'Sigma': peak_params['sigma'],
         'Gamma': peak_params['gamma'],
+        'Skew': peak_params.get('skew', 0.0),  # Default to 0.0 if 'skew' is not in peak_params
         'Bkg Low': window.bg_min_energy,
         'Bkg High': window.bg_max_energy,
         'Sheetname': sheet_name,

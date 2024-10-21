@@ -119,8 +119,8 @@ def create_peak_params_grid(window, parent):
     window.peak_params_grid.CreateGrid(0, 19)
 
     # Set column labels and sizes
-    column_labels = ["ID", "Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "L/G \n\u03C3/\u03B3 (%)", "Area\n(CPS.eV)",
-                     "\u03C3\nW_g", "\u03B3\nW_l", "Skew",
+    column_labels = ["ID", "Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "L/G \n\u03c3/\u03b3 (%)", "Area\n(CPS.eV)",
+                     "\u03c3\nW_g", "\u03b3\nW_l", "Skew",
                      "I/I\u1D00", "A/A\u1D00", "Split\n(eV)", "Fitting Model", "Bkg Type", "Bkg Low\n(eV)",
                      "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)", "Bkg Offset High\n(CPS)"]
     for i, label in enumerate(column_labels):
@@ -165,11 +165,12 @@ def create_results_grid(window, parent):
     window.results_grid.CreateGrid(0, 26)
 
     # Set column labels and properties for results grid
-    column_labels = ["Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "L/G \n\u03C3/\u03B3 (%)",
-                     "Area\n(CPS.eV)", "Atomic\n(%)", " ", "RSF", "Fitting Model","Rel. Area", "\u03C3 or \u03B1\nW_g",
-                     "\u03B3 or \u03B2\nW_l", "Bkg Type", "Bkg Low\n(eV)", "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)",
+    column_labels = ["Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "L/G \n\u03c3/\u03b3 (%)",
+                     "Area\n(CPS.eV)", "Atomic\n(%)", " ", "RSF", "Fitting Model","Rel. Area", "\u03c3 or \u03B1\nW_g",
+                     "\u03b3 or \u03B2\nW_l", "Bkg Type", "Bkg Low\n(eV)", "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)",
                      "Bkg Offset High\n(CPS)", "Sheetname", "Position\nConstraint", "Height\nConstraint",
-                     "FWHM\nConstraint", "L/G\nConstraint", "Area\nConstraint", "\u03C3\nConstraint", "\u03B3\nConstraint"]
+                     "FWHM\nConstraint", "L/G\nConstraint", "Area\nConstraint", "\u03c3\nConstraint",
+                     "\u03b3\nConstraint"]
     for i, label in enumerate(column_labels):
         window.results_grid.SetColLabelValue(i, label)
 

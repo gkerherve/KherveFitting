@@ -120,8 +120,8 @@ class FittingWindow(wx.Frame):
         items = ["--- Area Based ---",
                  "GL (Area)",
                  "SGL (Area)",
-                 "Voigt (Area, \u03C3, \u03B3)",
-                 "Voigt (Area, L/G, \u03C3)",
+                 "Voigt (Area, \u03c3, \u03b3)",
+                 "Voigt (Area, L/G, \u03c3)",
                  "Pseudo-Voigt (Area)",
 
                  "--- Height Based ---",
@@ -129,10 +129,10 @@ class FittingWindow(wx.Frame):
                  "SGL (Height)",
 
                  "--- Under Test ---",
-                 "ExpGauss.(Area, \u03C3, \u03B3)",
-                 "LA (Area, \u03C3, \u03B3)",
-                 "LA (Area, \u03C3/\u03B3, \u03B3)",
-                 "LA*G (Area, \u03C3/\u03B3, \u03B3)"
+                 "ExpGauss.(Area, \u03c3, \u03b3)",
+                 "LA (Area, \u03c3, \u03b3)",
+                 "LA (Area, \u03c3/\u03b3, \u03b3)",
+                 "LA*G (Area, \u03c3/\u03b3, \u03b3)"
                  ]
 
 
@@ -485,15 +485,15 @@ class FittingWindow(wx.Frame):
             "GL (Area)": "Gaussian-Lorentzian product function (area-based).\nEquation: Similar to GL (Height), but normalized for area",
             "SGL (Area)": "Sum of Gaussian and Lorentzian functions (area-based).\nEquation: Similar to SGL (Height), but normalized for area",
             "Pseudo-Voigt (Area)": "Linear combination of Gaussian and Lorentzian.\nEquation: I(x) = A * [η * L(x) + (1-η) * G(x)]",
-            "Voigt (Area, L/G, \u03C3)": "Convolution of Gaussian and Lorentzian.\nEquation: I(x) = A * ∫G(x')L(x-x')dx'",
-            "Voigt (Area,\u03C3, \u03B3)": "Voigt function with separate Gaussian and Lorentzian widths.\nEquation: "
+            "Voigt (Area, L/G, \u03c3)": "Convolution of Gaussian and Lorentzian.\nEquation: I(x) = A * ∫G(x')L(x-x')dx'",
+            "Voigt (Area,\u03c3, \u03b3)": "Voigt function with separate Gaussian and Lorentzian widths.\nEquation: "
                                            "I(x) = A * ∫G(x', σ)L(x-x', γ)dx'",
-            "ExpGauss.(Area, \u03C3, \u03B3)": "Gaussian shape model with asymmetric side. The asymmetry is modelled"
+            "ExpGauss.(Area, \u03c3, \u03b3)": "Gaussian shape model with asymmetric side. The asymmetry is modelled"
                                                "using an exponential decay as per equation: ",
-            "LA (Area, \u03C3, \u03B3)": "Asymmetrical lorentzian similar to the model used in casa XPS",
-            "LA (Area, \u03C3/\u03B3, \u03B3)": "Asymmetrical lorentzian with asymmetru controlled by the ratio "
-                                                "between \u03C3 and \u03B3 similar to the model used in casa XPS",
-            "LA*G (Area, \u03C3/\u03B3, \u03B3)": "Asymmetrical lorentzian convoluted with a gaussian peak of a certain width "
+            "LA (Area, \u03c3, \u03b3)": "Asymmetrical lorentzian similar to the model used in casa XPS",
+            "LA (Area, \u03c3/\u03b3, \u03b3)": "Asymmetrical lorentzian with asymmetru controlled by the ratio "
+                                                "between \u03c3 and \u03b3 similar to the model used in casa XPS",
+            "LA*G (Area, \u03c3/\u03b3, \u03b3)": "Asymmetrical lorentzian convoluted with a gaussian peak of a certain width "
                                            "similar to the model used in casa XPS"
 
         }
