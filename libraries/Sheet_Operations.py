@@ -67,12 +67,13 @@ def on_sheet_selected(window, event):
                     window.peak_params_grid.SetCellValue(row, 6, f"{peak_data.get('Area', '0')}")
                     window.peak_params_grid.SetCellValue(row, 7, f"{peak_data.get('Sigma', '0')}")
                     window.peak_params_grid.SetCellValue(row, 8, f"{peak_data.get('Gamma', '0')}")
-                    window.peak_params_grid.SetCellValue(row, 12, f"{peak_data.get('Fitting Model', '0')}")
-                    window.peak_params_grid.SetCellValue(row, 13, f"{peak_data.get('Bkg Type', '0')}")
-                    window.peak_params_grid.SetCellValue(row, 14, f"{peak_data.get('Bkg Low', '0')}")
-                    window.peak_params_grid.SetCellValue(row, 15, f"{peak_data.get('Bkg High', '0')}")
-                    window.peak_params_grid.SetCellValue(row, 16, f"{peak_data.get('Bkg Offset Low', '0')}")
-                    window.peak_params_grid.SetCellValue(row, 17, f"{peak_data.get('Bkg Offset High', '0')}")
+                    window.peak_params_grid.SetCellValue(row, 9, f"{peak_data.get('Skew', '0')}")
+                    window.peak_params_grid.SetCellValue(row, 13, f"{peak_data.get('Fitting Model', '0')}")
+                    window.peak_params_grid.SetCellValue(row, 14, f"{peak_data.get('Bkg Type', '0')}")
+                    window.peak_params_grid.SetCellValue(row, 15, f"{peak_data.get('Bkg Low', '0')}")
+                    window.peak_params_grid.SetCellValue(row, 16, f"{peak_data.get('Bkg High', '0')}")
+                    window.peak_params_grid.SetCellValue(row, 17, f"{peak_data.get('Bkg Offset Low', '0')}")
+                    window.peak_params_grid.SetCellValue(row, 18, f"{peak_data.get('Bkg Offset High', '0')}")
 
                     # Set constraints if available
                     if 'Constraints' in peak_data:
@@ -84,6 +85,7 @@ def on_sheet_selected(window, event):
                         window.peak_params_grid.SetCellValue(row + 1, 6, str(constraints.get('Area', '1:1e7')))
                         window.peak_params_grid.SetCellValue(row + 1, 7, str(constraints.get('Sigma', '0.01:1')))
                         window.peak_params_grid.SetCellValue(row + 1, 8, str(constraints.get('Gamma', '0.01:1')))
+                        window.peak_params_grid.SetCellValue(row + 1, 9, str(constraints.get('Skew', '0.01:2')))
 
                     # Set background color for constraint rows
                     for col in range(window.peak_params_grid.GetNumberCols()+1):

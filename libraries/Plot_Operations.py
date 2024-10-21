@@ -499,7 +499,7 @@ class PlotManager:
 
             # Get all necessary values, with error checking
             try:
-                fitting_model = window.peak_params_grid.GetCellValue(row, 12)
+                fitting_model = window.peak_params_grid.GetCellValue(row, 13)
                 position = float(window.peak_params_grid.GetCellValue(row, 2))
                 height = float(window.peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(window.peak_params_grid.GetCellValue(row, 4))
@@ -815,7 +815,7 @@ class PlotManager:
             lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)  # L/G
             # sigma = window.peak_params_grid.GetCellValue(row, 7)
             # gamma = window.peak_params_grid.GetCellValue(row, 8)
-            fitting_model = window.peak_params_grid.GetCellValue(row, 12)  # Fitting Model
+            fitting_model = window.peak_params_grid.GetCellValue(row, 13)  # Fitting Model
 
             # Check if any of the cells are empty
             if not all([position_str, height_str, fwhm_str, lg_ratio_str, fitting_model]):

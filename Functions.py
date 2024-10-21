@@ -236,7 +236,7 @@ def on_save_all_sheets(window, event):
 
 def toggle_Col_1(window):
     # List of columns to toggle
-    columns1 = [12, 13, 14, 15,16, 17]
+    columns1 = [13, 14, 15, 16,17, 18]
     columns2 = [8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
 
 
@@ -332,7 +332,7 @@ def fit_peaks(window, peak_params_grid):
                     area = float(peak_params_grid.GetCellValue(row, 6))
                 except ValueError:
                     area = 0  # Or any default value you prefer
-                peak_model_choice = peak_params_grid.GetCellValue(row, 12)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 13)
 
                 sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                 gamma = lg_ratio/100 * sigma
@@ -536,6 +536,7 @@ def fit_peaks(window, peak_params_grid):
                     amplitude = float(peak_params_grid.GetCellValue(row, 6))
                     fraction = float(peak_params_grid.GetCellValue(row, 5))  # L/G ratio
                     gamma = float(peak_params_grid.GetCellValue(row, 8))
+                    skew = float(peak_params_grid.GetCellValue(row, 9))
                     sigma = (fraction / 100) * gamma / (1 - fraction / 100)  # Calculate sigma from L/G and gamma
                     gamma_min, gamma_max, gamma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 8),
                                                                          gamma, peak_params_grid, i, "Gamma")
@@ -614,7 +615,7 @@ def fit_peaks(window, peak_params_grid):
                 row = i * 2
                 prefix = f'peak{i}_'
                 peak_label = peak_params_grid.GetCellValue(row, 1)
-                peak_model_choice = peak_params_grid.GetCellValue(row, 12)
+                peak_model_choice = peak_params_grid.GetCellValue(row, 13)
 
                 if peak_label in existing_peaks:
                     center = result.params[f'{prefix}center'].value

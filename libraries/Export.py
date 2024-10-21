@@ -37,7 +37,7 @@ def export_results_OLD(window):
         peak_params = _extract_peak_parameters(window, row, rsf_dict)
 
         # Get the fitting model for this specific peak
-        fitting_model = window.peak_params_grid.GetCellValue(row, 12)
+        fitting_model = window.peak_params_grid.GetCellValue(row, 13)
 
         # Calculate area and related values
         area, normalized_area, rel_area = _calculate_peak_areas(window, peak_params, row)
@@ -88,7 +88,7 @@ def export_results(window):
         row = i * 2
 
         peak_params = _extract_peak_parameters(window, row, library_data, current_instrument)
-        fitting_model = window.peak_params_grid.GetCellValue(row, 12)
+        fitting_model = window.peak_params_grid.GetCellValue(row, 13)
 
         area, normalized_area, rel_area = _calculate_peak_areas(window, peak_params, row)
 
@@ -226,6 +226,7 @@ def _extract_peak_parameters(window, row, library_data, current_instrument):
         'area': safe_float(window.peak_params_grid.GetCellValue(row, 6)),
         'sigma': safe_float(window.peak_params_grid.GetCellValue(row, 7)),
         'gamma': safe_float(window.peak_params_grid.GetCellValue(row, 8)),
+        'skew': safe_float(window.peak_params_grid.GetCellValue(row, 9)),
         'constraints': {
             'position': window.peak_params_grid.GetCellValue(row + 1, 2),
             'height': window.peak_params_grid.GetCellValue(row + 1, 3),
@@ -233,7 +234,8 @@ def _extract_peak_parameters(window, row, library_data, current_instrument):
             'lg_ratio': window.peak_params_grid.GetCellValue(row + 1, 5),
             'area': window.peak_params_grid.GetCellValue(row+1, 6),
             'sigma': window.peak_params_grid.GetCellValue(row+1, 7),
-            'gamma': window.peak_params_grid.GetCellValue(row+1, 8)
+            'gamma': window.peak_params_grid.GetCellValue(row+1, 8),
+            'skew': window.peak_params_grid.GetCellValue(row+1, 9)
         }
     }
 

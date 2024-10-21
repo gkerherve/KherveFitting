@@ -132,8 +132,6 @@ def add_core_level_Data(data, window, file_path, sheet_name):
     return data
 
 
-
-
 def add_peak_to_core_level_Data(data, core_name, peak_data):
     if core_name in data['Core levels']:
         fitting = data['Core levels'][core_name]['Fitting']

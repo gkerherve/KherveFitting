@@ -116,11 +116,11 @@ def create_peak_params_grid(window, parent):
     peak_params_sizer_inner = wx.BoxSizer(wx.VERTICAL)
 
     window.peak_params_grid = wx.grid.Grid(window.peak_params_frame)
-    window.peak_params_grid.CreateGrid(0, 18)
+    window.peak_params_grid.CreateGrid(0, 19)
 
     # Set column labels and sizes
     column_labels = ["ID", "Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "L/G \n\u03C3/\u03B3 (%)", "Area\n(CPS.eV)",
-                     "\u03C3\nW_g", "\u03B3\nW_l",
+                     "\u03C3\nW_g", "\u03B3\nW_l", "Skew",
                      "I/I\u1D00", "A/A\u1D00", "Split\n(eV)", "Fitting Model", "Bkg Type", "Bkg Low\n(eV)",
                      "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)", "Bkg Offset High\n(CPS)"]
     for i, label in enumerate(column_labels):
@@ -143,7 +143,7 @@ def create_peak_params_grid(window, parent):
 
 
     # Adjust individual column sizes
-    col_sizes = [20, 90, 80, 80, 60, 50, 60, 60, 60, 40, 40, 40, 130, 130, 80, 80, 100, 100]
+    col_sizes = [20, 90, 80, 80, 60, 50, 60, 60, 60, 60, 40, 40, 40, 130, 130, 80, 80, 100, 100]
     for i, size in enumerate(col_sizes):
         window.peak_params_grid.SetColSize(i, size)
 
