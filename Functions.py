@@ -407,8 +407,8 @@ def fit_peaks(window, peak_params_grid):
                                brute_step=area * 0.01)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary,
                                brute_step=0.1)
-                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max,
-                               vary=sigma_vary, brute_step=sigma * 0.01)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min/2.355, max=sigma_max/2.355,
+                               vary=sigma_vary/2.355, brute_step=sigma * 0.01)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=fraction_vary,
                                brute_step=gamma * 0.01)
 
@@ -437,9 +437,9 @@ def fit_peaks(window, peak_params_grid):
                     peak_model = lmfit.models.VoigtModel(prefix=prefix)
                     params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary, brute_step=area * 0.01)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary, brute_step=0.1)
-                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min, max=sigma_max,
-                               vary=sigma_vary, brute_step=sigma * 0.01)
-                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary,
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min/2.355, max=sigma_max/2.355,
+                               vary=sigma_vary/2.355, brute_step=sigma * 0.01)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min/2, max=gamma_max/2, vary=gamma_vary/2,
                                brute_step=gamma*0.01)
 
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
