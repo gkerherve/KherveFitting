@@ -2490,6 +2490,7 @@ class MyFrame(wx.Frame):
                 self.recent_files = config.get('recent_files', [])
                 self.peak_fill_types = config.get('peak_fill_types', ["Solid Fill" for _ in range(15)])
                 self.peak_hatch_patterns = config.get('peak_hatch_patterns', ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"] * 2)
+                self.hatch_density = config.get('hatch_density', 2)
         else:
             config = {}
             print("No config file found, using default values.")
@@ -2524,7 +2525,8 @@ class MyFrame(wx.Frame):
             'peak_line_pattern': self.peak_line_pattern,
             'recent_files': self.recent_files,
             'peak_fill_types': self.peak_fill_types,
-            'peak_hatch_patterns': self.peak_hatch_patterns
+            'peak_hatch_patterns': self.peak_hatch_patterns,
+            'hatch_density': self.hatch_density
         }
 
         with open('config.json', 'w') as f:

@@ -282,7 +282,7 @@ class PlotManager:
             else:  # Hatch
                 fill_params = {
                     'color': 'none',
-                    'hatch': window.peak_hatch_patterns[peak_index] * 2,
+                    'hatch': window.peak_hatch_patterns[peak_index] * window.hatch_density,
                     'linewidth': window.peak_line_thickness,
                     'edgecolor': color,
                     'alpha': alpha
