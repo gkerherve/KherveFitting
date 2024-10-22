@@ -359,6 +359,10 @@ class FittingWindow(wx.Frame):
             first_peak = self.parent.add_peak_params()
             second_peak = self.parent.add_peak_params()
 
+            # Add this block here to copy fill type and hatch pattern
+            self.parent.peak_fill_types[second_peak] = self.parent.peak_fill_types[first_peak]
+            self.parent.peak_hatch_patterns[second_peak] = self.parent.peak_hatch_patterns[first_peak]
+
             # Set constraints for the second peak
             row1 = first_peak * 2
             row2 = second_peak * 2

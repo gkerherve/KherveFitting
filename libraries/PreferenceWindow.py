@@ -9,9 +9,9 @@ class PreferenceWindow(wx.Frame):
         self.parent = parent
 
         self.SetTitle("Preferences")
-        self.SetSize((490, 630))
-        self.SetMinSize((490, 630))
-        self.SetMaxSize((490, 630))
+        self.SetSize((490, 650))
+        self.SetMinSize((490, 650))
+        self.SetMaxSize((490, 650))
 
         panel = wx.Panel(self)
 
@@ -173,56 +173,72 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(envelope_label, pos=(6, 4), flag=wx.ALL, border=5)
         sizer.Add(self.envelope_color_picker, pos=(6, 5), flag=wx.ALL, border=5)
 
-        # Peak color selection
+        # Peak fill type
+        peak_fill_type_label = wx.StaticText(self.plot_tab, label="Peak Fill Type:")
+        self.peak_fill_type_combo = wx.ComboBox(self.plot_tab, choices=["Solid Fill", "Hatch"], style=wx.CB_READONLY)
+        sizer.Add(peak_fill_type_label, pos=(8, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_fill_type_combo, pos=(8, 5), flag=wx.ALL, border=5)
+
+        # Peak number selection
         self.peak_number_spin_label = wx.StaticText(self.plot_tab, label="Peak Number:")
         self.peak_number_spin = wx.SpinCtrl(self.plot_tab, min=1, max=15, initial=1)
         self.peak_number_spin.SetMinSize((100, -1))
-        sizer.Add(self.peak_number_spin_label, pos=(8, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_number_spin, pos=(8, 5), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_number_spin_label, pos=(9, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_number_spin, pos=(9, 5), flag=wx.ALL, border=5)
 
+
+        # Peak hatch pattern
+        peak_hatch_label = wx.StaticText(self.plot_tab, label="Hatch Pattern:")
+        self.peak_hatch_combo = wx.ComboBox(self.plot_tab,
+                                            choices=["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"],
+                                            style=wx.CB_READONLY)
+        sizer.Add(peak_hatch_label, pos=(10, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_hatch_combo, pos=(10, 5), flag=wx.ALL, border=5)
+
+        self.peak_fill_type_combo.Bind(wx.EVT_COMBOBOX, self.OnFillTypeChange)
+        self.peak_hatch_combo.Bind(wx.EVT_COMBOBOX, self.OnHatchChange)
+
+
+        # Peak color selection
         peak_color_label = wx.StaticText(self.plot_tab, label="Peak Color:")
         self.peak_color_picker = wx.ColourPickerCtrl(self.plot_tab)
         self.peak_color_picker.SetMinSize((100, -1))
-        sizer.Add(peak_color_label, pos=(9, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_color_picker, pos=(9, 5), flag=wx.ALL, border=5)
-
-
+        sizer.Add(peak_color_label, pos=(11, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_color_picker, pos=(11, 5), flag=wx.ALL, border=5)
 
         # Peak alpha
         self.peak_alpha_label = wx.StaticText(self.plot_tab, label="Peak Alpha:")
         self.peak_alpha_spin = wx.SpinCtrlDouble(self.plot_tab, value="0.3", min=0, max=1, inc=0.1)
         self.peak_alpha_spin.SetMinSize((100, -1))
-        sizer.Add(self.peak_alpha_label, pos=(10, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_alpha_spin, pos=(10, 5), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_alpha_label, pos=(12, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_alpha_spin, pos=(12, 5), flag=wx.ALL, border=5)
 
         # Peak line style
         peak_line_style_label = wx.StaticText(self.plot_tab, label="Peak Line Style:")
-        self.peak_line_style_combo = wx.ComboBox(self.plot_tab, choices=["No Line", "Black", "Same Color", "Grey"],
+        self.peak_line_style_combo = wx.ComboBox(self.plot_tab,
+                                                 choices=["No Line", "Black", "Same Color", "Grey", "Yellow"],
                                                  style=wx.CB_READONLY)
-        sizer.Add(peak_line_style_label, pos=(11, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_line_style_combo, pos=(11, 5), flag=wx.ALL, border=5)
-
-        # Peak line pattern
-        peak_line_pattern_label = wx.StaticText(self.plot_tab, label="Peak Line Pattern:")
-        self.peak_line_pattern_combo = wx.ComboBox(self.plot_tab, choices=["-", "--", "-.", ":"], style=wx.CB_READONLY)
-        sizer.Add(peak_line_pattern_label, pos=(12, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_line_pattern_combo, pos=(12, 5), flag=wx.ALL, border=5)
+        sizer.Add(peak_line_style_label, pos=(13, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_style_combo, pos=(13, 5), flag=wx.ALL, border=5)
 
         # Peak line thickness
         self.peak_line_thickness_label = wx.StaticText(self.plot_tab, label="Peak Line Thickness:")
         self.peak_line_thickness_spin = wx.SpinCtrl(self.plot_tab, value="1", min=1, max=5)
-        sizer.Add(self.peak_line_thickness_label, pos=(13, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_line_thickness_spin, pos=(13, 5), flag=wx.ALL, border=5)
-
+        sizer.Add(self.peak_line_thickness_label, pos=(14, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_thickness_spin, pos=(14, 5), flag=wx.ALL, border=5)
 
         # Peak line alpha
         self.peak_line_alpha_label = wx.StaticText(self.plot_tab, label="Peak Line Alpha:")
         self.peak_line_alpha_spin = wx.SpinCtrlDouble(self.plot_tab, value="0.7", min=0, max=1, inc=0.1)
-        sizer.Add(self.peak_line_alpha_label, pos=(14, 4), flag=wx.ALL, border=5)
-        sizer.Add(self.peak_line_alpha_spin, pos=(14, 5), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_alpha_label, pos=(15, 4), flag=wx.ALL, border=5)
+        sizer.Add(self.peak_line_alpha_spin, pos=(15, 5), flag=wx.ALL, border=5)
 
 
-
+        # Peak line pattern
+        peak_line_pattern_label = wx.StaticText(self.plot_tab, label="Peak Line Pattern:")
+        self.peak_line_pattern_combo = wx.ComboBox(self.plot_tab, choices=["-", "--", "-.", ":"], style=wx.CB_READONLY)
+        # sizer.Add(peak_line_pattern_label, pos=(12, 4), flag=wx.ALL, border=5)
+        # sizer.Add(self.peak_line_pattern_combo, pos=(12, 5), flag=wx.ALL, border=5)
 
         # Save button (moved to the bottom)
         save_button = wx.Button(self.plot_tab, label="Save")
@@ -272,38 +288,59 @@ class PreferenceWindow(wx.Frame):
 
         self.peak_alpha_spin.SetValue(self.parent.peak_alpha)
 
+        current_peak = self.peak_number_spin.GetValue() - 1
+        self.peak_fill_type_combo.SetValue(self.parent.peak_fill_types[current_peak])
+        self.peak_hatch_combo.SetValue(self.parent.peak_hatch_patterns[current_peak])
+
         if hasattr(self.parent, 'current_instrument'):
             self.instrument_combo.SetValue(self.parent.current_instrument)
 
-    def OnPeakNumberChange2(self, event):
-        current_peak = self.peak_number_spin.GetValue() - 1
-        # Save the current color before changing
-        self.temp_peak_colors[current_peak] = self.peak_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
-
-        # Change to the new peak color
-        new_peak = event.GetPosition() - 1
-        if new_peak < len(self.temp_peak_colors):
-            self.peak_color_picker.SetColour(self.temp_peak_colors[new_peak])
-        else:
-            # If it's a new peak, set a default color
-            self.peak_color_picker.SetColour(wx.Colour(128, 128, 128))  # Gray as default
+    # def OnPeakNumberChange2(self, event):
+    #     current_peak = self.peak_number_spin.GetValue() - 1
+    #     # Save the current color before changing
+    #     self.temp_peak_colors[current_peak] = self.peak_color_picker.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+    #
+    #     # Change to the new peak color
+    #     new_peak = event.GetPosition() - 1
+    #     if new_peak < len(self.temp_peak_colors):
+    #         self.peak_color_picker.SetColour(self.temp_peak_colors[new_peak])
+    #     else:
+    #         # If it's a new peak, set a default color
+    #         self.peak_color_picker.SetColour(wx.Colour(128, 128, 128))  # Gray as default
 
     def OnPeakNumberChange(self, event):
-        current_peak = event.GetPosition() - 1  # New peak number (0-indexed)
+        current_peak = event.GetPosition() - 1
         if current_peak < len(self.temp_peak_colors):
             color = wx.Colour(self.temp_peak_colors[current_peak])
         else:
-            # If it's a new peak, set a default color and extend the list
-            color = wx.Colour(128, 128, 128)  # Gray
+            color = wx.Colour(128, 128, 128)
             self.temp_peak_colors.append(color.GetAsString(wx.C2S_HTML_SYNTAX))
 
         self.peak_color_picker.SetColour(color)
+
+        # Update fill type and hatch pattern for current peak
+        self.peak_fill_type_combo.SetValue(self.parent.peak_fill_types[current_peak])
+        self.peak_hatch_combo.SetValue(self.parent.peak_hatch_patterns[current_peak])
+
+    def OnFillTypeChange(self, event):
+        current_peak = self.peak_number_spin.GetValue() - 1
+        new_value = self.peak_fill_type_combo.GetValue()
+        self.parent.peak_fill_types[current_peak] = new_value
+
+    def OnHatchChange(self, event):
+        current_peak = self.peak_number_spin.GetValue() - 1
+        new_value = self.peak_hatch_combo.GetValue()
+        self.parent.peak_hatch_patterns[current_peak] = new_value
 
     def OnColorChange(self, event):
         current_peak = self.peak_number_spin.GetValue() - 1
         new_color = event.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
         if current_peak < len(self.temp_peak_colors):
             self.temp_peak_colors[current_peak] = new_color
+
+            # Update hatch pattern based on peak number
+            hatch_patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"]
+            self.peak_hatch_combo.SetValue(hatch_patterns[current_peak % len(hatch_patterns)])
         else:
             self.temp_peak_colors.append(new_color)
 
@@ -349,6 +386,10 @@ class PreferenceWindow(wx.Frame):
         self.parent.peak_alpha = self.peak_alpha_spin.GetValue()
 
         self.parent.current_instrument = self.instrument_combo.GetValue()
+
+        current_peak = self.peak_number_spin.GetValue() - 1
+        self.parent.peak_fill_types[current_peak] = self.peak_fill_type_combo.GetValue()
+        self.parent.peak_hatch_patterns[current_peak] = self.peak_hatch_combo.GetValue()
 
         # Save the configuration
         self.parent.save_config()

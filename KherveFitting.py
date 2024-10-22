@@ -219,6 +219,10 @@ class MyFrame(wx.Frame):
         self.peak_line_thickness = 1
         self.peak_line_pattern = '-'  # Options: '-', '--', '-.', ':'
 
+        # Hatch init
+        self.peak_fill_types = ["Solid Fill" for _ in range(15)]  # List of types for each peak
+        self.peak_hatch_patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"] * 2
+
         # Most recent File Initialisation
         self.recent_files = []
         self.max_recent_files = 10  # Maximum number of recent files to keep
@@ -2165,6 +2169,14 @@ class MyFrame(wx.Frame):
                             new_value = default_constraints[constraint_key]
                             self.peak_params_grid.SetCellValue(row, col, new_value)
 
+                        # Add this block to handle linked peaks' fill type and hatch pattern
+                        if new_value.startswith(('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')):
+                            linked_peak = ord(new_value[0]) - 65  # Convert A->0, B->1, etc.
+                            current_peak = row // 2
+                            # Copy fill type and hatch pattern from linked peak
+                            self.peak_fill_types[current_peak] = self.peak_fill_types[linked_peak]
+                            self.peak_hatch_patterns[current_peak] = self.peak_hatch_patterns[linked_peak]
+
                         peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 
             # Ensure numeric values are displayed with 2 decimal places
@@ -2476,6 +2488,8 @@ class MyFrame(wx.Frame):
                 self.peak_line_thickness = config.get('peak_line_thickness', 1)
                 self.peak_line_pattern = config.get('peak_line_pattern', '-')
                 self.recent_files = config.get('recent_files', [])
+                self.peak_fill_types = config.get('peak_fill_types', ["Solid Fill" for _ in range(15)])
+                self.peak_hatch_patterns = config.get('peak_hatch_patterns', ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"] * 2)
         else:
             config = {}
             print("No config file found, using default values.")
@@ -2508,7 +2522,9 @@ class MyFrame(wx.Frame):
             'peak_line_alpha': self.peak_line_alpha,
             'peak_line_thickness': self.peak_line_thickness,
             'peak_line_pattern': self.peak_line_pattern,
-            'recent_files': self.recent_files
+            'recent_files': self.recent_files,
+            'peak_fill_types': self.peak_fill_types,
+            'peak_hatch_patterns': self.peak_hatch_patterns
         }
 
         with open('config.json', 'w') as f:

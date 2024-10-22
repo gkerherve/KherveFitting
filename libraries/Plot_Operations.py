@@ -240,21 +240,68 @@ class PlotManager:
         if alpha is None:
             alpha = self.peak_alpha
 
+        if window.peak_line_style == "Black":
+            line_color = "black"
+        elif window.peak_line_style == "Grey":
+            line_color = "grey"
+        elif window.peak_line_style == "Yellow":
+            line_color = "yellow"
+        else:  # same_color
+            line_color = color
+
         line_alpha = min(alpha + 0.1, 1)
         if self.peak_fill_enabled:
             label = peak_label
+
+            # Identify doublets
+            num_peaks = window.peak_params_grid.GetNumberRows() // 2
+            doublets = []
+            for i in range(0, num_peaks - 1):
+                current_label = window.peak_params_grid.GetCellValue(i * 2, 1)
+                next_label = window.peak_params_grid.GetCellValue((i + 1) * 2, 1)
+                if self.is_part_of_doublet(current_label, next_label):
+                    doublets.extend([i, i + 1])
+
+            # Find current peak index
+            for i in range(num_peaks):
+                if window.peak_params_grid.GetCellValue(i * 2, 1) == peak_label:
+                    peak_index = i
+                    break
+
+            # If part of doublet, get fill type from first peak of the pair
+            if peak_index in doublets:
+                if doublets.index(peak_index) % 2 == 1:  # Second peak of doublet
+                    peak_index = peak_index - 1  # Use first peak's settings
+
+            if window.peak_fill_types[peak_index] == "Solid Fill":
+                fill_params = {
+                    'color': color,
+                    'alpha': alpha,
+                    'edgecolor': 'none'
+                }
+            else:  # Hatch
+                fill_params = {
+                    'color': 'none',
+                    'hatch': window.peak_hatch_patterns[peak_index] * 2,
+                    'linewidth': window.peak_line_thickness,
+                    'edgecolor': color,
+                    'alpha': alpha
+                }
+
             if window.energy_scale == 'KE':
-                self.ax.fill_between(window.photons - x_values, background, peak_y, color=color, alpha=alpha,
-                                     interpolate=True, edgecolor='none', label=peak_label)
+                self.ax.fill_between(window.photons - x_values, background, peak_y,
+                                     interpolate=True, label=peak_label, **fill_params)
             else:
-                self.ax.fill_between(x_values, background, peak_y, color=color, alpha=alpha, interpolate=True,
-                                     edgecolor='none', label=peak_label)
+                self.ax.fill_between(x_values, background, peak_y,
+                                     interpolate=True, label=peak_label, **fill_params)
 
             if window.peak_line_style != "No Line":
                 if window.peak_line_style == "Black":
                     line_color = "black"
                 elif window.peak_line_style == "Grey":
                     line_color = "grey"
+                elif window.peak_line_style == "Yellow":
+                    line_color = "yellow"
                 else:  # same_color
                     line_color = color
 
