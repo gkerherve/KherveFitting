@@ -9,9 +9,11 @@ and openpyxl for manipulating Excel file.
 When using KherveFitting in academic or research contexts, appropriate citation is requested  to acknowledge the 
 software's contribution to your work.
 
-To download .exe please go to https://sourceforge.net/projects/khervefitting/
+To download .exe,  go to https://sourceforge.net/projects/khervefitting/
 
-To download Mac install ... TBA ... 
+No Mac installation available yet. 
+
+For python source, make sure to use:  pip install -r requirements.txt
 
 ## Keyboard Shortcuts
 
@@ -81,10 +83,12 @@ p-shell, 0.67 for d-shell, 0.75 for f-shell.
 
 Available fitting models:
 
-- GL Gaussian-Lorentzian product
-- SGL Gaussian-Lorentzian sum 
-- Pseudo-Voigt from Lmfit library
-- Voigt from lmfit library
+- GL Gaussian-Lorentzian product (constraint with area or height)
+- SGL Gaussian-Lorentzian sum (constraint with area or height)
+- Pseudo-Voigt from Lmfit library (constraint with area only)
+- Voigt from lmfit library (constraint with area only)
+- Asymmetric Exponential Gaussian line shape (Under Test)
+- Asymmetric Lorentzian LA  with various constraint(Under Test)
 
 
 ## Peak Fitting Parameter Grid
