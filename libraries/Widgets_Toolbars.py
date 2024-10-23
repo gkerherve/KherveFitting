@@ -347,8 +347,8 @@ def create_horizontal_toolbar(window):
     # else:
     #     application_path = os.path.dirname(os.path.abspath(__file__))
     # icon_path = os.path.join(application_path, "Icons")
-
     # Get the correct path for icons
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     icon_path = os.path.join(current_dir, "Icons")
 
