@@ -341,12 +341,16 @@ def create_horizontal_toolbar(window):
     toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
     toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
-    # Determine the correct path for icons
-    if getattr(sys, 'frozen', False):
-        application_path = sys._MEIPASS
-    else:
-        application_path = os.path.dirname(os.path.abspath(__file__))
-    icon_path = os.path.join(application_path, "Icons")
+    # # Determine the correct path for icons
+    # if getattr(sys, 'frozen', False):
+    #     application_path = sys._MEIPASS
+    # else:
+    #     application_path = os.path.dirname(os.path.abspath(__file__))
+    # icon_path = os.path.join(application_path, "Icons")
+
+    # Get the correct path for icons
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(current_dir, "Icons")
 
     separators = []
 

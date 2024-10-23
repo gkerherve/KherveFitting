@@ -448,7 +448,7 @@ class MyFrame(wx.Frame):
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
         elif self.selected_fitting_method in ["Voigt (Area, \u03c3, \u03b3)", "ExpGauss.(Area, \u03c3, \u03b3)"]:
-            for col in [3, 4, 5, 9]:  # Columns for Height, FWHM, L/G ratio
+            for col in [3,4, 5, 9]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
@@ -2685,7 +2685,7 @@ if __name__ == '__main__':
     # app.SetHighDPIAware(True)  # Add this line to enable High DPI awareness
     splash = show_splash(duration=3000, delay=2)
 
-    frame = MyFrame(None, "KherveFitting - V1.0 - Sept 2024")
+    frame = MyFrame(None, "KherveFitting - V1.1 - Oct 2024")
     frame.Show(True)
 
     if splash:
