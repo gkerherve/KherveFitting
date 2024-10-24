@@ -375,7 +375,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 5, "20")
         if self.selected_fitting_method in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)",
                                             "LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
-            self.peak_params_grid.SetCellValue(row, 6, f"{peak_y:.2f}")
+            self.peak_params_grid.SetCellValue(row, 6, f"{peak_y * 1.6 * 1.064:.2f}")
         else:
             self.peak_params_grid.SetCellValue(row, 6, f"{peak_y * 1.6 * 1.064:.2f}")
         if self.selected_fitting_method == "ExpGauss.(Area, \u03c3, \u03b3)":
@@ -1971,12 +1971,9 @@ class MyFrame(wx.Frame):
             if sigma is None or gamma is None:
                 raise ValueError("Sigma and gamma are required for LA model")
 
-            # Use the peak maximum as an approximation for the center
-            center_approx = 0  # Assuming the peak is centered at 0 for integration purposes
-
-            # Numerical integration to calculate area
-            x_range = np.linspace(center_approx - 20 * fwhm, center_approx + 20 * fwhm, 40000)
-            y_values = PeakFunctions.LA(x_range, center_approx, height, fwhm, sigma, gamma)
+            F = 2 * fwhm / (np.sqrt(2 ** (1 / sigma) - 1) + np.sqrt(2 ** (1 / gamma) - 1))
+            x_range = np.linspace(-10 * fwhm, 10 * fwhm, 1000)
+            y_values = PeakFunctions.LA(x_range, 0, height, fwhm, sigma, gamma)
             area = np.trapz(y_values, x_range)
 
             return round(area, 2)

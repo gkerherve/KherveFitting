@@ -378,14 +378,43 @@ class PeakFunctions:
     #     )
 
     @staticmethod
-    def LA(x, center, amplitude, fwhm, sigma, gamma):
-        # print("LA FWHM: "+str(fwhm))
+    def LA_OLD(x, center, amplitude, fwhm, sigma, gamma):
+        # Calculate F from the input FWHM
+        F = 2 * fwhm / (np.sqrt(2 ** (1 / sigma) - 1) + np.sqrt(2 ** (1 / gamma) - 1))
+
         return amplitude * np.where(
             x <= center,
-            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** gamma,
-            1 / (1 + 4 * ((x - center) / fwhm) ** 2) ** sigma
+            1 / (1 + 4 * ((x - center) / F) ** 2) ** gamma,
+            1 / (1 + 4 * ((x - center) / F) ** 2) ** sigma
         )
 
+    def LA(x, center, amplitude, fwhm, sigma, gamma):
+        #amplitude here is the area
+
+        # Calculate lorentzian width from the input FWHM
+        F = 2 * fwhm / (np.sqrt(2 ** (1 / sigma) - 1) + np.sqrt(2 ** (1 / gamma) - 1))
+
+        # Create the peak shape with unit amplitude
+        peak_shape = np.where(
+            x <= center,
+            1 / (1 + 4 * ((x - center) / F) ** 2) ** gamma,
+            1 / (1 + 4 * ((x - center) / F) ** 2) ** sigma
+        )
+
+        # Sort x values and corresponding peak shape for correct integration
+        sort_idx = np.argsort(x)
+        x_sorted = x[sort_idx]
+        peak_shape_sorted = peak_shape[sort_idx]
+
+        # Calculate the area of unit amplitude peak
+        unit_area = abs(np.trapz(peak_shape_sorted, x_sorted))
+
+        # Calculate required amplitude to achieve desired area
+        height = amplitude / unit_area if unit_area != 0 else 0
+
+        return height * peak_shape
+
+    @staticmethod
     def LAxG(x, center, amplitude, fwhm, sigma, gamma, gaussian_fwhm):
         # Define the LA function
         # gaussian_fwhm =0.64

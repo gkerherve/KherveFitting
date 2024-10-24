@@ -348,7 +348,8 @@ class FittingWindow(wx.Frame):
         orbital = re.search(r'[spdf]', first_word)
 
         if not orbital:
-            wx.MessageBox("Invalid sheet name. Cannot determine orbital type.", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox("Invalid sheet name. Cannot determine orbital type. It needs to of the form Au4f and NOT Au 4f, Error",
+                          wx.OK | wx.ICON_ERROR)
             return
 
         orbital = orbital.group()

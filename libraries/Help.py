@@ -16,13 +16,16 @@ def on_about(self, event):
     wx.adv.AboutBox(info)
 
 def show_quick_help(parent):
-    if getattr(sys, 'frozen', False):
-        # If the application is run as a bundle, use the bundle's directory
-        application_path = sys._MEIPASS
-    else:
-        # If the application is run as a script, use the script's directory
-        application_path = os.path.dirname(os.path.abspath(__file__))
-    image_path = os.path.join(application_path, "Images")
+    # if getattr(sys, 'frozen', False):
+    #     # If the application is run as a bundle, use the bundle's directory
+    #     application_path = sys._MEIPASS
+    # else:
+    #     # If the application is run as a script, use the script's directory
+    #     application_path = os.path.dirname(os.path.abspath(__file__))
+    # image_path = os.path.join(application_path, "Images")
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(current_dir, "Images")
 
     help_text = (
         "<body bgcolor='#FFFFE0'>"
@@ -66,7 +69,7 @@ def show_quick_help(parent):
         f"<img src='{os.path.join(image_path, 'peak_control.png')}' alt='Peak Control'>"
         "<ul>"
         "<li>Ensure the Peak Fitting tab in the Peak Fitting window is selected to move peaks</li>"
-        "<li>Use TAB or 'Q' to select the chosen</li>"
+        "<li>Use TAB or 'Q' to select a peak.</li>"
         "<li>Use the left-click and drag the cross to move the position of a peak</li>"
         "<li>Shift + Left-click and move the mouse to adjust the width of the peak</li>"        
         "</ul>"

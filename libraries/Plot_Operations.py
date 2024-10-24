@@ -189,24 +189,20 @@ class PlotManager:
             params = peak_model.make_params(center=x, amplitude=amplitude, sigma=sigma, fraction=lg_ratio / 100)
         elif fitting_model in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)"]:
             peak_model = lmfit.Model(PeakFunctions.LA)
-            area = float(window.peak_params_grid.GetCellValue(row, 6))
+            amplitude = float(window.peak_params_grid.GetCellValue(row, 6))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
             gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-            params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+            params = peak_model.make_params(center=x,amplitude=amplitude,fwhm=fwhm,sigma=sigma,gamma=gamma)
 
-            # Calculate height numerically
-            x_range = np.linspace(x - 5 * fwhm, x + 5 * fwhm, 1000)
-            y_values = peak_model.eval(params, x=x_range)
-            height = np.max(y_values)
 
             # No direct equivalent to 'fraction' for LA model
             fraction = (sigma + gamma) / 2  # You could define it differently if needed
         elif fitting_model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             peak_model = lmfit.Model(PeakFunctions.LAxG)
-            area = float(window.peak_params_grid.GetCellValue(row, 6))
+            amplitude = float(window.peak_params_grid.GetCellValue(row, 3))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
             gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-            params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+            params = peak_model.make_params(center=x,amplitude=amplitude,fwhm=fwhm,sigma=sigma,gamma=gamma)
 
             # Calculate height numerically
             x_range = np.linspace(x - 5 * fwhm, x + 5 * fwhm, 1000)
@@ -784,8 +780,9 @@ class PlotManager:
                 peak_model = lmfit.Model(PeakFunctions.LA)
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-                area = float(window.peak_params_grid.GetCellValue(row, 6))
-                params = peak_model.make_params(center=x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+                # area = float(window.peak_params_grid.GetCellValue(row, 6))
+                amplitude = float(window.peak_params_grid.GetCellValue(row, 6))
+                params = peak_model.make_params(center=x,amplitude=amplitude,fwhm=fwhm,sigma=sigma,gamma=gamma)
             elif window.selected_fitting_method in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
                 peak_model = lmfit.Model(PeakFunctions.LAxG)
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
@@ -903,10 +900,11 @@ class PlotManager:
                                                 fraction=lg_ratio / 100)
             elif fitting_model in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)"]:
                 peak_model = lmfit.Model(PeakFunctions.LA)
-                area = float(window.peak_params_grid.GetCellValue(row, 6))
+                amplitude = float(window.peak_params_grid.GetCellValue(row, 6))
+                # area = float(window.peak_params_grid.GetCellValue(row, 6))
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-                params = peak_model.make_params(center=peak_x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+                params = peak_model.make_params(center=peak_x,amplitude=amplitude,fwhm=fwhm,sigma=sigma,gamma=gamma)
             elif fitting_model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
                 peak_model = lmfit.Model(PeakFunctions.LAxG)
                 area = float(window.peak_params_grid.GetCellValue(row, 6))

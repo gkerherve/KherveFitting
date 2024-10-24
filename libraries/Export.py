@@ -260,7 +260,15 @@ def _calculate_peak_areas2(peak_params, fitting_model):
         area = height * fwhm * np.pi / 2
     elif fitting_model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)", "LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
         # For LA model, area is directly provided
-        area = peak_params['area']
+        # area = peak_params['area']
+        height = peak_params['amplitude']
+        sigma = peak_params['sigma']
+        gamma = peak_params['gamma']
+        fraction = peak_params[f'{prefix}fraction'].value / 100
+
+
+        area = self.parent.calculate_peak_area(fitting_model, height, fwhm, fraction, sigma, gamma)
+
         # If area is not provided in peak_params, you can calculate it numerically:
         # if 'area' not in peak_params:
         #     sigma = peak_params['sigma']
