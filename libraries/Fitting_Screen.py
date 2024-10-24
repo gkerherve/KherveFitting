@@ -14,9 +14,9 @@ class FittingWindow(wx.Frame):
 
 
         self.SetTitle("Peak Fitting")
-        self.SetSize((305, 490))  # Increased height to accommodate new elements
-        self.SetMinSize((305, 490))
-        self.SetMaxSize((305, 490))
+        self.SetSize((305, 520))  # Increased height to accommodate new elements
+        self.SetMinSize((305, 520))
+        self.SetMaxSize((305, 520))
 
         #305 480
 
@@ -155,6 +155,27 @@ class FittingWindow(wx.Frame):
         info_button = self.create_info_button(self.fitting_panel,
                                               self.get_fitting_description(self.parent.selected_fitting_method))
 
+        self.optimization_method = wx.ComboBox(self.fitting_panel, choices=[
+            "leastsq",
+            "least_squares",
+            # "differential_evolution",
+            "nelder",
+            # "lbfgsb",
+            "powell",
+            # "cg",
+            # "newton",
+            "cobyla",
+            # "basinhopping",
+            # "slsqp",
+            # "tnc",
+            # "trust-krylov",
+            "trust-constr"
+            # "dogleg",
+            # "shgo",
+            # "dual_annealing"
+        ], style=wx.CB_READONLY)
+        self.optimization_method.SetSelection(1)  # Default value
+
         self.max_iter_spin = wx.SpinCtrl(self.fitting_panel, value=str(self.parent.max_iterations), min=1, max=10000)
         self.max_iter_spin.Bind(wx.EVT_SPINCTRL, self.on_max_iter_change)
 
@@ -209,36 +230,44 @@ class FittingWindow(wx.Frame):
         fitting_sizer.Add(self.model_combobox, pos=(0, 1), flag=wx.ALL | wx.EXPAND, border=0)
         fitting_sizer.Add(info_button, pos=(1, 1), flag=wx.ALL, border=0)
 
-        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Max Iteration:"), pos=(2, 0),
+        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Optimization Method:"), pos=(2, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.max_iter_spin, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Fit Iterations:"), pos=(3, 0),
+        fitting_sizer.Add(self.optimization_method, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=0)
+
+        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Max Iteration:"), pos=(3, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.fit_iterations_spin, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.max_iter_spin, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Fit Iterations:"), pos=(4, 0),
+                          flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.fit_iterations_spin, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(self.r_squared_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.r_squared_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.rsd_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.rsd_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.red_chi_squared_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.red_chi_squared_text, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.r_squared_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.r_squared_text, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.rsd_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.rsd_text, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.red_chi_squared_label, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.red_chi_squared_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(self.actual_iter_label, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.actual_iter_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(self.current_fit_label, pos=(8, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        fitting_sizer.Add(self.current_fit_text, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.actual_iter_label, pos=(8, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.actual_iter_text, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(self.current_fit_label, pos=(9, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        fitting_sizer.Add(self.current_fit_text, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(add_peak_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(add_doublet_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_peak_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(add_doublet_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(remove_peak_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(export_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(remove_peak_button, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(export_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        fitting_sizer.Add(fit_button, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        fitting_sizer.Add(fit_multi_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_button, pos=(12, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        fitting_sizer.Add(fit_multi_button, pos=(12, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         self.fitting_panel.SetSizer(fitting_sizer)
         notebook.AddPage(self.fitting_panel, "Peak Fitting")
+
+    def get_optimization_method(self):
+        selection = self.optimization_method.GetValue()
+        return selection.split()[0]  # Get just the method name without description
 
     def on_method_change(self, event):
         new_method = self.model_combobox.GetValue()

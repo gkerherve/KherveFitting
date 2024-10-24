@@ -592,7 +592,26 @@ def fit_peaks(window, peak_params_grid):
 
                 individual_peaks.append(peak_model)
 
-            result = model.fit(y_values_subtracted, params, x=x_values_filtered, max_nfev=max_nfev)
+            optimization_method = window.fitting_window.get_optimization_method() if window.fitting_window else 'leastsq'
+            # Define fit_kws only for methods that support it
+            if optimization_method in ['leastsq', 'least_squares']:
+                fit_kws = {'ftol': 1e-10, 'xtol': 1e-10}
+            else:
+                fit_kws = None  # Don't pass fit_kws for 'nelder', 'powell', or 'cobyla'
+
+            result = model.fit(
+                y_values_subtracted,
+                params,
+                x=x_values_filtered,
+                max_nfev=max_nfev,
+                method=optimization_method,
+                weights=np.ones(len(y_values_filtered)),
+                scale_covar=True,
+                nan_policy='omit',
+                verbose=True,
+                **({'fit_kws': fit_kws} if fit_kws else {})
+            )
+
 
             residuals = y_values_subtracted - result.best_fit
             ss_res = np.sum(residuals ** 2)
