@@ -708,6 +708,7 @@ def fit_peaks(window, peak_params_grid):
                         sigma = result.params[f'{prefix}sigma'].value
                         gamma = result.params[f'{prefix}gamma'].value
                         fraction = result.params[f'{prefix}fraction'].value /100
+                        fwhm_g = result.params[f'{prefix}fwhm_g'].value
 
                         # Calculate height numerically
                         y_values = PeakFunctions.LAxG(x_values, center, area, fwhm, sigma, gamma)
@@ -745,6 +746,13 @@ def fit_peaks(window, peak_params_grid):
                         gamma = round(float(gamma * 1), 2)
                         fraction = round(fraction * 100,2)
                         area = round(float(area), 2)
+                    elif peak_model_choice in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
+                        # Exponential Gaussian doesn't use fraction
+                        sigma = round(float(sigma * 1), 2)
+                        gamma = round(float(gamma * 1), 2)
+                        fraction = round(fraction * 100,2)
+                        area = round(float(area), 2)
+                        fwhm_g = round(float(fwhm_g), 2)
                     else:
                         sigma = round(float(sigma * 2.355), 2)
                         gamma = round(float(gamma * 2), 2)
