@@ -415,18 +415,21 @@ class PeakFunctions:
         return height * peak_shape
 
     @staticmethod
-    def LAxG(x, center, amplitude, fwhm, sigma, gamma, gaussian_fwhm):
+    def LAxG(x, center, amplitude, fwhm, sigma, gamma, fwhm_g=0.64):
         # Define the LA function
-        # gaussian_fwhm =0.64
+        # gaussian_fwhm =0.64 # now done through the grid
+
+        # Calculate lorentzian width from the input FWHM
+        F = 2 * fwhm / (np.sqrt(2 ** (1 / sigma) - 1) + np.sqrt(2 ** (1 / gamma) - 1))
         def LA_N(x):
             return np.where(
                 x <= 0,
-                1 / (1 + 4 * ((x ) / fwhm) ** 2) ** gamma,
-                1 / (1 + 4 * ((x ) / fwhm) ** 2) ** sigma
+                1 / (1 + 4 * ((x ) / F) ** 2) ** gamma,
+                1 / (1 + 4 * ((x ) / F) ** 2) ** sigma
             )
 
         # Define the Gaussian function
-        def gaussian(x, F):
+        def gaussian(x, fwhm_g):
             return np.exp(-4 * np.log(2) * ((x ) / F) ** 2)
 
         x_range = max(x.max() - x.min(), 4 * fwhm)
