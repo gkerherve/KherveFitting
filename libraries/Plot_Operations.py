@@ -1275,7 +1275,7 @@ class PlotManager:
         """
         Calculate and plot the background for the selected sheet.
 
-        This method computes the background using various methods (Adaptive Smart, Shirley, Linear, Smart)
+        This method computes the background using various methods (Multi-Regions Smart, Shirley, Linear, Smart)
         based on the user's selection. It updates the background data in the window.Data structure
         and plots the result on the main graph.
 
@@ -1338,7 +1338,7 @@ class PlotManager:
             wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
     def _calculate_adaptive_smart_background(self, window, x_values, y_values, offset_h, offset_l):
-        """Helper method to calculate Adaptive Smart background."""
+        """Helper method to calculate Multi-Regions Smart background."""
         sheet_name = window.sheet_combobox.GetValue()  # Get the current sheet name
         bg_min_energy, bg_max_energy = min(x_values), max(x_values)
         window.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = bg_min_energy
@@ -1355,10 +1355,10 @@ class PlotManager:
         background_filtered = BackgroundCalculations.calculate_adaptive_smart_background(
             x_values, y_values, adaptive_range, current_background, offset_h, offset_l
         )
-        return background_filtered, 'Background (Adaptive Smart)'
+        return background_filtered, 'Background (Multi-Regions Smart)'
 
     def _calculate_other_background(self, window, x_values, y_values, method, offset_h, offset_l):
-        """Helper method to calculate background for non-Adaptive Smart methods."""
+        """Helper method to calculate background for non-Multi-Regions Smart methods."""
         sheet_name = window.sheet_combobox.GetValue()
         bg_min_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg Low')
         bg_max_energy = window.Data['Core levels'][sheet_name]['Background'].get('Bkg High')

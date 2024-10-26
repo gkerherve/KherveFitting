@@ -791,7 +791,7 @@ class MyFrame(wx.Frame):
         self.peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")  # Update FWHM
 
 
-    def on_cross_drag(self, event):
+    def on_cross_drag_OLD(self, event):
         if event.inaxes and self.selected_peak_index is not None:
             row = self.selected_peak_index * 2
             if event.button == 1:
@@ -826,7 +826,7 @@ class MyFrame(wx.Frame):
                 except Exception as e:
                     print(f"Error during cross drag: {e}")
 
-    def on_cross_release(self, event):
+    def on_cross_release_OLD(self, event):
         save_state(self)
         if event.inaxes and self.selected_peak_index is not None:
             row = self.selected_peak_index * 2
@@ -871,6 +871,90 @@ class MyFrame(wx.Frame):
         # Refresh the grid to ensure it reflects the current state of self.Data
         self.refresh_peak_params_grid()
 
+    def on_cross_drag(self, event):
+        if event.inaxes and self.selected_peak_index is not None:
+            row = self.selected_peak_index * 2
+            fitting_model = self.peak_params_grid.GetCellValue(row, 13)
+
+            if event.button == 1:
+                try:
+                    if event.key == 'shift':
+                        new_fwhm = self.update_peak_fwhm(event.xdata)
+                        if new_fwhm is not None:
+                            self.update_linked_fwhm_recursive(self.selected_peak_index, new_fwhm)
+
+                    elif self.is_mouse_on_peak(event):
+                        closest_index = np.argmin(np.abs(self.x_values - event.xdata))
+                        bkg_y = self.background[closest_index]
+                        new_x = event.xdata
+
+                        if "LA" in fitting_model:
+                            # For LA models, maintain the area
+                            current_area = float(self.peak_params_grid.GetCellValue(row, 6))
+                            new_height = max(event.ydata - bkg_y, 0)
+                            fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                            sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                            gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+
+                            # Update position while keeping area constant
+                            self.update_peak(self.selected_peak_index, new_x, new_height, current_area)
+                            self.update_linked_peaks_recursive(self.selected_peak_index, new_x, new_height,
+                                                               current_area)
+                        else:
+                            # For height-based models
+                            new_height = max(event.ydata - bkg_y, 0)
+                            self.update_peak(self.selected_peak_index, new_x, new_height)
+                            self.update_linked_peaks_recursive(self.selected_peak_index, new_x, new_height)
+
+                    self.update_ratios()
+                    self.clear_and_replot()
+                    self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
+                    self.canvas.draw_idle()
+
+                except Exception as e:
+                    print(f"Error during cross drag: {e}")
+
+    def on_cross_release(self, event):
+        save_state(self)
+        if event.inaxes and self.selected_peak_index is not None:
+            row = self.selected_peak_index * 2
+            fitting_model = self.peak_params_grid.GetCellValue(row, 13)
+            peak_label = self.peak_params_grid.GetCellValue(row, 1)
+            sheet_name = self.sheet_combobox.GetValue()
+
+            x = event.xdata
+            y = event.ydata
+            bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
+
+            if event.button == 1:
+                if event.key == 'shift':
+                    new_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                    self.update_linked_fwhm_recursive(self.selected_peak_index, new_fwhm)
+                else:
+                    y = max(y - bkg_y, 0)
+
+                    if "LA" in fitting_model:
+                        current_area = float(self.peak_params_grid.GetCellValue(row, 6))
+                        self.update_peak(self.selected_peak_index, x, y, current_area)
+                        self.update_linked_peaks_recursive(self.selected_peak_index, x, y, current_area)
+                    else:
+                        self.update_peak(self.selected_peak_index, x, y)
+                        self.update_linked_peaks_recursive(self.selected_peak_index, x, y)
+
+            self.remove_cross_from_peak()
+            self.cross = self.ax.plot(x, y + bkg_y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)[
+                0]
+            self.canvas.draw_idle()
+
+        if hasattr(self, 'motion_cid'):
+            self.canvas.mpl_disconnect(self.motion_cid)
+            delattr(self, 'motion_cid')
+        if hasattr(self, 'release_cid'):
+            self.canvas.mpl_disconnect(self.release_cid)
+            delattr(self, 'release_cid')
+
+        self.refresh_peak_params_grid()
+
     def get_linked_peaks(self, peak_index):
         linked_peaks = []
         row = peak_index * 2
@@ -881,7 +965,7 @@ class MyFrame(wx.Frame):
                 linked_peaks.append(i)
         return linked_peaks
 
-    def update_linked_peak(self, peak_index, new_x, new_height, original_peak_index):
+    def update_linked_peak_OLD(self, peak_index, new_x, new_height, original_peak_index):
         row = peak_index * 2
         constraint_row = row + 1
         position_constraint = self.peak_params_grid.GetCellValue(constraint_row, 2)
@@ -970,6 +1054,88 @@ class MyFrame(wx.Frame):
         if position_constraint.startswith(original_peak_letter) or height_constraint.startswith(original_peak_letter):
             self.recalculate_peak_area(peak_index)
 
+    def update_linked_peak(self, peak_index, new_x, new_height, area=None, original_peak_index=None):
+        row = peak_index * 2
+        constraint_row = row + 1
+        position_constraint = self.peak_params_grid.GetCellValue(constraint_row, 2)
+        height_constraint = self.peak_params_grid.GetCellValue(constraint_row, 3)
+        area_constraint = self.peak_params_grid.GetCellValue(constraint_row, 6)
+
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+        peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+        fitting_model = self.peak_params_grid.GetCellValue(row, 13)
+
+        original_peak_letter = chr(65 + original_peak_index)
+
+        # Update position if constrained (same as original)
+        if position_constraint.startswith(original_peak_letter):
+            if '+' in position_constraint:
+                offset = float(position_constraint.split('+')[1].split('#')[0])
+                new_position = new_x + offset
+            elif '-' in position_constraint:
+                offset = float(position_constraint.split('-')[1].split('#')[0])
+                new_position = new_x - offset
+            elif '*' in position_constraint:
+                factor = float(position_constraint.split('*')[1].split('#')[0])
+                new_position = new_x * factor
+            elif '/' in position_constraint:
+                factor = float(position_constraint.split('/')[1].split('#')[0])
+                new_position = new_x / factor
+            else:
+                new_position = new_x
+
+            self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Position'] = new_position
+
+        if "LA" in fitting_model and area_constraint.startswith(original_peak_letter):
+            current_area = float(self.peak_params_grid.GetCellValue(original_peak_index * 2, 6))
+            if '*' in area_constraint:
+                factor = float(area_constraint.split('*')[1].split('#')[0])
+                new_linked_area = current_area * factor
+            elif '/' in area_constraint:
+                factor = float(area_constraint.split('/')[1].split('#')[0])
+                new_linked_area = current_area / factor
+            elif '+' in area_constraint:
+                offset = float(area_constraint.split('+')[1].split('#')[0])
+                new_linked_area = current_area + offset
+            elif '-' in area_constraint:
+                offset = float(area_constraint.split('-')[1].split('#')[0])
+                new_linked_area = current_area - offset
+            else:
+                new_linked_area = current_area
+
+            self.peak_params_grid.SetCellValue(row, 6, f"{new_linked_area:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Area'] = new_linked_area
+                peaks[peak_label]['Height'] = new_height
+
+        elif height_constraint.startswith(original_peak_letter):
+            # Original height-based logic
+            if '*' in height_constraint:
+                factor = float(height_constraint.split('*')[1].split('#')[0])
+                new_linked_height = new_height * factor
+            elif '/' in height_constraint:
+                factor = float(height_constraint.split('/')[1].split('#')[0])
+                new_linked_height = new_height / factor
+            elif '+' in height_constraint:
+                offset = float(height_constraint.split('+')[1].split('#')[0])
+                new_linked_height = new_height + offset
+            elif '-' in height_constraint:
+                offset = float(height_constraint.split('-')[1].split('#')[0])
+                new_linked_height = new_height - offset
+            else:
+                new_linked_height = new_height
+
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+            if peak_label in peaks:
+                peaks[peak_label]['Height'] = new_linked_height
+
+        # Recalculate area if not LA model
+        if not "LA" in fitting_model:
+            self.recalculate_peak_area(peak_index)
+
     def calculate_height_from_area(self, area, fwhm, model, row=None):
         if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
             # For Voigt, this is an approximation
@@ -1023,7 +1189,7 @@ class MyFrame(wx.Frame):
         else:  # GL, SGL, or other models
             return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
 
-    def update_peak(self, peak_index, new_x, new_height):
+    def update_peak_OLD(self, peak_index, new_x, new_height):
         row = peak_index * 2
         sheet_name = self.sheet_combobox.GetValue()
         peak_label = self.peak_params_grid.GetCellValue(row, 1)
@@ -1042,6 +1208,37 @@ class MyFrame(wx.Frame):
 
         # Recalculate area
         self.recalculate_peak_area(peak_index)
+
+    def update_peak(self, peak_index, new_x, new_height, area=None):
+        row = peak_index * 2
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+        fitting_model = self.peak_params_grid.GetCellValue(row, 13)
+
+        # Update the grid
+        self.peak_params_grid.SetCellValue(row, 2, f"{new_x:.2f}")
+
+        if "LA" in fitting_model and area is not None:
+            self.peak_params_grid.SetCellValue(row, 6, f"{area:.2f}")  # Set area first
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")  # Height is derived
+        else:
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
+
+        # Update the Data structure
+        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
+                self.Data['Core levels'][sheet_name]['Fitting']:
+            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+            if peak_label in peaks:
+                peaks[peak_label]['Position'] = new_x
+                if "LA" in fitting_model and area is not None:
+                    peaks[peak_label]['Area'] = area
+                    peaks[peak_label]['Height'] = new_height
+                else:
+                    peaks[peak_label]['Height'] = new_height
+
+        # Recalculate area if not LA model
+        if not "LA" in fitting_model:
+            self.recalculate_peak_area(peak_index)
 
     def update_linked_peak_fwhm(self, peak_index, new_fwhm):
         row = peak_index * 2
@@ -1065,7 +1262,7 @@ class MyFrame(wx.Frame):
             if peak_label in peaks:
                 peaks[peak_label]['FWHM'] = new_linked_fwhm
 
-    def update_linked_peaks_recursive(self, original_peak_index, new_x, new_height, visited=None):
+    def update_linked_peaks_recursive_OLD(self, original_peak_index, new_x, new_height, visited=None):
         if visited is None:
             visited = set()
 
@@ -1081,6 +1278,30 @@ class MyFrame(wx.Frame):
                 linked_x = float(self.peak_params_grid.GetCellValue(linked_peak * 2, 2))
                 linked_height = float(self.peak_params_grid.GetCellValue(linked_peak * 2, 3))
                 self.update_linked_peaks_recursive(linked_peak, linked_x, linked_height, visited)
+
+    def update_linked_peaks_recursive(self, original_peak_index, new_x, new_height, area=None, visited=None):
+        if visited is None:
+            visited = set()
+
+        if original_peak_index in visited:
+            return
+
+        visited.add(original_peak_index)
+
+        linked_peaks = self.get_linked_peaks(original_peak_index)
+        for linked_peak in linked_peaks:
+            if linked_peak not in visited:
+                if area is not None:
+                    self.update_linked_peak(linked_peak, new_x, new_height, area, original_peak_index)
+                else:
+                    self.update_linked_peak(linked_peak, new_x, new_height, None, original_peak_index)
+
+                linked_x = float(self.peak_params_grid.GetCellValue(linked_peak * 2, 2))
+                linked_height = float(self.peak_params_grid.GetCellValue(linked_peak * 2, 3))
+                linked_area = float(
+                    self.peak_params_grid.GetCellValue(linked_peak * 2, 6)) if area is not None else None
+
+                self.update_linked_peaks_recursive(linked_peak, linked_x, linked_height, linked_area, visited)
 
     def update_linked_fwhm_recursive(self, peak_index, new_fwhm, visited=None):
         if visited is None:
@@ -1240,7 +1461,7 @@ class MyFrame(wx.Frame):
                     sheet_name = self.sheet_combobox.GetValue()
                     if sheet_name in self.Data['Core levels']:
                         core_level_data = self.Data['Core levels'][sheet_name]
-                        if self.background_method == "Adaptive Smart":
+                        if self.background_method == "Multi-Regions Smart":
                             # Check if click is close to vline1 or vline2
                             if self.vline1 is not None and self.vline2 is not None:
                                 vline1_x = self.vline1.get_xdata()[0]
@@ -1636,7 +1857,7 @@ class MyFrame(wx.Frame):
                     core_level_data['Background']['Bkg High'] = max(bkg_low, bkg_high)
 
                     # If in Adaptive Smart mode, update the background in real-time
-                    if self.background_method == "Adaptive Smart":
+                    if self.background_method == "Multi-Regions Smart":
                         # plot_background(self)
                         pass
 
@@ -1670,7 +1891,7 @@ class MyFrame(wx.Frame):
                         core_level_data['Background']['Bkg High'] = max(bg_low, bg_high)
 
             # If in Adaptive Smart mode, update the background
-            if self.background_method == "Adaptive Smart":
+            if self.background_method == "Multi-Regions Smart":
                 # plot_background(self)
                 pass
         # If a peak is being moved, update its position and height
@@ -1722,7 +1943,7 @@ class MyFrame(wx.Frame):
             self.canvas.mpl_disconnect(self.release_cid)
 
             # Update background if in Adaptive Smart mode
-            if self.background_method == "Adaptive Smart":
+            if self.background_method == "Multi-Regions Smart":
                 self.plot_manager.plot_background(self)
 
     def on_zoom_in_tool(self, event):

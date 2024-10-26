@@ -77,7 +77,7 @@ def show_quick_help(parent):
         "<h3><font color='#006400'>Peak Fitting Window</font></h3>"
         f"<img src='{os.path.join(image_path, 'peak_fitting_window.png')}' alt='Peak Fitting Window'>"
         "<h4>Background Tab</h4>"
-        "<p>Five background types available: Linear, Shirley, Smart, Adaptive Smart, and Tougaard. Drag the red lines on the plot to set the background range.</p>"
+        "<p>Five background types available: Linear, Shirley, Smart, Multi-Regions Smart, and Tougaard. Drag the red lines on the plot to set the background range.</p>"
         "<ul>"
         "<li><b>Linear Background:</b><br>"
         "<pre>Y = mx + b</pre>"

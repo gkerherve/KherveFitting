@@ -553,7 +553,7 @@ class BackgroundCalculations:
     @staticmethod
     def calculate_adaptive_smart_background(x, y, x_range, previous_background, offset_h, offset_l):
         """
-        Calculate an adaptive smart background for a selected range.
+        Calculate an Multi-Regions Smart background for a selected range.
 
         Args:
             x (array): X-axis values
@@ -564,7 +564,7 @@ class BackgroundCalculations:
             offset_l (float): Low offset
 
         Returns:
-            array: Adaptive smart background
+            array: Multi-Regions Smart background
         """
         previous_background = np.array(previous_background)
         mask = (x >= x_range[0]) & (x <= x_range[1])
