@@ -329,6 +329,10 @@ def fit_peaks(window, peak_params_grid):
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
                 try:
+                    fwhm_g = float(peak_params_grid.GetCellValue(row, 9))
+                except ValueError:
+                    fwhm_g = 0.64
+                try:
                     area = float(peak_params_grid.GetCellValue(row, 6))
                 except ValueError:
                     area = 0  # Or any default value you prefer
@@ -542,16 +546,16 @@ def fit_peaks(window, peak_params_grid):
                     gamma_max = evaluate_constraint(gamma_max, peak_params_grid, 'gamma', gamma)
 
                     fwhm_g_min, fwhm_g_max, fwhm_g_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 9),
-                                                                         gamma, peak_params_grid, i, "fwhm_g")
-                    fwhm_g_min = evaluate_constraint(gamma_min, peak_params_grid, 'fwhm_g', fwhm_g)
-                    fwhm_g_max = evaluate_constraint(gamma_min, peak_params_grid, 'fwhm_g', fwhm_g)
+                                                                         fwhm_g, peak_params_grid, i, "fwhm_g")
+                    fwhm_g_min = evaluate_constraint(fwhm_g_min, peak_params_grid, 'fwhm_g', fwhm_g)
+                    fwhm_g_max = evaluate_constraint(fwhm_g_max, peak_params_grid, 'fwhm_g', fwhm_g)
 
                     params.add(f'{prefix}amplitude', value=amplitude, min=area_min, max=area_max, vary=area_vary)
                     params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary)
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=gamma_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max, vary=lg_ratio_vary)
-                    params.add(f'{prefix}fraction', value=fwhm_g, min=fwhm_g_min, max=fwhm_g_max,vary=lg_ratio_vary)
+                    params.add(f'{prefix}fwhm_g', value=fwhm_g, min=fwhm_g_min, max=fwhm_g_max,vary=True)
 
                     # Add constraint to calculate sigma from L/G ratio and gamma
                     params.add(f'{prefix}sigma',expr=f'({prefix}fraction / 100) * {prefix}gamma / (1 -{prefix}fraction / 100)')
@@ -711,7 +715,7 @@ def fit_peaks(window, peak_params_grid):
                         fwhm_g = result.params[f'{prefix}fwhm_g'].value
 
                         # Calculate height numerically
-                        y_values = PeakFunctions.LAxG(x_values, center, area, fwhm, sigma, gamma)
+                        y_values = PeakFunctions.LAxG(x_values, center, area, fwhm, sigma, gamma, fwhm_g)
                         height = np.max(y_values)
 
                         # # Calculate FWHM numerically
@@ -739,8 +743,7 @@ def fit_peaks(window, peak_params_grid):
                     center = round(float(center), 2)
                     height = round(float(height), 2)
                     fwhm = round(float(fwhm), 2)
-                    if peak_model_choice in ["ExpGauss.(Area, \u03c3, \u03b3)", "LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)",
-                                             "LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
+                    if peak_model_choice in ["ExpGauss.(Area, \u03c3, \u03b3)", "LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)"]:
                         # Exponential Gaussian doesn't use fraction
                         sigma = round(float(sigma * 1), 2)
                         gamma = round(float(gamma * 1), 2)
@@ -767,9 +770,13 @@ def fit_peaks(window, peak_params_grid):
                     peak_params_grid.SetCellValue(row, 6, f"{area:.0f}")
                     if peak_model_choice in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)",
                                              "ExpGauss.(Area, \u03c3, \u03b3)", "LA (Area, \u03c3, \u03b3)",
-                                             "LA (Area, \u03c3/\u03b3, \u03b3)", "LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
+                                             "LA (Area, \u03c3/\u03b3, \u03b3)"]:
                         peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
                         peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
+                    elif peak_model_choice in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
+                        peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
+                        peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
+                        peak_params_grid.SetCellValue(row, 9, f"{fwhm_g:.2f}")
                     else:
                         peak_params_grid.SetCellValue(row, 7, "")
                         peak_params_grid.SetCellValue(row, 8, "")
@@ -783,6 +790,7 @@ def fit_peaks(window, peak_params_grid):
                         'Area': area,
                         'Sigma': sigma,
                         'Gamma': gamma,
+                        'fwhm_g':fwhm_g,
                         'Fitting Model': peak_model_choice
                     })
                 else:
@@ -846,6 +854,8 @@ def get_peak_value(peak_params_grid, peak_name, param_name):
             elif param_name == 'gamma':
                 value = float(peak_params_grid.GetCellValue(i, 8))
                 return value / 2 if fitting_model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"] else value
+            elif param_name == 'fwhm_g':
+                return float(peak_params_grid.GetCellValue(i, 9))
 
     return None
 
@@ -878,7 +888,7 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
         if operator in ['+', '-']:
             return (f"{ref_peak}{operator}{value - delta}", f"{ref_peak}{operator}{value + delta}", True)
         elif operator in ['*', '/']:
-            if param_name in ['POSITION','FWHM', 'L/G']:
+            if param_name in ['POSITION','FWHM', 'L/G','fwhm_g']:
                 delta_percent = delta
                 # return (f"{ref_peak}{operator}{value} - {delta}", f"{ref_peak}{operator}{value} + {delta}", True)
                 return (f"{ref_peak}{operator}{value - delta_percent}", f"{ref_peak}{operator}{value + delta_percent}",True)
@@ -891,7 +901,10 @@ def parse_constraints(constraint_str, current_value, peak_params_grid, peak_inde
         if operator in ['+', '-']:
             return f"{ref_peak}{operator}{value - small_error}", f"{ref_peak}{operator}{value + small_error}", True
         elif operator in ['*', '/']:
-            small_error2 = 0.0001
+            if param_name == 'fwhm_g':
+                small_error2 = 0.01
+            else:
+                small_error2 = 0.0001
             return f"{ref_peak}{operator}{value - small_error2}", f"{ref_peak}{operator}{value + small_error2}", True
 
     # If it's a simple number or range

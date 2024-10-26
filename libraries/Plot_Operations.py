@@ -199,15 +199,17 @@ class PlotManager:
             fraction = (sigma + gamma) / 2  # You could define it differently if needed
         elif fitting_model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             peak_model = lmfit.Model(PeakFunctions.LAxG)
-            amplitude = float(window.peak_params_grid.GetCellValue(row, 3))
+            amplitude = float(window.peak_params_grid.GetCellValue(row, 6))
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
             gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-            params = peak_model.make_params(center=x,amplitude=amplitude,fwhm=fwhm,sigma=sigma,gamma=gamma)
+            fwhm_g = float(window.peak_params_grid.GetCellValue(row, 9))
+            params = peak_model.make_params(center=x,amplitude=amplitude,fwhm=fwhm,sigma=sigma,gamma=gamma,
+                                            fwhm_g=fwhm_g)
 
-            # Calculate height numerically
-            x_range = np.linspace(x - 5 * fwhm, x + 5 * fwhm, 1000)
-            y_values = peak_model.eval(params, x=x_range)
-            height = np.max(y_values)
+            # # Calculate height numerically
+            # x_range = np.linspace(x - 5 * fwhm, x + 5 * fwhm, 1000)
+            # y_values = peak_model.eval(params, x=x_range)
+            # height = np.max(y_values)
 
             # No direct equivalent to 'fraction' for LA model
             fraction = (sigma + gamma) / 2  # You could define it differently if needed
@@ -910,7 +912,9 @@ class PlotManager:
                 area = float(window.peak_params_grid.GetCellValue(row, 6))
                 sigma = float(window.peak_params_grid.GetCellValue(row, 7))
                 gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-                params = peak_model.make_params(center=peak_x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma)
+                fwhm_g = float(window.peak_params_grid.GetCellValue(row, 9))
+                params = peak_model.make_params(center=peak_x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma,
+                                                fwhm_g=fwhm_g)
             elif fitting_model == "GL (Height)":
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)

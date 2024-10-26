@@ -142,6 +142,7 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(1, 5, lg_constraint)
                 grid.SetCellValue(1, 7, sigma_constraint)
                 grid.SetCellValue(1, 8, gamma_constraint)
+                grid.SetCellValue(1, 9, skew_constraint)
 
                 # Save peak data in window.Data
                 if 'Fitting' not in self.parent.Data['Core levels'][sheet_name]:
@@ -164,7 +165,8 @@ class BackgroundWindow(wx.Frame):
                         'FWHM': fwhm_constraint,
                         'L/G': lg_constraint,
                         'Sigma': sigma_constraint,
-                        'Gamma': gamma_constraint
+                        'Gamma': gamma_constraint,
+                        'skew': skew_constraint
                     }
                 }
 

@@ -432,6 +432,10 @@ class FittingWindow(wx.Frame):
             gamma_constraint = f"{chr(65 + first_peak)}*1"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 8, gamma_constraint)
 
+            # Skew constraint
+            skew_constraint = f"{chr(65 + first_peak)}*1"
+            self.parent.peak_params_grid.SetCellValue(row2 + 1, 9, skew_constraint)
+
             # Calculate peak numbers
             peak_number1 = first_peak + 1
             peak_number2 = second_peak + 1
@@ -475,7 +479,8 @@ class FittingWindow(wx.Frame):
                             'L/G': lg_constraint,
                             'Area': area_constraint,
                             'Sigma': sigma_constraint,
-                            'Gamma': gamma_constraint
+                            'Gamma': gamma_constraint,
+                            'Skew': skew_constraint
                         }
                     else:
                         new_peaks[key] = value

@@ -423,8 +423,8 @@ class MyFrame(wx.Frame):
         elif self.selected_fitting_method in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)",
                                             "LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             self.peak_params_grid.SetCellValue(row + 1, 5, "Fixed")
-            self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:4")
-            self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:4")
+            self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:10")
+            self.peak_params_grid.SetCellValue(row + 1, 8, "0.01:10")
             self.peak_params_grid.SetCellValue(row + 1, 9, '0.01:2')  # skew
         else:
             self.peak_params_grid.SetCellValue(row + 1, 7, "0.01:3")
@@ -561,8 +561,8 @@ class MyFrame(wx.Frame):
                     'FWHM': "0.3:3.5",
                     'L/G': "Fixed",  # Wider range for L/G in LA model
                     'Area': '1:1e7',
-                    'Sigma': "0.01:4",
-                    'Gamma': "0.01:4"
+                    'Sigma': "0.01:10",
+                    'Gamma': "0.01:10"
                 }
             })
         elif self.selected_fitting_method in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
@@ -790,93 +790,6 @@ class MyFrame(wx.Frame):
         row = index * 2  # Assuming each peak uses two rows in the grid
         self.peak_params_grid.SetCellValue(row, 4, f"{fwhm:.2f}")  # Update FWHM
 
-    def on_cross_drag_OLD(self, event):
-        if event.inaxes and self.selected_peak_index is not None:
-            row = self.selected_peak_index * 2
-            if event.button == 1:
-                try:
-                    if event.key == 'shift':
-                        new_fwhm = self.update_peak_fwhm(event.xdata)
-
-                        if new_fwhm is not None:
-                            # Update FWHM for linked peaks
-                            linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                            for linked_peak in linked_peaks:
-                                self.update_linked_peak_fwhm(linked_peak, new_fwhm)
-
-                    elif self.is_mouse_on_peak(event):
-                        closest_index = np.argmin(np.abs(self.x_values - event.xdata))
-                        bkg_y = self.background[closest_index]
-
-                        new_x = event.xdata
-                        new_height = max(event.ydata - bkg_y, 0)
-
-                        # Update the selected peak
-                        self.update_peak(self.selected_peak_index, new_x, new_height)
-
-                        # Update linked peaks
-                        linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                        for linked_peak in linked_peaks:
-                            self.update_linked_peak(linked_peak, new_x, new_height)
-
-                    # Call the function that updates all split values
-                    self.update_ratios()
-
-                    self.clear_and_replot()
-                    self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
-                    self.canvas.draw_idle()
-
-                except Exception as e:
-                    print(f"Error during cross drag: {e}")
-
-    def on_cross_release_OLD(self, event):
-        save_state(self)
-        if event.inaxes and self.selected_peak_index is not None:
-            row = self.selected_peak_index * 2
-            peak_label = self.peak_params_grid.GetCellValue(row, 1)
-            sheet_name = self.sheet_combobox.GetValue()
-
-            x = event.xdata
-            y = event.ydata
-            bkg_y = self.background[np.argmin(np.abs(self.x_values - x))]
-
-            if event.button == 1:  # Left button release
-                if event.key == 'shift':  # SHIFT + left click release for FWHM change
-                    new_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
-
-                    # Update FWHM for linked peaks
-                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                    for linked_peak in linked_peaks:
-                        self.update_linked_peak_fwhm(linked_peak, new_fwhm)
-                else:
-                    y = max(y - bkg_y, 0)  # Ensure height is not negative
-
-                    self.update_peak(self.selected_peak_index, x, y)
-
-                    # Update linked peaks
-                    linked_peaks = self.get_linked_peaks(self.selected_peak_index)
-                    for linked_peak in linked_peaks:
-                        self.update_linked_peak(linked_peak, x, y)
-
-            # Remove old cross
-            self.remove_cross_from_peak()
-
-            # Create new cross at final position
-            self.cross = self.ax.plot(x, y + bkg_y, 'bx', markersize=15, markerfacecolor='none', picker=5, linewidth=3)[
-                0]
-
-            self.canvas.draw_idle()
-
-        # Safely disconnect event handlers
-        if hasattr(self, 'motion_cid'):
-            self.canvas.mpl_disconnect(self.motion_cid)
-            delattr(self, 'motion_cid')
-        if hasattr(self, 'release_cid'):
-            self.canvas.mpl_disconnect(self.release_cid)
-            delattr(self, 'release_cid')
-
-        # Refresh the grid to ensure it reflects the current state of self.Data
-        self.refresh_peak_params_grid()
 
     def on_cross_drag(self, event):
         if event.inaxes and self.selected_peak_index is not None:
@@ -1981,6 +1894,8 @@ class MyFrame(wx.Frame):
             if sigma is None or gamma is None:
                 raise ValueError("Sigma and gamma are required for LA model")
 
+            F = 2 * fwhm / (np.sqrt(2 ** (1 / sigma) - 1) + np.sqrt(2 ** (1 / gamma) - 1))
+
             # Use the peak maximum as an approximation for the center
             center_approx = 0  # Assuming the peak is centered at 0 for integration purposes
 
@@ -2161,7 +2076,7 @@ class MyFrame(wx.Frame):
                                 'Area': '1:1e7',
                                 'Sigma': '0.01:4',
                                 'Gamma': '0.01:4',
-                                'Skew': '0.02:2',
+                                'Skew': '0.02:2'
                             }
                             new_value = default_constraints[constraint_key]
                             self.peak_params_grid.SetCellValue(row, col, new_value)

@@ -415,7 +415,7 @@ class PeakFunctions:
         return height * peak_shape
 
     @staticmethod
-    def LAxG(x, center, amplitude, fwhm, sigma, gamma, fwhm_g=0.64):
+    def LAxG(x, center, amplitude, fwhm, sigma, gamma, fwhm_g):
         # Define the LA function
         # gaussian_fwhm =0.64 # now done through the grid
 
@@ -430,19 +430,30 @@ class PeakFunctions:
 
         # Define the Gaussian function
         def gaussian(x, fwhm_g):
-            return np.exp(-4 * np.log(2) * ((x ) / F) ** 2)
+            return np.exp(-4 * np.log(2) * ((x ) / fwhm_g) ** 2)
 
         x_range = max(x.max() - x.min(), 4 * fwhm)
         x_high_res = np.linspace(- x_range / 2, + x_range / 2, len(x) * 4)
 
         la = LA_N(x_high_res)
-        gauss = gaussian(x_high_res, gaussian_fwhm)
+        gauss = gaussian(x_high_res, fwhm_g)
 
         convolved = convolve(la, gauss, mode='same') / sum(gauss)
 
-        result = np.interp(x - center, x_high_res, convolved)
+        peak_shape = np.interp(x - center, x_high_res, convolved)
 
-        return amplitude * result / np.max(result)
+        # Sort x values and corresponding peak shape for correct integration
+        sort_idx = np.argsort(x)
+        x_sorted = x[sort_idx]
+        peak_shape_sorted = peak_shape[sort_idx]
+
+        # Calculate the area of unit amplitude peak
+        unit_area = abs(np.trapz(peak_shape_sorted, x_sorted))
+
+        # Calculate required amplitude to achieve desired area
+        height = amplitude / unit_area if unit_area != 0 else 0
+
+        return height * peak_shape
 
     @staticmethod
     def calculate_rsd(y_experimental, y_fitted):
