@@ -887,22 +887,18 @@ class MyFrame(wx.Frame):
                         closest_index = np.argmin(np.abs(self.x_values - event.xdata))
                         bkg_y = self.background[closest_index]
                         new_x = event.xdata
+                        new_height = max(event.ydata - bkg_y, 0)
 
                         if "LA" in fitting_model:
-                            # For LA models, maintain the area
-                            current_area = float(self.peak_params_grid.GetCellValue(row, 6))
-                            new_height = max(event.ydata - bkg_y, 0)
+                            # Calculate new area for LA models
                             fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
                             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                            new_area = self.calculate_peak_area(fitting_model, new_height, fwhm, 0, sigma, gamma)
 
-                            # Update position while keeping area constant
-                            self.update_peak(self.selected_peak_index, new_x, new_height, current_area)
-                            self.update_linked_peaks_recursive(self.selected_peak_index, new_x, new_height,
-                                                               current_area)
+                            self.update_peak(self.selected_peak_index, new_x, new_height, new_area)
+                            self.update_linked_peaks_recursive(self.selected_peak_index, new_x, new_height, new_area)
                         else:
-                            # For height-based models
-                            new_height = max(event.ydata - bkg_y, 0)
                             self.update_peak(self.selected_peak_index, new_x, new_height)
                             self.update_linked_peaks_recursive(self.selected_peak_index, new_x, new_height)
 
@@ -2105,26 +2101,23 @@ class MyFrame(wx.Frame):
             if sigma is None or gamma is None:
                 raise ValueError("Sigma and gamma are required for LA model")
 
-            F = 2 * fwhm / (np.sqrt(2 ** (1 / sigma) - 1) + np.sqrt(2 ** (1 / gamma) - 1))
+            # Calculate numerical integral
             x_range = np.linspace(-10 * fwhm, 10 * fwhm, 1000)
-            y_values = PeakFunctions.LA(x_range, 0, height, fwhm, sigma, gamma)
+            y_temp = PeakFunctions.LA(x_range, 0, 1.0, fwhm, sigma, gamma)  # Use unit amplitude
+            max_height = np.max(y_temp)
+            y_values = PeakFunctions.LA(x_range, 0, height / max_height, fwhm, sigma, gamma)
             area = np.trapz(y_values, x_range)
-
             return round(area, 2)
         elif model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             if sigma is None or gamma is None:
                 raise ValueError("Sigma and gamma are required for LA model")
 
-            F = 2 * fwhm / (np.sqrt(2 ** (1 / sigma) - 1) + np.sqrt(2 ** (1 / gamma) - 1))
-
-            # Use the peak maximum as an approximation for the center
-            center_approx = 0  # Assuming the peak is centered at 0 for integration purposes
-
-            # Numerical integration to calculate area
-            x_range = np.linspace(center_approx - 20 * fwhm, center_approx + 20 * fwhm, 40000)
-            y_values = PeakFunctions.LAxG(x_range, center_approx, height, fwhm, sigma, gamma, skew)
+            # Calculate numerical integral
+            x_range = np.linspace(-20 * fwhm, 20 * fwhm, 40000)
+            y_temp = PeakFunctions.LAxG(x_range, 0, 1.0, fwhm, sigma, gamma, skew)  # Use unit amplitude
+            max_height = np.max(y_temp)
+            y_values = PeakFunctions.LAxG(x_range, 0, height / max_height, fwhm, sigma, gamma, skew)
             area = np.trapz(y_values, x_range)
-
             return round(area, 2)
         else:
             raise ValueError(f"Unknown fitting model: {model}")
