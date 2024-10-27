@@ -227,6 +227,14 @@ class MyFrame(wx.Frame):
         self.recent_files = []
         self.max_recent_files = 10  # Maximum number of recent files to keep
 
+        # Add new attributes for text settings
+        self.plot_font = 'Arial'
+        self.axis_title_size = 12
+        self.axis_number_size = 10
+        self.x_sublines = 5
+        self.y_sublines = 5
+        self.legend_font_size = 8
+
         # Load config if exists
         self.load_config()
 
@@ -2666,6 +2674,14 @@ class MyFrame(wx.Frame):
                 self.peak_fill_types = config.get('peak_fill_types', ["Solid Fill" for _ in range(15)])
                 self.peak_hatch_patterns = config.get('peak_hatch_patterns', ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"] * 2)
                 self.hatch_density = config.get('hatch_density', 2)
+                self.current_instrument = config.get('current_instrument', 'Al')
+                self.plot_font = config.get('plot_font', 'Arial')
+                self.axis_title_size = config.get('axis_title_size', 12)
+                self.axis_number_size = config.get('axis_number_size', 10)
+                self.x_sublines = config.get('x_sublines', 5)
+                self.y_sublines = config.get('y_sublines', 5)
+                self.legend_font_size = config.get('legend_font_size', 8)
+
         else:
             config = {}
             print("No config file found, using default values.")
@@ -2701,7 +2717,14 @@ class MyFrame(wx.Frame):
             'recent_files': self.recent_files,
             'peak_fill_types': self.peak_fill_types,
             'peak_hatch_patterns': self.peak_hatch_patterns,
-            'hatch_density': self.hatch_density
+            'hatch_density': self.hatch_density,
+            'current_instrument': self.current_instrument,
+            'plot_font': self.plot_font,
+            'axis_title_size': self.axis_title_size,
+            'axis_number_size': self.axis_number_size,
+            'x_sublines': self.x_sublines,
+            'y_sublines': self.y_sublines,
+            'legend_font_size': self.legend_font_size
         }
 
         with open('config.json', 'w') as f:

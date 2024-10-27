@@ -8,7 +8,7 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
-from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import AutoMinorLocator, ScalarFormatter
 from itertools import cycle
 from PIL import Image, ImageDraw, ImageFont
 import matplotlib.colors as mcolors
@@ -103,42 +103,63 @@ class PlotManager:
         # Draw the canvas
         self.canvas.draw()
 
-    def plot_initial_logo2(self):
-        fig = self.plot_logo()
-        self.ax.clear()
-        self.ax.imshow(fig.axes[0].images[0].get_array(), cmap='hot', alpha = 0.3, aspect='auto', extent=[1350, 0,
-                                                                                                          10000,
-                                                                                                      0])
-        self.ax.set_xlabel('Binding Energy (eV)')
-        self.ax.set_ylabel('Intensity (CPS)')
-        plt.close(fig)  # Close the figure to free memory
-        self.canvas.draw()
+    # def plot_initial_logo2(self):
+    #     fig = self.plot_logo()
+    #     self.ax.clear()
+    #     self.ax.imshow(fig.axes[0].images[0].get_array(), cmap='hot', alpha = 0.3, aspect='auto', extent=[1350, 0,
+    #                                                                                                       10000,
+    #                                                                                                   0])
+    #     self.ax.set_xlabel('Binding Energy (eV)')
+    #     self.ax.set_ylabel('Intensity (CPS)')
+    #     plt.close(fig)  # Close the figure to free memory
+    #     self.canvas.draw()
+    #
+    # def plot_initial_logo2(self):
+    #     width, height = 300, 100
+    #     image = Image.new('RGB', (width, height), color=(255, 255, 255))
+    #     draw = ImageDraw.Draw(image)
+    #     try:
+    #         font = ImageFont.truetype("calibrib.ttf", 40)  # Calibri Bold
+    #     except IOError:
+    #         font = ImageFont.load_default()
+    #
+    #     # Define a gradient color
+    #     gradient = np.linspace(0, 1, width)
+    #     color_func = mcolors.LinearSegmentedColormap.from_list("", ["#66CC66", "#006400"])
+    #
+    #     # Draw text with gradient color
+    #     for i, letter in enumerate("KherveFitting"):
+    #         x = 10 + i * 20  # Adjust spacing as needed
+    #         color = tuple(int(c * 255) for c in color_func(gradient[i * 20 % width])[:3])
+    #         draw.text((x, 25), letter, font=font, fill=color)
+    #
+    #     data = np.array(image)
+    #     self.ax.clear()
+    #     self.ax.imshow(data, aspect='auto', extent=[1350, 0, 10000, 0])
+    #     self.ax.set_xlabel('Binding Energy (eV)')
+    #     self.ax.set_ylabel('Intensity (CPS)')
+    #     self.canvas.draw()
 
-    def plot_initial_logo2(self):
-        width, height = 300, 100
-        image = Image.new('RGB', (width, height), color=(255, 255, 255))
-        draw = ImageDraw.Draw(image)
-        try:
-            font = ImageFont.truetype("calibrib.ttf", 40)  # Calibri Bold
-        except IOError:
-            font = ImageFont.load_default()
+    def apply_text_settings(self, window):
+        # Apply font settings
+        plt.rcParams['font.family'] = window.plot_font
 
-        # Define a gradient color
-        gradient = np.linspace(0, 1, width)
-        color_func = mcolors.LinearSegmentedColormap.from_list("", ["#66CC66", "#006400"])
+        # Apply axis title size
+        self.ax.set_xlabel(self.ax.get_xlabel(), fontsize=window.axis_title_size)
+        self.ax.set_ylabel(self.ax.get_ylabel(), fontsize=window.axis_title_size)
 
-        # Draw text with gradient color
-        for i, letter in enumerate("KherveFitting"):
-            x = 10 + i * 20  # Adjust spacing as needed
-            color = tuple(int(c * 255) for c in color_func(gradient[i * 20 % width])[:3])
-            draw.text((x, 25), letter, font=font, fill=color)
+        # Apply axis number size
+        self.ax.tick_params(axis='both', labelsize=window.axis_number_size)
 
-        data = np.array(image)
-        self.ax.clear()
-        self.ax.imshow(data, aspect='auto', extent=[1350, 0, 10000, 0])
-        self.ax.set_xlabel('Binding Energy (eV)')
-        self.ax.set_ylabel('Intensity (CPS)')
-        self.canvas.draw()
+        # Apply sublines (minor ticks)
+        if window.x_sublines > 0:
+            self.ax.xaxis.set_minor_locator(AutoMinorLocator(window.x_sublines + 1))
+        if window.y_sublines > 0:
+            self.ax.yaxis.set_minor_locator(AutoMinorLocator(window.y_sublines + 1))
+
+        # Apply legend font size
+        if self.ax.get_legend():
+            plt.setp(self.ax.get_legend().get_texts(), fontsize=window.legend_font_size)
 
     def plot_peak(self, x_values, background, peak_params, sheet_name, window, color=None, alpha=0.3):
         row = peak_params['row']
@@ -673,6 +694,9 @@ class PlotManager:
             sheet_name_text.sheet_name_text = True  # Mark this text object
         else:
             self.ax.add_artist(sheet_name_text)
+
+        # Add this line before canvas.draw_idle()
+        self.apply_text_settings(window)
 
         # Draw the canvas
         self.canvas.draw_idle()

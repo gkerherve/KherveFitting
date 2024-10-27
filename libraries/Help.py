@@ -5,16 +5,6 @@ import sys
 
 
 
-def on_about_OLD(self, event):
-    info = wx.adv.AboutDialogInfo()
-    info.SetName("KherveFitting")
-    info.SetVersion("1.0")
-    info.SetDescription("An open-source XPS peak fitting software developed by Dr. Gwilherm Kerherve at Imperial College London.")
-    info.SetCopyright("(C) 2024 Gwilherm Kerherve")
-    info.SetWebSite("https://www.imperial.ac.uk/people/g.kerherve")
-    info.AddDeveloper("Dr. Gwilherm Kerherve / g.kerherve@imperial.ac.uk\n William Skinner")
-    wx.adv.AboutBox(info)
-
 def on_about(self, event):
     about_dialog = wx.Dialog(None, title="About KherveFitting", size=(400, 430))
     panel = wx.Panel(about_dialog)
@@ -227,16 +217,16 @@ def show_quick_help(parent):
                             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
     # help_dialog.SetBackgroundColour(wx.Colour(255, 255, 255))  # Light yellow
     html_window = wx.html.HtmlWindow(help_dialog)
-    # html_window.SetBackgroundColour(wx.Colour(255, 255, 224))  # Light yellow
+    html_window.SetBackgroundColour(wx.Colour(255, 255, 255))  # Light yellow
     html_window.SetPage(help_text)
 
     help_dialog.Show()
     help_dialog.Bind(wx.EVT_CLOSE, lambda evt: help_dialog.Destroy())
 
-    '''
-    image_path = os.path.join(application_path, "Images")
-    
-    '''
+    # '''
+    # image_path = os.path.join(application_path, "Images")
+    #
+    # '''
 
 def show_shortcuts(parent):
     shortcuts_html = """
