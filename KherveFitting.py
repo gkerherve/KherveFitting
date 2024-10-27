@@ -2345,12 +2345,12 @@ class MyFrame(wx.Frame):
                             self.peak_params_grid.SetCellValue(row, col, new_value)
 
                         # Add this block to handle linked peaks' fill type and hatch pattern
-                        if new_value.startswith(('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')):
-                            linked_peak = ord(new_value[0]) - 65  # Convert A->0, B->1, etc.
-                            current_peak = row // 2
-                            # Copy fill type and hatch pattern from linked peak
-                            self.peak_fill_types[current_peak] = self.peak_fill_types[linked_peak]
-                            self.peak_hatch_patterns[current_peak] = self.peak_hatch_patterns[linked_peak]
+                        # if new_value.startswith(('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J')):
+                        #     linked_peak = ord(new_value[0]) - 65  # Convert A->0, B->1, etc.
+                        #     current_peak = row // 2
+                        #     # Copy fill type and hatch pattern from linked peak
+                        #     self.peak_fill_types[current_peak] = self.peak_fill_types[linked_peak]
+                        #     self.peak_hatch_patterns[current_peak] = self.peak_hatch_patterns[linked_peak]
 
                         peaks[correct_peak_key]['Constraints'][constraint_key] = new_value
 

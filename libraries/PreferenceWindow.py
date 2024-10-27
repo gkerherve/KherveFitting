@@ -62,8 +62,11 @@ class PreferenceWindow(wx.Frame):
         plot_style_label = wx.StaticText(self.plot_tab, label="Plot Style:")
         self.plot_style = wx.Choice(self.plot_tab, choices=["Scatter", "Line"])
         self.plot_style.SetMinSize((100,30))
+        self.plot_style.Bind(wx.EVT_CHOICE, self.OnPlotStyleChange)
         sizer.Add(plot_style_label, pos=(0, 0), flag=wx.ALL, border=5)
         sizer.Add(self.plot_style, pos=(0, 1), flag=wx.ALL, border=5)
+
+
 
         # Point size (for scatter)
         self.point_size_label = wx.StaticText(self.plot_tab, label="Scatter Size:")
@@ -190,14 +193,28 @@ class PreferenceWindow(wx.Frame):
         # Peak hatch pattern
         peak_hatch_label = wx.StaticText(self.plot_tab, label="Hatch Pattern:")
         self.peak_hatch_combo = wx.ComboBox(self.plot_tab,
-                                            choices=["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"],
+                                            choices=[
+                                                '/', '\\', '|', '-',  # Simple lines
+                                                '+', 'x',  # Crosses
+                                                'o', 'O',  # Small/large circles
+                                                '.', '*',  # Dots/stars
+                                                '//', '\\\\', '||', '--',  # Double density
+                                                '///', '\\\\\\', '|||', '---',  # Triple density
+                                                '/o', '\\o', '|o', '-o',  # Lines with circles
+                                                '/O', '\\O', '|O', '-O',  # Lines with large circles
+                                                '//', '\\\\', '||', '--',  # Denser lines
+                                                'x/', 'x\\', 'x|', 'x-',  # Crosses with lines
+                                                '+/', '+\\', '+|', '+-',  # Plus with lines
+                                                '*/', '*\\', '*|', '*-'  # Stars with lines
+                                                ],
+                                                # "/", "\\", "|", "-", "+", "x", "o", "O", ".", "*",'//', '\\\\', '||', '--',],
                                             style=wx.CB_READONLY)
         self.peak_hatch_combo.SetMinSize((100, -1))
         sizer.Add(peak_hatch_label, pos=(10, 4), flag=wx.ALL, border=5)
         sizer.Add(self.peak_hatch_combo, pos=(10, 5), flag=wx.ALL, border=5)
 
         hatch_density_label = wx.StaticText(self.plot_tab, label="Hatch Density:")
-        self.hatch_density_spin = wx.SpinCtrl(self.plot_tab, value="2", min=1, max=5)
+        self.hatch_density_spin = wx.SpinCtrl(self.plot_tab, value="2", min=1, max=10)
         self.hatch_density_spin.SetMinSize((100, -1))
         sizer.Add(hatch_density_label, pos=(11, 4), flag=wx.ALL, border=5)
         sizer.Add(self.hatch_density_spin, pos=(11, 5), flag=wx.ALL, border=5)
@@ -244,13 +261,6 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.peak_line_alpha_spin, pos=(16, 5), flag=wx.ALL, border=5)
 
 
-        # Peak line pattern
-        # peak_line_pattern_label = wx.StaticText(self.plot_tab, label="Peak Line Pattern:")
-        # self.peak_line_pattern_combo = wx.ComboBox(self.plot_tab, choices=["-", "--", "-.", ":"],
-        # style=wx.CB_READONLY)
-        # sizer.Add(peak_line_pattern_label, pos=(12, 4), flag=wx.ALL, border=5)
-        # sizer.Add(self.peak_line_pattern_combo, pos=(12, 5), flag=wx.ALL, border=5)
-
         # Save button (moved to the bottom)
         save_button = wx.Button(self.plot_tab, label="Save")
         save_button.SetMinSize((190, 40))
@@ -260,12 +270,129 @@ class PreferenceWindow(wx.Frame):
         # Bind the spin control to update the color picker
         self.peak_number_spin.Bind(wx.EVT_SPINCTRL, self.OnPeakNumberChange)
         self.peak_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.OnColorChange)
+        self.point_size_spin.Bind(wx.EVT_SPINCTRL, self.OnPointSizeChange)
+        self.marker_choice.Bind(wx.EVT_CHOICE, self.OnMarkerChange)
+        self.scatter_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.OnScatterColorChange)
+        self.raw_data_linestyle.Bind(wx.EVT_CHOICE, self.OnRawDataLineStyleChange)
+        self.line_width_spin.Bind(wx.EVT_SPINCTRL, self.OnLineWidthChange)
+        self.line_alpha_spin.Bind(wx.EVT_SPINCTRLDOUBLE, self.OnLineAlphaChange)
+        self.line_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.OnLineColorChange)
+        self.residual_linestyle.Bind(wx.EVT_CHOICE, self.OnResidualLineStyleChange)
+        self.residual_alpha_spin.Bind(wx.EVT_SPINCTRLDOUBLE, self.OnResidualAlphaChange)
+        self.residual_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.OnResidualColorChange)
+        self.background_linestyle.Bind(wx.EVT_CHOICE, self.OnBackgroundLineStyleChange)
+        self.background_alpha_spin.Bind(wx.EVT_SPINCTRLDOUBLE, self.OnBackgroundAlphaChange)
+        self.background_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.OnBackgroundColorChange)
+        self.envelope_linestyle.Bind(wx.EVT_CHOICE, self.OnEnvelopeLineStyleChange)
+        self.envelope_alpha_spin.Bind(wx.EVT_SPINCTRLDOUBLE, self.OnEnvelopeAlphaChange)
+        self.envelope_color_picker.Bind(wx.EVT_COLOURPICKER_CHANGED, self.OnEnvelopeColorChange)
+        self.peak_alpha_spin.Bind(wx.EVT_SPINCTRLDOUBLE, self.OnPeakAlphaChange)
+        self.peak_line_style_combo.Bind(wx.EVT_COMBOBOX, self.OnPeakLineStyleChange)
+        self.peak_line_thickness_spin.Bind(wx.EVT_SPINCTRL, self.OnPeakLineThicknessChange)
+        self.peak_line_alpha_spin.Bind(wx.EVT_SPINCTRLDOUBLE, self.OnPeakLineAlphaChange)
+        self.hatch_density_spin.Bind(wx.EVT_SPINCTRL, self.OnHatchDensityChange)
 
         self.plot_tab.SetSizer(sizer)
         self.Centre()
 
         # Load current settings
         # self.LoadSettings()
+
+    def OnHatchDensityChange(self, event):
+        self.parent.hatch_density = self.hatch_density_spin.GetValue()
+        self.update_plot()
+
+    def OnPointSizeChange(self, event):
+        self.parent.scatter_size = self.point_size_spin.GetValue()
+        self.update_plot()
+
+    def OnMarkerChange(self, event):
+        self.parent.scatter_marker = self.marker_choice.GetString(self.marker_choice.GetSelection())
+        self.update_plot()
+
+    def OnPlotStyleChange(self, event):
+        self.parent.plot_style = "scatter" if self.plot_style.GetSelection() == 0 else "line"
+        self.update_plot()
+
+    def OnPointSizeChange(self, event):
+        self.parent.scatter_size = self.point_size_spin.GetValue()
+        self.update_plot()
+
+    def OnMarkerChange(self, event):
+        self.parent.scatter_marker = self.marker_choice.GetString(self.marker_choice.GetSelection())
+        self.update_plot()
+
+    def OnScatterColorChange(self, event):
+        self.parent.scatter_color = event.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+        self.update_plot()
+
+    def OnRawDataLineStyleChange(self, event):
+        self.parent.raw_data_linestyle = self.raw_data_linestyle.GetString(self.raw_data_linestyle.GetSelection())
+        self.update_plot()
+
+    def OnLineWidthChange(self, event):
+        self.parent.line_width = self.line_width_spin.GetValue()
+        self.update_plot()
+
+    def OnLineAlphaChange(self, event):
+        self.parent.line_alpha = self.line_alpha_spin.GetValue()
+        self.update_plot()
+
+    def OnLineColorChange(self, event):
+        self.parent.line_color = event.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+        self.update_plot()
+
+    def OnResidualLineStyleChange(self, event):
+        self.parent.residual_linestyle = self.residual_linestyle.GetString(self.residual_linestyle.GetSelection())
+        self.update_plot()
+
+    def OnResidualAlphaChange(self, event):
+        self.parent.residual_alpha = self.residual_alpha_spin.GetValue()
+        self.update_plot()
+
+    def OnResidualColorChange(self, event):
+        self.parent.residual_color = event.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+        self.update_plot()
+
+    def OnBackgroundLineStyleChange(self, event):
+        self.parent.background_linestyle = self.background_linestyle.GetString(self.background_linestyle.GetSelection())
+        self.update_plot()
+
+    def OnBackgroundAlphaChange(self, event):
+        self.parent.background_alpha = self.background_alpha_spin.GetValue()
+        self.update_plot()
+
+    def OnBackgroundColorChange(self, event):
+        self.parent.background_color = event.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+        self.update_plot()
+
+    def OnEnvelopeLineStyleChange(self, event):
+        self.parent.envelope_linestyle = self.envelope_linestyle.GetString(self.envelope_linestyle.GetSelection())
+        self.update_plot()
+
+    def OnEnvelopeAlphaChange(self, event):
+        self.parent.envelope_alpha = self.envelope_alpha_spin.GetValue()
+        self.update_plot()
+
+    def OnEnvelopeColorChange(self, event):
+        self.parent.envelope_color = event.GetColour().GetAsString(wx.C2S_HTML_SYNTAX)
+        self.update_plot()
+
+    def OnPeakAlphaChange(self, event):
+        self.parent.peak_alpha = self.peak_alpha_spin.GetValue()
+        self.update_plot()
+
+    def OnPeakLineStyleChange(self, event):
+        self.parent.peak_line_style = self.peak_line_style_combo.GetValue()
+        self.update_plot()
+
+    def OnPeakLineThicknessChange(self, event):
+        self.parent.peak_line_thickness = self.peak_line_thickness_spin.GetValue()
+        self.update_plot()
+
+    def OnPeakLineAlphaChange(self, event):
+        self.parent.peak_line_alpha = self.peak_line_alpha_spin.GetValue()
+        self.update_plot()
 
     def LoadSettings(self):
         self.plot_style.SetSelection(0 if self.parent.plot_style == "scatter" else 1)
@@ -334,16 +461,19 @@ class PreferenceWindow(wx.Frame):
         # Update fill type and hatch pattern for current peak
         self.peak_fill_type_combo.SetValue(self.parent.peak_fill_types[current_peak])
         self.peak_hatch_combo.SetValue(self.parent.peak_hatch_patterns[current_peak])
+        self.update_plot()
 
     def OnFillTypeChange(self, event):
         current_peak = self.peak_number_spin.GetValue() - 1
         new_value = self.peak_fill_type_combo.GetValue()
         self.parent.peak_fill_types[current_peak] = new_value
+        self.update_plot()
 
     def OnHatchChange(self, event):
         current_peak = self.peak_number_spin.GetValue() - 1
         new_value = self.peak_hatch_combo.GetValue()
         self.parent.peak_hatch_patterns[current_peak] = new_value
+        self.update_plot()
 
     def OnColorChange(self, event):
         current_peak = self.peak_number_spin.GetValue() - 1
@@ -356,6 +486,13 @@ class PreferenceWindow(wx.Frame):
             self.peak_hatch_combo.SetValue(hatch_patterns[current_peak % len(hatch_patterns)])
         else:
             self.temp_peak_colors.append(new_color)
+
+        self.parent.peak_colors = self.temp_peak_colors.copy()
+        self.update_plot()
+
+    def OnPlotStyleChange(self, event):
+        self.parent.plot_style = "scatter" if self.plot_style.GetSelection() == 0 else "line"
+        self.update_plot()
 
     def update_plot(self):
         self.parent.update_plot_preferences()
