@@ -222,8 +222,8 @@ def show_shortcuts(parent):
     <li><b>Ctrl+Equal (=):</b> Zoom in</li>
     <li><b>Ctrl+Left bracket [:</b> Select previous core level</li>
     <li><b>Ctrl+Right bracket ]:</b> Select next core level</li>
-    <li><b>Ctrl+Up:</b> Increase intensity</li>
-    <li><b>Ctrl+Down:</b> Decrease intensity</li>
+    <li><b>Ctrl+Up:</b> Increase plot intensity</li>
+    <li><b>Ctrl+Down:</b> Decrease plot intensity</li>
     <li><b>Ctrl+Left:</b> Move plot to High BE</li>
     <li><b>Ctrl+Right:</b> Move plot to Low BE</li>
     <li><b>SHIFT+Left:</b> Decrease High BE</li>
@@ -234,12 +234,16 @@ def show_shortcuts(parent):
     <li><b>Ctrl+P:</b> Open peak fitting window</li>
     <li><b>Ctrl+A:</b> Open Area window</li>
     <li><b>Ctrl+K:</b> Show Keyboard shortcut</li>
+    <li><b>Alt+Up:</b> Increase peak intensity</li>
+    <li><b>Alt+Down:</b> Decrease peak intensity</li>
+    <li><b>Alt+Left:</b> Move peak to High BE</li>
+    <li><b>Alt+Right:</b> Move peak to Low BE</li>
     </ul>
     </body>
     </html>
     """
 
-    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(380, 500), style=wx.DEFAULT_DIALOG_STYLE |
+    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(380, 580), style=wx.DEFAULT_DIALOG_STYLE |
                                                                               wx.RESIZE_BORDER)
     html_win = wx.html.HtmlWindow(dlg)
     html_win.SetPage(shortcuts_html)

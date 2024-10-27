@@ -440,13 +440,18 @@ class MyFrame(wx.Frame):
 
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
         if self.selected_fitting_method == "Voigt (Area, L/G, \u03c3)":
-            for col in [3, 4, 9]:  # Columns for Height, FWHM, L/G ratio
+            for col in [3, 4, 8,9]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
-            for col in [5, 6, 7, 8]:  # Columns for Height, FWHM, L/G ratio
+            for col in [5, 6, 7]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
+            for col in [9]:  # Columns for Area, sigma and gamma
+                self.peak_params_grid.SetCellValue(row, col, "0")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(255, 255, 255))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
         elif self.selected_fitting_method in ["Voigt (Area, \u03c3, \u03b3)", "ExpGauss.(Area, \u03c3, \u03b3)"]:
             for col in [3,4, 5, 9]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
@@ -894,7 +899,9 @@ class MyFrame(wx.Frame):
                             fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
                             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-                            new_area = self.calculate_peak_area(fitting_model, new_height, fwhm, 0, sigma, gamma)
+                            skew = float(
+                                self.peak_params_grid.GetCellValue(row, 9)) if "LA*G" in fitting_model else None
+                            new_area = self.calculate_peak_area(fitting_model, new_height, fwhm, 0, sigma, gamma, skew)
 
                             self.update_peak(self.selected_peak_index, new_x, new_height, new_area)
                             self.update_linked_peaks_recursive(self.selected_peak_index, new_x, new_height, new_area)
@@ -1641,7 +1648,48 @@ class MyFrame(wx.Frame):
 
     def on_key_press_global(self, event):
         keycode = event.GetKeyCode()
-        if event.ControlDown():
+        if event.AltDown() and self.selected_peak_index is not None:
+            if keycode in [wx.WXK_LEFT, wx.WXK_RIGHT]:
+                row = self.selected_peak_index * 2
+                current_position = float(self.peak_params_grid.GetCellValue(row, 2))
+
+                # Move 0.1 eV left or right
+                delta = 0.05 if keycode == wx.WXK_LEFT else -0.05
+                new_position = current_position + delta
+
+                # Update peak position
+                self.peak_params_grid.SetCellValue(row, 2, f"{new_position:.2f}")
+
+                # Update linked peaks if any
+                self.update_linked_peaks_recursive(self.selected_peak_index, new_position,
+                                                   float(self.peak_params_grid.GetCellValue(row, 3)))
+
+                # Refresh display
+                self.clear_and_replot()
+                self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
+                save_state(self)
+                return
+            elif keycode in [wx.WXK_UP, wx.WXK_DOWN]:
+                row = self.selected_peak_index * 2
+                current_height = float(self.peak_params_grid.GetCellValue(row, 3))
+                intensity_factor = 0.01
+
+                delta = intensity_factor * current_height * (1 if keycode == wx.WXK_UP else -1)
+                new_height = max(0, current_height + delta)
+
+                self.peak_params_grid.SetCellValue(row, 3, f"{new_height:.2f}")
+
+                # Recalculate area after height change
+                self.recalculate_peak_area(self.selected_peak_index)
+
+                self.update_linked_peaks_recursive(self.selected_peak_index,
+                                                   float(self.peak_params_grid.GetCellValue(row, 2)), new_height)
+
+                self.clear_and_replot()
+                self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
+                save_state(self)
+                return
+        elif event.ControlDown():
             if keycode == ord('B'):
                 self.toggle_energy_scale()
                 self.toggle_energy_scale()
@@ -1654,14 +1702,14 @@ class MyFrame(wx.Frame):
                 from libraries.Save import redo
                 redo(self)
                 return
-            elif keycode == ord('C'):
-                print('Control C')
-                copy_cell(self.peak_params_grid)
-                return
-            elif keycode == ord('V'):
-                paste_cell(self.peak_params_grid)
-                save_state(self)
-                return
+            # elif keycode == ord('C'):
+            #     print('Control C')
+            #     copy_cell(self.peak_params_grid)
+            #     return
+            # elif keycode == ord('V'):
+            #     paste_cell(self.peak_params_grid)
+            #     save_state(self)
+            #     return
             elif keycode == ord('S'):
                 print("Saving")
                 on_save(self)
@@ -1683,8 +1731,8 @@ class MyFrame(wx.Frame):
                                         "-Ctrl+Equal (=): Zoom in\n"
                                         "-Ctrl+Left bracket [: Select previous core level\n"
                                         "-Ctrl+Right bracket ]: Select next core level\n"
-                                        "-Ctrl+Up: Increase intensity\n"
-                                        "-Ctrl+Down: Decrease intensity\n"
+                                        "-Ctrl+Up: Increase plot intensity\n"
+                                        "-Ctrl+Down: Decrease plot intensity\n"
                                         "-Ctrl+Left: Move plot to High BE\n"
                                         "-Ctrl+Right: Move plot to Low BE\n"
                                         "-SHIFT+Left: Decrease High BE\n"
@@ -1694,7 +1742,12 @@ class MyFrame(wx.Frame):
                                         "-Ctrl+S: Save. Only works on the grid and not on the figure canvas\n"
                                         "-Ctrl+P: Open peak fitting window\n"
                                         "-Ctrl+A: Open Area window\n"
-                                        "-Ctrl+K: Show Keyboard shortcut\n")
+                                        "-Ctrl+K: Show Keyboard shortcut\n"
+                                        "-Alt+Up: Increase peak intensity\n"
+                                        "-Alt+Down: Decrease peak intensity\n"
+                                        "-Alt+Left: Move peak to High BE\n"
+                                        "-Alt+Right: Move peak to Low BE\n"
+                                         )
                 return
             elif keycode == ord('A'):
                 print("Opening Area Window")
@@ -2092,8 +2145,6 @@ class MyFrame(wx.Frame):
         elif model in ["GL (Height)", "SGL (Height)", "Unfitted"]:
             area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
         elif model in ["GL (Area)", "SGL (Area)"]:
-            # For area-based models, the area is already provided
-            # area = height
             area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
         elif model == "ExpGauss.(Area, \u03c3, \u03b3)":
             area = height * sigma * np.sqrt(2 * np.pi) * np.exp(gamma ** 2 * sigma ** 2 / 4)
@@ -2101,7 +2152,6 @@ class MyFrame(wx.Frame):
             if sigma is None or gamma is None:
                 raise ValueError("Sigma and gamma are required for LA model")
 
-            # Calculate numerical integral
             x_range = np.linspace(-10 * fwhm, 10 * fwhm, 1000)
             y_temp = PeakFunctions.LA(x_range, 0, 1.0, fwhm, sigma, gamma)  # Use unit amplitude
             max_height = np.max(y_temp)
@@ -2109,11 +2159,10 @@ class MyFrame(wx.Frame):
             area = np.trapz(y_values, x_range)
             return round(area, 2)
         elif model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
-            if sigma is None or gamma is None:
-                raise ValueError("Sigma and gamma are required for LA model")
+            if sigma is None or gamma is None or skew is None:
+                raise ValueError("Sigma, gamma and skew are required for LA*G model")
 
-            # Calculate numerical integral
-            x_range = np.linspace(-20 * fwhm, 20 * fwhm, 40000)
+            x_range = np.linspace(-10 * fwhm, 10 * fwhm, 1000)
             y_temp = PeakFunctions.LAxG(x_range, 0, 1.0, fwhm, sigma, gamma, skew)  # Use unit amplitude
             max_height = np.max(y_temp)
             y_values = PeakFunctions.LAxG(x_range, 0, height / max_height, fwhm, sigma, gamma, skew)
