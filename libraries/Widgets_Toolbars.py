@@ -2,6 +2,7 @@
 import os
 import sys
 import wx
+import webbrowser
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
@@ -324,8 +325,13 @@ def create_menu(window):
     shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
     window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
 
+    coffee_item = help_menu.Append(wx.NewId(), "Buy Me a Coffee")
+    window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://buymeacoffee.com/gkerherve"), coffee_item)
+
     about_item = help_menu.Append(wx.ID_ABOUT, "About")
     window.Bind(wx.EVT_MENU, lambda event: on_about(window, event), about_item)
+
+
 
     # Add menus to menubar
     menubar.Append(file_menu, "&File")

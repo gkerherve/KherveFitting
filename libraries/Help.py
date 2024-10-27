@@ -5,7 +5,7 @@ import sys
 
 
 
-def on_about(self, event):
+def on_about_OLD(self, event):
     info = wx.adv.AboutDialogInfo()
     info.SetName("KherveFitting")
     info.SetVersion("1.0")
@@ -14,6 +14,41 @@ def on_about(self, event):
     info.SetWebSite("https://www.imperial.ac.uk/people/g.kerherve")
     info.AddDeveloper("Dr. Gwilherm Kerherve / g.kerherve@imperial.ac.uk\n William Skinner")
     wx.adv.AboutBox(info)
+
+def on_about(self, event):
+    about_dialog = wx.Dialog(None, title="About KherveFitting", size=(400, 430))
+    panel = wx.Panel(about_dialog)
+    sizer = wx.BoxSizer(wx.VERTICAL)
+
+    # Add text information
+    name = wx.StaticText(panel, label="KherveFitting")
+    name.SetFont(wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+    version = wx.StaticText(panel, label="Version 1.1 October 24")
+    description = wx.StaticText(panel, label="An open-source XPS peak fitting software\ndeveloped by Dr. Gwilherm Kerherve\nat Imperial College London")
+    website = wx.adv.HyperlinkCtrl(panel, -1, "Imperial College Profile", "https://www.imperial.ac.uk/people/g.kerherve")
+    developers = wx.StaticText(panel, label="Developers:\nDr. Gwilherm Kerherve / g.kerherve@imperial.ac.uk\nWilliam Skinner")
+    copyright = wx.StaticText(panel, label="(C) 2024 Gwilherm Kerherve")
+
+
+
+    # Add all elements to sizer
+    for item in [name, version, description, website, developers, copyright]:
+        sizer.Add(item, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+    panel.SetSizer(sizer)
+
+
+
+    # Load and display QR code
+    qr_path = os.path.join("libraries", "Images", "buymeacoffee_qr.png")
+    if os.path.exists(qr_path):
+        qr_image = wx.Image(qr_path, wx.BITMAP_TYPE_PNG)
+        qr_image = qr_image.Scale(150, 150, wx.IMAGE_QUALITY_HIGH)
+        qr_bitmap = wx.StaticBitmap(panel, -1, wx.Bitmap(qr_image))
+        sizer.Add(qr_bitmap, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+    about_dialog.ShowModal()
+    about_dialog.Destroy()
 
 def show_quick_help(parent):
     # if getattr(sys, 'frozen', False):

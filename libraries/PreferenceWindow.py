@@ -207,7 +207,6 @@ class PreferenceWindow(wx.Frame):
                                                 '+/', '+\\', '+|', '+-',  # Plus with lines
                                                 '*/', '*\\', '*|', '*-'  # Stars with lines
                                                 ],
-                                                # "/", "\\", "|", "-", "+", "x", "o", "O", ".", "*",'//', '\\\\', '||', '--',],
                                             style=wx.CB_READONLY)
         self.peak_hatch_combo.SetMinSize((100, -1))
         sizer.Add(peak_hatch_label, pos=(10, 4), flag=wx.ALL, border=5)
