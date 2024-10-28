@@ -690,6 +690,9 @@ def fit_peaks(window, peak_params_grid):
                         y_values = PeakFunctions.LA(x_values, center, area, fwhm, sigma, gamma)
                         height = np.max(y_values)
 
+                        # FOR RSD calc
+                        existing_peaks[peak_label]['y_values'] = y_values
+
                         # No direct equivalent to 'fraction' for LA model
                         fraction = sigma / (sigma + gamma)
                     elif peak_model_choice in ["LA (Area, \u03c3/\u03b3, \u03b3)"]:
@@ -705,6 +708,9 @@ def fit_peaks(window, peak_params_grid):
                         y_values = PeakFunctions.LA(x_values, center, area, fwhm, sigma, gamma)
                         height = np.max(y_values)
 
+                        # FOR RSD calc
+                        existing_peaks[peak_label]['y_values'] = y_values
+
                     elif peak_model_choice in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
                         area = result.params[f'{prefix}amplitude'].value
                         center = result.params[f'{prefix}center'].value
@@ -717,13 +723,7 @@ def fit_peaks(window, peak_params_grid):
                         # Calculate height numerically
                         y_values = PeakFunctions.LAxG(x_values, center, area, fwhm, sigma, gamma, fwhm_g)
                         height = np.max(y_values)
-
-                        # # Calculate FWHM numerically
-                        # half_max = height / 2
-                        # left_idx = np.argmax(y_values >= half_max)
-                        # right_idx = len(y_values) - np.argmax(y_values[::-1] >= half_max) - 1
-                        # fwhm2 = abs(x_values[right_idx] - x_values[left_idx])
-                        # print("Fit_FWHM: "+str(fwhm2))
+                        existing_peaks[peak_label]['y_values'] = y_values
 
                     elif peak_model_choice in ["GL (Height)", "SGL (Height)"]:
                         height = result.params[f'{prefix}amplitude'].value
@@ -799,7 +799,16 @@ def fit_peaks(window, peak_params_grid):
             window.Data['Core levels'][sheet_name]['Fitting']['Model'] = model_choice
 
             # Calculate the RSD
-            rsd = round(PeakFunctions.calculate_rsd(y_values, result.best_fit + background_filtered),3)
+            if any("LA" in peak_params_grid.GetCellValue(i * 2, 13) for i in range(num_peaks)):
+                # For LA models, use stored y_values
+                total_fit = np.zeros_like(x_values_filtered)
+                for peak_label in existing_peaks:
+                    if 'y_values' in existing_peaks[peak_label]:
+                        total_fit += existing_peaks[peak_label]['y_values']
+                rsd = round(PeakFunctions.calculate_rsd(y_values_filtered, total_fit + background_filtered), 3)
+            else:
+                # For other models
+                rsd = round(PeakFunctions.calculate_rsd(y_values, result.best_fit + background_filtered), 3)
 
             window.fit_results = {
                 'result': result,

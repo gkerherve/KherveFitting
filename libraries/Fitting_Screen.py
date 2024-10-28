@@ -338,14 +338,6 @@ class FittingWindow(wx.Frame):
     def on_export_results(self, event):
         self.parent.export_results()
 
-    def load_doublet_splittings_OLD(self, filename):
-        splittings = {}
-        with open(filename, 'r') as f:
-            for line in f:
-                parts = line.strip().split()
-                if len(parts) == 2:
-                    splittings[parts[0]] = float(parts[1])
-        return splittings
 
     def load_doublet_splittings(self, library_data):
         splittings = {}
