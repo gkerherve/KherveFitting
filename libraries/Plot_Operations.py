@@ -524,7 +524,8 @@ class PlotManager:
 
         # Clear the plot
         self.ax.clear()
-        x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else "Binding Energy (eV)"
+        # x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else "Binding Energy (eV)"
+        x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else window.x_axis_label
         self.ax.set_xlabel(x_label)
         # self.ax.set_xlabel("Binding Energy (eV)")
         self.ax.set_ylabel("Intensity (CPS)")

@@ -112,7 +112,19 @@ class PreferenceWindow(wx.Frame):
         text_sizer.Add(y_sublines_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         text_sizer.Add(self.y_sublines_spin, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
+        # X-axis label
+        x_label_text = wx.StaticText(self.text_tab, label="X-axis Label:")
+        self.x_label_ctrl = wx.TextCtrl(self.text_tab, value="Binding Energy (eV)")
+        self.x_label_ctrl.Bind(wx.EVT_TEXT, self.on_text_change)
+        text_sizer.Add(x_label_text, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.x_label_ctrl, pos=(7, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
+        # Y-axis label
+        y_label_text = wx.StaticText(self.text_tab, label="Y-axis Label:")
+        self.y_label_ctrl = wx.TextCtrl(self.text_tab, value="Intensity (CPS)")
+        self.y_label_ctrl.Bind(wx.EVT_TEXT, self.on_text_change)
+        text_sizer.Add(y_label_text, pos=(8, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.y_label_ctrl, pos=(8, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         self.text_tab.SetSizer(text_sizer)
 
@@ -524,7 +536,10 @@ class PreferenceWindow(wx.Frame):
         self.y_sublines_spin.SetValue(self.parent.y_sublines)
         self.legend_size_spin.SetValue(self.parent.legend_font_size)
         self.core_level_spin.SetValue(self.parent.core_level_text_size)
-
+        if hasattr(self.parent, 'x_axis_label'):
+            self.x_label_ctrl.SetValue(self.parent.x_axis_label)
+        if hasattr(self.parent, 'y_axis_label'):
+            self.y_label_ctrl.SetValue(self.parent.y_axis_label)
 
         # Load the first peak color
         self.temp_peak_colors = self.parent.peak_colors.copy()
@@ -643,6 +658,13 @@ class PreferenceWindow(wx.Frame):
         self.parent.x_sublines = self.x_sublines_spin.GetValue()
         self.parent.y_sublines = self.y_sublines_spin.GetValue()
         self.parent.legend_font_size = self.legend_size_spin.GetValue()
+        self.parent.x_axis_label = self.x_label_ctrl.GetValue()
+        self.parent.y_axis_label = self.y_label_ctrl.GetValue()
+
+        # Update plot axis labels
+        self.parent.ax.set_xlabel(self.parent.x_axis_label)
+        self.parent.ax.set_ylabel(self.parent.y_axis_label)
+        self.parent.canvas.draw_idle()
 
         # Save the configuration
         self.parent.save_config()

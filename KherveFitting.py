@@ -178,6 +178,8 @@ class MyFrame(wx.Frame):
         self.y_sublines = 5
         self.legend_font_size = 8
         self.core_level_text_size = 15
+        self.x_axis_label = "Binding Energy (eV)"
+        self.y_axis_label = "Intensity (CPS)"
 
         # Initialize right_frame to None before creating widgets
         self.right_frame = None
