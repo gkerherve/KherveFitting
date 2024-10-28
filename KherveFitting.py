@@ -10,7 +10,7 @@ import sys
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
-from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import ScalarFormatter, AutoMinorLocator
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
 import lmfit
 import wx.lib.agw.aui as aui
@@ -170,6 +170,15 @@ class MyFrame(wx.Frame):
         # initialise peak fill or not
         self.peak_fill_enabled = True
 
+        # Add new attributes for text settings
+        self.plot_font = 'Calibri'
+        self.axis_title_size = 12
+        self.axis_number_size = 10
+        self.x_sublines = 5
+        self.y_sublines = 5
+        self.legend_font_size = 8
+        self.core_level_text_size = 15
+
         # Initialize right_frame to None before creating widgets
         self.right_frame = None
         self.figure = plt.figure()
@@ -178,6 +187,14 @@ class MyFrame(wx.Frame):
         self.ax.set_ylabel("Intensity (CPS)")  # Set y-axis label
         self.ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
         self.ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
+        # Apply text settings
+        plt.rcParams['font.family'] = self.plot_font
+        self.ax.tick_params(axis='both', labelsize=self.axis_number_size)
+        if self.x_sublines > 0:
+            self.ax.xaxis.set_minor_locator(AutoMinorLocator(self.x_sublines + 1))
+        if self.y_sublines > 0:
+            self.ax.yaxis.set_minor_locator(AutoMinorLocator(self.y_sublines + 1))
 
         self.moving_vline = None  # Initialize moving_vline attribute
         self.selected_peak_index = None  # Add this attribute to track selected peak index
@@ -227,13 +244,7 @@ class MyFrame(wx.Frame):
         self.recent_files = []
         self.max_recent_files = 10  # Maximum number of recent files to keep
 
-        # Add new attributes for text settings
-        self.plot_font = 'Arial'
-        self.axis_title_size = 12
-        self.axis_number_size = 10
-        self.x_sublines = 5
-        self.y_sublines = 5
-        self.legend_font_size = 8
+
 
         # Load config if exists
         self.load_config()
@@ -1662,7 +1673,7 @@ class MyFrame(wx.Frame):
                 current_position = float(self.peak_params_grid.GetCellValue(row, 2))
 
                 # Move 0.1 eV left or right
-                delta = 0.05 if keycode == wx.WXK_LEFT else -0.05
+                delta = 0.1 if keycode == wx.WXK_LEFT else -0.1
                 new_position = current_position + delta
 
                 # Update peak position
@@ -1680,7 +1691,7 @@ class MyFrame(wx.Frame):
             elif keycode in [wx.WXK_UP, wx.WXK_DOWN]:
                 row = self.selected_peak_index * 2
                 current_height = float(self.peak_params_grid.GetCellValue(row, 3))
-                intensity_factor = 0.01
+                intensity_factor = 0.05
 
                 delta = intensity_factor * current_height * (1 if keycode == wx.WXK_UP else -1)
                 new_height = max(0, current_height + delta)
@@ -2681,6 +2692,7 @@ class MyFrame(wx.Frame):
                 self.x_sublines = config.get('x_sublines', 5)
                 self.y_sublines = config.get('y_sublines', 5)
                 self.legend_font_size = config.get('legend_font_size', 8)
+                self.core_level_text_size = config.get('core_level_text_size', 15)
 
         else:
             config = {}
@@ -2724,7 +2736,8 @@ class MyFrame(wx.Frame):
             'axis_number_size': self.axis_number_size,
             'x_sublines': self.x_sublines,
             'y_sublines': self.y_sublines,
-            'legend_font_size': self.legend_font_size
+            'legend_font_size': self.legend_font_size,
+            'core_level_text_size': self.core_level_text_size,
         }
 
         with open('config.json', 'w') as f:
@@ -2875,6 +2888,47 @@ class MyFrame(wx.Frame):
         # Implement logic to update RSF and doublet splitting for all peaks
         # Then update peak fitting and display
         pass
+
+    def on_text_size_increase(self, event):
+        self.axis_title_size += 1
+        self.axis_number_size += 1
+        self.legend_font_size += 1
+        self.core_level_text_size += 1
+
+        # Update the preference window if it's open
+        for window in wx.GetTopLevelWindows():
+            if isinstance(window, PreferenceWindow):
+                window.axis_title_spin.SetValue(self.axis_title_size)
+                window.axis_num_spin.SetValue(self.axis_number_size)
+                window.legend_size_spin.SetValue(self.legend_font_size)
+                window.core_level_spin.SetValue(self.core_level_text_size)
+
+        # Update plot
+        self.update_plot_preferences()
+        self.clear_and_replot()
+
+    def on_text_size_decrease(self, event):
+        # Make sure sizes don't go below minimum values
+        if self.axis_title_size > 8:
+            self.axis_title_size -= 1
+        if self.axis_number_size > 8:
+            self.axis_number_size -= 1
+        if self.legend_font_size > 6:
+            self.legend_font_size -= 1
+        if self.core_level_text_size > 8:
+            self.core_level_text_size -= 1
+
+        # Update the preference window if it's open
+        for window in wx.GetTopLevelWindows():
+            if isinstance(window, PreferenceWindow):
+                window.axis_title_spin.SetValue(self.axis_title_size)
+                window.axis_num_spin.SetValue(self.axis_number_size)
+                window.legend_size_spin.SetValue(self.legend_font_size)
+                window.core_level_spin.SetValue(self.core_level_text_size)
+
+        # Update plot
+        self.update_plot_preferences()
+        self.clear_and_replot()
 
 
 if __name__ == '__main__':

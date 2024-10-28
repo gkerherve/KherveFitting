@@ -534,6 +534,16 @@ def create_vertical_toolbar(parent, frame):
 
     v_toolbar.AddSeparator()
 
+    # Add text size increase/decrease tools
+    text_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Increase Font Size',
+                                          wx.Bitmap(os.path.join(icon_path, "A+_25.png"), wx.BITMAP_TYPE_PNG),
+                                          shortHelp="Increase All Font Sizes")
+    text_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Decrease Font Size',
+                                          wx.Bitmap(os.path.join(icon_path, "A-_25.png"), wx.BITMAP_TYPE_PNG),
+                                          shortHelp="Decrease All Font Sizes")
+
+    v_toolbar.AddSeparator()
+
     v_toolbar.Realize()
 
     # Bind events to the frame
@@ -545,6 +555,8 @@ def create_vertical_toolbar(parent, frame):
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('high_int', 'decrease'), high_int_decrease_tool)
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'increase'), low_int_increase_tool)
     frame.Bind(wx.EVT_TOOL, lambda event: frame.adjust_plot_limits('low_int', 'decrease'), low_int_decrease_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_text_size_increase, text_increase_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_text_size_decrease, text_decrease_tool)
     frame.Bind(wx.EVT_TOOL, frame.on_zoom_in_tool, zoom_in_tool)
     frame.Bind(wx.EVT_TOOL, frame.on_zoom_out, zoom_out_tool)
     frame.Bind(wx.EVT_TOOL, frame.on_drag_tool, drag_tool)

@@ -161,6 +161,11 @@ class PlotManager:
         if self.ax.get_legend():
             plt.setp(self.ax.get_legend().get_texts(), fontsize=window.legend_font_size)
 
+        for text in self.ax.texts:
+            if getattr(text, 'sheet_name_text', False):
+                text.set_fontsize(window.core_level_text_size)
+                text.set_fontfamily([window.plot_font])
+
     def plot_peak(self, x_values, background, peak_params, sheet_name, window, color=None, alpha=0.3):
         row = peak_params['row']
         fwhm = peak_params['fwhm']
@@ -461,6 +466,8 @@ class PlotManager:
                 bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
             )
             sheet_name_text.sheet_name_text = True  # Mark this text object
+
+            self.apply_text_settings(window)
 
             self.canvas.draw()  # Update the plot
 

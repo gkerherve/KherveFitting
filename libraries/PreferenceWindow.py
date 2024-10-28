@@ -25,9 +25,9 @@ class PreferenceWindow(wx.Frame):
         self.instrument_tab = wx.Panel(self.notebook)
 
         # Add tabs to notebook
-        self.notebook.AddPage(self.plot_tab, "Plot")
-        self.notebook.AddPage(self.text_tab, "Text & Axis")
-        self.notebook.AddPage(self.instrument_tab, "Instrument")
+        self.notebook.AddPage(self.plot_tab, "Plot Settings")
+        self.notebook.AddPage(self.text_tab, "Text/Axis Settings")
+        self.notebook.AddPage(self.instrument_tab, "Instrument Settings")
 
         # Add notebook to sizer
         main_sizer.Add(self.notebook, 1, wx.EXPAND | wx.ALL, 5)
@@ -60,57 +60,91 @@ class PreferenceWindow(wx.Frame):
     def init_text_tab(self):
         text_sizer = wx.GridBagSizer(5, 5)
 
-        # Font selection
-        fonts = ['Arial', 'Times New Roman', 'Calibri', 'Helvetica']
+        fonts = ['DejaVu Sans','Arial', 'Times New Roman', 'Calibri', 'Verdana',
+                 'Tahoma', 'Georgia', 'Cambria', 'Century Gothic', 'Garamond',
+                 'Book Antiqua', 'Palatino', 'Franklin Gothic', 'Trebuchet MS',
+                 'Segoe UI']
         font_label = wx.StaticText(self.text_tab, label="Font:")
         self.font_combo = wx.ComboBox(self.text_tab, choices=fonts, style=wx.CB_READONLY)
+        self.font_combo.Bind(wx.EVT_COMBOBOX, self.on_text_change)
         text_sizer.Add(font_label, pos=(0, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         text_sizer.Add(self.font_combo, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
-        # Axis title font size
-        axis_title_label = wx.StaticText(self.text_tab, label="Axis Title Size:")
-        self.axis_title_spin = wx.SpinCtrl(self.text_tab, min=8, max=20, initial=12)
-        text_sizer.Add(axis_title_label, pos=(1, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.axis_title_spin, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
-
-        # Axis numbers font size
-        axis_num_label = wx.StaticText(self.text_tab, label="Axis Numbers Size:")
-        self.axis_num_spin = wx.SpinCtrl(self.text_tab, min=8, max=20, initial=10)
-        text_sizer.Add(axis_num_label, pos=(2, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.axis_num_spin, pos=(2, 1), flag=wx.EXPAND | wx.ALL, border=5)
-
-        # X-axis sublines
-        x_sublines_label = wx.StaticText(self.text_tab, label="X-axis Sublines:")
-        self.x_sublines_spin = wx.SpinCtrl(self.text_tab, min=0, max=10, initial=5)
-        text_sizer.Add(x_sublines_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.x_sublines_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
-
-        # Y-axis sublines
-        y_sublines_label = wx.StaticText(self.text_tab, label="Y-axis Sublines:")
-        self.y_sublines_spin = wx.SpinCtrl(self.text_tab, min=0, max=10, initial=5)
-        text_sizer.Add(y_sublines_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.y_sublines_spin, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        # Core level name font size
+        core_level_label = wx.StaticText(self.text_tab, label="Title Font Size:")
+        self.core_level_spin = wx.SpinCtrl(self.text_tab, min=8, max=24, initial=15)
+        self.core_level_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
+        text_sizer.Add(core_level_label, pos=(1, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.core_level_spin, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Legend font size
         legend_size_label = wx.StaticText(self.text_tab, label="Legend Font Size:")
         self.legend_size_spin = wx.SpinCtrl(self.text_tab, min=6, max=16, initial=8)
-        text_sizer.Add(legend_size_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.legend_size_spin, pos=(5, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        self.legend_size_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
+        text_sizer.Add(legend_size_label, pos=(2, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.legend_size_spin, pos=(2, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Axis title font size
+        axis_title_label = wx.StaticText(self.text_tab, label="Axis Title Font Size:")
+        self.axis_title_spin = wx.SpinCtrl(self.text_tab, min=8, max=20, initial=12)
+        self.axis_title_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
+        text_sizer.Add(axis_title_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.axis_title_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Axis numbers font size
+        axis_num_label = wx.StaticText(self.text_tab, label="Axis Numbers Font Size:")
+        self.axis_num_spin = wx.SpinCtrl(self.text_tab, min=8, max=20, initial=10)
+        self.axis_num_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
+        text_sizer.Add(axis_num_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.axis_num_spin, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
+        # X-axis sublines
+        x_sublines_label = wx.StaticText(self.text_tab, label="Number of X-axis Sublines:")
+        self.x_sublines_spin = wx.SpinCtrl(self.text_tab, min=0, max=10, initial=5)
+        self.x_sublines_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
+        text_sizer.Add(x_sublines_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.x_sublines_spin, pos=(5, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Y-axis sublines
+        y_sublines_label = wx.StaticText(self.text_tab, label="Number of Y-axis Sublines:")
+        self.y_sublines_spin = wx.SpinCtrl(self.text_tab, min=0, max=10, initial=5)
+        self.y_sublines_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
+        text_sizer.Add(y_sublines_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.y_sublines_spin, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
+
 
         self.text_tab.SetSizer(text_sizer)
 
+    def on_text_change(self, event):
+        # Update parent window properties
+        self.parent.plot_font = self.font_combo.GetValue()
+        self.parent.axis_title_size = self.axis_title_spin.GetValue()
+        self.parent.axis_number_size = self.axis_num_spin.GetValue()
+        self.parent.x_sublines = self.x_sublines_spin.GetValue()
+        self.parent.y_sublines = self.y_sublines_spin.GetValue()
+        self.parent.legend_font_size = self.legend_size_spin.GetValue()
+        self.parent.core_level_text_size = self.core_level_spin.GetValue()
+
+        # Update the plot
+        self.parent.update_plot_preferences()
+        self.parent.clear_and_replot()
+
     def init_instrument_tab(self):
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        # sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer = wx.GridBagSizer(5, 5)
 
         instruments = list(set(instr for data in self.parent.library_data.values() for instr in data.keys()))
         self.instrument_combo = wx.ComboBox(self.instrument_tab, choices=instruments, style=wx.CB_READONLY)
         self.instrument_combo.Bind(wx.EVT_COMBOBOX, self.on_instrument_change)
 
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Current Instrument:"), 0, wx.ALL, 5)
-        sizer.Add(self.instrument_combo, 0, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Current Instrument:"), pos=(0, 0), flag=wx.EXPAND |
+                                                                                                    wx.ALL, border=5)
+        sizer.Add(self.instrument_combo, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         self.use_transmission = wx.CheckBox(self.instrument_tab, label="Use Transmission")
-        sizer.Add(self.use_transmission, 0, wx.ALL, 5)
+        sizer.Add(self.use_transmission, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
 
         self.instrument_tab.SetSizer(sizer)
 
@@ -489,6 +523,7 @@ class PreferenceWindow(wx.Frame):
         self.x_sublines_spin.SetValue(self.parent.x_sublines)
         self.y_sublines_spin.SetValue(self.parent.y_sublines)
         self.legend_size_spin.SetValue(self.parent.legend_font_size)
+        self.core_level_spin.SetValue(self.parent.core_level_text_size)
 
 
         # Load the first peak color
