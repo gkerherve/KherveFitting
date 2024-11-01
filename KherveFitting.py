@@ -944,7 +944,8 @@ class MyFrame(wx.Frame):
             if peak_label in peaks:
                 peaks[peak_label]['Position'] = new_position
 
-        if "LA" in fitting_model and area_constraint.startswith(original_peak_letter):
+        if ("LA" in fitting_model or "GL (Area)" in fitting_model or "Voigt" in fitting_model or "ExpGauss" in fitting_model) and area_constraint.startswith(
+                original_peak_letter):
             current_area = float(self.peak_params_grid.GetCellValue(original_peak_index * 2, 6))
             if '*' in area_constraint:
                 factor = float(area_constraint.split('*')[1].split('#')[0])
@@ -962,9 +963,15 @@ class MyFrame(wx.Frame):
                 new_linked_area = current_area
 
             self.peak_params_grid.SetCellValue(row, 6, f"{new_linked_area:.2f}")
+
+            # Recalculate height from area
+            fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+            new_linked_height = self.calculate_height_from_area(new_linked_area, fwhm, fitting_model, row)
+            self.peak_params_grid.SetCellValue(row, 3, f"{new_linked_height:.2f}")
+
             if peak_label in peaks:
                 peaks[peak_label]['Area'] = new_linked_area
-                peaks[peak_label]['Height'] = new_height
+                peaks[peak_label]['Height'] = new_linked_height
 
         elif height_constraint.startswith(original_peak_letter):
             # Original height-based logic
@@ -988,7 +995,8 @@ class MyFrame(wx.Frame):
                 peaks[peak_label]['Height'] = new_linked_height
 
         # Recalculate area if not LA model
-        if not "LA" in fitting_model:
+        # if not "LA" in fitting_model:
+        if not ("LA" in fitting_model or "GL (Area)" in fitting_model or "Voigt" in fitting_model or "ExpGauss" in fitting_model) and area_constraint.startswith(original_peak_letter):
             self.recalculate_peak_area(peak_index)
 
     def calculate_height_from_area(self, area, fwhm, model, row=None):
@@ -1004,7 +1012,7 @@ class MyFrame(wx.Frame):
             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
             # Calculate height numerically
             x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
-            y_values = lmfit.models.exponential_gaussian(x_range, area, center, sigma, gamma)
+            y_values = lmfit.models.ExponentialGaussianModel(x_range, area, center, sigma, gamma)
             height = np.max(y_values)
             return height
 
@@ -1906,6 +1914,13 @@ class MyFrame(wx.Frame):
             else:
                 # Set the atomic percentage to 0 for unticked rows
                 self.results_grid.SetCellValue(i, 6, "0.00")
+        # grid_values = np.array([[float(self.results_grid.GetCellValue(i, 5)),
+        #                          float(self.results_grid.GetCellValue(i, 8)),
+        #                          self.results_grid.GetCellValue(i, 7)]
+        #                         for i in range(current_rows)])
+        # checked_mask = grid_values[:, 2] == '1'
+        # normalized_areas = grid_values[checked_mask, 0] / grid_values[checked_mask, 1]
+        # total_normalized_area = np.sum(normalized_areas)
 
         # Calculate and set atomic percentages for checked elements
         for i in checked_indices:
@@ -2704,6 +2719,7 @@ class MyFrame(wx.Frame):
         # Update plot
         self.update_plot_preferences()
         self.clear_and_replot()
+        self.save_config()
 
     def on_text_size_decrease(self, event):
         # Make sure sizes don't go below minimum values
@@ -2727,6 +2743,7 @@ class MyFrame(wx.Frame):
         # Update plot
         self.update_plot_preferences()
         self.clear_and_replot()
+        self.save_config()
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 
 import numpy as np
+from numba import jit, prange
 import lmfit
 from lmfit.models import VoigtModel
 from scipy.optimize import minimize_scalar, brentq
@@ -388,6 +389,8 @@ class PeakFunctions:
             1 / (1 + 4 * ((x - center) / F) ** 2) ** sigma
         )
 
+    @staticmethod
+    # @jit(nopython=True, parallel=True)
     def LA(x, center, amplitude, fwhm, sigma, gamma):
         #amplitude here is the area
 
@@ -415,6 +418,7 @@ class PeakFunctions:
         return height * peak_shape
 
     @staticmethod
+    # @jit(nopython=True, parallel=True)
     def LAxG(x, center, amplitude, fwhm, sigma, gamma, fwhm_g):
         # Define the LA function
         # gaussian_fwhm =0.64 # now done through the grid
@@ -454,6 +458,7 @@ class PeakFunctions:
         height = amplitude / unit_area if unit_area != 0 else 0
 
         return height * peak_shape
+
 
     @staticmethod
     def calculate_rsd(y_experimental, y_fitted):
