@@ -1153,11 +1153,21 @@ class MyFrame(wx.Frame):
         if self.initial_fwhm is not None and self.initial_x is not None:
             row = self.selected_peak_index * 2
             peak_label = self.peak_params_grid.GetCellValue(row, 1)
-
+            model = self.peak_params_grid.GetCellValue(row, 13)
             delta_x = x - self.initial_x
-            new_fwhm = max(self.initial_fwhm + delta_x * 1, 0.3)  # Ensure minimum FWHM of 0.3 eV
 
-            self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")
+            if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)",
+                         "ExpGauss.(Area, \u03c3, \u03b3)"]:
+                current_sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                current_gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                new_sigma = max(current_sigma + delta_x * 0.05, 0.01)
+                new_gamma = max(current_gamma + delta_x * 0.05, 0.01)
+                self.peak_params_grid.SetCellValue(row, 7, f"{new_sigma:.2f}")
+                self.peak_params_grid.SetCellValue(row, 8, f"{new_gamma:.2f}")
+                new_fwhm = self.initial_fwhm  # Keep FWHM unchanged for these models
+            else:
+                new_fwhm = max(self.initial_fwhm + delta_x * 1, 0.3)  # Ensure minimum FWHM of 0.3 eV
+                self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")
 
             # Update FWHM in window.Data
             sheet_name = self.sheet_combobox.GetValue()
@@ -1166,6 +1176,10 @@ class MyFrame(wx.Frame):
                 peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
                 if peak_label in peaks:
                     peaks[peak_label]['FWHM'] = new_fwhm
+                    if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)",
+                                 "ExpGauss.(Area, \u03c3, \u03b3)"]:
+                        peaks[peak_label]['Sigma'] = new_sigma
+                        peaks[peak_label]['Gamma'] = new_gamma
 
             # Recalculate area
             self.recalculate_peak_area(self.selected_peak_index)
