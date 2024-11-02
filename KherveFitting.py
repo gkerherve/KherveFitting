@@ -1199,14 +1199,31 @@ class MyFrame(wx.Frame):
 
         visited.add(peak_index)
 
-        self.update_linked_peak_fwhm(peak_index, new_fwhm)
-
         linked_peaks = self.get_linked_peaks(peak_index)
         for linked_peak in linked_peaks:
             if linked_peak not in visited:
-                row = linked_peak * 2
-                linked_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
-                self.update_linked_fwhm_recursive(linked_peak, linked_fwhm, visited)
+                row = peak_index * 2
+                model = self.peak_params_grid.GetCellValue(row, 13)
+
+                if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
+                    original_sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                    original_lg = float(self.peak_params_grid.GetCellValue(row, 5))
+                    linked_sigma = original_sigma
+                    linked_gamma = (original_lg / 100 * linked_sigma) / (1 - original_lg / 100)
+                    self.peak_params_grid.SetCellValue(linked_peak * 2, 7, f"{linked_sigma:.2f}")
+                    self.peak_params_grid.SetCellValue(linked_peak * 2, 8, f"{linked_gamma:.2f}")
+                    self.update_linked_fwhm_recursive(linked_peak, new_fwhm, visited)
+                elif model == "ExpGauss.(Area, \u03c3, \u03b3)":
+                    original_gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                    original_sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                    linked_gamma = original_gamma
+                    self.peak_params_grid.SetCellValue(linked_peak * 2, 7, f"{original_sigma:.2f}")
+                    self.peak_params_grid.SetCellValue(linked_peak * 2, 8, f"{linked_gamma:.2f}")
+                    self.update_linked_fwhm_recursive(linked_peak, new_fwhm, visited)
+                else:
+                    linked_fwhm = float(self.peak_params_grid.GetCellValue(linked_peak * 2, 4))
+                    self.update_linked_peak_fwhm(linked_peak, new_fwhm)
+                    self.update_linked_fwhm_recursive(linked_peak, linked_fwhm, visited)
 
     def update_peak_fwhm(self, x):
         if self.initial_fwhm is not None and self.initial_x is not None:
