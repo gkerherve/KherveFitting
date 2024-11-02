@@ -263,12 +263,15 @@ def show_shortcuts(parent):
     <li><b>Alt+Down:</b> Decrease peak intensity</li>
     <li><b>Alt+Left:</b> Move peak to High BE</li>
     <li><b>Alt+Right:</b> Move peak to Low BE</li>
+    <li><b>Alt+SHIFT+Left:</b> increase FWHM</li>
+    <li><b>Alt+SHIFT+Right:</b> Decrease FWHM</li>
+    <li><b>SHIFT+Mouse Left button:</b> increase/decrease FWHM</li>
     </ul>
     </body>
     </html>
     """
 
-    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(380, 580), style=wx.DEFAULT_DIALOG_STYLE |
+    dlg = wx.Dialog(parent, title="List of Shortcuts", size=(380, 650), style=wx.DEFAULT_DIALOG_STYLE |
                                                                               wx.RESIZE_BORDER)
     html_win = wx.html.HtmlWindow(dlg)
     html_win.SetPage(shortcuts_html)
