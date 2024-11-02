@@ -1091,7 +1091,7 @@ class MyFrame(wx.Frame):
         if not "LA" in fitting_model:
             self.recalculate_peak_area(peak_index)
 
-    def update_linked_peak_fwhm(self, peak_index, new_fwhm):
+    def update_linked_peak_fwhm_OLD(self, peak_index, new_fwhm):
         row = peak_index * 2
         constraint_row = row + 1
         fwhm_constraint = self.peak_params_grid.GetCellValue(constraint_row, 4)
@@ -1113,6 +1113,55 @@ class MyFrame(wx.Frame):
             if peak_label in peaks:
                 peaks[peak_label]['FWHM'] = new_linked_fwhm
 
+    def update_linked_peak_fwhm(self, peak_index, new_fwhm):
+        row = peak_index * 2
+        constraint_row = row + 1
+        model = self.peak_params_grid.GetCellValue(row, 13)
+
+        if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
+            sigma_constraint = self.peak_params_grid.GetCellValue(constraint_row, 7)
+            gamma_constraint = self.peak_params_grid.GetCellValue(constraint_row, 8)
+            current_sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+            current_gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+
+            if '*' in sigma_constraint:
+                factor = float(sigma_constraint.split('*')[1].split('#')[0])
+                new_sigma = current_sigma * factor
+                lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
+                new_gamma = (lg_ratio / 100 * new_sigma) / (1 - lg_ratio / 100)
+                self.peak_params_grid.SetCellValue(row, 7, f"{new_sigma:.2f}")
+                self.peak_params_grid.SetCellValue(row, 8, f"{new_gamma:.2f}")
+
+        elif model == "ExpGauss.(Area, \u03c3, \u03b3)":
+            gamma_constraint = self.peak_params_grid.GetCellValue(constraint_row, 8)
+            if '*' in gamma_constraint:
+                factor = float(gamma_constraint.split('*')[1].split('#')[0])
+                current_gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                new_gamma = current_gamma * factor
+                self.peak_params_grid.SetCellValue(row, 8, f"{new_gamma:.2f}")
+
+        else:
+            fwhm_constraint = self.peak_params_grid.GetCellValue(constraint_row, 4)
+            if '*' in fwhm_constraint:
+                factor = float(fwhm_constraint.split('*')[1].split('#')[0])
+                new_linked_fwhm = new_fwhm * factor
+                self.peak_params_grid.SetCellValue(row, 4, f"{new_linked_fwhm:.2f}")
+
+        self.recalculate_peak_area(peak_index)
+
+        sheet_name = self.sheet_combobox.GetValue()
+        peak_label = self.peak_params_grid.GetCellValue(row, 1)
+        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
+                self.Data['Core levels'][sheet_name]['Fitting']:
+            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+            if peak_label in peaks:
+                if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
+                    peaks[peak_label]['Sigma'] = new_sigma
+                    peaks[peak_label]['Gamma'] = new_gamma
+                elif model == "ExpGauss.(Area, \u03c3, \u03b3)":
+                    peaks[peak_label]['Gamma'] = new_gamma
+                else:
+                    peaks[peak_label]['FWHM'] = new_linked_fwhm
 
     def update_linked_peaks_recursive(self, original_peak_index, new_x, new_height, area=None, visited=None):
         if visited is None:
