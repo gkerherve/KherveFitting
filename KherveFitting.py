@@ -999,6 +999,9 @@ class MyFrame(wx.Frame):
         if not ("LA" in fitting_model or "GL (Area)" in fitting_model or "Voigt" in fitting_model or "ExpGauss" in fitting_model) and area_constraint.startswith(original_peak_letter):
             self.recalculate_peak_area(peak_index)
 
+
+
+
     def calculate_height_from_area(self, area, fwhm, model, row=None):
         if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
             # For Voigt, this is an approximation
@@ -1010,9 +1013,13 @@ class MyFrame(wx.Frame):
             center = float(self.peak_params_grid.GetCellValue(row, 2))
             sigma = float(self.peak_params_grid.GetCellValue(row, 7))
             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-            # Calculate height numerically
+
+            # Create model instance first
+            exp_gauss_model = lmfit.models.ExponentialGaussianModel()
+
+            # Then evaluate with parameters
             x_range = np.linspace(center - 10 * sigma, center + 10 * sigma, 1000)
-            y_values = lmfit.models.ExponentialGaussianModel(x_range, area, center, sigma, gamma)
+            y_values = exp_gauss_model.eval(x=x_range, amplitude=area, center=center, sigma=sigma, gamma=gamma)
             height = np.max(y_values)
             return height
 
@@ -1156,17 +1163,24 @@ class MyFrame(wx.Frame):
             model = self.peak_params_grid.GetCellValue(row, 13)
             delta_x = x - self.initial_x
 
-            if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)",
-                         "ExpGauss.(Area, \u03c3, \u03b3)"]:
+            if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
                 current_sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                current_gamma = float(self.peak_params_grid.GetCellValue(row, 8))
-                new_sigma = max(current_sigma + delta_x * 0.05, 0.01)
-                new_gamma = max(current_gamma + delta_x * 0.05, 0.01)
+                lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
+                new_sigma = max(current_sigma + delta_x * 1, 0.4)
+                new_gamma = (lg_ratio / 100 * new_sigma) / (1 - lg_ratio / 100)
                 self.peak_params_grid.SetCellValue(row, 7, f"{new_sigma:.2f}")
                 self.peak_params_grid.SetCellValue(row, 8, f"{new_gamma:.2f}")
-                new_fwhm = self.initial_fwhm  # Keep FWHM unchanged for these models
+                new_fwhm = self.initial_fwhm
+            elif model == "ExpGauss.(Area, \u03c3, \u03b3)":
+                current_sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                current_gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                # new_sigma = max(current_sigma + delta_x * 0.5, 0.2)
+                new_gamma = max(current_gamma + delta_x * 0.5, 0.2)
+                self.peak_params_grid.SetCellValue(row, 7, f"{current_sigma:.2f}")
+                self.peak_params_grid.SetCellValue(row, 8, f"{new_gamma:.2f}")
+                new_fwhm = self.initial_fwhm
             else:
-                new_fwhm = max(self.initial_fwhm + delta_x * 1, 0.3)  # Ensure minimum FWHM of 0.3 eV
+                new_fwhm = max(self.initial_fwhm + delta_x * 1, 0.3)
                 self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")
 
             # Update FWHM in window.Data
