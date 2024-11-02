@@ -1502,7 +1502,35 @@ class MyFrame(wx.Frame):
     def on_key_press_global(self, event):
         keycode = event.GetKeyCode()
         if event.AltDown() and self.selected_peak_index is not None:
-            if keycode in [wx.WXK_LEFT, wx.WXK_RIGHT]:
+            if event.ShiftDown() and keycode in [wx.WXK_LEFT, wx.WXK_RIGHT] and self.selected_peak_index is not None:
+                row = self.selected_peak_index * 2
+                model = self.peak_params_grid.GetCellValue(row, 13)
+                delta = 0.1 if keycode == wx.WXK_RIGHT else -0.1
+                current_fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
+                new_fwhm = current_fwhm
+
+                if model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
+                    current_sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                    lg_ratio = float(self.peak_params_grid.GetCellValue(row, 5))
+                    new_sigma = max(current_sigma + delta, 0.4)
+                    new_gamma = (lg_ratio / 100 * new_sigma) / (1 - lg_ratio / 100)
+                    self.peak_params_grid.SetCellValue(row, 7, f"{new_sigma:.2f}")
+                    self.peak_params_grid.SetCellValue(row, 8, f"{new_gamma:.2f}")
+                elif model == "ExpGauss.(Area, \u03c3, \u03b3)":
+                    current_gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                    new_gamma = max(current_gamma + delta, 0.2)
+                    self.peak_params_grid.SetCellValue(row, 8, f"{new_gamma:.2f}")
+                else:
+                    new_fwhm = max(current_fwhm + delta, 0.3)
+                    self.peak_params_grid.SetCellValue(row, 4, f"{new_fwhm:.2f}")
+
+                self.recalculate_peak_area(self.selected_peak_index)
+                self.update_linked_fwhm_recursive(self.selected_peak_index, new_fwhm)
+                self.clear_and_replot()
+                self.plot_manager.add_cross_to_peak(self, self.selected_peak_index)
+                save_state(self)
+                return
+            elif keycode in [wx.WXK_LEFT, wx.WXK_RIGHT]:
                 row = self.selected_peak_index * 2
                 current_position = float(self.peak_params_grid.GetCellValue(row, 2))
 
