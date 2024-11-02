@@ -2873,16 +2873,16 @@ class MyFrame(wx.Frame):
 
 if __name__ == '__main__':
     # Try Multiprocessing
-    import multiprocessing
+    # import multiprocessing
 
-    multiprocessing.freeze_support()  # Required for Windows
+    # multiprocessing.freeze_support()  # Required for Windows
 
     # Set number of cores for numerical libraries
     import os
 
-    os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())
-    os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())
-    os.environ['OPENBLAS_NUM_THREADS'] = str(multiprocessing.cpu_count())
+    # os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())
+    # os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())
+    # os.environ['OPENBLAS_NUM_THREADS'] = str(multiprocessing.cpu_count())
 
     app = wx.App(False)
     # app.SetHighDPIAware(True)  # Add this line to enable High DPI awareness
