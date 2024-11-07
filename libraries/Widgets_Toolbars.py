@@ -598,7 +598,9 @@ def update_statusbar(window, message):
 
 def open_manual(window):
     import os
-    manual_path = os.path.join("libraries", "Images", "Try.pdf")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.dirname(current_dir)
+    manual_path = os.path.join(root_dir, "Manual.pdf")
     import webbrowser
     webbrowser.open(manual_path)
 

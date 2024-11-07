@@ -30,7 +30,10 @@ def on_about(self, event):
 
 
     # Load and display QR code
-    qr_path = os.path.join("libraries", "Images", "buymeacoffee_qr.png")
+    # qr_path = os.path.join("libraries", "Images", "buymeacoffee_qr.png")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(current_dir, "Images")
+    qr_path = os.path.join(image_path, "buymeacoffee_qr.png")
     if os.path.exists(qr_path):
         qr_image = wx.Image(qr_path, wx.BITMAP_TYPE_PNG)
         qr_image = qr_image.Scale(150, 150, wx.IMAGE_QUALITY_HIGH)
