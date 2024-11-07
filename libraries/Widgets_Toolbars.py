@@ -322,6 +322,9 @@ def create_menu(window):
     mini_help_item = help_menu.Append(wx.NewId(), "Help")
     window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
 
+    manual_item = help_menu.Append(wx.NewId(), "Open Manual\tCtrl+M")
+    window.Bind(wx.EVT_MENU, lambda event: open_manual(window), manual_item)
+
     shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
     window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
 
@@ -592,4 +595,10 @@ def update_statusbar(window, message):
     """
     window.SetStatusText("Working Directory: " + message)
 
+
+def open_manual(window):
+    import os
+    manual_path = os.path.join("libraries", "Images", "Try.pdf")
+    import webbrowser
+    webbrowser.open(manual_path)
 

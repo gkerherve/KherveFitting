@@ -117,26 +117,30 @@ class FittingWindow(wx.Frame):
         self.model_combobox = CustomComboBox(self.fitting_panel, style=wx.CB_READONLY)
 
         # Set items and green items
-        items = ["--- Area Based ---",
+        items = ["Preferred Models-----",
+                 "GL (Area)",
+                 "SGL (Area)",
+                 "LA (Area, \u03c3/\u03b3, \u03b3)",
+                 "Voigt (Area, L/G, \u03c3)",
+                 "Area Based----------",
                  "GL (Area)",
                  "SGL (Area)",
                  "Voigt (Area, \u03c3, \u03b3)",
                  "Voigt (Area, L/G, \u03c3)",
-                 "Pseudo-Voigt (Area)",
-
-                 "--- Height Based ---",
-                 "GL (Height)",
-                 "SGL (Height)",
-
-                 "--- Under Test ---",
-                 "ExpGauss.(Area, \u03c3, \u03b3)",
                  "LA (Area, \u03c3, \u03b3)",
                  "LA (Area, \u03c3/\u03b3, \u03b3)",
-                 "LA*G (Area, \u03c3/\u03b3, \u03b3)"
+                 "LA*G (Area, \u03c3/\u03b3, \u03b3)",
+                 "Pseudo-Voigt (Area)",
+                 "ExpGauss.(Area, \u03c3, \u03b3)",
+                 "Height Based---------",
+                 "GL (Height)",
+                 "SGL (Height)",
+                 "Under Test -----------",
+
                  ]
 
 
-        green_items = ["--- Area Based ---", "--- Height Based ---", "--- Under Test ---"]
+        green_items = ["Area Based----------", "Height Based---------", "Under Test -----------", "Preferred Models-----"]
         self.model_combobox.SetItems(items)
         self.model_combobox.SetGreenItems(green_items)
 
@@ -176,10 +180,10 @@ class FittingWindow(wx.Frame):
         ], style=wx.CB_READONLY)
         self.optimization_method.SetSelection(1)  # Default value
 
-        self.max_iter_spin = wx.SpinCtrl(self.fitting_panel, value=str(self.parent.max_iterations), min=1, max=10000)
+        self.max_iter_spin = wx.SpinCtrl(self.fitting_panel, value=str(self.parent.max_iterations), min=20, max=200)
         self.max_iter_spin.Bind(wx.EVT_SPINCTRL, self.on_max_iter_change)
 
-        self.fit_iterations_spin = wx.SpinCtrl(self.fitting_panel, value="20", min=1, max=100)
+        self.fit_iterations_spin = wx.SpinCtrl(self.fitting_panel, value="20", min=3, max=100)
 
         self.r_squared_label = wx.StaticText(self.fitting_panel, label="R²:")
         self.r_squared_text = wx.TextCtrl(self.fitting_panel, style=wx.TE_READONLY)
@@ -234,7 +238,7 @@ class FittingWindow(wx.Frame):
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         fitting_sizer.Add(self.optimization_method, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=0)
 
-        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Max Iteration:"), pos=(3, 0),
+        fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Convergence Limit:"), pos=(3, 0),
                           flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         fitting_sizer.Add(self.max_iter_spin, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
         fitting_sizer.Add(wx.StaticText(self.fitting_panel, label="Fit Iterations:"), pos=(4, 0),
