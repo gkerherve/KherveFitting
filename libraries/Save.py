@@ -577,7 +577,10 @@ def save_plot_to_excel(window):
     try:
         # Save the current figure to a bytes buffer
         buf = io.BytesIO()
+        original_size = window.figure.get_size_inches()  # Store original size
+        window.figure.set_size_inches(7.4, 5.2)  # Set fixed size
         window.figure.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        window.figure.set_size_inches(original_size)  # Restore to original size
         buf.seek(0)
 
         # Open the workbook and select the sheet
@@ -708,6 +711,13 @@ def save_results_table(window):
             wb.remove(wb[sheet_name])
         ws = wb.create_sheet(sheet_name)
 
+        def get_column_letter(n):
+            result = ""
+            while n > 0:
+                n, remainder = divmod(n - 1, 26)
+                result = chr(65 + remainder) + result
+            return result
+
         headers = [window.results_grid.GetColLabelValue(col) for col in range(window.results_grid.GetNumberCols())]
         for col, header in enumerate(headers, start=2):
             cell = ws.cell(row=2, column=col, value=header)
@@ -726,13 +736,14 @@ def save_results_table(window):
                               bottom=Side(style='medium'))
 
         max_row = ws.max_row
-        max_col = ws.max_column
+        max_col = len(headers) + 1
+        end_letter = get_column_letter(max_col)
 
-        for row in ws[f'B2:{chr(65 + max_col-1)}2']:
+        for row in ws[f'B2:{end_letter}2']:
             for cell in row:
                 cell.border = thick_border
 
-        for row in ws[f'B3:{chr(65 + max_col - 1)}{max_row}']:
+        for row in ws[f'B3:{end_letter}{max_row}']:
             for cell in row:
                 cell.border = thin_border
 
