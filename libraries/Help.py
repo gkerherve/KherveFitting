@@ -2,6 +2,7 @@ import wx
 import wx.html
 import os
 import sys
+import pygame
 
 
 
@@ -289,3 +290,11 @@ def show_shortcuts(parent):
     dlg.SetSizer(sizer)
     # dlg.ShowModal()
     dlg.Show()
+
+
+def show_mini_game(parent):
+    from libraries.MiniGame import ParticleSimulation
+    pygame.init()
+    sim = ParticleSimulation()
+    sim.run()
+    pygame.quit()

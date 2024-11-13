@@ -143,20 +143,27 @@ class PreferenceWindow(wx.Frame):
         self.parent.clear_and_replot()
 
     def init_instrument_tab(self):
-        # sizer = wx.BoxSizer(wx.VERTICAL)
-
         sizer = wx.GridBagSizer(5, 5)
 
         instruments = list(set(instr for data in self.parent.library_data.values() for instr in data.keys()))
         self.instrument_combo = wx.ComboBox(self.instrument_tab, choices=instruments, style=wx.CB_READONLY)
         self.instrument_combo.Bind(wx.EVT_COMBOBOX, self.on_instrument_change)
 
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Current Instrument:"), pos=(0, 0), flag=wx.EXPAND |
-                                                                                                    wx.ALL, border=5)
+        # Add instrument selection
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Current Instrument:"), pos=(0, 0),
+                  flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.instrument_combo, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
+        # Add ECF method selection
+        self.library_type_label = wx.StaticText(self.instrument_tab, label="ECF Method:")
+        self.library_type_combo = wx.ComboBox(self.instrument_tab,
+                                              choices=["Scofield (KE^0.6)", "Wagner (KE^1.0)", "TPP-2M"],
+                                              style=wx.CB_READONLY)
+        sizer.Add(self.library_type_label, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.library_type_combo, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
         self.use_transmission = wx.CheckBox(self.instrument_tab, label="Use Transmission")
-        sizer.Add(self.use_transmission, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.use_transmission, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
 
         self.instrument_tab.SetSizer(sizer)
 
@@ -554,6 +561,10 @@ class PreferenceWindow(wx.Frame):
 
         if hasattr(self.parent, 'current_instrument'):
             self.instrument_combo.SetValue(self.parent.current_instrument)
+        if hasattr(self.parent, 'library_type'):
+            self.library_type_combo.SetValue(self.parent.library_type +
+                                             (" (KE^0.6)" if self.parent.library_type == "Scofield" else
+                                              " (KE^1.0)" if self.parent.library_type == "Wagner" else ""))
 
     def OnPeakNumberChange(self, event):
         current_peak = event.GetPosition() - 1
@@ -665,6 +676,11 @@ class PreferenceWindow(wx.Frame):
         self.parent.ax.set_xlabel(self.parent.x_axis_label)
         self.parent.ax.set_ylabel(self.parent.y_axis_label)
         self.parent.canvas.draw_idle()
+
+        self.parent.current_instrument = self.instrument_combo.GetValue()
+        self.parent.library_type = self.library_type_combo.GetValue().split()[
+            0]  # Gets just "Scofield", "Wagner" or "TPP-2M"
+        self.parent.use_transmission = self.use_transmission.GetValue()
 
         # Save the configuration
         self.parent.save_config()

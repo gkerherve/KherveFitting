@@ -23,6 +23,7 @@ from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig
 from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
+from libraries.Peak_Functions import AtomicConcentrations
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
@@ -246,7 +247,7 @@ class MyFrame(wx.Frame):
         self.recent_files = []
         self.max_recent_files = 10  # Maximum number of recent files to keep
 
-
+        self.library_type = "Scofield"  # Default value
 
         # Load config if exists
         self.load_config()
@@ -1996,35 +1997,102 @@ class MyFrame(wx.Frame):
         save_state(self)
         export_results(self)
 
-
     def on_cell_changed(self, event):
         row = event.GetRow()
         col = event.GetCol()
 
         try:
-            if col in [1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19]:
+            if col in [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]:
                 event.Veto()
                 return
-            elif col in [8]:  # Height, FWHM, L/G, RSF columns
+            elif col in [8]:  # RSF column
                 rsf = float(self.results_grid.GetCellValue(row, 8))
-                new_area = float(self.results_grid.GetCellValue(row, 5))
-                self.results_grid.SetCellValue(row, 5, f"{new_area:.2f}")
+                area = float(self.results_grid.GetCellValue(row, 5))
+                binding_energy = float(self.results_grid.GetCellValue(row, 1))
+                kinetic_energy = self.photons - binding_energy
 
-                # Recalculate the relative area
-                new_rel_area = new_area / rsf
+                # Calculate ECF based on method
+                if self.library_type == "Scofield":
+                    ecf = kinetic_energy ** 0.6
+                elif self.library_type == "Wagner":
+                    ecf = kinetic_energy ** 1.0
+                elif self.library_type == "TPP-2M":
+                    z_avg = 50  # Default values
+                    n_v_avg = 4
+                    molecular_weight = 100
+                    density = 2.0
+                    imfp = PeakFunctions.calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg,
+                                                              molecular_weight, density)
+                    ecf = 1 / imfp
+                else:
+                    ecf = 1.0
+
+                txfn = 1.0  # Transmission function
+                new_rel_area = area / (rsf * txfn * ecf)
                 self.results_grid.SetCellValue(row, 10, f"{new_rel_area:.2f}")
 
-                # Update the atomic percentages if necessary
+                # Update the atomic percentages
                 self.update_atomic_percentages()
             elif col in [16, 17, 18, 19]:  # Constraint columns
-                # You may want to add logic here to handle changes in constraints
                 pass
 
         except ValueError:
             wx.MessageBox("Invalid value entered", "Error", wx.OK | wx.ICON_ERROR)
 
-
     def update_atomic_percentages(self):
+        current_rows = self.results_grid.GetNumberRows()
+        total_normalized_area = 0
+        checked_indices = []
+
+        # Calculate ECF for each peak
+        for i in range(current_rows):
+            if self.results_grid.GetCellValue(i, 7) == '1':  # If checkbox ticked
+                binding_energy = float(self.results_grid.GetCellValue(i, 1))
+                kinetic_energy = self.photons - binding_energy
+                print(f"Library Type:{self.library_type}")
+                # Calculate ECF based on method selected
+                if self.library_type == "Scofield":
+                    ecf = kinetic_energy ** 0.6
+                elif self.library_type == "Wagner":
+                    ecf = kinetic_energy ** 1.0
+                elif self.library_type == "TPP-2M":
+                    # Get material properties for TPP-2M calculation
+                    z_avg = 50  # Default values - you should add UI to set these
+                    n_v_avg = 4
+                    molecular_weight = 100
+                    density = 2.0
+
+                    # Calculate IMFP using TPP-2M
+                    imfp = PeakFunctions.calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg,
+                                                              molecular_weight, density)
+
+                    # ECF is the reciprocal of IMFP
+                    ecf = 1 / imfp
+                else:
+                    ecf = 1.0  # Default no correction
+
+                # Get raw area and RSF
+                area = float(self.results_grid.GetCellValue(i, 5))
+                rsf = float(self.results_grid.GetCellValue(i, 8))
+
+                # Calculate normalized area with ECF correction
+                txfn = 1.0  # Transmission function
+                normalized_area = area / (rsf * txfn * ecf)
+
+                total_normalized_area += normalized_area
+                checked_indices.append((i, normalized_area))
+            else:
+                # Set the atomic percentage to 0 for unticked rows
+                self.results_grid.SetCellValue(i, 6, "0.00")
+
+        # Calculate atomic percentages
+        for i, norm_area in checked_indices:
+            atomic_percent = (norm_area / total_normalized_area) * 100 if total_normalized_area > 0 else 0
+            self.results_grid.SetCellValue(i, 6, f"{atomic_percent:.2f}")
+
+        self.results_grid.ForceRefresh()
+
+    def update_atomic_percentages_OLD(self):
         current_rows = self.results_grid.GetNumberRows()
         total_normalized_area = 0
         checked_indices = []

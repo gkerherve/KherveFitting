@@ -627,6 +627,35 @@ class BackgroundCalculations:
         return background[1:-1]  # Remove padding before returning
 
 
+class AtomicConcentrations:
+    @staticmethod
+    def calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg, molecular_weight, density):
+        """
+        Calculate IMFP using TPP-2M formula
+        Parameters:
+            kinetic_energy: electron energy in eV
+            z_avg: average atomic number
+            n_v_avg: average number of valence electrons
+            molecular_weight: molecular weight (g/mol)
+            density: density (g/cm³)
+        Returns:
+            imfp: Inelastic Mean Free Path in nanometers
+
+        Reference: S.Tanuma, C.J.Powell and D.R.Penn - Surface and Interface Analysis, Vol 21, 165-176 (1993)
+        """
+        E = kinetic_energy
+        beta = -0.10 + 0.944 / (E ** 2) + 0.069 * density ** 0.1
+        gamma = 0.191 / density ** 0.5
+        C = 1.97 - 0.91 * (n_v_avg / z_avg)
+        D = 53.4 - 20.8 * (n_v_avg / z_avg)
+
+        # Calculate plasmon energy E_p
+        E_p = 28.8 * (n_v_avg * density / molecular_weight) ** 0.5
+
+        imfp = (E / (E_p ** 2)) * (beta * np.log(gamma * E) - (C / E) + (D / E ** 2))
+        return imfp
+
+
 
 # ------------------------------ HISTORY CHECK -----------------------------------------------
 # --------------------------------------------------------------------------------------------

@@ -14,7 +14,7 @@ from libraries.Peak_Functions import PeakFunctions, BackgroundCalculations
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Save import save_results_table, save_all_sheets_with_plots
 from libraries.Help import on_about
-from libraries.Help import show_shortcuts
+from libraries.Help import show_shortcuts, show_mini_game
 from libraries.Save import undo, redo, save_state, update_undo_redo_state
 from libraries.Open import update_recent_files, import_avantage_file, open_avg_file, import_multiple_avg_files
 from libraries.Utilities import load_rsf_data

@@ -14,7 +14,7 @@ from libraries.Save import update_undo_redo_state
 from libraries.Open import open_vamas_file_dialog
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
-    on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, on_about)
+    on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, show_mini_game, on_about)
 
 
 from Functions import refresh_sheets, on_sheet_selected_wrapper, toggle_plot, on_save, on_save_plot, on_save_all_sheets, toggle_Col_1, undo, redo
@@ -121,7 +121,7 @@ def create_peak_params_grid(window, parent):
 
     # Set column labels and sizes
     column_labels = ["ID", "Peak\nLabel", "Position\n(eV)", "Height\n(CPS)", "FWHM\n(eV)", "\u03c3/\u03b3 (%)\nL/G \n", "Area\n(CPS.eV)",
-                     "\u03c3\nW_g", "\u03b3\nW_l", "Skew",
+                     "\u03c3\nW_g", "\u03b3\nW_l", "W_g\nSkew",
                      "I/I\u1D00", "A/A\u1D00", "Split\n(eV)", "Fitting Model", "Bkg Type", "Bkg Low\n(eV)",
                      "Bkg High\n(eV)", "Bkg Offset Low\n(CPS)", "Bkg Offset High\n(CPS)"]
     for i, label in enumerate(column_labels):
@@ -327,6 +327,9 @@ def create_menu(window):
 
     shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
     window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
+
+    mini_game_item = help_menu.Append(wx.NewId(), "Mini Game")
+    window.Bind(wx.EVT_MENU, lambda event: show_mini_game(window), mini_game_item)
 
     coffee_item = help_menu.Append(wx.NewId(), "Buy Me a Coffee")
     window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://buymeacoffee.com/gkerherve"), coffee_item)
@@ -596,11 +599,26 @@ def update_statusbar(window, message):
     window.SetStatusText("Working Directory: " + message)
 
 
-def open_manual(window):
+def open_manual2(window):
     import os
     current_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(current_dir)
     manual_path = os.path.join(root_dir, "Manual.pdf")
     import webbrowser
+    webbrowser.open(manual_path)
+
+def open_manual(window):
+    import os
+    import sys
+    import webbrowser
+
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle, get the path of the executable
+        application_path = os.path.dirname(sys.executable)
+    else:
+        # If the application is run as a script, get the path of the script
+        application_path = os.path.dirname(os.path.abspath(__file__))
+
+    manual_path = os.path.join(application_path, "Manual.pdf")
     webbrowser.open(manual_path)
 

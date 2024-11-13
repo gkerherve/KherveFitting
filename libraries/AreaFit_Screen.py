@@ -131,7 +131,7 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(0, 6, f"{area:.2f}")
                 grid.SetCellValue(0, 7, "0.00")  # Sigma
                 grid.SetCellValue(0, 8, "0.00")  # Gamma
-                grid.SetCellValue(0, 12, "Unfitted")  # Fitting Model
+                grid.SetCellValue(0, 13, "Unfitted")  # Fitting Model
 
                 # Set constraints and color
                 for col in range(grid.GetNumberCols()):
@@ -158,6 +158,7 @@ class BackgroundWindow(wx.Frame):
                     'Area': area,
                     'Sigma': 0,
                     'Gamma': 0,
+                    'Skew': 0,
                     'Fitting Model': "Unfitted",
                     'Constraints': {
                         'Position': position_constraint,
