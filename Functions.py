@@ -588,8 +588,8 @@ def fit_peaks(window, peak_params_grid):
                     params.add(f'{prefix}fwhm', value=fwhm, min=fwhm_min, max=fwhm_max, vary=fwhm_vary)
                     params.add(f'{prefix}fraction', value=lg_ratio, min=lg_ratio_min, max=lg_ratio_max,
                                vary=lg_ratio_vary)
-                elif peak_model_choice == "Unfitted":
-                    return
+                # elif peak_model_choice == "Unfitted":
+                #     return
                 else:
                     raise ValueError(f"Unknown fitting model: {peak_model_choice} for peak {i}")
 
@@ -791,6 +791,7 @@ def fit_peaks(window, peak_params_grid):
                         'Sigma': sigma,
                         'Gamma': gamma,
                         'fwhm_g':fwhm_g,
+                        'Skew': skew,
                         'Fitting Model': peak_model_choice
                     })
                 else:

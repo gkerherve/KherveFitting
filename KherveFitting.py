@@ -39,6 +39,7 @@ from libraries.survey import PeriodicTableWindow
 from libraries.Widgets_Toolbars import create_widgets, create_menu
 from libraries.Widgets_Toolbars import create_statusbar, update_statusbar
 from libraries.Open import open_xlsx_file
+from libraries.Export import export_word_report
 
 
 

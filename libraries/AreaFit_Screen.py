@@ -114,6 +114,7 @@ class BackgroundWindow(wx.Frame):
                 lg_constraint = "0,0.5"
                 sigma_constraint = "0.1,1"
                 gamma_constraint = "0.1,1"
+                skew_constraint = "0.01,2"
 
                 # Update peak fitting parameter grid
                 grid = self.parent.peak_params_grid
@@ -131,6 +132,7 @@ class BackgroundWindow(wx.Frame):
                 grid.SetCellValue(0, 6, f"{area:.2f}")
                 grid.SetCellValue(0, 7, "0.00")  # Sigma
                 grid.SetCellValue(0, 8, "0.00")  # Gamma
+                grid.SetCellValue(0, 9, "0.00")  # Skew
                 grid.SetCellValue(0, 13, "Unfitted")  # Fitting Model
 
                 # Set constraints and color
@@ -167,7 +169,7 @@ class BackgroundWindow(wx.Frame):
                         'L/G': lg_constraint,
                         'Sigma': sigma_constraint,
                         'Gamma': gamma_constraint,
-                        'skew': skew_constraint
+                        'Skew': skew_constraint
                     }
                 }
 

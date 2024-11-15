@@ -12,6 +12,7 @@ from libraries.Plot_Operations import PlotManager
 from Functions import toggle_Col_1
 from libraries.Save import update_undo_redo_state
 from libraries.Open import open_vamas_file_dialog
+from libraries.Export import export_word_report
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
     on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, show_mini_game, on_about)
@@ -267,6 +268,10 @@ def create_menu(window):
 
     save_plot_item_svg = export_menu.Append(wx.NewId(), "Export as SVG")
     window.Bind(wx.EVT_MENU, lambda event: on_save_plot_svg(window), save_plot_item_svg)
+
+    export_menu.AppendSeparator()
+    word_report_item = export_menu.Append(wx.NewId(), "Word Report")
+    window.Bind(wx.EVT_MENU, lambda event: export_word_report(window), word_report_item)
 
     # Recent files submenu
     window.recent_files_menu = wx.Menu()

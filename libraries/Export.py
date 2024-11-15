@@ -4,6 +4,7 @@ import re
 from libraries.Utilities import load_rsf_data
 from libraries.Save import save_state
 from libraries.Open import load_library_data
+from libraries.Sheet_Operations import on_sheet_selected
 
 
 def export_results(window):
@@ -276,3 +277,110 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
 def _bind_grid_events(window):
     """Bind necessary events to the results grid."""
     window.results_grid.Bind(wx.grid.EVT_GRID_CELL_CHANGED, window.on_cell_changed)
+
+
+def export_word_report(window):
+    from docx import Document
+    from docx.shared import Inches, Pt
+    from docx.enum.section import WD_ORIENT
+    import os
+    from docx.shared import RGBColor
+
+    file_path = window.Data['FilePath']
+    base_path = os.path.splitext(file_path)[0]
+    doc = Document()
+
+    sections = doc.sections
+    for section in sections:
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+
+    doc.add_heading('XPS Analysis Report', 0)
+
+    for sheet_name in window.Data['Core levels'].keys():
+        window.sheet_combobox.SetValue(sheet_name)
+        on_sheet_selected(window, sheet_name)
+
+        doc.add_heading(sheet_name, level=1)
+
+        plot_path = f"{base_path}_{sheet_name}_plot.png"
+        window.figure.savefig(plot_path, dpi=300, bbox_inches='tight')
+        doc.add_picture(plot_path, width=Inches(7))
+        os.remove(plot_path)
+
+        doc.add_heading('Fitting Parameters', level=2)
+
+        # Peak parameters table
+        columns = ['Label', 'Position', 'FWHM', 'Area', 'L/G', 'Sigma', 'Gamma', 'Model']
+        col_indices = [1, 2, 4, 6, 5, 7, 8, 13]
+        col_widths = [1.5, 1., 1., 1.5, 1., 1., 1., 2]
+
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2
+
+        table = doc.add_table(rows=1 + num_peaks * 2, cols=len(columns))
+        table.style = 'Table Grid'
+        table.autofit = False
+
+        # Add headers with bold formatting
+        for i, header in enumerate(columns):
+            cell = table.cell(0, i)
+            cell.text = header
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.bold = True
+
+        for peak in range(num_peaks):
+            value_row = peak * 2 + 1
+            constraint_row = value_row + 1
+            grid_row = peak * 2
+
+            for col, grid_col in enumerate(col_indices):
+                cell = table.cell(value_row, col)
+                cell.text = window.peak_params_grid.GetCellValue(grid_row, grid_col)
+
+            for col, grid_col in enumerate(col_indices):
+                if col > 0:
+                    cell = table.cell(constraint_row, col)
+                    cell.text = window.peak_params_grid.GetCellValue(grid_row + 1, grid_col)
+
+        for i, col in enumerate(table.columns):
+            col.width = Inches(col_widths[i])
+
+        doc.add_paragraph('')
+
+    doc.add_paragraph('')
+
+    # Results grid table
+    doc.add_heading('Quantification Results', level=2)
+
+    results_columns = ['Peak Label', 'Position', 'FWHM', 'Area', 'Rel. Area', 'RSF', 'at. %']
+    results_indices = [0, 1, 3, 5, 10, 8, 6]  # Indices in results grid
+    results_widths = [2, 1., 1., 1.5, 1.5, 0.9, 1.]
+
+    results_table = doc.add_table(rows=window.results_grid.GetNumberRows() + 1, cols=len(results_columns))
+    results_table.style = 'Table Grid'
+    results_table.autofit = False
+
+    # Add headers with bold formatting
+    for i, header in enumerate(results_columns):
+        cell = results_table.cell(0, i)
+        cell.text = header
+        for paragraph in cell.paragraphs:
+            for run in paragraph.runs:
+                run.font.bold = True
+
+    # Add data
+    for row in range(window.results_grid.GetNumberRows()):
+        for col, grid_col in enumerate(results_indices):
+            cell = results_table.cell(row + 1, col)
+            cell.text = window.results_grid.GetCellValue(row, grid_col)
+
+    # Set column widths
+    for i, col in enumerate(results_table.columns):
+        col.width = Inches(results_widths[i])
+
+
+
+    word_path = f"{base_path}_report.docx"
+    doc.save(word_path)
+    window.show_popup_message2("Report Created", f"Saved to: {word_path}")

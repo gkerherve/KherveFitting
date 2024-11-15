@@ -972,8 +972,8 @@ class PlotManager:
         residuals = window.y_values - overall_fit
 
         # Determine the scaling factor
-        max_raw_data = max(window.y_values)
-        desired_max_residual = 0.1 * max_raw_data
+        max_raw_data = max(window.y_values) - min(window.y_values)
+        desired_max_residual = 0.05 * max_raw_data
         actual_max_residual = max(abs(residuals))
         scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
 
@@ -994,14 +994,14 @@ class PlotManager:
             self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
                     linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
 
-            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.1 * max(window.y_values),
+            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
                                          alpha=self.residual_alpha, label='Residuals')
         else:
             self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
                     linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
 
-            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.1 * max(window.y_values),
+            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
                                          alpha=self.residual_alpha, label='Residuals')
 
@@ -1010,7 +1010,7 @@ class PlotManager:
 
         if rsd is not None:
             y_max = self.ax.get_ylim()[1]
-            residual_height = 1.1 * max(window.y_values)
+            residual_height = 1.07 * max(window.y_values)
             x_min = self.ax.get_xlim()[1] + 0.4
 
             if self.rsd_text:
