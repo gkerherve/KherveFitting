@@ -19,14 +19,14 @@ class DParameterWindow(wx.Frame):
         # Smooth Width
         smooth_sizer = wx.BoxSizer(wx.HORIZONTAL)
         smooth_label = wx.StaticText(panel, label="Smooth Width")
-        self.smooth_spin = wx.SpinCtrlDouble(panel, value="2.0", min=0.1, max=10.0, inc=0.1)
+        self.smooth_spin = wx.SpinCtrlDouble(panel, value="7.0", min=0.1, max=10.0, inc=0.1)
         smooth_sizer.Add(smooth_label, 0, wx.ALL | wx.CENTER, 5)
         smooth_sizer.Add(self.smooth_spin, 0, wx.ALL, 5)
 
         # Pre-Smooth Passes
         pre_sizer = wx.BoxSizer(wx.HORIZONTAL)
         pre_label = wx.StaticText(panel, label="Pre-Smooth Passes")
-        self.pre_spin = wx.SpinCtrl(panel, value="1", min=0, max=10)
+        self.pre_spin = wx.SpinCtrl(panel, value="2", min=0, max=10)
         pre_sizer.Add(pre_label, 0, wx.ALL | wx.CENTER, 5)
         pre_sizer.Add(self.pre_spin, 0, wx.ALL, 5)
 
@@ -103,6 +103,11 @@ class DParameterWindow(wx.Frame):
         x_values = self.parent.x_values
         y_values = self.parent.y_values
 
+        # Clear previous derivative plots
+        for line in self.parent.ax.lines:
+            if line.get_label() == 'Derivative':
+                line.remove()
+
         normalized_deriv = OtherCalc.smooth_and_differentiate(
             x_values,
             y_values,
@@ -124,7 +129,7 @@ class DParameterWindow(wx.Frame):
         self.d_value.SetValue(f"{d_param:.2f}")
 
         # Update plot
-        self.parent.ax.plot(x_values, normalized_deriv, '--', color='red', label='Derivative')
+        self.parent.ax.plot(x_values, normalized_deriv, '-', color='grey', label='Derivative')
         self.parent.canvas.draw_idle()
 
         # Update peak parameters grid
@@ -133,18 +138,28 @@ class DParameterWindow(wx.Frame):
 
         center = (x_max + x_min) / 2
 
-        self.parent.peak_params_grid.SetCellValue(row, 0, chr(65 + row // 2))
-        self.parent.peak_params_grid.SetCellValue(row, 1, "D-parameter")
-        self.parent.peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
-        self.parent.peak_params_grid.SetCellValue(row, 4, f"{d_param:.2f}")
-        self.parent.peak_params_grid.SetCellValue(row, 7, f"{self.pre_spin.GetValue():.2f}")
-        self.parent.peak_params_grid.SetCellValue(row, 8, f"{self.post_spin.GetValue():.2f}")
-        self.parent.peak_params_grid.SetCellValue(row, 5, f"{self.diff_spin.GetValue():.2f}")
-        self.parent.peak_params_grid.SetCellValue(row, 13, "D-parameter")
+        self.parent.peak_params_grid.SetCellValue(0, 0, chr(65 + row // 2))
+        self.parent.peak_params_grid.SetCellValue(0, 1, "D-parameter")
+        self.parent.peak_params_grid.SetCellValue(0, 2, f"{center:.2f}")
+        self.parent.peak_params_grid.SetCellValue(0, 4, f"{d_param:.2f}")
+        self.parent.peak_params_grid.SetCellValue(0, 7, f"{self.pre_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(0, 8, f"{self.post_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(0, 9, f"{self.smooth_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(0, 5, f"{self.diff_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(0, 13, "D-parameter")
+        # self.parent.peak_params_grid.SetCellValue(row, 0, chr(65 + row // 2))
+        # self.parent.peak_params_grid.SetCellValue(row, 1, "D-parameter")
+        # self.parent.peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
+        # self.parent.peak_params_grid.SetCellValue(row, 4, f"{d_param:.2f}")
+        # self.parent.peak_params_grid.SetCellValue(row, 7, f"{self.pre_spin.GetValue():.2f}")
+        # self.parent.peak_params_grid.SetCellValue(row, 8, f"{self.post_spin.GetValue():.2f}")
+        # self.parent.peak_params_grid.SetCellValue(row, 9, f"{self.smooth_spin.GetValue():.2f}")
+        # self.parent.peak_params_grid.SetCellValue(row, 5, f"{self.diff_spin.GetValue():.2f}")
+        # self.parent.peak_params_grid.SetCellValue(row, 13, "D-parameter")
 
     def on_defaults(self, event):
-        self.smooth_spin.SetValue(2.0)
-        self.pre_spin.SetValue(1)
+        self.smooth_spin.SetValue(7.0)
+        self.pre_spin.SetValue(2)
         self.diff_spin.SetValue(1.0)
         self.post_spin.SetValue(1)
         self.algo_radio.SetSelection(0)
