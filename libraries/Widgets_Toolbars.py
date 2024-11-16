@@ -437,6 +437,13 @@ def create_horizontal_toolbar(window):
     id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
                               shortHelp="Element identifications (ID)")
 
+    diff_tool = toolbar.AddTool(wx.ID_ANY, 'Differentiate',
+                                wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
+                                shortHelp="Smooth and differentiate data")
+
+    window.Bind(wx.EVT_TOOL, window.on_differentiate, diff_tool)
+
+
     toolbar.AddStretchableSpace()
 
     # Export and toggle tools

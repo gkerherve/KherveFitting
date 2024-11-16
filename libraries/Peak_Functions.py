@@ -6,6 +6,7 @@ from lmfit.models import VoigtModel
 from scipy.optimize import minimize_scalar, brentq
 from scipy.signal import convolve
 from scipy.interpolate import interp1d
+from scipy.ndimage import gaussian_filter
 
 import numpy as np
 
@@ -655,6 +656,30 @@ class AtomicConcentrations:
         imfp = (E / (E_p ** 2)) * (beta * np.log(gamma * E) - (C / E) + (D / E ** 2))
         return imfp
 
+
+class OtherCalc:
+    @staticmethod
+    def smooth_and_differentiate(x_values, y_values, smooth_width=2.0, pre_smooth=1, diff_width=1.0, post_smooth=1):
+        from scipy.ndimage import gaussian_filter
+
+        # Pre-smoothing passes
+        smoothed = y_values
+        for _ in range(int(smooth_width)):
+            smoothed = gaussian_filter(smoothed, smooth_width)
+
+        # Calculate derivative
+        derivative = np.gradient(smoothed, diff_width)
+
+        # Post-smoothing passes
+        for _ in range(int(smooth_width)):
+            derivative = gaussian_filter(derivative, smooth_width)
+
+        # Normalize derivative to data range
+        data_range = np.max(y_values) - np.min(y_values)
+        deriv_range = np.max(derivative) - np.min(derivative)
+        normalized_deriv = ((derivative - np.min(derivative)) / deriv_range * data_range) + np.min(y_values)
+
+        return normalized_deriv
 
 
 # ------------------------------ HISTORY CHECK -----------------------------------------------
