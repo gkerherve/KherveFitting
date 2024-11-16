@@ -428,6 +428,11 @@ def create_horizontal_toolbar(window):
     fitting_tool = toolbar.AddTool(wx.ID_ANY, 'Fitting', wx.Bitmap(os.path.join(icon_path, "C1s-25.png"),
                                                                    wx.BITMAP_TYPE_PNG), shortHelp="Create Peaks "
                                                                                                   "Model \tCtrl+P")
+
+    diff_tool = toolbar.AddTool(wx.ID_ANY, 'Differentiate',
+                                wx.Bitmap(os.path.join(icon_path, "Dpara-25.png"), wx.BITMAP_TYPE_PNG),
+                                shortHelp="D-parameter Calculation")
+
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
     toolbar.AddSeparator()
@@ -437,9 +442,7 @@ def create_horizontal_toolbar(window):
     id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
                               shortHelp="Element identifications (ID)")
 
-    diff_tool = toolbar.AddTool(wx.ID_ANY, 'Differentiate',
-                                wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
-                                shortHelp="Smooth and differentiate data")
+
 
     window.Bind(wx.EVT_TOOL, window.on_differentiate, diff_tool)
 

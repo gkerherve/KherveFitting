@@ -41,6 +41,7 @@ from libraries.Widgets_Toolbars import create_statusbar, update_statusbar
 from libraries.Open import open_xlsx_file
 from libraries.Export import export_word_report
 from libraries.Peak_Functions import OtherCalc
+from libraries.Dpara_Screen import DParameterWindow
 
 
 
@@ -2791,18 +2792,12 @@ class MyFrame(wx.Frame):
 
         if hasattr(self, 'canvas'):
             self.canvas.draw_idle()
+
     def on_differentiate(self, event):
-        sheet_name = self.sheet_combobox.GetValue()
-        if sheet_name not in self.Data['Core levels']:
-            return
-
-        x_values = np.array(self.Data['Core levels'][sheet_name]['B.E.'])
-        y_values = np.array(self.Data['Core levels'][sheet_name]['Raw Data'])
-
-        normalized_deriv = OtherCalc.smooth_and_differentiate(x_values, y_values)
-
-        self.ax.plot(x_values, normalized_deriv, '-', color='red', label='Derivative')
-        self.canvas.draw_idle()
+        if not hasattr(self, 'd_param_window') or not self.d_param_window:
+            self.d_param_window = DParameterWindow(self)
+        self.d_param_window.Show()
+        self.d_param_window.Raise()
 
     def on_be_correction_change(self, event):
         new_correction = self.be_correction_spinbox.GetValue()

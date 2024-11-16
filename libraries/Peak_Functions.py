@@ -663,15 +663,15 @@ class OtherCalc:
         from scipy.ndimage import gaussian_filter
 
         # Pre-smoothing passes
-        smoothed = y_values
-        for _ in range(int(smooth_width)):
+        smoothed = y_values.copy()  # Make a copy to avoid modifying original
+        for _ in range(int(pre_smooth)):  # Use pre_smooth parameter instead of smooth_width
             smoothed = gaussian_filter(smoothed, smooth_width)
 
         # Calculate derivative
-        derivative = np.gradient(smoothed, diff_width)
+        derivative = np.gradient(smoothed, x_values)  # Use x_values for proper scaling
 
         # Post-smoothing passes
-        for _ in range(int(smooth_width)):
+        for _ in range(int(post_smooth)):  # Use post_smooth parameter
             derivative = gaussian_filter(derivative, smooth_width)
 
         # Normalize derivative to data range

@@ -8,7 +8,7 @@ class DParameterWindow(wx.Frame):
         super().__init__(parent, title="D-Parameter Measurement",
                          style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX))
         self.parent = parent
-        self.SetSize((400, 300))
+        self.SetSize((400, 400))
 
         panel = wx.Panel(self)
 
@@ -57,7 +57,7 @@ class DParameterWindow(wx.Frame):
         d_sizer = wx.StaticBoxSizer(d_box, wx.HORIZONTAL)
 
         self.auto_calc = wx.CheckBox(panel, label="Auto-Calculate")
-        self.d_value = wx.TextCtrl(panel, value="21.10")
+        self.d_value = wx.TextCtrl(panel, value="0")
         self.d_unit = wx.StaticText(panel, label="eV")
 
         d_sizer.Add(self.auto_calc, 0, wx.ALL, 5)
