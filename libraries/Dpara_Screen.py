@@ -102,60 +102,76 @@ class DParameterWindow(wx.Frame):
     def on_calculate(self, event):
         x_values = self.parent.x_values
         y_values = self.parent.y_values
+        sheet_name = self.parent.sheet_combobox.GetValue()
 
         # Clear previous derivative plots
         for line in self.parent.ax.lines:
             if line.get_label() == 'Derivative':
                 line.remove()
 
+        # Remove previous D-parameter rows if they exist
+        for row in range(self.parent.peak_params_grid.GetNumberRows() - 1, -1, -1):
+            if self.parent.peak_params_grid.GetCellValue(row, 13) == "D-parameter":
+                self.parent.peak_params_grid.DeleteRows(row, 2)
+
+        algorithm = self.algo_radio.GetString(self.algo_radio.GetSelection())
         normalized_deriv = OtherCalc.smooth_and_differentiate(
             x_values,
             y_values,
             self.smooth_spin.GetValue(),
             self.pre_spin.GetValue(),
             self.diff_spin.GetValue(),
-            self.post_spin.GetValue()
+            self.post_spin.GetValue(),
+            algorithm
         )
 
-        # Find Ymin and Ymax positions
         min_idx = np.argmin(normalized_deriv)
         max_idx = np.argmax(normalized_deriv)
-
         x_min = x_values[min_idx]
         x_max = x_values[max_idx]
-
-        # Calculate D-parameter
+        center = (x_max + x_min) / 2
         d_param = abs(x_max - x_min)
+
+        # Update D-value display
         self.d_value.SetValue(f"{d_param:.2f}")
 
-        # Update plot
-        self.parent.ax.plot(x_values, normalized_deriv, '-', color='grey', label='Derivative')
-        self.parent.canvas.draw_idle()
-
-        # Update peak parameters grid
+        # Add new rows
         row = self.parent.peak_params_grid.GetNumberRows()
         self.parent.peak_params_grid.AppendRows(2)
 
-        center = (x_max + x_min) / 2
+        # Update grid values
+        self.parent.peak_params_grid.SetCellValue(row, 0, chr(65 + row // 2))
+        self.parent.peak_params_grid.SetCellValue(row, 1, "D-parameter")
+        self.parent.peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
+        self.parent.peak_params_grid.SetCellValue(row, 4, f"{d_param:.2f}")
+        self.parent.peak_params_grid.SetCellValue(row, 7, f"{self.pre_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(row, 8, f"{self.post_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(row, 9, f"{self.smooth_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(row, 5, f"{self.diff_spin.GetValue():.2f}")
+        self.parent.peak_params_grid.SetCellValue(row, 13, "D-parameter")
 
-        self.parent.peak_params_grid.SetCellValue(0, 0, chr(65 + row // 2))
-        self.parent.peak_params_grid.SetCellValue(0, 1, "D-parameter")
-        self.parent.peak_params_grid.SetCellValue(0, 2, f"{center:.2f}")
-        self.parent.peak_params_grid.SetCellValue(0, 4, f"{d_param:.2f}")
-        self.parent.peak_params_grid.SetCellValue(0, 7, f"{self.pre_spin.GetValue():.2f}")
-        self.parent.peak_params_grid.SetCellValue(0, 8, f"{self.post_spin.GetValue():.2f}")
-        self.parent.peak_params_grid.SetCellValue(0, 9, f"{self.smooth_spin.GetValue():.2f}")
-        self.parent.peak_params_grid.SetCellValue(0, 5, f"{self.diff_spin.GetValue():.2f}")
-        self.parent.peak_params_grid.SetCellValue(0, 13, "D-parameter")
-        # self.parent.peak_params_grid.SetCellValue(row, 0, chr(65 + row // 2))
-        # self.parent.peak_params_grid.SetCellValue(row, 1, "D-parameter")
-        # self.parent.peak_params_grid.SetCellValue(row, 2, f"{center:.2f}")
-        # self.parent.peak_params_grid.SetCellValue(row, 4, f"{d_param:.2f}")
-        # self.parent.peak_params_grid.SetCellValue(row, 7, f"{self.pre_spin.GetValue():.2f}")
-        # self.parent.peak_params_grid.SetCellValue(row, 8, f"{self.post_spin.GetValue():.2f}")
-        # self.parent.peak_params_grid.SetCellValue(row, 9, f"{self.smooth_spin.GetValue():.2f}")
-        # self.parent.peak_params_grid.SetCellValue(row, 5, f"{self.diff_spin.GetValue():.2f}")
-        # self.parent.peak_params_grid.SetCellValue(row, 13, "D-parameter")
+        # Update Data dictionary
+        if 'Fitting' not in self.parent.Data['Core levels'][sheet_name]:
+            self.parent.Data['Core levels'][sheet_name]['Fitting'] = {}
+        if 'Peaks' not in self.parent.Data['Core levels'][sheet_name]['Fitting']:
+            self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = {}
+
+        peak_data = {
+            'Position': center,
+            'FWHM': d_param,
+            'Sigma': self.pre_spin.GetValue(),
+            'Gamma': self.post_spin.GetValue(),
+            'Skew': self.smooth_spin.GetValue(),
+            'L/G': self.diff_spin.GetValue(),
+            'Fitting Model': 'D-parameter',
+            'Derivative': normalized_deriv.tolist()  # Store derivative for replotting
+        }
+
+        self.parent.Data['Core levels'][sheet_name]['Fitting']['Peaks']['D-parameter'] = peak_data
+
+        # Update plot
+        self.parent.ax.plot(x_values, normalized_deriv, '--', color='red', label='Derivative')
+        self.parent.canvas.draw_idle()
 
     def on_defaults(self, event):
         self.smooth_spin.SetValue(7.0)

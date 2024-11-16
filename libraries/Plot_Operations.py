@@ -14,7 +14,8 @@ from PIL import Image, ImageDraw, ImageFont
 import matplotlib.colors as mcolors
 from scipy.ndimage import gaussian_filter
 
-from libraries.Peak_Functions import PeakFunctions, BackgroundCalculations
+from libraries.Peak_Functions import PeakFunctions, BackgroundCalculations, OtherCalc
+
 from libraries.Save import save_state
 
 
@@ -184,6 +185,30 @@ class PlotManager:
         bkg_y = background[np.argmin(np.abs(x_values - x))]
         if fitting_model == "Unfitted":
             return
+        elif fitting_model == "D-parameter":
+            # Get parameters for D-parameter calculation
+            sigma = float(window.peak_params_grid.GetCellValue(row, 7))
+            gamma = float(window.peak_params_grid.GetCellValue(row, 8))
+            skew = float(window.peak_params_grid.GetCellValue(row, 9))
+            lg_ratio = float(window.peak_params_grid.GetCellValue(row, 5))
+
+            # Calculate derivative
+            normalized_deriv = OtherCalc.smooth_and_differentiate(
+                x_values,
+                window.y_values,
+                skew,  # smooth_width
+                sigma,  # pre_smooth
+                lg_ratio,  # diff_width
+                gamma  # post_smooth
+            )
+
+            # Plot derivative
+            if window.energy_scale == 'KE':
+                self.ax.plot(window.photons - x_values, normalized_deriv, '--', color=color, label=peak_label)
+            else:
+                self.ax.plot(x_values, normalized_deriv, '--', color=color, label=peak_label)
+
+            return background  # Return background unchanged
         elif fitting_model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
             peak_model = lmfit.models.VoigtModel()
             sigma = float(peak_params.get('sigma', 1.2)) / 2.355
@@ -645,7 +670,7 @@ class PlotManager:
                     self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
                                  linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
         # Update overall fit and residuals
-        if cst_unfit == "Unfitted" or any(x in sheet_name.lower() for x in ["survey", "wide"]):
+        if cst_unfit in ["Unfitted","D-parameter"] or any(x in sheet_name.lower() for x in ["survey", "wide"]):
             pass
         else:
             window.update_overall_fit_and_residuals()
@@ -837,6 +862,8 @@ class PlotManager:
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area)
                 area = y * fwhm * np.sqrt(np.pi / (4 * np.log(2)))  # Calculate area from height and FWHM
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, area=area)
+            elif model == "D-parameter":
+                return area, 0, 0  # Return original area and zero for normalized/relative areas
             else:  # Default to GL (Height) as a safe bet
                 peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
                 params = peak_model.make_params(center=x, fwhm=fwhm, fraction=lg_ratio, amplitude=y)
@@ -844,7 +871,10 @@ class PlotManager:
             peak_y = peak_model.eval(params, x=window.x_values) + window.background
 
             # Update overall fit and residuals
-            window.update_overall_fit_and_residuals()
+            if model == "D-parameter":
+                print("")
+            else:
+                window.update_overall_fit_and_residuals()
 
             peak_label = window.peak_params_grid.GetCellValue(row, 1)  # Get peak label from grid
 
@@ -961,6 +991,9 @@ class PlotManager:
                 peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area)
                 area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, area=area)
+            elif fitting_model == "D-parameter":
+                # Skip D-parameter in overall fit calculation
+                continue
             else:
                 print(f"Warning: Unknown fitting model '{fitting_model}' for peak {i + 1}. Skipping this peak.")
                 continue

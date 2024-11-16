@@ -659,20 +659,37 @@ class AtomicConcentrations:
 
 class OtherCalc:
     @staticmethod
-    def smooth_and_differentiate(x_values, y_values, smooth_width=2.0, pre_smooth=1, diff_width=1.0, post_smooth=1):
+    def smooth_and_differentiate(x_values, y_values, smooth_width=2.0, pre_smooth=1, diff_width=1.0, post_smooth=1, algorithm="Gaussian"):
         from scipy.ndimage import gaussian_filter
+        from scipy.signal import savgol_filter, wiener
+        import numpy as np
+
+        # Smoothing function based on algorithm
+        def apply_smooth(data, width, algorithm):
+            if algorithm == "Gaussian":
+                return gaussian_filter(data, width)
+            elif algorithm == "Savitsky-Golay":
+                window = int(width * 10) if int(width * 10) % 2 == 1 else int(width * 10) + 1
+                return savgol_filter(data, window, 3)
+            elif algorithm == "Moving Average":
+                window = int(width * 10)
+                return np.convolve(data, np.ones(window)/window, mode='same')
+            elif algorithm == "Wiener":
+                return wiener(data, int(width * 10))
+            else:  # "None"
+                return data
 
         # Pre-smoothing passes
         smoothed = y_values.copy()
         for _ in range(int(pre_smooth)):
-            smoothed = gaussian_filter(smoothed, smooth_width)
+            smoothed = apply_smooth(smoothed, smooth_width, algorithm)
 
-        # Calculate derivative - multiply by -1 to invert
-        derivative = -1 * np.gradient(smoothed, x_values)  # Invert derivative
+        # Calculate derivative
+        derivative = -1 * np.gradient(smoothed, x_values)
 
         # Post-smoothing passes
         for _ in range(int(post_smooth)):
-            derivative = gaussian_filter(derivative, diff_width)  # Use diff_width for derivative smoothing
+            derivative = apply_smooth(derivative, diff_width, algorithm)
 
         # Normalize derivative to data range
         data_range = np.max(y_values) - np.min(y_values)

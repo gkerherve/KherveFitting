@@ -418,10 +418,15 @@ class MyFrame(wx.Frame):
             self.peak_params_grid.SetCellValue(row, 7, "2.7")  # sigma
             self.peak_params_grid.SetCellValue(row, 8, '2.7')  # gamma
             self.peak_params_grid.SetCellValue(row, 9, '0')  # skew
+        elif self.selected_fitting_method in ["D-parameter"]:
+            self.peak_params_grid.SetCellValue(row, 5, "2")
+            self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
+            self.peak_params_grid.SetCellValue(row, 8, '1')  # gamma
+            self.peak_params_grid.SetCellValue(row, 9, '7')  # skew
         else:
             self.peak_params_grid.SetCellValue(row, 7, "1")  # sigma
             self.peak_params_grid.SetCellValue(row, 8, '0.15')  # gamma
-        self.peak_params_grid.SetCellValue(row, 9, "0.64")  # Default value for skewed
+            self.peak_params_grid.SetCellValue(row, 9, "0.64")  # Default value for skewed
         self.peak_params_grid.SetCellValue(row, 10, '')
         self.peak_params_grid.SetCellValue(row, 11, '')
         self.peak_params_grid.SetCellValue(row, 12, '')  # Split, initially empty
@@ -1060,6 +1065,10 @@ class MyFrame(wx.Frame):
         elif model in ["GL (Area)", "SGL (Area)", "GL (Height)", "SGL (Height)"]:
             return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
 
+        elif model == "D-parameter":
+            # D-parameter doesn't have an area
+            return 0.0
+
         else:  # GL, SGL, or other models
             return area / (fwhm * np.sqrt(np.pi / (4 * np.log(2))))
 
@@ -1292,6 +1301,8 @@ class MyFrame(wx.Frame):
             gamma = float(self.peak_params_grid.GetCellValue(row, 8))
             skew = float(self.peak_params_grid.GetCellValue(row, 9))
             area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma, skew)
+        elif model == "D-parameter":
+            return
         else:
             area = self.calculate_peak_area(model, height, fwhm, fraction)
 
@@ -2196,6 +2207,8 @@ class MyFrame(wx.Frame):
             y_values = PeakFunctions.LAxG(x_range, 0, height / max_height, fwhm, sigma, gamma, skew)
             area = np.trapz(y_values, x_range)
             return round(area, 2)
+        elif model =="D-parameter":
+            return
         else:
             raise ValueError(f"Unknown fitting model: {model}")
         return round(area, 2)
@@ -2315,6 +2328,8 @@ class MyFrame(wx.Frame):
                             sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
                             height = area / (sigma * np.sqrt(2 * np.pi))
                             self.peak_params_grid.SetCellValue(row, 3, f"{height:.2f}")
+                        elif model == "D-parameter":
+                            return
                         else:
                             # Recalculate area
                             area = self.calculate_peak_area(model, height, fwhm, fraction, sigma, gamma,skew)

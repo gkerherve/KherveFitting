@@ -435,9 +435,9 @@ def create_horizontal_toolbar(window):
 
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis', wx.Bitmap(os.path.join(icon_path, "Noise-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open Noise Analysis Window")
 
-    toolbar.AddSeparator()
-    add_vertical_separator(toolbar, separators)
-    toolbar.AddSeparator()
+    # toolbar.AddSeparator()
+    # add_vertical_separator(toolbar, separators)
+    # toolbar.AddSeparator()
 
     id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
                               shortHelp="Element identifications (ID)")
