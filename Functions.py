@@ -303,6 +303,15 @@ def fit_peaks(window, peak_params_grid):
     bg_min_energy = core_level_data['Background'].get('Bkg Low')
     bg_max_energy = core_level_data['Background'].get('Bkg High')
 
+    try:
+        bg_min_energy = float(bg_min_energy)
+        bg_max_energy = float(bg_max_energy)
+    except (ValueError, TypeError):
+        bg_min_energy = min(x_values)
+        bg_max_energy = max(x_values)
+
+    print(f"BKG min {bg_min_energy} and BKG max {bg_max_energy}")
+
     if bg_min_energy is not None and bg_max_energy is not None and bg_min_energy <= bg_max_energy:
         mask = (x_values >= bg_min_energy) & (x_values <= bg_max_energy)
         x_values_filtered = x_values[mask]
@@ -328,6 +337,7 @@ def fit_peaks(window, peak_params_grid):
                 height = float(peak_params_grid.GetCellValue(row, 3))
                 fwhm = float(peak_params_grid.GetCellValue(row, 4))
                 lg_ratio = float(peak_params_grid.GetCellValue(row, 5))
+                skew = float(peak_params_grid.GetCellValue(row, 9))
                 try:
                     fwhm_g = float(peak_params_grid.GetCellValue(row, 9))
                 except ValueError:
@@ -800,7 +810,7 @@ def fit_peaks(window, peak_params_grid):
                         'Sigma': sigma,
                         'Gamma': gamma,
                         'fwhm_g':fwhm_g,
-                        'Skew': skew,
+                        'Skew': fwhm_g,
                         'Fitting Model': peak_model_choice
                     })
                 else:

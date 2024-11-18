@@ -204,9 +204,9 @@ class PlotManager:
 
             # Plot derivative
             if window.energy_scale == 'KE':
-                self.ax.plot(window.photons - x_values, normalized_deriv, '--', color=color, label=peak_label)
+                self.ax.plot(window.photons - x_values, normalized_deriv, '-', color=color, label=peak_label)
             else:
-                self.ax.plot(x_values, normalized_deriv, '--', color=color, label=peak_label)
+                self.ax.plot(x_values, normalized_deriv, '-', color=color, label=peak_label)
 
             return background  # Return background unchanged
         elif fitting_model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:

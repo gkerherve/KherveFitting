@@ -2611,38 +2611,38 @@ class MyFrame(wx.Frame):
 
 
 
-    def get_data_for_save2(self):
-        data = {
-            'x_values': self.x_values,
-            'y_values': self.y_values,
-            'background': self.background if hasattr(self, 'background') else None,
-            'calculated_fit': None,
-            'individual_peak_fits': [],
-            'peak_params_grid': self.peak_params_grid if hasattr(self, 'peak_params_grid') else None,
-            'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
-        }
-
-        # Use existing fit_peaks function to get the fit data
-        from Functions import fit_peaks
-        fit_result = fit_peaks(self, self.peak_params_grid)
-
-        if fit_result:
-            r_squared, chi_square, red_chi_square = fit_result
-
-            # The overall fit (envelope) is stored as 'fitted_peak' in fit_peaks
-            if hasattr(self, 'ax'):
-                for line in self.ax.lines:
-                    if line.get_label() == 'Envelope':
-                        data['calculated_fit'] = line.get_ydata()
-                        break
-
-            # Individual peaks are stored as fill_between plots
-            if hasattr(self, 'ax'):
-                for collection in self.ax.collections:
-                    if collection.get_label().startswith(self.sheet_combobox.GetValue()):
-                        data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
-
-        return data
+    # def get_data_for_save2(self):
+    #     data = {
+    #         'x_values': self.x_values,
+    #         'y_values': self.y_values,
+    #         'background': self.background if hasattr(self, 'background') else None,
+    #         'calculated_fit': None,
+    #         'individual_peak_fits': [],
+    #         'peak_params_grid': self.peak_params_grid if hasattr(self, 'peak_params_grid') else None,
+    #         'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
+    #     }
+    #
+    #     # Use existing fit_peaks function to get the fit data
+    #     from Functions import fit_peaks
+    #     fit_result = fit_peaks(self, self.peak_params_grid)
+    #
+    #     if fit_result:
+    #         r_squared, chi_square, red_chi_square = fit_result
+    #
+    #         # The overall fit (envelope) is stored as 'fitted_peak' in fit_peaks
+    #         if hasattr(self, 'ax'):
+    #             for line in self.ax.lines:
+    #                 if line.get_label() == 'Envelope':
+    #                     data['calculated_fit'] = line.get_ydata()
+    #                     break
+    #
+    #         # Individual peaks are stored as fill_between plots
+    #         if hasattr(self, 'ax'):
+    #             for collection in self.ax.collections:
+    #                 if collection.get_label().startswith(self.sheet_combobox.GetValue()):
+    #                     data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
+    #
+    #     return data
 
     def get_data_for_save(self):
         data = {
@@ -2656,25 +2656,29 @@ class MyFrame(wx.Frame):
             'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
         }
 
-        # Check if there are any peaks
-        if hasattr(self, 'peak_params_grid') and self.peak_params_grid.GetNumberRows() > 0:
-            from Functions import fit_peaks
-            fit_result = fit_peaks(self, self.peak_params_grid)
+        # Skip fit_peaks for D-Parameter model
 
-            if fit_result:
-                r_squared, chi_square, red_chi_square = fit_result
 
-                if hasattr(self, 'ax'):
-                    for line in self.ax.lines:
-                        if line.get_label() == 'Overall Fit':
-                            data['calculated_fit'] = line.get_ydata()
-                        elif line.get_label() == 'Residuals':
-                            data['residuals'] = line.get_ydata()
+        row = 0  # First peak row
+        grid_fitting_method = self.peak_params_grid.GetCellValue(row, 13)  # Column 13 contains fitting method
+        sheet_name = self.sheet_combobox.GetValue()
+        print(f"Fitting method {grid_fitting_method}")
+        if grid_fitting_method != "D-Parameter":
+            if hasattr(self, 'peak_params_grid') and self.peak_params_grid.GetNumberRows() > 0:
+                from Functions import fit_peaks
+                fit_result = fit_peaks(self, self.peak_params_grid)
 
-                    # Individual peaks are stored as fill_between plots
-                    for collection in self.ax.collections:
-                        if collection.get_label().startswith(self.sheet_combobox.GetValue()):
-                            data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
+                if fit_result:
+                    if hasattr(self, 'ax'):
+                        for line in self.ax.lines:
+                            if line.get_label() == 'Overall Fit':
+                                data['calculated_fit'] = line.get_ydata()
+                            elif line.get_label() == 'Residuals':
+                                data['residuals'] = line.get_ydata()
+
+                        for collection in self.ax.collections:
+                            if collection.get_label().startswith(sheet_name):
+                                data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
 
         return data
 

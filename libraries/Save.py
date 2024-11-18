@@ -198,9 +198,15 @@ def convert_to_serializable(obj):
 def save_to_excel(window, data, file_path, sheet_name):
     existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
+    # Skip fitting for D-Parameter
+    print(f"Saved Method {window.selected_fitting_method}")
+    if window.selected_fitting_method == "D-Parameter":
+        data['calculated_fit'] = None
+        data['individual_peak_fits'] = []
+
     # Remove previously fitted data if it exists
-    if existing_df.shape[1] > 3:  # If there are more than 3 columns (BE, Raw Data, empty)
-        existing_df = existing_df.iloc[:, :3]  # Keep only the first 3 columns
+    if existing_df.shape[1] > 3:
+        existing_df = existing_df.iloc[:, :3]
 
     # Ensure there's an empty column C
     if existing_df.shape[1] < 3:
@@ -211,6 +217,12 @@ def save_to_excel(window, data, file_path, sheet_name):
         filtered_data = pd.DataFrame({
             'BE': x_values
         })
+
+        # Add differentiated data for D-Parameter
+        if window.selected_fitting_method == "D-Parameter":
+            derivative = np.gradient(data['y_values'], data['x_values'])
+            filtered_data['Derivative'] = derivative
+            existing_df.insert(8, 'Derivative', derivative)
 
         if data['background'] is not None and data['calculated_fit'] is not None:
             mask = np.isin(data['x_values'], x_values)
@@ -232,18 +244,19 @@ def save_to_excel(window, data, file_path, sheet_name):
             num_peaks = data['peak_params_grid'].GetNumberRows() // 2
             for i in range(num_peaks):
                 row = i * 2
-                peak_label = data['peak_params_grid'].GetCellValue(row, 1)  # Get the peak label
+                peak_label = data['peak_params_grid'].GetCellValue(row, 1)
                 if i < len(data['individual_peak_fits']):
                     reversed_peak = np.array(data['individual_peak_fits'][i])[::-1]
                     trimmed_peak = reversed_peak[:num_rows]
-                    filtered_data[peak_label] = trimmed_peak  # Use peak label as column name
+                    filtered_data[peak_label] = trimmed_peak
 
         # Rename columns to avoid conflicts before inserting them
         for i, col in enumerate(filtered_data.columns):
             new_col_name = col
             while new_col_name in existing_df.columns:
                 new_col_name += '_new'
-            existing_df.insert(3 + i, new_col_name, filtered_data[col])
+            if col != 'Derivative':  # Skip if it's derivative (already inserted)
+                existing_df.insert(3 + i, new_col_name, filtered_data[col])
 
     # Ensure there are at least 23 columns (A to W)
     while existing_df.shape[1] < 23:
