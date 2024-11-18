@@ -32,7 +32,7 @@ class FittingWindow(wx.Frame):
 
     def init_ui(self):
         panel = wx.Panel(self)
-        # panel.SetBackgroundColour(wx.Colour(255, 255, 255))
+        panel.SetBackgroundColour(wx.Colour(255, 255, 255))
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 

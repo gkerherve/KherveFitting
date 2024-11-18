@@ -104,43 +104,6 @@ class PlotManager:
         # Draw the canvas
         self.canvas.draw()
 
-    # def plot_initial_logo2(self):
-    #     fig = self.plot_logo()
-    #     self.ax.clear()
-    #     self.ax.imshow(fig.axes[0].images[0].get_array(), cmap='hot', alpha = 0.3, aspect='auto', extent=[1350, 0,
-    #                                                                                                       10000,
-    #                                                                                                   0])
-    #     self.ax.set_xlabel('Binding Energy (eV)')
-    #     self.ax.set_ylabel('Intensity (CPS)')
-    #     plt.close(fig)  # Close the figure to free memory
-    #     self.canvas.draw()
-    #
-    # def plot_initial_logo2(self):
-    #     width, height = 300, 100
-    #     image = Image.new('RGB', (width, height), color=(255, 255, 255))
-    #     draw = ImageDraw.Draw(image)
-    #     try:
-    #         font = ImageFont.truetype("calibrib.ttf", 40)  # Calibri Bold
-    #     except IOError:
-    #         font = ImageFont.load_default()
-    #
-    #     # Define a gradient color
-    #     gradient = np.linspace(0, 1, width)
-    #     color_func = mcolors.LinearSegmentedColormap.from_list("", ["#66CC66", "#006400"])
-    #
-    #     # Draw text with gradient color
-    #     for i, letter in enumerate("KherveFitting"):
-    #         x = 10 + i * 20  # Adjust spacing as needed
-    #         color = tuple(int(c * 255) for c in color_func(gradient[i * 20 % width])[:3])
-    #         draw.text((x, 25), letter, font=font, fill=color)
-    #
-    #     data = np.array(image)
-    #     self.ax.clear()
-    #     self.ax.imshow(data, aspect='auto', extent=[1350, 0, 10000, 0])
-    #     self.ax.set_xlabel('Binding Energy (eV)')
-    #     self.ax.set_ylabel('Intensity (CPS)')
-    #     self.canvas.draw()
-
     def apply_text_settings(self, window):
         # Apply font settings
         plt.rcParams['font.family'] = window.plot_font
