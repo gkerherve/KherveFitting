@@ -2656,14 +2656,12 @@ class MyFrame(wx.Frame):
             'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
         }
 
-        # Skip fit_peaks for D-Parameter model
-
-
         row = 0  # First peak row
         grid_fitting_method = self.peak_params_grid.GetCellValue(row, 13)  # Column 13 contains fitting method
         sheet_name = self.sheet_combobox.GetValue()
-        print(f"Fitting method {grid_fitting_method}")
-        if grid_fitting_method != "D-Parameter":
+
+        # Skip fit_peaks for D-parameter model
+        if grid_fitting_method != "D-parameter":
             if hasattr(self, 'peak_params_grid') and self.peak_params_grid.GetNumberRows() > 0:
                 from Functions import fit_peaks
                 fit_result = fit_peaks(self, self.peak_params_grid)

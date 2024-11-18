@@ -198,11 +198,19 @@ def convert_to_serializable(obj):
 def save_to_excel(window, data, file_path, sheet_name):
     existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-    # Skip fitting for D-Parameter
-    print(f"Saved Method {window.selected_fitting_method}")
+    # # Skip fitting for D-Parameter
+    # print(f"Saved Method {window.selected_fitting_method}")
+    # if window.selected_fitting_method == "D-Parameter":
+    #     data['calculated_fit'] = None
+    #     data['individual_peak_fits'] = []
+
+    # Handle D-parameter derivative data
     if window.selected_fitting_method == "D-Parameter":
-        data['calculated_fit'] = None
-        data['individual_peak_fits'] = []
+        if 'Fitting' in window.Data['Core levels'][sheet_name] and 'Peaks' in window.Data['Core levels'][sheet_name][
+            'Fitting']:
+            d_param_data = window.Data['Core levels'][sheet_name]['Fitting']['Peaks'].get('D-parameter')
+            if d_param_data and 'Derivative' in d_param_data:
+                existing_df.insert(8, 'Derivative', d_param_data['Derivative'])
 
     # Remove previously fitted data if it exists
     if existing_df.shape[1] > 3:
