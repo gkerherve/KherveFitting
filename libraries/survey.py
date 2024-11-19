@@ -66,18 +66,37 @@ class PeriodicTableWindow(wx.Frame):
         panel.SetSizer(main_sizer)
         self.SetSize(560, 340)
 
-    def get_element_transitions(self, element):
+    def get_element_transitions_OLD(self, element):
         allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
         transitions = {}
         for (elem, orbital), data in self.library_data.items():
 
-            if elem == element:
+            if elem == element and data[instrument]['position'] >= 20:  # Only transitions above 20 eV
                 orbital_lower = orbital.lower()
                 main_orbital = ''.join([c for c in orbital_lower if c.isalpha() or c.isdigit()])[:2]
                 if main_orbital in allowed_orbitals:
                     # Check if 'Al' key exists, if not, use the first available instrument
                     instrument = 'Al' if 'Al' in data else next(iter(data))
                     if 'position' in data[instrument]:
+                        energy = float(data[instrument]['position'])
+                        if main_orbital not in transitions or energy > transitions[main_orbital]:
+                            transitions[main_orbital] = energy
+
+        sorted_transitions = sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
+        return sorted_transitions
+
+    def get_element_transitions(self, element):
+        allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
+        transitions = {}
+        for (elem, orbital), data in self.library_data.items():
+            if elem == element:
+                # Get instrument first
+                instrument = 'Al' if 'Al' in data else next(iter(data))
+
+                if 'position' in data[instrument] and float(data[instrument]['position']) >= 30:
+                    orbital_lower = orbital.lower()
+                    main_orbital = ''.join([c for c in orbital_lower if c.isalpha() or c.isdigit()])[:2]
+                    if main_orbital in allowed_orbitals:
                         energy = float(data[instrument]['position'])
                         if main_orbital not in transitions or energy > transitions[main_orbital]:
                             transitions[main_orbital] = energy
