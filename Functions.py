@@ -310,8 +310,6 @@ def fit_peaks(window, peak_params_grid):
         bg_min_energy = min(x_values)
         bg_max_energy = max(x_values)
 
-    print(f"BKG min {bg_min_energy} and BKG max {bg_max_energy}")
-
     if bg_min_energy is not None and bg_max_energy is not None and bg_min_energy <= bg_max_energy:
         mask = (x_values >= bg_min_energy) & (x_values <= bg_max_energy)
         x_values_filtered = x_values[mask]

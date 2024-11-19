@@ -1289,9 +1289,20 @@ class PlotManager:
                     window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
                 window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = y_values.tolist()
 
-            method = window.background_method
-            offset_h = float(window.offset_h)
-            offset_l = float(window.offset_l)
+            try:
+                method = window.background_method
+            except (AttributeError, ValueError):
+                method = "Multi-Regions Smart"
+
+            try:
+                offset_h = float(window.offset_h)
+            except (AttributeError, ValueError):
+                offset_h = 0
+
+            try:
+                offset_l = float(window.offset_l)
+            except (AttributeError, ValueError):
+                offset_l = 0
 
             # Calculate background based on the selected method
             if method == "Multi-Regions Smart":

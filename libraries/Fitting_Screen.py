@@ -55,6 +55,11 @@ class FittingWindow(wx.Frame):
 
     def init_background_tab(self, notebook):
         """Initialize the background tab in the notebook."""
+        self.parent.background_method = "Multi-Regions Smart"
+        self.parent.offset_h = 0
+        self.parent.offset_l = 0
+
+
         self.background_panel = wx.Panel(notebook)
         background_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
