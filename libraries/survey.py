@@ -1,4 +1,5 @@
 import wx
+import numpy as np
 
 
 class PeriodicTableWindow(wx.Frame):
@@ -23,6 +24,7 @@ class PeriodicTableWindow(wx.Frame):
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # Info text
         self.info_text1 = wx.StaticText(panel, style=wx.ALIGN_CENTER | wx.ST_NO_AUTORESIZE)
         self.info_text1.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         main_sizer.Add(self.info_text1, 0, wx.EXPAND | wx.ALL, 0)
@@ -31,6 +33,11 @@ class PeriodicTableWindow(wx.Frame):
         self.info_text2.SetFont(wx.Font(10, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         main_sizer.Add(self.info_text2, 0, wx.EXPAND | wx.ALL, 0)
 
+        # Split the window horizontally
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Left side: Periodic Table
+        periodic_sizer = wx.BoxSizer(wx.VERTICAL)
         grid = wx.GridSizer(10, 18, 2, 2)
 
         elements = [
@@ -62,9 +69,24 @@ class PeriodicTableWindow(wx.Frame):
                 btn = wx.StaticText(panel, label="")
             grid.Add(btn, 0, wx.EXPAND)
 
-        main_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 5)
+        periodic_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 5)
+        hsizer.Add(periodic_sizer, 0, wx.EXPAND)
+
+        # Right side: Core Level List and Buttons
+        right_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.core_level_list = wx.ListBox(panel, style=wx.LB_MULTIPLE, size=(200, -1))
+        right_sizer.Add(self.core_level_list, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.add_labels_btn = wx.Button(panel, label="Add Labels")
+        self.add_labels_btn.Bind(wx.EVT_BUTTON, self.OnAddLabels)
+        right_sizer.Add(self.add_labels_btn, 0, wx.ALL, 5)
+
+        hsizer.Add(right_sizer, 0, wx.EXPAND)
+
+        main_sizer.Add(hsizer, 1, wx.EXPAND)
         panel.SetSizer(main_sizer)
-        self.SetSize(560, 340)
+        self.SetSize(800, 500)
 
     def get_element_transitions_OLD(self, element):
         allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
@@ -111,11 +133,81 @@ class PeriodicTableWindow(wx.Frame):
         if self.button_states[element]:
             event.GetEventObject().SetBackgroundColour(wx.GREEN)
             self.plot_element_lines(element)
+
+            # Add core levels to list
+            transitions = self.get_element_transitions(element)
+            self.core_level_list.Clear()
+            for orbital, be in transitions:
+                self.core_level_list.Append(f"{element}{orbital}: {be:.1f} eV")
+
+            # Add main core level to peak fitting grid if survey scan
+            sheet_name = self.parent_window.sheet_combobox.GetValue().lower()
+            if any(x in sheet_name for x in ['survey', 'wide']):
+                main_orbital = self.get_main_core_level(element)
+                if main_orbital:
+                    self.add_peak_to_grid(element, main_orbital)
         else:
             event.GetEventObject().SetBackgroundColour(wx.WHITE)
             self.remove_element_lines(element)
+            self.core_level_list.Clear()
 
         event.GetEventObject().Refresh()
+
+    def OnAddLabels(self, event):
+        selections = self.core_level_list.GetSelections()
+        for selection in selections:
+            label = self.core_level_list.GetString(selection)
+            element, be_str = label.split(':')
+            be = float(be_str.replace(' eV', ''))
+
+            # Get data intensity at this binding energy
+            x_values = self.parent_window.x_values
+            y_values = self.parent_window.y_values
+            idx = (np.abs(x_values - be)).argmin()
+            intensity = y_values[idx]
+
+            # Add label to plot
+            self.parent_window.ax.text(be, intensity * 1.2, element,
+                                       rotation=90, va='bottom', ha='center')
+            self.parent_window.canvas.draw_idle()
+
+    def add_peak_to_grid(self, element, orbital):
+        peak_name = f"{element}{orbital}"
+        position = None
+
+        # Find position from library data
+        for (elem, orb), data in self.library_data.items():
+            if elem == element and orb.lower() == orbital.lower():
+                instrument = 'Al' if 'Al' in data else next(iter(data))
+                if 'position' in data[instrument]:
+                    position = float(data[instrument]['position'])
+                    break
+
+        if position:
+            # Add to peak params grid
+            row = self.parent_window.peak_params_grid.GetNumberRows()
+            self.parent_window.peak_params_grid.AppendRows(2)
+
+            # Set peak parameters
+            self.parent_window.peak_params_grid.SetCellValue(row, 1, peak_name)
+            self.parent_window.peak_params_grid.SetCellValue(row, 2, str(position))
+            self.parent_window.peak_params_grid.SetCellValue(row, 13, "SurveyID")
+
+            # Force refresh
+            self.parent_window.peak_params_grid.ForceRefresh()
+
+    def get_main_core_level(self, element):
+        main_core_levels = {
+            'Li': '1s', 'Be': '1s', 'B': '1s', 'C': '1s', 'N': '1s', 'O': '1s', 'F': '1s', 'Ne': '1s',
+            'Na': '1s', 'Mg': '1s', 'Al': '2p', 'Si': '2p', 'P': '2p', 'S': '2p', 'Cl': '2p',
+            'K': '2p', 'Ca': '2p', 'Sc': '2p', 'Ti': '2p', 'V': '2p', 'Cr': '2p', 'Mn': '2p',
+            'Fe': '2p', 'Co': '2p', 'Ni': '2p', 'Cu': '2p', 'Zn': '2p', 'Ga': '2p', 'Ge': '3d',
+            'As': '3d', 'Se': '3d', 'Br': '3d', 'Sr': '3d', 'Y': '3d', 'Zr': '3d', 'Nb': '3d',
+            'Mo': '3d', 'Tc': '3d', 'Ru': '3d', 'Rh': '3d', 'Pd': '3d', 'Ag': '3d', 'Cd': '3d',
+            'In': '3d', 'Sn': '3d', 'Sb': '3d', 'Te': '3d', 'I': '3d', 'Xe': '3d', 'Cs': '3d',
+            'Ba': '3d', 'La': '3d', 'W': '4f'
+        }
+        return main_core_levels.get(element)
 
     def plot_element_lines(self, element):
         transitions = self.get_element_transitions(element)
