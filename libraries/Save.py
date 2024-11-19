@@ -198,20 +198,6 @@ def convert_to_serializable(obj):
 def save_to_excel(window, data, file_path, sheet_name):
     existing_df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-    # # Skip fitting for D-Parameter
-    # print(f"Saved Method {window.selected_fitting_method}")
-    # if window.selected_fitting_method == "D-Parameter":
-    #     data['calculated_fit'] = None
-    #     data['individual_peak_fits'] = []
-
-    # Handle D-parameter derivative data
-    if window.selected_fitting_method == "D-Parameter":
-        if 'Fitting' in window.Data['Core levels'][sheet_name] and 'Peaks' in window.Data['Core levels'][sheet_name][
-            'Fitting']:
-            d_param_data = window.Data['Core levels'][sheet_name]['Fitting']['Peaks'].get('D-parameter')
-            if d_param_data and 'Derivative' in d_param_data:
-                existing_df.insert(8, 'Derivative', d_param_data['Derivative'])
-
     # Remove previously fitted data if it exists
     if existing_df.shape[1] > 3:
         existing_df = existing_df.iloc[:, :3]
@@ -227,10 +213,10 @@ def save_to_excel(window, data, file_path, sheet_name):
         })
 
         # Add differentiated data for D-Parameter
-        if window.selected_fitting_method == "D-Parameter":
-            derivative = np.gradient(data['y_values'], data['x_values'])
-            filtered_data['Derivative'] = derivative
-            existing_df.insert(8, 'Derivative', derivative)
+        # if window.selected_fitting_method == "D-Parameter":
+        #     derivative = np.gradient(data['y_values'], data['x_values'])
+        #     filtered_data['Derivative'] = derivative
+        #     existing_df.insert(8, 'Derivative', derivative)
 
         if data['background'] is not None and data['calculated_fit'] is not None:
             mask = np.isin(data['x_values'], x_values)
@@ -288,6 +274,16 @@ def save_to_excel(window, data, file_path, sheet_name):
     # Add peak_params_df to existing_df starting from column 23 (X)
     for i, col in enumerate(peak_params_df.columns):
         existing_df.insert(23 + i, col, peak_params_df[col])
+
+    # Handle D-parameter derivative data
+    if window.selected_fitting_method == "D-parameter":
+        if 'Fitting' in window.Data['Core levels'][sheet_name] and 'Peaks' in window.Data['Core levels'][sheet_name][
+            'Fitting']:
+            d_param_data = window.Data['Core levels'][sheet_name]['Fitting']['Peaks'].get(
+                'D-parameter')
+            if d_param_data and 'Derivative' in d_param_data:
+                filtered_data['Derivative'] = d_param_data['Derivative']
+                existing_df.insert(7, 'Derivative', d_param_data['Derivative'])
 
 
     with pd.ExcelWriter(file_path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:

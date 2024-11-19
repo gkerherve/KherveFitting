@@ -336,6 +336,7 @@ class PlotManager:
             return
 
         sheet_name = window.sheet_combobox.GetValue()
+        is_d_parameter = False
         limits = window.plot_config.get_plot_limits(window, sheet_name)
         if sheet_name not in window.Data['Core levels']:
             wx.MessageBox(f"No data available for sheet: {sheet_name}", "Error", wx.OK | wx.ICON_ERROR)
@@ -426,8 +427,13 @@ class PlotManager:
             for collection in self.ax.collections:
                 if collection.get_label().startswith(window.sheet_combobox.GetValue()):
                     collection.remove()
+            if 'Fitting' in window.Data['Core levels'][sheet_name] and 'Peaks' in \
+                    window.Data['Core levels'][sheet_name]['Fitting']:
+                peaks = window.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+                if peaks and any(peak.get('Fitting Model') == 'D-parameter' for peak in peaks.values()):
+                    is_d_parameter = True
 
-            if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
+            if "survey" in sheet_name.lower() or "wide" in sheet_name.lower() or is_d_parameter:
                 pass
             else:
                 self.ax.legend(loc='upper left')
@@ -577,7 +583,8 @@ class PlotManager:
             except ValueError:
                 print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
                 continue
-
+            if fitting_model == "D-parameter":
+                cst_unfit = "D-parameter"
             if fitting_model == "Unfitted":
                 # For unfitted peaks, fill between background and raw data
                 cst_unfit = "Unfitted"
@@ -587,6 +594,7 @@ class PlotManager:
                 else:
                     self.ax.fill_between(x_values, window.background, y_values,
                                          facecolor='lightgreen', alpha=0.5, label=label)
+
             else:
                 if i in doublets:
                     if doublets.index(i) % 2 == 0:  # First peak of the doublet
@@ -988,14 +996,16 @@ class PlotManager:
         # Plot the new overall fit and residuals
         if window.energy_scale == 'KE':
             self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
-                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
+                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
+                         label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
                                          alpha=self.residual_alpha, label='Residuals')
         else:
             self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
-                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha, label='Overall Fit')
+                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
+                         label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
