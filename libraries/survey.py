@@ -196,7 +196,8 @@ class PeriodicTableWindow(wx.Frame):
 
                 sheet_name = self.parent_window.sheet_combobox.GetValue()
 
-                if formatted_label not in self.parent_window.Data['Core levels'][sheet_name]:
+                if 'Labels' not in self.parent_window.Data['Core levels'][sheet_name]:
+                    # print('Labels not in sheetname')
                     self.parent_window.Data['Core levels'][sheet_name]['Labels'] = []
 
                 self.parent_window.Data['Core levels'][sheet_name]['Labels'].append({

@@ -2656,6 +2656,9 @@ class MyFrame(wx.Frame):
             'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
         }
 
+        if self.peak_params_grid.GetNumberRows() == 0:
+            return data
+
         row = 0  # First peak row
         grid_fitting_method = self.peak_params_grid.GetCellValue(row, 13)  # Column 13 contains fitting method
         sheet_name = self.sheet_combobox.GetValue()

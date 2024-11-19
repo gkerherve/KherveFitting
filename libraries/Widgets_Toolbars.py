@@ -244,16 +244,16 @@ def create_menu(window):
     file_menu.AppendSubMenu(save_menu, "Save")
 
     # Import submenu items
-    import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file")
+    import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file (.vms)")
     window.Bind(wx.EVT_MENU, lambda event: open_vamas_file_dialog(window), import_vamas_item)
 
-    import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage file")
+    import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage file (.xlsx)")
     window.Bind(wx.EVT_MENU, lambda event: import_avantage_file(window), import_avantage_item)
 
-    import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file")
+    import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file (.avg)")
     window.Bind(wx.EVT_MENU, lambda event: open_avg_file(window), import_avg_item)
 
-    import_multiple_avg_item = import_menu.Append(wx.NewId(), "Import Multiple AVG files")
+    import_multiple_avg_item = import_menu.Append(wx.NewId(), "Import Multiple AVG files (folder)")
     window.Bind(wx.EVT_MENU, lambda event: import_multiple_avg_files(window), import_multiple_avg_item)
 
     # Export submenu items
@@ -270,7 +270,7 @@ def create_menu(window):
     window.Bind(wx.EVT_MENU, lambda event: on_save_plot_svg(window), save_plot_item_svg)
 
     export_menu.AppendSeparator()
-    word_report_item = export_menu.Append(wx.NewId(), "Word Report")
+    word_report_item = export_menu.Append(wx.NewId(), "Create Report (.docx)")
     window.Bind(wx.EVT_MENU, lambda event: export_word_report(window), word_report_item)
 
     # Recent files submenu

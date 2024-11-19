@@ -409,6 +409,16 @@ class PlotManager:
                     self.ax.plot(x_values, y_values, c=self.line_color, linewidth=self.line_width,
                                  alpha=self.line_alpha, linestyle=self.raw_data_linestyle, label='Raw Data')
 
+            if 'Labels' in window.Data['Core levels'][sheet_name]:
+
+                for label_data in window.Data['Core levels'][sheet_name]['Labels']:
+                    window.ax.text(
+                        label_data['x'],
+                        label_data['y'],
+                        label_data['text'],
+                        rotation=90, va='bottom', ha='center'
+                    )
+
 
             # Hide the cross if it exists
             if hasattr(window, 'cross') and window.cross:
@@ -599,6 +609,16 @@ class PlotManager:
                     self.ax.fill_between(x_values, window.background, y_values,
                                          facecolor='lightgreen', alpha=0.5, label=label)
 
+            # When replotting, restore labels
+            # print(window.Data['Core levels'][sheet_name])
+            if 'Labels' in window.Data['Core levels'][sheet_name]:
+
+                for label_data in window.Data['Core levels'][sheet_name]['Labels']:
+                    window.ax.text(
+                        label_data['x'],
+                        label_data['y'],
+                        label_data['text']
+                    )
             else:
                 if i in doublets:
                     if doublets.index(i) % 2 == 0:  # First peak of the doublet
