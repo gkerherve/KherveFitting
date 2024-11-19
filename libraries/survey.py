@@ -4,7 +4,7 @@ import numpy as np
 
 class PeriodicTableWindow(wx.Frame):
     def __init__(self, parent):
-        super().__init__(parent, title="Periodic Table",
+        super().__init__(parent, title="Survey Identification / Labelling",
                          style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         self.parent_window = parent  # Store the parent window
         self.SetBackgroundColour(wx.WHITE)
@@ -75,18 +75,34 @@ class PeriodicTableWindow(wx.Frame):
         # Right side: Core Level List and Buttons
         right_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.core_level_list = wx.ListBox(panel, style=wx.LB_MULTIPLE, size=(200, -1))
+        self.core_level_list = wx.ListBox(panel, style=wx.LB_MULTIPLE, size=(170, -1))
         right_sizer.Add(self.core_level_list, 1, wx.EXPAND | wx.ALL, 5)
 
+        # Buttons
+        button_sizer = wx.GridBagSizer(5, 5)
+
         self.add_labels_btn = wx.Button(panel, label="Add Labels")
+        self.add_peak_btn = wx.Button(panel, label="Add to Grid")
+        self.remove_selected_btn = wx.Button(panel, label="Clear")
+        self.remove_all_btn = wx.Button(panel, label="Clear All")
+
         self.add_labels_btn.Bind(wx.EVT_BUTTON, self.OnAddLabels)
-        right_sizer.Add(self.add_labels_btn, 0, wx.ALL, 5)
+        self.add_peak_btn.Bind(wx.EVT_BUTTON, self.OnAddPeak)
+        self.remove_selected_btn.Bind(wx.EVT_BUTTON, self.OnRemoveSelected)
+        self.remove_all_btn.Bind(wx.EVT_BUTTON, self.OnRemoveAll)
+
+        button_sizer.Add(self.add_labels_btn, pos=(0, 0), flag=wx.EXPAND)
+        button_sizer.Add(self.add_peak_btn, pos=(0, 1), flag=wx.EXPAND)
+        button_sizer.Add(self.remove_selected_btn, pos=(1, 0), flag=wx.EXPAND)
+        button_sizer.Add(self.remove_all_btn, pos=(1, 1), flag=wx.EXPAND)
+
+        right_sizer.Add(button_sizer, 0, wx.ALL | wx.EXPAND, 5)
 
         hsizer.Add(right_sizer, 0, wx.EXPAND)
 
         main_sizer.Add(hsizer, 1, wx.EXPAND)
         panel.SetSizer(main_sizer)
-        self.SetSize(800, 500)
+        self.SetSize(770, 400)
 
     def get_element_transitions_OLD(self, element):
         allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
@@ -133,23 +149,17 @@ class PeriodicTableWindow(wx.Frame):
         if self.button_states[element]:
             event.GetEventObject().SetBackgroundColour(wx.GREEN)
             self.plot_element_lines(element)
-
-            # Add core levels to list
             transitions = self.get_element_transitions(element)
-            self.core_level_list.Clear()
-            for orbital, be in transitions:
-                self.core_level_list.Append(f"{element}{orbital}: {be:.1f} eV")
 
-            # Add main core level to peak fitting grid if survey scan
-            sheet_name = self.parent_window.sheet_combobox.GetValue().lower()
-            if any(x in sheet_name for x in ['survey', 'wide']):
-                main_orbital = self.get_main_core_level(element)
-                if main_orbital:
-                    self.add_peak_to_grid(element, main_orbital)
+            # Add transitions to list without clearing existing items
+            existing_items = [self.core_level_list.GetString(i) for i in range(self.core_level_list.GetCount())]
+            for orbital, be in transitions:
+                item = f"{element}{orbital}: {be:.1f} eV"
+                if item not in existing_items:
+                    self.core_level_list.Append(item)
         else:
             event.GetEventObject().SetBackgroundColour(wx.WHITE)
             self.remove_element_lines(element)
-            self.core_level_list.Clear()
 
         event.GetEventObject().Refresh()
 
@@ -160,22 +170,38 @@ class PeriodicTableWindow(wx.Frame):
             element, be_str = label.split(':')
             be = float(be_str.replace(' eV', ''))
 
-            # Get data intensity at this binding energy
+            # Get max intensity in ±5 eV range
             x_values = self.parent_window.x_values
             y_values = self.parent_window.y_values
-            idx = (np.abs(x_values - be)).argmin()
-            intensity = y_values[idx]
+            maxY = max(y_values)
+            mask = (x_values >= be - 5) & (x_values <= be + 5)
+            if np.any(mask):
+                local_max = np.max(y_values[mask])
+                # Add label at 1.2 times the local maximum height
+                self.parent_window.ax.text(be, local_max +0.05*maxY, element,
+                                           rotation=90, va='bottom', ha='center')
+                self.parent_window.canvas.draw_idle()
 
-            # Add label to plot
-            self.parent_window.ax.text(be, intensity * 1.2, element,
-                                       rotation=90, va='bottom', ha='center')
-            self.parent_window.canvas.draw_idle()
+    def add_peak_to_grid(self, peak_name):
 
-    def add_peak_to_grid(self, element, orbital):
-        peak_name = f"{element}{orbital}"
+        # Add peak to window.Data first
+        sheet_name = self.parent_window.sheet_combobox.GetValue()
+
+        # Initialize the full structure if it doesn't exist
+        if 'Fitting' not in self.parent_window.Data['Core levels'][sheet_name]:
+            self.parent_window.Data['Core levels'][sheet_name]['Fitting'] = {}
+        if 'Peaks' not in self.parent_window.Data['Core levels'][sheet_name]['Fitting']:
+            self.parent_window.Data['Core levels'][sheet_name]['Fitting']['Peaks'] = {}
+
+        # Better element and orbital extraction
+        import re
+        match = re.match(r'([A-Z][a-z]*)(\d+[spdf])', peak_name)
+        if match:
+            element, orbital = match.groups()
+        else:
+            return False
+
         position = None
-
-        # Find position from library data
         for (elem, orb), data in self.library_data.items():
             if elem == element and orb.lower() == orbital.lower():
                 instrument = 'Al' if 'Al' in data else next(iter(data))
@@ -184,17 +210,67 @@ class PeriodicTableWindow(wx.Frame):
                     break
 
         if position:
-            # Add to peak params grid
-            row = self.parent_window.peak_params_grid.GetNumberRows()
+            # Add to window.Data
+            peak_data = {
+                'Position': position,
+                'Height': 0,
+                'FWHM': 2.0,
+                'L/G': 30,
+                'Area': 0,
+                'Fitting Model': 'SurveyID'
+            }
+            self.parent_window.Data['Core levels'][sheet_name]['Fitting']['Peaks'][peak_name] = peak_data
+
+            # Add to grid
+            current_rows = self.parent_window.peak_params_grid.GetNumberRows()
+
             self.parent_window.peak_params_grid.AppendRows(2)
 
-            # Set peak parameters
-            self.parent_window.peak_params_grid.SetCellValue(row, 1, peak_name)
-            self.parent_window.peak_params_grid.SetCellValue(row, 2, str(position))
-            self.parent_window.peak_params_grid.SetCellValue(row, 13, "SurveyID")
+            # Make sure to add the letter ID
+            letter_id = chr(65 + (current_rows // 2))  # A, B, C, etc.
 
-            # Force refresh
+            self.parent_window.peak_params_grid.SetCellValue(current_rows, 0, letter_id)
+            self.parent_window.peak_params_grid.SetCellValue(current_rows, 1, peak_name)
+            self.parent_window.peak_params_grid.SetCellValue(current_rows, 2, f"{position:.2f}")
+            self.parent_window.peak_params_grid.SetCellValue(current_rows, 4, "2.0")  # FWHM
+            self.parent_window.peak_params_grid.SetCellValue(current_rows, 5, "30")  # L/G
+            self.parent_window.peak_params_grid.SetCellValue(current_rows, 13, "SurveyID")
+
+            # Set constraint row background color
+            for col in range(self.parent_window.peak_params_grid.GetNumberCols()):
+                self.parent_window.peak_params_grid.SetCellBackgroundColour(current_rows + 1, col,
+                                                                            wx.Colour(200, 245, 228))
+
+            # Update peak count
+            self.parent_window.peak_count = current_rows // 2 + 1
+
             self.parent_window.peak_params_grid.ForceRefresh()
+            return True
+        else:
+            print(f"No position found for peak {peak_name}")
+            return False
+
+    def OnAddPeak(self, event):
+        selections = self.core_level_list.GetSelections()
+        sheet_name = self.parent_window.sheet_combobox.GetValue().lower()
+
+        if any(x in sheet_name for x in ['survey', 'wide']):
+            for selection in selections:
+                label = self.core_level_list.GetString(selection)
+                element = label.split(':')[0]
+                # Check if it's a main core level
+                if any(element.endswith(x) for x in ['1s', '2p', '3d', '4f']):
+                    self.add_peak_to_grid(element)
+
+    def OnRemoveSelected(self, event):
+        selections = list(self.core_level_list.GetSelections())
+        selections.reverse()  # Remove from bottom to top to avoid index issues
+        for selection in selections:
+            self.core_level_list.Delete(selection)
+
+    def OnRemoveAll(self, event):
+        self.core_level_list.Clear()
+
 
     def get_main_core_level(self, element):
         main_core_levels = {
