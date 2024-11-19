@@ -148,6 +148,8 @@ class PlotManager:
         bkg_y = background[np.argmin(np.abs(x_values - x))]
         if fitting_model == "Unfitted":
             return
+        elif fitting_model == "SurveyID":
+            return
         elif fitting_model == "D-parameter":
             # Get parameters for D-parameter calculation
             sigma = float(window.peak_params_grid.GetCellValue(row, 7))
@@ -585,6 +587,8 @@ class PlotManager:
                 continue
             if fitting_model == "D-parameter":
                 cst_unfit = "D-parameter"
+            if fitting_model == "SurveyID":
+                cst_unfit = "SurveyID"
             if fitting_model == "Unfitted":
                 # For unfitted peaks, fill between background and raw data
                 cst_unfit = "Unfitted"
@@ -641,7 +645,7 @@ class PlotManager:
                     self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
                                  linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
         # Update overall fit and residuals
-        if cst_unfit in ["Unfitted","D-parameter"] or any(x in sheet_name.lower() for x in ["survey", "wide"]):
+        if cst_unfit in ["Unfitted","D-parameter","SurveyID"] or any(x in sheet_name.lower() for x in ["survey", "wide"]):
             pass
         else:
             window.update_overall_fit_and_residuals()
@@ -842,7 +846,7 @@ class PlotManager:
             peak_y = peak_model.eval(params, x=window.x_values) + window.background
 
             # Update overall fit and residuals
-            if model == "D-parameter":
+            if model in ["D-parameter", "SurveyID"]:
                 print("")
             else:
                 window.update_overall_fit_and_residuals()
@@ -963,6 +967,9 @@ class PlotManager:
                 area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
                 params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, area=area)
             elif fitting_model == "D-parameter":
+                # Skip D-parameter in overall fit calculation
+                continue
+            elif fitting_model == "SurveyID":
                 # Skip D-parameter in overall fit calculation
                 continue
             else:
