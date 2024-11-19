@@ -104,23 +104,41 @@ class PeriodicTableWindow(wx.Frame):
         panel.SetSizer(main_sizer)
         self.SetSize(775, 320)
 
+    # print(f"Element {element} Oribital {orbital} Auger {is_auger} Instrument {instrument}, ")
+
     def get_element_transitions(self, element):
         allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
         transitions = {}
+        photon_energy = self.parent_window.photons  # Get photon energy
+
         for (elem, orbital), data in self.library_data.items():
             if elem == element:
-                # Get instrument first
-                instrument = 'Al' if 'Al' in data else next(iter(data))
+                # Choose instrument based on whether it's an Auger line
+                if 'Any' in data:
+                    instrument = 'Any'  # For Auger lines
+                else:
+                    instrument = 'Al' if 'Al' in data else next(iter(data))
 
-                if 'position' in data[instrument] and float(data[instrument]['position']) >= 30:
+                if 'position' in data[instrument] and float(data[instrument]['position']) >= 20:
+                    # Check if it's a core level or Auger transition
+                    is_auger = instrument == 'Any'
+                    # is_auger = data[instrument]['Auger'] == '1'  # Corrected this line
                     orbital_lower = orbital.lower()
-                    main_orbital = ''.join([c for c in orbital_lower if c.isalpha() or c.isdigit()])[:2]
-                    if main_orbital in allowed_orbitals:
-                        energy = float(data[instrument]['position'])
-                        if main_orbital not in transitions or energy > transitions[main_orbital]:
-                            transitions[main_orbital] = energy
 
-        sorted_transitions = sorted(transitions.items(), key=lambda x: allowed_orbitals.index(x[0]))
+                    if is_auger:
+                        # Subtract photon energy for Auger transitions
+                        kinetic_energy = float(data[instrument]['position'])
+                        binding_energy = photon_energy - kinetic_energy  # Convert KE to BE
+                        transitions[orbital_lower] = binding_energy
+                    else:
+                        # For core levels
+                        main_orbital = ''.join([c for c in orbital_lower if c.isalpha() or c.isdigit()])[:2]
+                        if main_orbital in allowed_orbitals:
+                            energy = float(data[instrument]['position'])
+                            if main_orbital not in transitions or energy > transitions[main_orbital]:
+                                transitions[main_orbital] = energy
+
+        sorted_transitions = sorted(transitions.items(), key=lambda x: x[1])
         return sorted_transitions
 
     def OnElementClick(self, event):
@@ -148,20 +166,44 @@ class PeriodicTableWindow(wx.Frame):
         selections = self.core_level_list.GetSelections()
         for selection in selections:
             label = self.core_level_list.GetString(selection)
-            element, be_str = label.split(':')
+            element_orbital, be_str = label.split(':')
+            print(f'Element Orbital: {element_orbital}')
             be = float(be_str.replace(' eV', ''))
+            formatted_label = ".."
 
-            # Get max intensity in ±5 eV range
-            x_values = self.parent_window.x_values
-            y_values = self.parent_window.y_values
-            maxY = max(y_values)
-            mask = (x_values >= be - 5) & (x_values <= be + 5)
-            if np.any(mask):
-                local_max = np.max(y_values[mask])
-                # Add label at 1.2 times the local maximum height
-                self.parent_window.ax.text(be, local_max +0.05*maxY, element,
-                                           rotation=90, va='bottom', ha='center')
-                self.parent_window.canvas.draw_idle()
+            # Extract element and orbital correctly
+            import re
+            match = re.match(r'([A-Z][a-z]*)(\d+[spdf])', element_orbital)
+            if match:
+                element, orbital = match.groups()
+                formatted_label = f"{element} {orbital[0]}{orbital[1]}"  # e.g., "C 1 s"
+            elif any(element_orbital.endswith(x) for x in ['kll', 'mnn', 'mvv', 'mnv', 'lmm']):
+                auger = element_orbital[-3:]
+                formatted_label = f"{element_orbital[:-3]} {auger.upper()}"
+
+            if formatted_label != "..":
+                # Get max intensity in ±5 eV range
+                x_values = self.parent_window.x_values
+                y_values = self.parent_window.y_values
+                maxY = max(y_values)
+                mask = (x_values >= be - 5) & (x_values <= be + 5)
+                if np.any(mask):
+                    local_max = np.max(y_values[mask])
+                    # Add label at 1.2 times the local maximum height
+                    self.parent_window.ax.text(be, local_max +0.05*maxY, formatted_label,
+                                               rotation=90, va='bottom', ha='center')
+                    self.parent_window.canvas.draw_idle()
+
+                sheet_name = self.parent_window.sheet_combobox.GetValue()
+
+                if formatted_label not in self.parent_window.Data['Core levels'][sheet_name]:
+                    self.parent_window.Data['Core levels'][sheet_name]['Labels'] = []
+
+                self.parent_window.Data['Core levels'][sheet_name]['Labels'].append({
+                    'text': formatted_label,
+                    'x':be,
+                    'y': local_max +0.05*maxY
+                })
 
     def add_peak_to_grid(self, peak_name):
 
@@ -267,7 +309,9 @@ class PeriodicTableWindow(wx.Frame):
         return main_core_levels.get(element)
 
     def plot_element_lines(self, element):
+
         transitions = self.get_element_transitions(element)
+        print(f"transitions: {transitions}")
 
         if transitions:
             xmin, xmax = self.parent_window.ax.get_xlim()
