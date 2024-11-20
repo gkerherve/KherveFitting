@@ -4,9 +4,10 @@ class LabelWindow(wx.Frame):
     def __init__(self, parent):
         super().__init__(parent, title="Labels Manager")
         self.parent = parent
-        self.SetSize((400, 400))
+        self.SetSize((300, 300))
 
         panel = wx.Panel(self)
+        panel.SetBackgroundColour(wx.WHITE)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.list_box = wx.ListBox(panel, style=wx.LB_SINGLE)
@@ -14,8 +15,11 @@ class LabelWindow(wx.Frame):
 
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
         add_btn = wx.Button(panel, label="Add")
+        add_btn.SetMinSize((60, 40))
         edit_btn = wx.Button(panel, label="Edit")
+        edit_btn.SetMinSize((60, 40))
         remove_btn = wx.Button(panel, label="Remove")
+        remove_btn.SetMinSize((60, 40))
 
         btn_sizer.Add(add_btn, 0, wx.ALL, 5)
         btn_sizer.Add(edit_btn, 0, wx.ALL, 5)
@@ -80,21 +84,44 @@ class LabelWindow(wx.Frame):
             sheet_name = self.parent.sheet_combobox.GetValue()
             label = self.parent.Data['Core levels'][sheet_name]['Labels'][selection]
 
-            dlg = wx.Dialog(self, title="Edit Label")
+            dlg = wx.Dialog(self, title="Edit Label", size=(250, 200))
+            dlg.SetBackgroundColour(wx.WHITE)
             sizer = wx.BoxSizer(wx.VERTICAL)
 
-            text_ctrl = wx.TextCtrl(dlg, value=label['text'])
-            x_ctrl = wx.SpinCtrlDouble(dlg, value=str(label['x']), min=-10, max=1e4)
-            y_ctrl = wx.SpinCtrlDouble(dlg, value=str(label['y']), min=-10000, max=1e10)
+            # Add text label and control
+            text_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            text_label = wx.StaticText(dlg, label="Label:")
+            text_ctrl = wx.TextCtrl(dlg, value=label['text'], size=(120, -1))
+            text_sizer.Add(text_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            text_sizer.Add(text_ctrl, 1, wx.EXPAND | wx.ALL, 5)
+            sizer.Add(text_sizer, 0, wx.EXPAND)
 
-            sizer.Add(text_ctrl, 0, wx.ALL, 5)
-            sizer.Add(x_ctrl, 0, wx.ALL, 5)
-            sizer.Add(y_ctrl, 0, wx.ALL, 5)
+            # Add x control
+            x_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            x_label = wx.StaticText(dlg, label="X:")
+            x_ctrl = wx.SpinCtrlDouble(dlg, value=str(label['x']), min=-10, max=1e4, size=(120, -1))
+            x_sizer.Add(x_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            x_sizer.Add(x_ctrl, 1, wx.EXPAND | wx.ALL, 5)
+            sizer.Add(x_sizer, 0, wx.EXPAND)
 
-            btn_sizer = dlg.CreateButtonSizer(wx.OK | wx.CANCEL)
-            sizer.Add(btn_sizer, 0, wx.ALL | wx.CENTER, 5)
+            # Add y control
+            y_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            y_label = wx.StaticText(dlg, label="Y:")
+            y_ctrl = wx.SpinCtrlDouble(dlg, value=str(label['y']), min=-10000, max=1e10, size=(120, -1))
+            y_sizer.Add(y_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            y_sizer.Add(y_ctrl, 1, wx.EXPAND | wx.ALL, 5)
+            sizer.Add(y_sizer, 0, wx.EXPAND)
+
+            # Add buttons
+            btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            ok_btn = wx.Button(dlg, wx.ID_OK, "OK", size=(60, 40))
+            cancel_btn = wx.Button(dlg, wx.ID_CANCEL, "Cancel", size=(60, 40))
+            btn_sizer.Add(ok_btn, 0, wx.ALL, 5)
+            btn_sizer.Add(cancel_btn, 0, wx.ALL, 5)
+            sizer.Add(btn_sizer, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
             dlg.SetSizer(sizer)
+            sizer.Fit(dlg)
 
             if dlg.ShowModal() == wx.ID_OK:
                 label['text'] = text_ctrl.GetValue()
