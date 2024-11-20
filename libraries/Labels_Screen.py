@@ -38,7 +38,41 @@ class LabelWindow(wx.Frame):
                 self.list_box.Append(f"{label['text']} ({label['x']:.1f}, {label['y']:.1f})")
 
     def on_add(self, event):
-        self.parent.add_draggable_text()
+        dlg = wx.TextEntryDialog(self, 'Enter text:', 'Add Text Annotation')
+        if dlg.ShowModal() == wx.ID_OK:
+            text = dlg.GetValue()
+            sheet_name = self.parent.sheet_combobox.GetValue()
+            maxY = max(self.parent.y_values)
+            x = (self.parent.ax.get_xlim()[0] + self.parent.ax.get_xlim()[1]) / 2
+            y = maxY * 1.1
+
+            if 'Labels' not in self.parent.Data['Core levels'][sheet_name]:
+                self.parent.Data['Core levels'][sheet_name]['Labels'] = []
+
+            self.parent.Data['Core levels'][sheet_name]['Labels'].append({
+                'text': text,
+                'x': x,
+                'y': y
+            })
+
+            # Clear all existing text annotations
+            for txt in self.parent.ax.texts[:]:
+                txt.remove()
+
+            # Redraw all labels
+            for label_data in self.parent.Data['Core levels'][sheet_name]['Labels']:
+                self.parent.ax.text(
+                    label_data['x'],
+                    label_data['y'],
+                    label_data['text'],
+                    rotation=90,
+                    va='bottom',
+                    ha='center'
+                )
+
+            self.parent.canvas.draw_idle()
+            self.update_list()
+        dlg.Destroy()
 
     def on_edit(self, event):
         selection = self.list_box.GetSelection()
@@ -66,7 +100,23 @@ class LabelWindow(wx.Frame):
                 label['text'] = text_ctrl.GetValue()
                 label['x'] = x_ctrl.GetValue()
                 label['y'] = y_ctrl.GetValue()
-                self.parent.clear_and_replot()
+
+                # Clear all existing text annotations
+                for txt in self.parent.ax.texts[:]:
+                    txt.remove()
+
+                # Redraw all labels
+                for label_data in self.parent.Data['Core levels'][sheet_name]['Labels']:
+                    self.parent.ax.text(
+                        label_data['x'],
+                        label_data['y'],
+                        label_data['text'],
+                        rotation=90,
+                        va='bottom',
+                        ha='center'
+                    )
+
+                self.parent.canvas.draw_idle()
                 self.update_list()
 
             dlg.Destroy()
@@ -75,17 +125,23 @@ class LabelWindow(wx.Frame):
         selection = self.list_box.GetSelection()
         if selection != wx.NOT_FOUND:
             sheet_name = self.parent.sheet_combobox.GetValue()
-            self.parent.Data['Core levels'][sheet_name]['Labels'].pop(selection)
+            labels = self.parent.Data['Core levels'][sheet_name]['Labels']
+            labels.pop(selection)
 
-            # First remove all text annotations from the plot
-            for txt in self.parent.ax.texts:
-                txt.remove()
+            # Clear all existing text annotations
+            for text in self.parent.ax.texts[:]:
+                text.remove()
 
-            # Redraw plot completely
-            self.parent.clear_and_replot()
+            # Redraw remaining labels
+            for label_data in labels:
+                self.parent.ax.text(
+                    label_data['x'],
+                    label_data['y'],
+                    label_data['text'],
+                    rotation=90,
+                    va='bottom',
+                    ha='center'
+                )
 
-            # Update the list
-            self.update_list()
-
-            # Force redraw
             self.parent.canvas.draw_idle()
+            self.update_list()
