@@ -1,5 +1,6 @@
 import wx
 import numpy as np
+from libraries.Sheet_Operations import on_sheet_selected
 
 
 class PeriodicTableWindow(wx.Frame):
@@ -85,16 +86,22 @@ class PeriodicTableWindow(wx.Frame):
         self.add_peak_btn = wx.Button(panel, label="Add to Grid")
         self.remove_selected_btn = wx.Button(panel, label="Clear")
         self.remove_all_btn = wx.Button(panel, label="Clear All")
+        self.remove_last_label_btn = wx.Button(panel, label="Clear Last Label")
+        self.remove_all_labels_btn = wx.Button(panel, label="Clear All Labels")
 
         self.add_labels_btn.Bind(wx.EVT_BUTTON, self.OnAddLabels)
         self.add_peak_btn.Bind(wx.EVT_BUTTON, self.OnAddPeak)
         self.remove_selected_btn.Bind(wx.EVT_BUTTON, self.OnRemoveSelected)
         self.remove_all_btn.Bind(wx.EVT_BUTTON, self.OnRemoveAll)
+        self.remove_last_label_btn.Bind(wx.EVT_BUTTON, self.OnRemoveLastLabel)
+        self.remove_all_labels_btn.Bind(wx.EVT_BUTTON, self.OnRemoveAllLabels)
 
         button_sizer.Add(self.add_labels_btn, pos=(0, 0), flag=wx.EXPAND)
         button_sizer.Add(self.add_peak_btn, pos=(0, 1), flag=wx.EXPAND)
         button_sizer.Add(self.remove_selected_btn, pos=(1, 0), flag=wx.EXPAND)
         button_sizer.Add(self.remove_all_btn, pos=(1, 1), flag=wx.EXPAND)
+        button_sizer.Add(self.remove_last_label_btn, pos=(2, 0), flag=wx.EXPAND)
+        button_sizer.Add(self.remove_all_labels_btn, pos=(2, 1), flag=wx.EXPAND)
 
         right_sizer.Add(button_sizer, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -102,9 +109,38 @@ class PeriodicTableWindow(wx.Frame):
 
         main_sizer.Add(hsizer, 1, wx.EXPAND)
         panel.SetSizer(main_sizer)
-        self.SetSize(775, 320)
+        self.SetSize(815, 320)
 
-    # print(f"Element {element} Oribital {orbital} Auger {is_auger} Instrument {instrument}, ")
+    def OnRemoveLastLabel(self, event):
+        sheet_name = self.parent_window.sheet_combobox.GetValue()
+        if 'Labels' in self.parent_window.Data['Core levels'][sheet_name]:
+            labels = self.parent_window.Data['Core levels'][sheet_name]['Labels']
+            if labels:
+                labels.pop()
+                # Clear all existing text annotations
+                for text in self.parent_window.ax.texts[:]:
+                    text.remove()
+                # Redraw remaining labels
+                maxY = max(self.parent_window.y_values)
+                for label_data in labels:
+                    self.parent_window.ax.text(
+                        label_data['x'],
+                        label_data['y'],
+                        label_data['text'],
+                        rotation=90,
+                        va='bottom',
+                        ha='center'
+                    )
+                self.parent_window.canvas.draw_idle()
+
+    def OnRemoveAllLabels(self, event):
+        sheet_name = self.parent_window.sheet_combobox.GetValue()
+        if 'Labels' in self.parent_window.Data['Core levels'][sheet_name]:
+            self.parent_window.Data['Core levels'][sheet_name]['Labels'] = []
+            # Clear all text annotations
+            for text in self.parent_window.ax.texts[:]:
+                text.remove()
+            self.parent_window.canvas.draw_idle()
 
     def get_element_transitions(self, element):
         allowed_orbitals = ['1s', '2s', '2p', '3s', '3p', '3d', '4s', '4p', '4d', '4f', '5s', '5p', '5d', '5f']
