@@ -2973,6 +2973,12 @@ class MyFrame(wx.Frame):
             draggable_text = DraggableText(text)
             self.canvas.draw()
 
+    def open_labels_window(self, event):
+        from libraries.Labels_Screen import LabelWindow
+        if not hasattr(self, 'labels_window') or not self.labels_window:
+            self.labels_window = LabelWindow(self)
+        self.labels_window.Show()
+        self.labels_window.Raise()
 
 if __name__ == '__main__':
     # Try Multiprocessing

@@ -153,10 +153,10 @@ def add_draggable_text(window):
         window.canvas.Bind(wx.EVT_LEFT_DOWN, on_canvas_click)
     else:
         window.canvas.Unbind(wx.EVT_LEFT_DOWN)
+        window.canvas.mpl_connect('button_press_event', lambda event: None)  # Reset Matplotlib listener
 
 
 def on_canvas_click(event):
-    # Navigate up to find the main frame
     parent = event.GetEventObject().GetParent()
     while not isinstance(parent, wx.Frame):
         parent = parent.GetParent()
@@ -166,7 +166,6 @@ def on_canvas_click(event):
         event.Skip()
         return
 
-    # Convert wx coordinates to matplotlib data coordinates
     x, y = event.GetPosition()
     ax = window.ax
     display_point = ax.transData.inverted().transform((x, y))
@@ -177,6 +176,17 @@ def on_canvas_click(event):
         annotation = ax.text(display_point[0], display_point[1], text,
                              picker=5,
                              bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
+
+        sheet_name = window.sheet_combobox.GetValue()
+        if 'Labels' not in window.Data['Core levels'][sheet_name]:
+            window.Data['Core levels'][sheet_name]['Labels'] = []
+
+        window.Data['Core levels'][sheet_name]['Labels'].append({
+            'text': text,
+            'x': display_point[0],
+            'y': display_point[1]
+        })
+
         draggable = DraggableText(annotation)
         window.canvas.draw()
     dlg.Destroy()
@@ -184,19 +194,4 @@ def on_canvas_click(event):
     window.text_mode = False
     window.canvas.Unbind(wx.EVT_LEFT_DOWN)
 
-# def copy_cell(grid):
-#     if grid.GetSelectedCells():
-#         cell = grid.GetSelectedCells()[0]
-#         return grid.GetCellValue(cell[0], cell[1])
-#     return ""
-#
-# def paste_cell(grid):
-#     if wx.TheClipboard.Open():
-#         if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
-#             text_data = wx.TextDataObject()
-#             wx.TheClipboard.GetData(text_data)
-#             text = text_data.GetText()
-#             if grid.GetSelectedCells():
-#                 cell = grid.GetSelectedCells()[0]
-#                 grid.SetCellValue(cell[0], cell[1], text)
-#         wx.TheClipboard.Close()
+

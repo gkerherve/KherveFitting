@@ -563,6 +563,11 @@ def create_vertical_toolbar(parent, frame):
     # Add to the binding section
     frame.Bind(wx.EVT_TOOL, lambda evt: add_draggable_text(frame), text_tool)
 
+    labels_tool = v_toolbar.AddTool(wx.ID_ANY, 'Labels Manager',
+                                    wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_TOOLBAR),
+                                    shortHelp="Open Labels Manager")
+    frame.Bind(wx.EVT_TOOL, frame.open_labels_window, labels_tool)
+
     v_toolbar.AddSeparator()
 
     # Add text size increase/decrease tools
