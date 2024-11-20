@@ -16,6 +16,7 @@ from libraries.Export import export_word_report
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
     on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, show_mini_game, on_about)
+from libraries.Utilities import add_draggable_text
 
 
 from Functions import refresh_sheets, on_sheet_selected_wrapper, toggle_plot, on_save, on_save_plot, on_save_all_sheets, toggle_Col_1, undo, redo
@@ -552,6 +553,15 @@ def create_vertical_toolbar(parent, frame):
     low_int_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Low Int -',
                                               wx.Bitmap(os.path.join(icon_path, "Down-Blue-25g.png"), wx.BITMAP_TYPE_PNG),
                                               shortHelp="Decrease Low Intensity")
+    v_toolbar.AddSeparator()
+
+    # Add text annotation tool after other tools
+    text_tool = v_toolbar.AddTool(wx.ID_ANY, 'Add Text',
+        wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_TOOLBAR),
+        shortHelp="Add draggable text annotation")
+
+    # Add to the binding section
+    frame.Bind(wx.EVT_TOOL, lambda evt: add_draggable_text(frame), text_tool)
 
     v_toolbar.AddSeparator()
 

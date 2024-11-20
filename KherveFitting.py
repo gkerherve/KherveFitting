@@ -2967,6 +2967,12 @@ class MyFrame(wx.Frame):
         self.clear_and_replot()
         self.save_config()
 
+    def add_text_annotation(self, event):
+        if event.inaxes:
+            text = self.ax.text(event.xdata, event.ydata, "Text")
+            draggable_text = DraggableText(text)
+            self.canvas.draw()
+
 
 if __name__ == '__main__':
     # Try Multiprocessing

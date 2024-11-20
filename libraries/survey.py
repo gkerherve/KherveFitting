@@ -84,8 +84,8 @@ class PeriodicTableWindow(wx.Frame):
 
         self.add_labels_btn = wx.Button(panel, label="Add Labels")
         self.add_peak_btn = wx.Button(panel, label="Add to Grid")
-        self.remove_selected_btn = wx.Button(panel, label="Clear")
-        self.remove_all_btn = wx.Button(panel, label="Clear All")
+        self.remove_selected_btn = wx.Button(panel, label="Clear Selected")
+        self.remove_all_btn = wx.Button(panel, label="Clear All List")
         self.remove_last_label_btn = wx.Button(panel, label="Clear Last Label")
         self.remove_all_labels_btn = wx.Button(panel, label="Clear All Labels")
 

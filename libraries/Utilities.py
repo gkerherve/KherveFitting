@@ -1,5 +1,6 @@
 # libraries/utilities.py
 import wx
+import numpy as np
 
 
 def _clear_peak_params_grid(window):
@@ -51,3 +52,151 @@ def load_rsf_data(file_path):
                 core_level, rsf = parts
                 rsf_dict[core_level] = float(rsf)
     return rsf_dict
+
+
+import wx
+import numpy as np
+
+
+class DraggableText:
+    def __init__(self, text):
+        self.text = text
+        self.press = None
+        self.menu = None
+        self.connect()
+
+    def connect(self):
+        self.cidpress = self.text.figure.canvas.mpl_connect('button_press_event', self.on_press)
+        self.cidrelease = self.text.figure.canvas.mpl_connect('button_release_event', self.on_release)
+        self.cidmotion = self.text.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.cidkeypress = self.text.figure.canvas.mpl_connect('key_press_event', self.on_key)
+        self.cidrightclick = self.text.figure.canvas.mpl_connect('button_press_event', self.on_right_click)
+
+    def on_right_click(self, event):
+        if event.button != 3: return
+        if event.inaxes != self.text.axes: return
+        contains, _ = self.text.contains(event)
+        if not contains: return
+
+        window = event.canvas.GetParent().GetParent().GetParent()
+        menu = wx.Menu()
+
+        rotate_item = menu.Append(wx.ID_ANY, "Rotate")
+        size_item = menu.Append(wx.ID_ANY, "Change Size")
+        delete_item = menu.Append(wx.ID_ANY, "Delete")
+
+        window.Bind(wx.EVT_MENU, self.on_rotate, rotate_item)
+        window.Bind(wx.EVT_MENU, self.on_change_size, size_item)
+        window.Bind(wx.EVT_MENU, self.on_delete, delete_item)
+
+        window.PopupMenu(menu)
+        menu.Destroy()
+
+    def on_rotate(self, event):
+        window = self.text.figure.canvas.GetParent().GetParent().GetParent()
+        dlg = wx.TextEntryDialog(window, 'Enter rotation angle (degrees):', 'Rotate Text')
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                angle = float(dlg.GetValue())
+                self.text.set_rotation(angle)
+                self.text.figure.canvas.draw()
+            except ValueError:
+                wx.MessageBox('Please enter a valid number', 'Error')
+        dlg.Destroy()
+
+    def on_change_size(self, event):
+        window = self.text.figure.canvas.GetParent().GetParent().GetParent()
+        dlg = wx.TextEntryDialog(window, 'Enter font size:', 'Change Text Size')
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                size = float(dlg.GetValue())
+                self.text.set_fontsize(size)
+                self.text.figure.canvas.draw()
+            except ValueError:
+                wx.MessageBox('Please enter a valid number', 'Error')
+        dlg.Destroy()
+
+    def on_delete(self, event):
+        self.text.remove()
+        self.text.figure.canvas.draw()
+
+    def on_press(self, event):
+        if event.button != 1: return
+        if event.inaxes != self.text.axes: return
+        contains, _ = self.text.contains(event)
+        if not contains: return
+        self.press = self.text.get_position(), event.xdata, event.ydata
+
+    def on_motion(self, event):
+        if self.press is None: return
+        if event.inaxes != self.text.axes: return
+        pos, xpress, ypress = self.press
+        dx = event.xdata - xpress
+        dy = event.ydata - ypress
+        self.text.set_position((pos[0] + dx, pos[1] + dy))
+        self.text.figure.canvas.draw()
+
+    def on_release(self, event):
+        self.press = None
+
+    def on_key(self, event):
+        if event.key == 'delete':
+            contains, _ = self.text.contains(event)
+            if contains:
+                self.text.remove()
+                self.text.figure.canvas.draw()
+
+
+def add_draggable_text(window):
+    window.text_mode = not getattr(window, 'text_mode', False)
+    if window.text_mode:
+        window.canvas.Bind(wx.EVT_LEFT_DOWN, on_canvas_click)
+    else:
+        window.canvas.Unbind(wx.EVT_LEFT_DOWN)
+
+
+def on_canvas_click(event):
+    # Navigate up to find the main frame
+    parent = event.GetEventObject().GetParent()
+    while not isinstance(parent, wx.Frame):
+        parent = parent.GetParent()
+    window = parent
+
+    if not window.text_mode:
+        event.Skip()
+        return
+
+    # Convert wx coordinates to matplotlib data coordinates
+    x, y = event.GetPosition()
+    ax = window.ax
+    display_point = ax.transData.inverted().transform((x, y))
+
+    dlg = wx.TextEntryDialog(window, 'Enter text:', 'Add Text Annotation')
+    if dlg.ShowModal() == wx.ID_OK:
+        text = dlg.GetValue()
+        annotation = ax.text(display_point[0], display_point[1], text,
+                             picker=5,
+                             bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
+        draggable = DraggableText(annotation)
+        window.canvas.draw()
+    dlg.Destroy()
+
+    window.text_mode = False
+    window.canvas.Unbind(wx.EVT_LEFT_DOWN)
+
+# def copy_cell(grid):
+#     if grid.GetSelectedCells():
+#         cell = grid.GetSelectedCells()[0]
+#         return grid.GetCellValue(cell[0], cell[1])
+#     return ""
+#
+# def paste_cell(grid):
+#     if wx.TheClipboard.Open():
+#         if wx.TheClipboard.IsSupported(wx.DataFormat(wx.DF_TEXT)):
+#             text_data = wx.TextDataObject()
+#             wx.TheClipboard.GetData(text_data)
+#             text = text_data.GetText()
+#             if grid.GetSelectedCells():
+#                 cell = grid.GetSelectedCells()[0]
+#                 grid.SetCellValue(cell[0], cell[1], text)
+#         wx.TheClipboard.Close()
