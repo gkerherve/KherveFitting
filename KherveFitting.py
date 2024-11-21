@@ -2094,6 +2094,7 @@ class MyFrame(wx.Frame):
                 # Calculate normalized area with ECF correction
                 txfn = 1.0  # Transmission function
                 normalized_area = area / (rsf * txfn * ecf)
+                print(f"Area Norm: {normalized_area} ECF {ecf}")
 
                 total_normalized_area += normalized_area
                 checked_indices.append((i, normalized_area))

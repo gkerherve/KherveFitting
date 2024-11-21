@@ -131,55 +131,33 @@ def get_rsf_from_library(library_data, element, orbital, instrument):
         return library_data[key][instrument]['rsf']
     return library_data[key]['Al']['rsf']  # Default to Al if not found
 
-def _calculate_peak_areas2(peak_params, fitting_model):
-    """Calculate area, normalized area, and relative area for a peak."""
-    height = peak_params['height']
-    fwhm = peak_params['fwhm']
-
-    if fitting_model == "Voigt (Area, L/G, \u03C3)":
-        # Area calculation for Voigt profile
-        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-        area = height * sigma * np.sqrt(2 * np.pi)
-    elif fitting_model == "Pseudo-Voigt (Area)":
-        # Area calculation for Pseudo-Voigt profile
-        area = height * fwhm * np.pi / 2
-    elif fitting_model in ["LA (Area, \u03C3, \u03B3)", "LA (Area, \u03C3/\u03B3, \u03B3)", "LA*G (Area, \u03C3/\u03B3, \u03B3)"]:
-        # For LA model, area is directly provided
-        # area = peak_params['area']
-        height = peak_params['amplitude']
-        sigma = peak_params['sigma']
-        gamma = peak_params['gamma']
-        fraction = peak_params[f'{prefix}fraction'].value / 100
-
-
-        area = self.parent.calculate_peak_area(fitting_model, height, fwhm, fraction, sigma, gamma)
-
-        # If area is not provided in peak_params, you can calculate it numerically:
-        # if 'area' not in peak_params:
-        #     sigma = peak_params['sigma']
-        #     gamma = peak_params['gamma']
-        #     x_range = np.linspace(peak_params['center'] - 5*fwhm, peak_params['center'] + 5*fwhm, 1000)
-        #     y_values = PeakFunctions.LA(x_range, peak_params['center'], height, fwhm, sigma, gamma)
-        #     area = np.trapz(y_values, x_range)
-    elif fitting_model in ["GL (Height)", "SGL (Height)", "Unfitted"]:
-        # Area calculation for Gaussian-Lorentzian profiles
-        area = height * fwhm * np.sqrt(np.pi / (4 * np.log(2)))
-    elif fitting_model in ["GL (Area)", "SGL (Area)"]:
-        # For area-based models, area is already provided
-        pass  # We don't need to calculate area as it's already given
-    else:
-        raise ValueError(f"Unknown fitting model: {fitting_model}")
-
-    normalized_area = area / peak_params['rsf']
-    rel_area = area / peak_params['rsf']
-
-    return round(area, 2), round(normalized_area, 2), round(rel_area, 2)
-
 def _calculate_peak_areas(window, peak_params, row):
-    area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
+    area = float(window.peak_params_grid.GetCellValue(row, 6))
     rsf = peak_params['rsf']
-    normalized_area = area / rsf
+
+    binding_energy = float(window.peak_params_grid.GetCellValue(row, 2))
+    kinetic_energy = window.photons - binding_energy
+
+    if window.library_type == "Scofield":
+        ecf = kinetic_energy ** 0.6
+    elif window.library_type == "Wagner":
+        ecf = kinetic_energy ** 1.0
+    elif window.library_type == "TPP-2M":
+        z_avg = 50
+        n_v_avg = 4
+        molecular_weight = 100
+        density = 2.0
+
+        imfp = PeakFunctions.calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg,
+                                                  molecular_weight, density)
+        ecf = 1 / imfp
+    else:
+        ecf = 1.0
+
+    txfn = 1.0
+    normalized_area = area / (rsf * txfn * ecf)
     rel_area = normalized_area
+
     return round(area, 2), round(normalized_area, 2), round(rel_area, 2)
 
 def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model, peak_label):
@@ -198,11 +176,11 @@ def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model
     window.results_grid.SetCellValue(row, 8, f"{peak_params['rsf']:.2f}")
     window.results_grid.SetCellValue(row, 9, fitting_model)
     window.results_grid.SetCellValue(row, 10, f"{rel_area:.2f}")
-    window.results_grid.SetCellValue(row, 11, "")  # Sigma
-    window.results_grid.SetCellValue(row, 12, "")  # Gamma
-    window.results_grid.SetCellValue(row, 13, f"{window.bg_min_energy:.2f}" if window.bg_min_energy is not None else "")
-    window.results_grid.SetCellValue(row, 14, f"{window.bg_max_energy:.2f}" if window.bg_max_energy is not None else "")
-    window.results_grid.SetCellValue(row, 15, window.sheet_combobox.GetValue())
+    window.results_grid.SetCellValue(row, 11, f"{peak_params['sigma']:.2f}")  # Sigma
+    window.results_grid.SetCellValue(row, 12, f"{peak_params['gamma']:.2f}")  # Gamma
+    window.results_grid.SetCellValue(row, 14, f"{window.bg_min_energy:.2f}" if window.bg_min_energy is not None else "")
+    window.results_grid.SetCellValue(row, 15, f"{window.bg_max_energy:.2f}" if window.bg_max_energy is not None else "")
+    window.results_grid.SetCellValue(row, 18, window.sheet_combobox.GetValue())
     _set_constraints(window, row, peak_params['constraints'])
 
     # Force a refresh of the grid cell to ensure the checkbox is displayed correctly
@@ -219,10 +197,14 @@ def _set_checkbox(window, row, col, state='0'):
 
 def _set_constraints(window, row, constraints):
     """Set constraint values in the results grid."""
-    window.results_grid.SetCellValue(row, 16, constraints['position'])
-    window.results_grid.SetCellValue(row, 17, constraints['height'])
-    window.results_grid.SetCellValue(row, 18, constraints['fwhm'])
-    window.results_grid.SetCellValue(row, 19, constraints['lg_ratio'])
+    window.results_grid.SetCellValue(row, 19, constraints['position'])
+    window.results_grid.SetCellValue(row, 20, constraints['height'])
+    window.results_grid.SetCellValue(row, 21, constraints['fwhm'])
+    window.results_grid.SetCellValue(row, 22, constraints['lg_ratio'])
+    window.results_grid.SetCellValue(row, 23, constraints['area'])
+    window.results_grid.SetCellValue(row, 24, constraints['sigma'])
+    window.results_grid.SetCellValue(row, 25, constraints['gamma'])
+
 
 def _update_data_structure(window, sheet_name, peak_index, peak_params, area, rel_area, fitting_model):
     """Update the window.Data structure with peak results."""
