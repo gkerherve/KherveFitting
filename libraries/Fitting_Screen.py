@@ -307,8 +307,7 @@ class FittingWindow(wx.Frame):
 
     def on_averaging_points_change(self, event):
         try:
-            averaging_points = int(self.averaging_points_text.GetValue())
-            self.parent.averaging_points = averaging_points
+            self.parent.averaging_points = int(self.averaging_points_text.GetValue())
         except ValueError:
             pass
 

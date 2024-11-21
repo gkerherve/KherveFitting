@@ -505,15 +505,15 @@ class BackgroundCalculations:
         Returns:
             array: Linear background
         """
-        y_start = BackgroundCalculations.calculate_endpoint_average(x_values, y_values, x_values[0],
+        y_start = BackgroundCalculations.calculate_endpoint_average(x, y, x[0],
                                                                     num_points) + start_offset
-        y_end = BackgroundCalculations.calculate_endpoint_average(x_values, y_values, x_values[-1],
+        y_end = BackgroundCalculations.calculate_endpoint_average(x, y, x[-1],
                                                                   num_points) + end_offset
-        return np.linspace(y_start, y_end, len(y_values))
+        return np.linspace(y_start, y_end, len(y))
 
 
     @staticmethod
-    def calculate_smart_background(x, y, offset_h, offset_l):
+    def calculate_smart_background(x, y, offset_h, offset_l, num_points=5):
         """
         Calculate a 'smart' background by choosing between Shirley and linear backgrounds.
 
@@ -526,8 +526,8 @@ class BackgroundCalculations:
         Returns:
             array: Smart background
         """
-        shirley_bg = BackgroundCalculations.calculate_shirley_background(x, y, offset_h, offset_l)
-        linear_bg = BackgroundCalculations.calculate_linear_background(x, y, offset_h, offset_l)
+        shirley_bg = BackgroundCalculations.calculate_shirley_background(x, y, offset_h, offset_l,num_points)
+        linear_bg = BackgroundCalculations.calculate_linear_background(x, y, offset_h, offset_l,num_points)
 
         # Choose background type based on first and last y-values
         background = shirley_bg if y[0] > y[-1] else linear_bg
@@ -573,7 +573,7 @@ class BackgroundCalculations:
         return background
 
     @staticmethod
-    def calculate_adaptive_smart_background(x, y, x_range, previous_background, offset_h, offset_l):
+    def calculate_adaptive_smart_background(x, y, x_range, previous_background, offset_h, offset_l, num_points=5):
         """
         Calculate an Multi-Regions Smart background for a selected range.
 
@@ -596,15 +596,16 @@ class BackgroundCalculations:
         # Determine background type for selected range
         if y_selected[0] > y_selected[-1]:
             new_background[mask] = BackgroundCalculations.calculate_shirley_background(x_selected, y_selected, offset_h,
-                                                                                       offset_l)
+                                                                                       offset_l, num_points)
         else:
             new_background[mask] = BackgroundCalculations.calculate_linear_background(x_selected, y_selected, offset_h,
-                                                                                      offset_l)
+                                                                                      offset_l, num_points)
 
         return new_background
 
     @staticmethod
-    def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, tol=1e-6, padding_factor=0.01):
+    def calculate_shirley_background(x, y, start_offset, end_offset, max_iter=100, tol=1e-6, padding_factor=0.01,
+                                     num_points=5):
         """
         Calculate the Shirley background.
 
@@ -616,6 +617,7 @@ class BackgroundCalculations:
             max_iter (int): Maximum number of iterations
             tol (float): Tolerance for convergence
             padding_factor (float): Factor for padding the data
+            num_points (int): Number of points to average for endpoints
 
         Returns:
             array: Shirley background
@@ -626,7 +628,11 @@ class BackgroundCalculations:
         x_min, x_max = x[0], x[-1]
         padding_width = padding_factor * (x_max - x_min)
         x_padded = np.concatenate([[x_min - padding_width], x, [x_max + padding_width]])
-        y_padded = np.concatenate([[y[0] + start_offset], y, [y[-1] + end_offset]])
+
+        # Calculate averaged endpoint values
+        y_start = BackgroundCalculations.calculate_endpoint_average(x, y, x[0], num_points) + start_offset
+        y_end = BackgroundCalculations.calculate_endpoint_average(x, y, x[-1], num_points) + end_offset
+        y_padded = np.concatenate([[y_start], y, [y_end]])
 
         background = np.zeros_like(y_padded)
         I0, Iend = y_padded[0], y_padded[-1]
