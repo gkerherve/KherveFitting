@@ -34,34 +34,6 @@ def on_sheet_selected(window, event):
             # Check if there's fitting data available
             if 'Fitting' in core_level_data and 'Peaks' in core_level_data['Fitting']:
                 peaks = core_level_data['Fitting']['Peaks']
-                # x_values = np.array(core_level_data['B.E.'])
-                #
-                # # Update peak count and adjust grid rows first
-                # window.peak_count = len(peaks)
-                # required_rows = window.peak_count * 2
-                # current_rows = window.peak_params_grid.GetNumberRows()
-                # if current_rows < required_rows:
-                #     window.peak_params_grid.AppendRows(required_rows - current_rows)
-                #
-                # for i, (peak_label, peak_data) in enumerate(peaks.items()):
-                #     row = i * 2
-                #     if peak_data.get('Fitting Model') == 'D-parameter':
-                #         window.peak_params_grid.SetCellValue(row, 7, f"{peak_data['Sigma']:.2f}")
-                #         window.peak_params_grid.SetCellValue(row, 8, f"{peak_data['Gamma']:.2f}")
-                #         window.peak_params_grid.SetCellValue(row, 9, f"{peak_data['Skew']:.2f}")
-                #         window.peak_params_grid.SetCellValue(row, 5, f"{peak_data['L/G']:.2f}")
-                #         window.peak_params_grid.SetCellValue(row, 4, f"{peak_data['Width']:.2f}")
-                #
-                #         # Recalculate and plot derivative
-                #         normalized_deriv = OtherCalc.smooth_and_differentiate(
-                #             x_values,
-                #             window.y_values,
-                #             peak_data['Skew'],  # smooth_width
-                #             peak_data['Sigma'],  # pre_smooth
-                #             peak_data['L/G'],  # diff_width
-                #             peak_data['Gamma']  # post_smooth
-                #         )
-                #         window.ax.plot(x_values, normalized_deriv, '-', color='grey', label='Derivative')
 
                 # Update peak count
                 window.peak_count = len(peaks)

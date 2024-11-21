@@ -555,20 +555,7 @@ def create_vertical_toolbar(parent, frame):
                                               shortHelp="Decrease Low Intensity")
     v_toolbar.AddSeparator()
 
-    # Add text annotation tool after other tools
-    text_tool = v_toolbar.AddTool(wx.ID_ANY, 'Add Text',
-        wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_TOOLBAR),
-        shortHelp="Add draggable text annotation")
 
-    # Add to the binding section
-    frame.Bind(wx.EVT_TOOL, lambda evt: add_draggable_text(frame), text_tool)
-
-    labels_tool = v_toolbar.AddTool(wx.ID_ANY, 'Labels Manager',
-                                    wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_TOOLBAR),
-                                    shortHelp="Open Labels Manager")
-    frame.Bind(wx.EVT_TOOL, frame.open_labels_window, labels_tool)
-
-    v_toolbar.AddSeparator()
 
     # Add text size increase/decrease tools
     text_increase_tool = v_toolbar.AddTool(wx.ID_ANY, 'Increase Font Size',
@@ -577,6 +564,22 @@ def create_vertical_toolbar(parent, frame):
     text_decrease_tool = v_toolbar.AddTool(wx.ID_ANY, 'Decrease Font Size',
                                           wx.Bitmap(os.path.join(icon_path, "A-_25.png"), wx.BITMAP_TYPE_PNG),
                                           shortHelp="Decrease All Font Sizes")
+
+    v_toolbar.AddSeparator()
+
+    # Add text annotation tool after other tools
+    text_tool = v_toolbar.AddTool(wx.ID_ANY, 'Add Text',
+        wx.Bitmap(os.path.join(icon_path, "AddText-25.png"), wx.BITMAP_TYPE_PNG),
+        shortHelp="Add draggable text annotation")
+
+    # Add to the binding section
+    frame.Bind(wx.EVT_TOOL, lambda evt: add_draggable_text(frame), text_tool)
+
+    labels_tool = v_toolbar.AddTool(wx.ID_ANY, 'Labels Manager',
+                                    wx.Bitmap(os.path.join(icon_path, "ListText2-25.png"), wx.BITMAP_TYPE_PNG),
+                                    # wx.Bitmap(os.path.join(icon_path, "AddText-25.png"), wx.BITMAP_TYPE_PNG),
+                                    shortHelp="Open Labels Manager")
+    frame.Bind(wx.EVT_TOOL, frame.open_labels_window, labels_tool)
 
     v_toolbar.AddSeparator()
 

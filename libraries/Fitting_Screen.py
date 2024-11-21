@@ -81,6 +81,10 @@ class FittingWindow(wx.Frame):
         self.offset_l_text = wx.TextCtrl(self.background_panel, value=str(self.parent.offset_l))
         self.offset_l_text.Bind(wx.EVT_TEXT, self.on_offset_l_change)
 
+        averaging_points_label = wx.StaticText(self.background_panel, label="Averaging Points:")
+        self.averaging_points_text = wx.TextCtrl(self.background_panel, value="5")
+        self.averaging_points_text.Bind(wx.EVT_TEXT, self.on_averaging_points_change)
+
         background_button = wx.Button(self.background_panel, label="Background")
         background_button.SetMinSize((125, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
@@ -105,10 +109,13 @@ class FittingWindow(wx.Frame):
         background_sizer.Add(self.offset_h_text, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(offset_l_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         background_sizer.Add(self.offset_l_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(background_button, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(reset_vlines_button, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(clear_background_only_button, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(clear_background_button, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(averaging_points_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        background_sizer.Add(self.averaging_points_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+
+        background_sizer.Add(reset_vlines_button, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_only_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(background_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         self.background_panel.SetSizer(background_sizer)
         notebook.AddPage(self.background_panel, "Background")
@@ -298,7 +305,12 @@ class FittingWindow(wx.Frame):
     def on_clear_background_only(self, event):
         self.parent.plot_manager.clear_background_only(self.parent)
 
-
+    def on_averaging_points_change(self, event):
+        try:
+            averaging_points = int(self.averaging_points_text.GetValue())
+            self.parent.averaging_points = averaging_points
+        except ValueError:
+            pass
 
     def on_reset_vlines(self, event):
         self.parent.vline1 = None

@@ -599,6 +599,14 @@ class PlotManager:
                 cst_unfit = "D-parameter"
             if fitting_model == "SurveyID":
                 cst_unfit = "SurveyID"
+            if 'Labels' in window.Data['Core levels'][sheet_name]:
+
+                for label_data in window.Data['Core levels'][sheet_name]['Labels']:
+                    window.ax.text(
+                        label_data['x'],
+                        label_data['y'],
+                        label_data['text']
+                    )
             if fitting_model == "Unfitted":
                 # For unfitted peaks, fill between background and raw data
                 cst_unfit = "Unfitted"
@@ -609,16 +617,6 @@ class PlotManager:
                     self.ax.fill_between(x_values, window.background, y_values,
                                          facecolor='lightgreen', alpha=0.5, label=label)
 
-            # When replotting, restore labels
-            # print(window.Data['Core levels'][sheet_name])
-            if 'Labels' in window.Data['Core levels'][sheet_name]:
-
-                for label_data in window.Data['Core levels'][sheet_name]['Labels']:
-                    window.ax.text(
-                        label_data['x'],
-                        label_data['y'],
-                        label_data['text']
-                    )
             else:
                 if i in doublets:
                     if doublets.index(i) % 2 == 0:  # First peak of the doublet

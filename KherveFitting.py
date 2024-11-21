@@ -210,6 +210,8 @@ class MyFrame(wx.Frame):
         self.current_instrument = 'Al'  # Default instrument
         self.library_data = load_library_data()
 
+        self.averaging_points = 5
+
         # Number of column to remove from the excel file
         self.num_fitted_columns = 15
 

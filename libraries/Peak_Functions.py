@@ -478,8 +478,21 @@ from scipy.signal import savgol_filter
 
 
 class BackgroundCalculations:
+
     @staticmethod
-    def calculate_linear_background(x, y, start_offset, end_offset):
+    def calculate_endpoint_average(x_values, y_values, point, num_points):
+        # Find index closest to the specified point
+        idx = np.argmin(np.abs(x_values - point))
+
+        # Get start and end indices for averaging window
+        start_idx = max(0, idx - num_points // 2)
+        end_idx = min(len(y_values), idx + num_points // 2 + 1)
+
+        # Calculate average
+        return np.mean(y_values[start_idx:end_idx])
+
+    @staticmethod
+    def calculate_linear_background(x, y, start_offset, end_offset, num_points=5):
         """
         Calculate a linear background between the start and end points of the data.
 
@@ -492,9 +505,12 @@ class BackgroundCalculations:
         Returns:
             array: Linear background
         """
-        y_start = y[0] + start_offset
-        y_end = y[-1] + end_offset
-        return np.linspace(y_start, y_end, len(y))
+        y_start = BackgroundCalculations.calculate_endpoint_average(x_values, y_values, x_values[0],
+                                                                    num_points) + start_offset
+        y_end = BackgroundCalculations.calculate_endpoint_average(x_values, y_values, x_values[-1],
+                                                                  num_points) + end_offset
+        return np.linspace(y_start, y_end, len(y_values))
+
 
     @staticmethod
     def calculate_smart_background(x, y, offset_h, offset_l):
