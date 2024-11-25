@@ -207,8 +207,9 @@ class MyFrame(wx.Frame):
 
         self.be_correction = 0.00
 
-        self.current_instrument = 'Al1486'  # Default instrument
+        self.current_instrument = 'A-ALTHERMO01'  # Default instrument
         self.library_data = load_library_data()
+        # data, instruments = load_library_data()
 
         self.averaging_points = 5
 
@@ -2958,7 +2959,7 @@ if __name__ == '__main__':
     # app.SetHighDPIAware(True)  # Add this line to enable High DPI awareness
     splash = show_splash(duration=3000, delay=2)
 
-    frame = MyFrame(None, "KherveFitting - V1.1 - Oct 2024")
+    frame = MyFrame(None, "KherveFitting - V1.2 - Nov 2024")
     frame.Show(True)
 
     if splash:

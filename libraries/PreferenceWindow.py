@@ -145,7 +145,7 @@ class PreferenceWindow(wx.Frame):
     def init_instrument_tab(self):
         sizer = wx.GridBagSizer(5, 5)
 
-        instruments = list(set(instr for data in self.parent.library_data.values() for instr in data.keys()))
+        instruments = sorted(list(set(instr for data in self.parent.library_data.values() for instr in data.keys())))
         self.instrument_combo = wx.ComboBox(self.instrument_tab, choices=instruments, style=wx.CB_READONLY)
         self.instrument_combo.Bind(wx.EVT_COMBOBOX, self.on_instrument_change)
 

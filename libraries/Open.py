@@ -31,21 +31,7 @@ class ExcelDropTarget(wx.FileDropTarget):
         return False
 
 
-def load_library_data_OLD():
-    wb = openpyxl.load_workbook('KherveFitting_library.xlsx')
-    sheet = wb['Library']
-    data = {}
-    for row in sheet.iter_rows(min_row=2, values_only=True):
-        element, orbital, full_name, auger, ke_be, position, ds, rsf, instrument = row
-        key = (element, orbital)
-        if key not in data:
-            data[key] = {}
-        data[key][instrument] = {
-            'position': position,
-            'ds': ds,
-            'rsf': rsf
-        }
-    return data
+
 
 def load_library_data():
    wb = openpyxl.load_workbook('KherveFitting_library.xlsx')
@@ -63,6 +49,26 @@ def load_library_data():
            'row': row_idx
        }
    return data
+
+
+def load_library_data_NEWBUTNO():
+    wb = openpyxl.load_workbook('KherveFitting_library.xlsx')
+    sheet = wb['Library']
+    data = {}
+    instruments = set()  # Create set for unique instruments
+
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        element, orbital, full_name, auger, ke_be, position, ds, rsf, instrument = row
+        instruments.add(instrument)  # Add each instrument to set
+        key = (element, orbital)
+        if key not in data:
+            data[key] = {}
+        data[key][instrument] = {
+            'position': position,
+            'ds': ds,
+            'rsf': rsf
+        }
+    return data, sorted(list(instruments))  # Return data and sorted instruments list
 
 def load_recent_files_from_config(window):
     config = window.load_config()

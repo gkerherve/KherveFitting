@@ -323,12 +323,18 @@ def create_menu(window):
     Fitting_item = tools_menu.Append(wx.NewId(), "Create Peak Model\tCtrl+P")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_fitting_window(), Fitting_item)
 
+    Dparam_item = tools_menu.Append(wx.NewId(), "D-parameter\tCtrl+D")
+    window.Bind(wx.EVT_MENU, window.on_differentiate, Dparam_item)
+
+    ID_item = tools_menu.Append(wx.NewId(), "Element ID\tCtrl+I")
+    window.Bind(wx.EVT_MENU, window.open_periodic_table, ID_item)
+
     Noise_item = tools_menu.Append(wx.NewId(), "Noise Analysis")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_noise_analysis_window, Noise_item)
 
     # Help menu items
-    mini_help_item = help_menu.Append(wx.NewId(), "Help")
-    window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
+    # mini_help_item = help_menu.Append(wx.NewId(), "Help")
+    # window.Bind(wx.EVT_MENU, window.on_mini_help, mini_help_item)
 
     manual_item = help_menu.Append(wx.NewId(), "Open Manual\tCtrl+M")
     window.Bind(wx.EVT_MENU, lambda event: open_manual(window), manual_item)
