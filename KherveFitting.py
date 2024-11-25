@@ -252,7 +252,7 @@ class MyFrame(wx.Frame):
         self.recent_files = []
         self.max_recent_files = 10  # Maximum number of recent files to keep
 
-        self.library_type = "Scofield"  # Default value
+        self.library_type = "TPP-2M"  # Default value
 
         # Load config if exists
         self.load_config()
@@ -2681,7 +2681,7 @@ class MyFrame(wx.Frame):
                 self.y_sublines = config.get('y_sublines', 5)
                 self.legend_font_size = config.get('legend_font_size', 8)
                 self.core_level_text_size = config.get('core_level_text_size', 15)
-                self.library_type = config.get('library_type', 'Scofield')
+                self.library_type = config.get('library_type', 'TPP-2M')
 
         else:
             config = {}

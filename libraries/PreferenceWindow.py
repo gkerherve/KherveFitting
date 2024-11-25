@@ -157,8 +157,14 @@ class PreferenceWindow(wx.Frame):
         # Add ECF method selection
         self.library_type_label = wx.StaticText(self.instrument_tab, label="ECF Method:")
         self.library_type_combo = wx.ComboBox(self.instrument_tab,
-                                              choices=["Scofield (KE^0.6)", "Wagner (KE^1.0)", "TPP-2M", "None"],
+                                              choices=["Scofield", "Wagner", "TPP-2M", "None"],
                                               style=wx.CB_READONLY)
+        current_type = self.parent.library_type
+        selection_index = self.library_type_combo.FindString(current_type)
+        if selection_index != wx.NOT_FOUND:
+            self.library_type_combo.SetSelection(selection_index)
+        else:
+            self.library_type_combo.SetSelection(2)  # TPP-2M as fallback
         sizer.Add(self.library_type_label, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.library_type_combo, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
@@ -678,8 +684,9 @@ class PreferenceWindow(wx.Frame):
         self.parent.canvas.draw_idle()
 
         self.parent.current_instrument = self.instrument_combo.GetValue()
-        self.parent.library_type = self.library_type_combo.GetValue().split()[
-            0]  # Gets just "Scofield", "Wagner" or "TPP-2M"
+
+        value = self.library_type_combo.GetValue()
+        self.parent.library_type = value.split()[0] if value else "ALTHERMO01"
         self.parent.use_transmission = self.use_transmission.GetValue()
 
         # Save the configuration

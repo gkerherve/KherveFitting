@@ -719,7 +719,7 @@ class AtomicConcentrations:
         # To compare KherveFitting with Avantage we will also apply this factor
         imfp2 = imfp * 26.2
 
-        print(f'IMFP: {imfp}, Factored_imfp: {imfp2} KE: {kinetic_energy}')
+        # print(f'IMFP: {imfp}, Factored_imfp: {imfp2} KE: {kinetic_energy}')
 
         return imfp
 

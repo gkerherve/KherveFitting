@@ -252,7 +252,7 @@ def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model
 
     window.results_grid.SetCellValue(row, 8, f"{peak_params['rsf']:.2f}")
     window.results_grid.SetCellValue(row, 9, "1.0")  # TXFN default value
-
+    print(f"Library: {window.library_type}")
     if window.library_type == "Scofield":
         window.results_grid.SetCellValue(row, 10, "KE^0.6")
     elif window.library_type == "Wagner":
