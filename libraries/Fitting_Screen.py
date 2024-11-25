@@ -358,12 +358,26 @@ class FittingWindow(wx.Frame):
         self.parent.export_results()
 
 
+    def load_doublet_splittings_OLD(self, library_data):
+        splittings = {}
+        for key, value in library_data.items():
+            element, orbital = key
+            if orbital.endswith(('p', 'd', 'f')):
+                # splittings[f"{element}{orbital}"] = value['Al']['ds']  # Default to Al instrument
+                splittings[f"{element}{orbital}"] = value['Al1486']['ds']  # Default to Al instrument
+        return splittings
+
     def load_doublet_splittings(self, library_data):
         splittings = {}
         for key, value in library_data.items():
             element, orbital = key
             if orbital.endswith(('p', 'd', 'f')):
-                splittings[f"{element}{orbital}"] = value['Al']['ds']  # Default to Al instrument
+                try:
+                    splittings[f"{element}{orbital}"] = value['Al1486']['ds']  # Must match Excel exactly
+                except KeyError:
+                    # print(f"Available instruments for {element}{orbital}: {list(value.keys())}")
+                    # print(f"Full value data: {value}")
+                    continue
         return splittings
 
     def get_doublet_splitting(self, element, orbital, instrument):
@@ -376,7 +390,8 @@ class FittingWindow(wx.Frame):
         for num in range(1, 6):  # Trying 1d, 2d, 3d, 4d, 5d
             key = (element, f"{num}{orbital}")
             if key in self.library_data and instrument in self.library_data[key]:
-                return self.library_data[key][instrument]['ds']
+                # return self.library_data[key][instrument]['ds']
+                return self.library_data[key]['Al1486']['ds']
 
         # If still not found, return a default value or raise an error
         print(f"Warning: No doublet splitting found for {element} {orbital}")

@@ -157,7 +157,7 @@ class PreferenceWindow(wx.Frame):
         # Add ECF method selection
         self.library_type_label = wx.StaticText(self.instrument_tab, label="ECF Method:")
         self.library_type_combo = wx.ComboBox(self.instrument_tab,
-                                              choices=["Scofield (KE^0.6)", "Wagner (KE^1.0)", "TPP-2M"],
+                                              choices=["Scofield (KE^0.6)", "Wagner (KE^1.0)", "TPP-2M", "None"],
                                               style=wx.CB_READONLY)
         sizer.Add(self.library_type_label, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.library_type_combo, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
@@ -564,7 +564,7 @@ class PreferenceWindow(wx.Frame):
         if hasattr(self.parent, 'library_type'):
             self.library_type_combo.SetValue(self.parent.library_type +
                                              (" (KE^0.6)" if self.parent.library_type == "Scofield" else
-                                              " (KE^1.0)" if self.parent.library_type == "Wagner" else ""))
+                                              " (KE^1.0)" if self.parent.library_type == "Wagner" else "None"))
 
     def OnPeakNumberChange(self, event):
         current_peak = event.GetPosition() - 1

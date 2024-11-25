@@ -40,7 +40,7 @@ from libraries.Widgets_Toolbars import create_widgets, create_menu
 from libraries.Widgets_Toolbars import create_statusbar, update_statusbar
 from libraries.Open import open_xlsx_file
 from libraries.Export import export_word_report
-from libraries.Peak_Functions import OtherCalc
+from libraries.Peak_Functions import OtherCalc, AtomicConcentrations
 from libraries.Dpara_Screen import DParameterWindow
 
 
@@ -61,7 +61,7 @@ class MyFrame(wx.Frame):
         wx.SystemOptions.SetOption("mac.window-plain-transition", 1)
         wx.SystemOptions.SetOption("mac.scrollbar-autohide", 0)
         wx.SystemOptions.SetOption("osx.opengl.force-enable-angle", 0)
-        wx.SystemOptions.SetOption("mac.listctrl.always_use_generic", "1")    # ChatGPT recommendation
+        wx.SystemOptions.SetOption("mac.listctrl.always_use_generic", "1")
 
         if 'wxMac' in wx.PlatformInfo:
             self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
@@ -207,7 +207,7 @@ class MyFrame(wx.Frame):
 
         self.be_correction = 0.00
 
-        self.current_instrument = 'Al'  # Default instrument
+        self.current_instrument = 'Al1486'  # Default instrument
         self.library_data = load_library_data()
 
         self.averaging_points = 5
@@ -2033,19 +2033,19 @@ class MyFrame(wx.Frame):
                 elif self.library_type == "Wagner":
                     ecf = kinetic_energy ** 1.0
                 elif self.library_type == "TPP-2M":
-                    z_avg = 50  # Default values
-                    n_v_avg = 4
-                    molecular_weight = 100
-                    density = 2.0
-                    imfp = PeakFunctions.calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg,
-                                                              molecular_weight, density)
-                    ecf = 1 / imfp
+                    # Calculate IMFP using TPP-2M using the average matrix
+                    imfp = AtomicConcentrations.calculate_imfp_tpp2m(kinetic_energy)
+
+                    # 26.2 is a factor added by Avantage to match KE^0.6
+                    ecf = imfp * 26.2
+                elif self.library_type == "None":
+                    ecf = 1.0
                 else:
                     ecf = 1.0
 
                 txfn = 1.0  # Transmission function
                 new_rel_area = area / (rsf * txfn * ecf)
-                self.results_grid.SetCellValue(row, 10, f"{new_rel_area:.2f}")
+                self.results_grid.SetCellValue(row, 13, f"{new_rel_area:.2f}")
 
                 # Update the atomic percentages
                 self.update_atomic_percentages()
@@ -2072,18 +2072,13 @@ class MyFrame(wx.Frame):
                 elif self.library_type == "Wagner":
                     ecf = kinetic_energy ** 1.0
                 elif self.library_type == "TPP-2M":
-                    # Get material properties for TPP-2M calculation
-                    z_avg = 50  # Default values - you should add UI to set these
-                    n_v_avg = 4
-                    molecular_weight = 100
-                    density = 2.0
+                    # Calculate IMFP using TPP-2M using the average matrix
+                    imfp = AtomicConcentrations.calculate_imfp_tpp2m(kinetic_energy)
 
-                    # Calculate IMFP using TPP-2M
-                    imfp = PeakFunctions.calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg,
-                                                              molecular_weight, density)
-
-                    # ECF is the reciprocal of IMFP
-                    ecf = 1 / imfp
+                    # 26.2 is a factor added by Avantage to match KE^0.6
+                    ecf = imfp * 26.2
+                elif self.library_type == "None":
+                    ecf = 1.0
                 else:
                     ecf = 1.0  # Default no correction
 
@@ -2094,7 +2089,6 @@ class MyFrame(wx.Frame):
                 # Calculate normalized area with ECF correction
                 txfn = 1.0  # Transmission function
                 normalized_area = area / (rsf * txfn * ecf)
-                print(f"Area Norm: {normalized_area} ECF {ecf}")
 
                 total_normalized_area += normalized_area
                 checked_indices.append((i, normalized_area))
@@ -2109,44 +2103,6 @@ class MyFrame(wx.Frame):
 
         self.results_grid.ForceRefresh()
 
-    def update_atomic_percentages_OLD(self):
-        current_rows = self.results_grid.GetNumberRows()
-        total_normalized_area = 0
-        checked_indices = []
-
-        # Calculate total normalized area for checked elements
-        for i in range(current_rows):
-            if self.results_grid.GetCellValue(i, 7) == '1':  # Checkbox is ticked
-                normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(
-                    self.results_grid.GetCellValue(i, 8))
-                total_normalized_area += normalized_area
-                checked_indices.append(i)
-            else:
-                # Set the atomic percentage to 0 for unticked rows
-                self.results_grid.SetCellValue(i, 6, "0.00")
-        # grid_values = np.array([[float(self.results_grid.GetCellValue(i, 5)),
-        #                          float(self.results_grid.GetCellValue(i, 8)),
-        #                          self.results_grid.GetCellValue(i, 7)]
-        #                         for i in range(current_rows)])
-        # checked_mask = grid_values[:, 2] == '1'
-        # normalized_areas = grid_values[checked_mask, 0] / grid_values[checked_mask, 1]
-        # total_normalized_area = np.sum(normalized_areas)
-
-        # Calculate and set atomic percentages for checked elements
-        for i in checked_indices:
-            normalized_area = float(self.results_grid.GetCellValue(i, 5)) / float(self.results_grid.GetCellValue(i, 8))
-            atomic_percent = (normalized_area / total_normalized_area) * 100 if total_normalized_area > 0 else 0
-            self.results_grid.SetCellValue(i, 6, f"{atomic_percent:.2f}")
-
-            # Update Bkg Low, Bkg High, and Sheetname for all rows
-            self.results_grid.SetCellValue(i, 13, f"{self.bg_min_energy:.2f}" if self.bg_min_energy is not None else "")
-            self.results_grid.SetCellValue(i, 14, f"{self.bg_max_energy:.2f}" if self.bg_max_energy is not None else "")
-            self.results_grid.SetCellValue(i, 15, self.sheet_combobox.GetValue())
-
-            # Update constraint columns if needed
-            # (You may want to add logic here if constraints can change dynamically)
-
-        self.results_grid.ForceRefresh()
 
     def on_height_changed(self, event):
         row = event.GetRow()
@@ -2717,7 +2673,7 @@ class MyFrame(wx.Frame):
                 self.peak_fill_types = config.get('peak_fill_types', ["Solid Fill" for _ in range(15)])
                 self.peak_hatch_patterns = config.get('peak_hatch_patterns', ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"] * 2)
                 self.hatch_density = config.get('hatch_density', 2)
-                self.current_instrument = config.get('current_instrument', 'Al')
+                self.current_instrument = config.get('current_instrument', 'Al1486')
                 self.plot_font = config.get('plot_font', 'Arial')
                 self.axis_title_size = config.get('axis_title_size', 12)
                 self.axis_number_size = config.get('axis_number_size', 10)
@@ -2725,6 +2681,7 @@ class MyFrame(wx.Frame):
                 self.y_sublines = config.get('y_sublines', 5)
                 self.legend_font_size = config.get('legend_font_size', 8)
                 self.core_level_text_size = config.get('core_level_text_size', 15)
+                self.library_type = config.get('library_type', 'Scofield')
 
         else:
             config = {}
@@ -2770,6 +2727,7 @@ class MyFrame(wx.Frame):
             'y_sublines': self.y_sublines,
             'legend_font_size': self.legend_font_size,
             'core_level_text_size': self.core_level_text_size,
+            'library_type': self.library_type,
         }
 
         with open('config.json', 'w') as f:

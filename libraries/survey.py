@@ -426,7 +426,7 @@ class PeriodicTableWindow(wx.Frame):
                 orbital_lower = orbital.lower()
                 if orbital_lower in [o.lower() for o in orbitals]:
                     # Check if 'Al' key exists, if not, use the first available instrument
-                    instrument = 'Al' if 'Al' in data else next(iter(data))
+                    instrument = 'Al1486' if 'Al1486' in data else next(iter(data))
                     print(data[instrument])
                     if 'rsf' in data[instrument]:
                         rsf_values.append(float(data[instrument]['rsf']))

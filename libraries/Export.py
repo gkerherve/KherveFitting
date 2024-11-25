@@ -5,6 +5,7 @@ from libraries.Utilities import load_rsf_data
 from libraries.Save import save_state
 from libraries.Open import load_library_data
 from libraries.Sheet_Operations import on_sheet_selected
+from libraries.Peak_Functions import AtomicConcentrations
 
 
 def export_results(window):
@@ -65,7 +66,7 @@ def safe_float(value, default=0.0):
         return default
 
 
-def _extract_peak_parameters(window, row, library_data, current_instrument):
+def _extract_peak_parameters_OLD(window, row, library_data, current_instrument):
     peak_name = window.peak_params_grid.GetCellValue(row, 1)  # Label
 
     # Use regex to extract element and orbital information
@@ -101,6 +102,27 @@ def _extract_peak_parameters(window, row, library_data, current_instrument):
             elif suborbital == '5/2':
                 rsf *= 6 / total_electrons
 
+    print(f"Element: {element}")
+    print(f"Orbital: {orbital}")
+    print(f"Base RSF from library: {rsf}")
+    print(f"Current instrument: {current_instrument}")
+
+    if suborbital:
+        if orbital.endswith('p'):
+            total_electrons = 6
+            print(f"p orbital - Total electrons: {total_electrons}")
+            if suborbital == '3/2':
+                print(f"3/2 adjustment: {rsf} * (4/{total_electrons}) = {rsf * 4 / total_electrons}")
+            elif suborbital == '1/2':
+                print(f"1/2 adjustment: {rsf} * (2/{total_electrons}) = {rsf * 2 / total_electrons}")
+        elif orbital.endswith('d'):
+            total_electrons = 10
+            print(f"d orbital - Total electrons: {total_electrons}")
+            if suborbital == '5/2':
+                print(f"5/2 adjustment: {rsf} * (6/{total_electrons}) = {rsf * 6 / total_electrons}")
+            elif suborbital == '3/2':
+                print(f"3/2 adjustment: {rsf} * (4/{total_electrons}) = {rsf * 4 / total_electrons}")
+
     return {
         'name': peak_name,
         'position': safe_float(window.peak_params_grid.GetCellValue(row, 2)),
@@ -125,11 +147,67 @@ def _extract_peak_parameters(window, row, library_data, current_instrument):
     }
 
 
-def get_rsf_from_library(library_data, element, orbital, instrument):
+def _extract_peak_parameters(window, row, library_data, current_instrument):
+    peak_name = window.peak_params_grid.GetCellValue(row, 1)  # Label
+
+    # Use regex to extract element, orbital, and suborbital
+    match = re.match(r'([A-Z][a-z]*)(\d+[spdf])(?:(\d+/\d+))?', peak_name)
+    if match:
+        element, orbital, suborbital = match.groups()
+        if suborbital:
+            # Use full orbital including suborbital for RSF lookup
+            core_level = f"{element}{orbital}{suborbital}"
+        else:
+            core_level = f"{element}{orbital}"
+    else:
+        core_level = ''.join(filter(str.isalnum, peak_name.split()[0]))
+        element, orbital, suborbital = core_level, '', None
+
+    # Get RSF directly using complete orbital designation
+    key = (element, orbital + (suborbital or ''))
+    if key in library_data and current_instrument in library_data[key]:
+        rsf = library_data[key][current_instrument]['rsf']
+    else:
+        # Fallback to Al if instrument not found
+        rsf = library_data[key]['Al']['rsf'] if key in library_data else 1.0
+
+    return {
+        'name': peak_name,
+        'position': safe_float(window.peak_params_grid.GetCellValue(row, 2)),
+        'height': safe_float(window.peak_params_grid.GetCellValue(row, 3)),
+        'fwhm': safe_float(window.peak_params_grid.GetCellValue(row, 4)),
+        'lg_ratio': safe_float(window.peak_params_grid.GetCellValue(row, 5)),
+        'rsf': rsf,
+        'area': safe_float(window.peak_params_grid.GetCellValue(row, 6)),
+        'sigma': safe_float(window.peak_params_grid.GetCellValue(row, 7)),
+        'gamma': safe_float(window.peak_params_grid.GetCellValue(row, 8)),
+        'skew': safe_float(window.peak_params_grid.GetCellValue(row, 9)),
+        'constraints': {
+            'position': window.peak_params_grid.GetCellValue(row + 1, 2),
+            'height': window.peak_params_grid.GetCellValue(row + 1, 3),
+            'fwhm': window.peak_params_grid.GetCellValue(row + 1, 4),
+            'lg_ratio': window.peak_params_grid.GetCellValue(row + 1, 5),
+            'area': window.peak_params_grid.GetCellValue(row+1, 6),
+            'sigma': window.peak_params_grid.GetCellValue(row+1, 7),
+            'gamma': window.peak_params_grid.GetCellValue(row+1, 8),
+            'skew': window.peak_params_grid.GetCellValue(row+1, 9)
+        }
+    }
+
+def get_rsf_from_library_OLD(library_data, element, orbital, instrument):
     key = (element, orbital)
     if key in library_data and instrument in library_data[key]:
         return library_data[key][instrument]['rsf']
-    return library_data[key]['Al']['rsf']  # Default to Al if not found
+
+    return library_data[key]['Al1486']['rsf']  # Default to Al if not found
+
+
+def get_rsf_from_library(library_data, element, orbital, instrument):
+   key = (element, orbital)
+   if key in library_data and instrument in library_data[key]:
+       print(f"Found {element}{orbital} at row {library_data[key][instrument]['row']}")
+       return library_data[key][instrument]['rsf']
+   return library_data[key]['Al']['rsf']
 
 def _calculate_peak_areas(window, peak_params, row):
     area = float(window.peak_params_grid.GetCellValue(row, 6))
@@ -143,14 +221,13 @@ def _calculate_peak_areas(window, peak_params, row):
     elif window.library_type == "Wagner":
         ecf = kinetic_energy ** 1.0
     elif window.library_type == "TPP-2M":
-        z_avg = 50
-        n_v_avg = 4
-        molecular_weight = 100
-        density = 2.0
+        # Calculate IMFP using TPP-2M using the average matrix
+        imfp = AtomicConcentrations.calculate_imfp_tpp2m(kinetic_energy)
 
-        imfp = PeakFunctions.calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg,
-                                                  molecular_weight, density)
-        ecf = 1 / imfp
+        # 26.2 is a factor added by Avantage to match KE^0.6
+        ecf = imfp * 26.2
+    elif window.library_type == "None":
+        ecf = 1.0
     else:
         ecf = 1.0
 
@@ -174,13 +251,26 @@ def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model
     _set_checkbox(window, row, 7, checkbox_state)
 
     window.results_grid.SetCellValue(row, 8, f"{peak_params['rsf']:.2f}")
-    window.results_grid.SetCellValue(row, 9, fitting_model)
-    window.results_grid.SetCellValue(row, 10, f"{rel_area:.2f}")
-    window.results_grid.SetCellValue(row, 11, f"{peak_params['sigma']:.2f}")  # Sigma
-    window.results_grid.SetCellValue(row, 12, f"{peak_params['gamma']:.2f}")  # Gamma
-    window.results_grid.SetCellValue(row, 14, f"{window.bg_min_energy:.2f}" if window.bg_min_energy is not None else "")
-    window.results_grid.SetCellValue(row, 15, f"{window.bg_max_energy:.2f}" if window.bg_max_energy is not None else "")
-    window.results_grid.SetCellValue(row, 18, window.sheet_combobox.GetValue())
+    window.results_grid.SetCellValue(row, 9, "1.0")  # TXFN default value
+
+    if window.library_type == "Scofield":
+        window.results_grid.SetCellValue(row, 10, "KE^0.6")
+    elif window.library_type == "Wagner":
+        window.results_grid.SetCellValue(row, 10, "KE^1.0")
+    elif window.library_type == "TPP-2M":
+        window.results_grid.SetCellValue(row, 10, "TPP-2M")
+    else:
+        window.results_grid.SetCellValue(row, 10, "1.0")
+
+
+    window.results_grid.SetCellValue(row, 11, window.current_instrument)
+    window.results_grid.SetCellValue(row, 12, fitting_model)
+    window.results_grid.SetCellValue(row, 13, f"{rel_area:.2f}")
+    window.results_grid.SetCellValue(row, 14, f"{peak_params['sigma']:.2f}")  # Sigma
+    window.results_grid.SetCellValue(row, 15, f"{peak_params['gamma']:.2f}")  # Gamma
+    window.results_grid.SetCellValue(row, 17, f"{window.bg_min_energy:.2f}" if window.bg_min_energy is not None else "")
+    window.results_grid.SetCellValue(row, 18, f"{window.bg_max_energy:.2f}" if window.bg_max_energy is not None else "")
+    window.results_grid.SetCellValue(row, 21, window.sheet_combobox.GetValue())
     _set_constraints(window, row, peak_params['constraints'])
 
     # Force a refresh of the grid cell to ensure the checkbox is displayed correctly
@@ -197,13 +287,13 @@ def _set_checkbox(window, row, col, state='0'):
 
 def _set_constraints(window, row, constraints):
     """Set constraint values in the results grid."""
-    window.results_grid.SetCellValue(row, 19, constraints['position'])
-    window.results_grid.SetCellValue(row, 20, constraints['height'])
-    window.results_grid.SetCellValue(row, 21, constraints['fwhm'])
-    window.results_grid.SetCellValue(row, 22, constraints['lg_ratio'])
-    window.results_grid.SetCellValue(row, 23, constraints['area'])
-    window.results_grid.SetCellValue(row, 24, constraints['sigma'])
-    window.results_grid.SetCellValue(row, 25, constraints['gamma'])
+    window.results_grid.SetCellValue(row, 22, constraints['position'])
+    window.results_grid.SetCellValue(row, 23, constraints['height'])
+    window.results_grid.SetCellValue(row, 24, constraints['fwhm'])
+    window.results_grid.SetCellValue(row, 25, constraints['lg_ratio'])
+    window.results_grid.SetCellValue(row, 26, constraints['area'])
+    window.results_grid.SetCellValue(row, 27, constraints['sigma'])
+    window.results_grid.SetCellValue(row, 28, constraints['gamma'])
 
 
 def _update_data_structure(window, sheet_name, peak_index, peak_params, area, rel_area, fitting_model):
@@ -224,6 +314,15 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
     if existing_peak:
         peak_label = existing_peak
 
+    if window.library_type == "Scofield":
+        ecf_type = "KE^0.6"
+    elif window.library_type == "Wagner":
+        ecf_type = "KE^1.0"
+    elif window.library_type == "TPP-2M":
+        ecf_type = "TPP-2M"
+    else:
+        ecf_type = "1.0"
+
     peak_data = {
         'Label': peak_label,
         'Name': peak_name,
@@ -234,6 +333,9 @@ def _update_data_structure(window, sheet_name, peak_index, peak_params, area, re
         'Area': area,
         'at. %': results.get(peak_label, {}).get('at. %', 0.00),  # Preserve existing at. % if available
         'RSF': peak_params['rsf'],
+        'TXFN': 1.0,
+        'ECF': ecf_type,
+        'Instrument':  window.current_instrument,
         'Fitting Model': fitting_model,
         'Rel. Area': rel_area,
         'Sigma': peak_params['sigma'],

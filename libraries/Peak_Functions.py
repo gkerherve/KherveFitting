@@ -652,30 +652,75 @@ class BackgroundCalculations:
 
 class AtomicConcentrations:
     @staticmethod
-    def calculate_imfp_tpp2m(kinetic_energy, z_avg, n_v_avg, molecular_weight, density):
+    def calculate_imfp_tpp2m_WITHOUT_VALUES_BUT_GOOD(kinetic_energy, z_avg, n_v_avg, molecular_weight, density):
         """
-        Calculate IMFP using TPP-2M formula
-        Parameters:
-            kinetic_energy: electron energy in eV
-            z_avg: average atomic number
-            n_v_avg: average number of valence electrons
-            molecular_weight: molecular weight (g/mol)
-            density: density (g/cm³)
-        Returns:
-            imfp: Inelastic Mean Free Path in nanometers
-
-        Reference: S.Tanuma, C.J.Powell and D.R.Penn - Surface and Interface Analysis, Vol 21, 165-176 (1993)
+        Calculate IMFP using TPP-2M formula for 50-2000 eV electrons
         """
         E = kinetic_energy
-        beta = -0.10 + 0.944 / (E ** 2) + 0.069 * density ** 0.1
-        gamma = 0.191 / density ** 0.5
-        C = 1.97 - 0.91 * (n_v_avg / z_avg)
-        D = 53.4 - 20.8 * (n_v_avg / z_avg)
 
         # Calculate plasmon energy E_p
         E_p = 28.8 * (n_v_avg * density / molecular_weight) ** 0.5
 
-        imfp = (E / (E_p ** 2)) * (beta * np.log(gamma * E) - (C / E) + (D / E ** 2))
+        # Calculate parameters
+        U = n_v_avg * density / molecular_weight
+        beta = -0.10 + 0.944 * (E_p ** 2) ** (-0.5) + 0.069 * density ** 0.1
+        gamma = 0.191 * density ** (-0.5)
+        C = 1.97 - 0.91 * U / (z_avg)
+        D = 53.4 - 20.8 * U / (z_avg)
+
+        # Calculate IMFP in Angstroms
+        # /10 to get it in nm as per plot found advantage
+        imfp = E / (E_p ** 2 * (beta * np.log2(gamma * E) - C / E + D / E ** 2)) /10#
+
+        print(f'IMFP: {imfp}, KE: {kinetic_energy}')
+        return imfp   # Convert to nanometers
+
+    @staticmethod
+    def calculate_imfp_tpp2m(kinetic_energy):
+        """
+        Calculate IMFP using TPP-2M formula with average matrix parameters from XPS reference data.
+
+        Parameters:
+            kinetic_energy: electron energy in eV
+
+        Returns:
+            imfp: Inelastic Mean Free Path in nanometers
+
+        Notes:
+        Average matrix parameters derived from metals and inorganic compounds:
+        - N_v = 4.684 (valence electrons per atom)
+        - rho = 6.767 g/cm³ (density)
+        - M = 137.51 g/mol (molecular weight)
+        - E_g = 0 eV (bandgap energy)
+
+        References:
+        1. S.Tanuma, C.J.Powell and D.R.Penn, Surf. Interface Anal., 21, 165-176 (1993)
+        2. Briggs & Grant, "Surface Analysis by XPS and AES" 2nd Ed., Wiley (2003), p.84-85
+        """
+        N_v = 4.684
+        rho = 6.767
+        M = 137.51
+        E_g = 0
+
+        E_p = 28.8 * np.sqrt((N_v * rho) / M)
+        U = N_v * rho / M
+
+        beta = -0.10 + 0.944 / (E_p ** 2 + E_g ** 2) ** 0.5 + 0.069 * rho ** 0.1
+        gamma = 0.191 * rho ** (-0.5)
+        C = 1.97 - 0.91 * U
+        D = 53.4 - 20.8 * U
+
+        imfp = kinetic_energy / (E_p ** 2 * (
+                beta * np.log(gamma * kinetic_energy) -
+                (C / kinetic_energy) +
+                (D / kinetic_energy ** 2))) / 10
+
+        # Avantage add a scaling factor so that corrected area matches the one obtained with KE^0.6
+        # To compare KherveFitting with Avantage we will also apply this factor
+        imfp2 = imfp * 26.2
+
+        print(f'IMFP: {imfp}, Factored_imfp: {imfp2} KE: {kinetic_energy}')
+
         return imfp
 
 
@@ -721,5 +766,3 @@ class OtherCalc:
         return normalized_deriv
 
 
-# ------------------------------ HISTORY CHECK -----------------------------------------------
-# --------------------------------------------------------------------------------------------

@@ -31,7 +31,7 @@ class ExcelDropTarget(wx.FileDropTarget):
         return False
 
 
-def load_library_data():
+def load_library_data_OLD():
     wb = openpyxl.load_workbook('KherveFitting_library.xlsx')
     sheet = wb['Library']
     data = {}
@@ -46,6 +46,23 @@ def load_library_data():
             'rsf': rsf
         }
     return data
+
+def load_library_data():
+   wb = openpyxl.load_workbook('KherveFitting_library.xlsx')
+   sheet = wb['Library']
+   data = {}
+   for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+       element, orbital, full_name, auger, ke_be, position, ds, rsf, instrument = row
+       key = (element, orbital)
+       if key not in data:
+           data[key] = {}
+       data[key][instrument] = {
+           'position': position,
+           'ds': ds,
+           'rsf': rsf,
+           'row': row_idx
+       }
+   return data
 
 def load_recent_files_from_config(window):
     config = window.load_config()

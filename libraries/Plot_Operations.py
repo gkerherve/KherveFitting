@@ -906,6 +906,8 @@ class PlotManager:
         overall_fit = window.background.astype(float).copy()
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
 
+        fitting_model = ""  # Default empty string
+
         for i in range(num_peaks):
             row = i * 2  # Each peak uses two rows in the grid
 
