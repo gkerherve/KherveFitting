@@ -373,7 +373,7 @@ class FittingWindow(wx.Frame):
             element, orbital = key
             if orbital.endswith(('p', 'd', 'f')):
                 try:
-                    splittings[f"{element}{orbital}"] = value['Al1486']['ds']  # Must match Excel exactly
+                    splittings[f"{element}{orbital}"] = value['C-Al1486']['ds']  # Must match Excel exactly
                 except KeyError:
                     # print(f"Available instruments for {element}{orbital}: {list(value.keys())}")
                     # print(f"Full value data: {value}")
@@ -391,7 +391,7 @@ class FittingWindow(wx.Frame):
             key = (element, f"{num}{orbital}")
             if key in self.library_data and instrument in self.library_data[key]:
                 # return self.library_data[key][instrument]['ds']
-                return self.library_data[key]['Al1486']['ds']
+                return self.library_data[key]['C-Al1486']['ds']
 
         # If still not found, return a default value or raise an error
         print(f"Warning: No doublet splitting found for {element} {orbital}")
