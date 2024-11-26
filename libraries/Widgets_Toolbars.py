@@ -339,6 +339,10 @@ def create_menu(window):
     manual_item = help_menu.Append(wx.NewId(), "Open Manual\tCtrl+M")
     window.Bind(wx.EVT_MENU, lambda event: open_manual(window), manual_item)
 
+    yt_videos_item = help_menu.Append(wx.NewId(), "KherveFitting Videos")
+    window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://www.youtube.com/@xpsexamples-imperialcolleg6571"),
+                yt_videos_item)
+
     shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
     window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
 
