@@ -1026,6 +1026,10 @@ class PlotManager:
                     linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
+            residual_height = 1.07 * max(window.y_values)
+            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1,
+                                           label='Residuals')
+
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
                                          alpha=self.residual_alpha, label='Residuals')
@@ -1034,11 +1038,16 @@ class PlotManager:
                     linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
+            residual_height = 1.07 * max(window.y_values)
+            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1,
+                                         label='l_Residuals')
+
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
                                          alpha=self.residual_alpha, label='Residuals')
 
         residual_line[0].set_visible(self.residuals_visible)
+        residual_base.set_visible(self.residuals_visible)
         rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
 
         if rsd is not None:
@@ -1142,6 +1151,8 @@ class PlotManager:
         self.residuals_visible = not self.residuals_visible
         for line in self.ax.get_lines():
             if line.get_label().startswith('Residuals'):
+                line.set_visible(self.residuals_visible)
+            if line.get_label().startswith('l_Residuals'):
                 line.set_visible(self.residuals_visible)
 
         if self.rsd_text:
