@@ -114,13 +114,27 @@ class Particle:
             self.tail.pop(0)
 
     def draw(self, screen, color, view_offset):
-        # Draw particle tail with view offset
+        # Draw particle tail with view offset and color gradient
         if len(self.tail) > 1:
             screen_points = [(p.x - view_offset.x, p.y - view_offset.y) for p in self.tail]
-            pygame.draw.lines(screen, (20,20, 20), False, screen_points, 5)  # Pink-red trails
 
+            # Draw gradient trail segments
+            for i in range(len(screen_points) - 1):
+                # Calculate color transition
+                # Start red at particle end, transition to black
+                progress = 1 - (i / (len(screen_points) - 1))  # Reversed progress
+                if progress > 0.85:  # First 30% of the trail (nearest to particle)
+                    # Transition from black to red
+                    red = int(255 * ((progress - 0.85) / 0.15))  # Scale to 0-255
+                    trail_color = (red, 0, 0)
+                else:
+                    trail_color = (0, 0, 0)  # Black
+
+                pygame.draw.line(screen, trail_color, screen_points[i], screen_points[i + 1], 5)
+
+        # Draw particle with view offset and sphere effect
         screen_pos = (int(self.pos.x - view_offset.x), int(self.pos.y - view_offset.y))
-        draw_sphere(screen, screen_pos, self.radius, (199, 12, 120))  # Pink-red electrons
+        draw_sphere(screen, screen_pos, self.radius, (210, 0, 0))
 
 
 class ParticleSimulation:
