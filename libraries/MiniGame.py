@@ -15,13 +15,21 @@ FPS = 100
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-
+GREEN_BG = (144, 238, 144)  # Light green background
+MINT_GREEN = (152, 251, 152)  # Lighter mint green, you can adjust these values
+PINK_RED = (255, 192, 203)  # Pink-red for electrons
 
 def draw_sphere(screen, pos, radius, color, is_nucleus=False):
     """Draw a sphere with gradient to create 3D effect"""
-    for i in range(radius, 0, -2):
+    # First draw the black outline
+    if not is_nucleus:
+        pygame.draw.circle(screen, BLACK, pos, radius)  # Add black outline
+
+    # Then draw the inner gradient slightly smaller
+    inner_radius = radius - 1 if not is_nucleus else radius
+    for i in range(inner_radius, 0, -2):
         # Adjust brightness based on radius
-        brightness = int(40 + (radius - i) * 8)  # Make sure brightness is an integer
+        brightness = int(20 + (radius - i) * 4)  # Make sure brightness is an integer
         # print(f"bright: {brightness}" )
         if is_nucleus:
             # Convert HSV to RGB
@@ -55,7 +63,15 @@ def draw_sphere(screen, pos, radius, color, is_nucleus=False):
             )
         else:
             # Keep electrons blue
-            current_color = (200, 0, 0)#brightness)
+            # current_color = (200, 0, 0)#brightness)
+            current_color = (199, 12, 120)  # Pink-red for electrons
+            # Apply brightness reduction
+            # dimmed_color = (
+            #     min(255, int(current_color[0] * (brightness / 255))),
+            #     min(255, int(current_color[1] * (brightness / 255))),
+            #     min(255, int(current_color[2] * (brightness / 255)))
+            # )
+            # current_color = dimmed_color
 
         pygame.draw.circle(screen, current_color, pos, i)
 
@@ -68,6 +84,8 @@ class Particle:
         self.tail = []
         self.tail_length = 20
         self.radius = 7  # Radius for the electron
+
+
 
     def move(self, particles, att_force, friction):
         # Update position based on velocity
@@ -99,11 +117,10 @@ class Particle:
         # Draw particle tail with view offset
         if len(self.tail) > 1:
             screen_points = [(p.x - view_offset.x, p.y - view_offset.y) for p in self.tail]
-            pygame.draw.lines(screen, color, False, screen_points, 2)
+            pygame.draw.lines(screen, (20,20, 20), False, screen_points, 5)  # Pink-red trails
 
-        # Draw particle with view offset and sphere effect
         screen_pos = (int(self.pos.x - view_offset.x), int(self.pos.y - view_offset.y))
-        draw_sphere(screen, screen_pos, self.radius, (210, 0, 0))  # Blue-ish electron
+        draw_sphere(screen, screen_pos, self.radius, (199, 12, 120))  # Pink-red electrons
 
 
 class ParticleSimulation:
@@ -116,8 +133,12 @@ class ParticleSimulation:
         self.friction = 0.03
         self.att_force = 80
         self.running = True
-        self.back_white = True
-        self.nucleus_radius = 22
+
+        # self.back_white = True
+        self.back_white = False  # Set to False to use custom background
+        self.back_color = GREEN_BG  # Add this line
+
+        self.nucleus_radius = 35
         self.fps = FPS  # Add FPS control
 
         # New attribute to store last 5 position changes
@@ -284,8 +305,8 @@ class ParticleSimulation:
 
     def draw(self):
         # Clear screen
-        self.screen.fill(WHITE if self.back_white else BLACK)
-
+        # self.screen.fill(WHITE if self.back_white else BLACK)
+        self.screen.fill(self.back_color)
 
 
         # Draw nucleus with view offset and sphere effect
@@ -319,7 +340,7 @@ class ParticleSimulation:
         GREY = (128, 128, 128)  # Medium grey - you can adjust these values for lighter/darker grey
 
         # Then in your draw method, modify the text_color line to:
-        text_color = GREY if self.back_white else WHITE
+        text_color = GREY if self.back_white else GREY
 
         # Create list of help texts
         help_texts = [
@@ -331,7 +352,7 @@ class ParticleSimulation:
             "Controls:",
             f"FPS: {self.fps}",
             "↑↓←→: Move view",
-            "+/-: Change speed",
+            # "+/-: Change speed",
             "c: Change color",
             "Left click: Add electron",
             "Right click: Remove electron"
@@ -381,7 +402,7 @@ class ParticleSimulation:
 
             # Only draw lines if we have at least 2 points
             if len(scaled_points) >= 2:
-                pygame.draw.lines(self.screen, (200, 200, 200), False, scaled_points, 2)
+                pygame.draw.lines(self.screen, (240, 240, 240), False, scaled_points, 2)
 
             # Draw Y-axis labels and grid lines
             font = pygame.font.SysFont('Arial', 12)
@@ -396,7 +417,7 @@ class ParticleSimulation:
 
 
                 # Draw y-axis label
-                label = font.render(f"{value:.3f}", True, (100, 100, 100))
+                label = font.render(f"{value:.3f}", True, (240, 240, 240))
                 self.screen.blit(label, (plot_x + 5, y_pos - 6))
 
     def run(self):
