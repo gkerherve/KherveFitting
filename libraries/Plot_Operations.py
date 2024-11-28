@@ -504,6 +504,8 @@ class PlotManager:
         """
 
         sheet_name = window.sheet_combobox.GetValue()
+        if not sheet_name or 'Core levels' not in window.Data or sheet_name not in window.Data['Core levels']:
+            return
         limits = window.plot_config.get_plot_limits(window, sheet_name)
         cst_unfit = ""
 

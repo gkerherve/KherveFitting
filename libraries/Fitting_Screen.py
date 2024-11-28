@@ -398,6 +398,10 @@ class FittingWindow(wx.Frame):
         return 0.0  # or whatever default value makes sense for your application
 
     def on_add_doublet(self, event):
+        if self.parent.bg_min_energy is None or self.parent.bg_max_energy is None:
+            wx.MessageBox("Please create a background first.", "No Background", wx.OK | wx.ICON_WARNING)
+            return
+
         sheet_name = self.parent.sheet_combobox.GetValue()
         first_word = sheet_name.split()[0]  # Get the first word of the sheet name
         orbital = re.search(r'[spdf]', first_word)
@@ -516,10 +520,20 @@ class FittingWindow(wx.Frame):
 
     def on_background(self, event):
         self.parent.plot_manager.plot_background(self.parent)
+
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        if sheet_name in self.parent.Data['Core levels']:
+            core_level_data = self.parent.Data['Core levels'][sheet_name]
+            if 'Background' in core_level_data:
+                self.parent.bg_min_energy = core_level_data['Background']['Bkg Low']
+                self.parent.bg_max_energy = core_level_data['Background']['Bkg High']
+
         save_state(self.parent)
 
     def on_clear_background(self, event):
         self.parent.plot_manager.clear_background(self.parent)
+        self.parent.bg_min_energy = None
+        self.parent.bg_max_energy = None
         save_state(self.parent)
 
     def on_offset_h_change(self, event):

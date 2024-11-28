@@ -350,6 +350,11 @@ class MyFrame(wx.Frame):
     def add_peak_params(self):
         save_state(self)
         sheet_name = self.sheet_combobox.GetValue()
+
+        if self.bg_min_energy is None or self.bg_max_energy is None:
+            wx.MessageBox("Please create a background first.", "No Background", wx.OK | wx.ICON_WARNING)
+            return None
+
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
 
         # Update bg_min_energy and bg_max_energy from window.Data
@@ -832,6 +837,11 @@ class MyFrame(wx.Frame):
     def on_cross_drag(self, event):
         if event.inaxes and self.selected_peak_index is not None:
             row = self.selected_peak_index * 2
+
+            if row >= self.peak_params_grid.GetNumberRows():
+                self.selected_peak_index = None
+                return
+
             fitting_model = self.peak_params_grid.GetCellValue(row, 13)
 
             if event.button == 1:

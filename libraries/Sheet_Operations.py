@@ -12,9 +12,13 @@ def on_sheet_selected(window, event):
         selected_sheet = event
     else:
         selected_sheet = window.sheet_combobox.GetValue()
+
+
     if selected_sheet:
         # Reinitialize peak count
         window.peak_count = 0
+        window.bg_min_energy = None
+        window.bg_max_energy = None
 
         window.remove_cross_from_peak()
 
