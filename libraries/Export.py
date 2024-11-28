@@ -226,6 +226,11 @@ def _calculate_peak_areas(window, peak_params, row):
 
         # 26.2 is a factor added by Avantage to match KE^0.6
         ecf = imfp * 26.2
+    elif window.library_type == "EAL":
+        z_avg = 50  # Default values
+
+        eal = (0.65 + 0.007 * kinetic_energy**0.93) / (z_avg**0.38)
+        ecf = eal
     elif window.library_type == "None":
         ecf = 1.0
     else:
@@ -259,6 +264,8 @@ def _update_results_grid(window, row, peak_params, area, rel_area, fitting_model
         window.results_grid.SetCellValue(row, 10, "KE^1.0")
     elif window.library_type == "TPP-2M":
         window.results_grid.SetCellValue(row, 10, "TPP-2M")
+    elif window.library_type == "EAL":
+        window.results_grid.SetCellValue(row, 10, "EAL")
     else:
         window.results_grid.SetCellValue(row, 10, "1.0")
 
