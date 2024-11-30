@@ -584,51 +584,50 @@ def save_data_ORI(window, data):
 
 
 def save_plot_to_excel(window):
-    if 'FilePath' not in window.Data or not window.Data['FilePath']:
-        wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
-        return
+   if 'FilePath' not in window.Data or not window.Data['FilePath']:
+       wx.MessageBox("No file selected. Please open a file first.", "Error", wx.OK | wx.ICON_ERROR)
+       return
 
-    file_path = window.Data['FilePath']
-    sheet_name = window.sheet_combobox.GetValue()
+   file_path = window.Data['FilePath']
+   sheet_name = window.sheet_combobox.GetValue()
+   is_survey = "survey" in sheet_name.lower() or "wide" in sheet_name.lower()
 
-    try:
-        # Save the current figure to a bytes buffer
-        buf = io.BytesIO()
-        original_size = window.figure.get_size_inches()  # Store original size
-        window.figure.set_size_inches(7.4, 5.2)  # Set fixed size
-        window.figure.savefig(buf, format='png', dpi=100, bbox_inches='tight')
-        window.figure.set_size_inches(original_size)  # Restore to original size
-        buf.seek(0)
+   try:
+       # Get dimensions based on plot type
+       width = window.survey_excel_width if is_survey else window.excel_width
+       height = window.survey_excel_height if is_survey else window.excel_height
+       dpi = window.survey_excel_dpi if is_survey else window.excel_dpi
 
-        # Open the workbook and select the sheet
-        wb = openpyxl.load_workbook(file_path)
+       print("Save plot to Excel")
 
-        # Check if the sheet exists, if not create it
-        if sheet_name not in wb.sheetnames:
-            ws = wb.create_sheet(sheet_name)
-        else:
-            ws = wb[sheet_name]
+       # Save figure to buffer
+       buf = io.BytesIO()
+       original_size = window.figure.get_size_inches()
+       window.figure.set_size_inches(width, height)
+       window.figure.savefig(buf, format='png', dpi=dpi, bbox_inches='tight')
+       window.figure.set_size_inches(original_size)
+       buf.seek(0)
 
-        # Remove existing images
-        for img in ws._images:
-            ws._images.remove(img)
+       # Save to Excel
+       wb = openpyxl.load_workbook(file_path)
+       ws = wb.create_sheet(sheet_name) if sheet_name not in wb.sheetnames else wb[sheet_name]
 
-        # Create an image from the bytes buffer
-        img = Image(buf)
+       # Clear existing images
+       for img in ws._images:
+           ws._images.remove(img)
 
-        # Add the image to the worksheet
-        ws.add_image(img, 'D6')  # You can adjust the cell reference as needed
+       # Add new image
+       img = Image(buf)
+       ws.add_image(img, 'D6')
+       wb.save(file_path)
 
-        # Save the workbook
-        wb.save(file_path)
+       print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
+       window.show_popup_message2("Plot saved into Excel file", f"Under sheet: {sheet_name}")
 
-        print(f"Plot saved to Excel file: {file_path}, Sheet: {sheet_name}")
-        window.show_popup_message2("Plot saved into Excel file", f"Under sheet: {sheet_name}")
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        wx.MessageBox(f"Error saving plot to Excel: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+   except Exception as e:
+       import traceback
+       traceback.print_exc()
+       wx.MessageBox(f"Error saving plot to Excel: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
 def save_plot_as_png(window):

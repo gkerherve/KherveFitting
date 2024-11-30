@@ -150,10 +150,10 @@ class PeriodicTableWindow(wx.Frame):
         for (elem, orbital), data in self.library_data.items():
             if elem == element:
                 # Choose instrument based on whether it's an Auger line
-                if 'Any' in data:
-                    instrument = 'Any'  # For Auger lines
+                if 'C-Any' in data:
+                    instrument = 'C-Any'  # For Auger lines
                 else:
-                    instrument = 'Al' if 'Al' in data else next(iter(data))
+                    instrument = 'C-Al' if 'C-Al' in data else next(iter(data))
 
                 if 'position' in data[instrument] and float(data[instrument]['position']) >= 20:
                     # Check if it's a core level or Auger transition

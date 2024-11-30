@@ -469,7 +469,9 @@ class PeakFunctions:
         term = (residuals / np.sqrt(denominator)) ** 2
         sum_term = np.sum(term)
         rsd = np.sqrt(sum_term / n)
-        # print(f"RSD: {rsd}")
+
+        # rsd2 = np.sqrt(np.mean(residuals ** 2)) / np.mean(y_experimental) * 100
+        # print(f"RSD: {rsd2}")
         return rsd
 
 
@@ -722,6 +724,34 @@ class AtomicConcentrations:
         # print(f'IMFP: {imfp}, Factored_imfp: {imfp2} KE: {kinetic_energy}')
 
         return imfp
+
+    @staticmethod
+    def calculate_angular_correction(angle_degrees, orbital_type):
+        """
+        Calculate angular correction factor for non-magic angle analysis.
+
+        Args:
+            angle_degrees (float): Analysis angle in degrees
+            orbital_type (str): Orbital type ('s', 'p', 'd', 'f')
+
+        Returns:
+            float: Angular correction factor
+        """
+        angle_rad = angle_degrees * np.pi / 180
+
+        # Set beta parameter based on orbital type
+        beta_values = {
+            's': 0,
+            'p': 1,
+            'd': 2,
+            'f': 2
+        }
+        beta = beta_values.get(orbital_type, 0)
+
+        correction = 1 + beta * (3 * np.cos(angle_rad) ** 2 - 1) / 2
+
+        print(f'Angle correction: {correction}')
+        return correction
 
 
 class OtherCalc:

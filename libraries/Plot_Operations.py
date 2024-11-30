@@ -469,7 +469,7 @@ class PlotManager:
                 fontweight='bold',
                 verticalalignment='top',
                 horizontalalignment='right',
-                bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+                bbox=dict(facecolor='none', edgecolor='none', alpha=0.7),
             )
             sheet_name_text.sheet_name_text = True  # Mark this text object
 
@@ -717,7 +717,7 @@ class PlotManager:
                 fontweight='bold',
                 verticalalignment='top',
                 horizontalalignment='right',
-                bbox=dict(facecolor='white', edgecolor='none', alpha=0.7),
+                bbox=dict(facecolor='none', edgecolor='none', alpha=0.7),
             )
             sheet_name_text.sheet_name_text = True  # Mark this text object
         else:
@@ -1041,7 +1041,7 @@ class PlotManager:
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
             residual_height = 1.07 * max(window.y_values)
-            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1,
+            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1,zorder=3,
                                          label='l_Residuals')
 
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),

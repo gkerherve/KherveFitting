@@ -224,11 +224,11 @@ class FittingWindow(wx.Frame):
         add_doublet_button.SetMinSize((125, 40))
         add_doublet_button.Bind(wx.EVT_BUTTON, self.on_add_doublet)
 
-        remove_peak_button = wx.Button(self.fitting_panel, label="Remove Peak")
+        remove_peak_button = wx.Button(self.fitting_panel, label="Remove\nLast Peak")
         remove_peak_button.SetMinSize((125, 40))
         remove_peak_button.Bind(wx.EVT_BUTTON, self.on_remove_peak)
 
-        export_button = wx.Button(self.fitting_panel, label="Accept")
+        export_button = wx.Button(self.fitting_panel, label="Export to\nResults Grid")
         export_button.SetMinSize((125, 40))
         export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 
@@ -433,7 +433,11 @@ class FittingWindow(wx.Frame):
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 5, lg_constraint)
 
             # FWHM constraint
-            fwhm_constraint = f"{chr(65 + first_peak)}*1"
+            if any(element in sheet_name for element in ['Ti2p', 'V2p']) and any(
+                    x in self.parent.selected_fitting_method for x in ["LA", "GL", "SGL"]):
+                fwhm_constraint = "0.3:3.5"  # Independent FWHM for Ti2p and V2p
+            else:
+                fwhm_constraint = f"{chr(65 + first_peak)}*1"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 4, fwhm_constraint)
 
             # Height constraint
@@ -455,7 +459,11 @@ class FittingWindow(wx.Frame):
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 2, position_constraint)
 
             # Sigma constraint
-            sigma_constraint = f"{chr(65 + first_peak)}*1"
+            if any(element in sheet_name for element in ['Ti2p', 'V2p']) and any(
+                    x in self.parent.selected_fitting_method for x in ["Voigt"]):
+                sigma_constraint = "0.01:3"  # Independent FWHM for Ti2p and V2p
+            else:
+                sigma_constraint = f"{chr(65 + first_peak)}*1"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 7, sigma_constraint)
 
             # Gamma constraint

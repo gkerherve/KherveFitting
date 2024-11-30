@@ -22,11 +22,13 @@ class PreferenceWindow(wx.Frame):
         # Create tabs
         self.plot_tab = wx.Panel(self.notebook)
         self.text_tab = wx.Panel(self.notebook)
+        self.save_tab = wx.Panel(self.notebook)
         self.instrument_tab = wx.Panel(self.notebook)
 
         # Add tabs to notebook
         self.notebook.AddPage(self.plot_tab, "Plot Settings")
         self.notebook.AddPage(self.text_tab, "Text/Axis Settings")
+        self.notebook.AddPage(self.save_tab, "Save Settings")
         self.notebook.AddPage(self.instrument_tab, "Instrument Settings")
 
         # Add notebook to sizer
@@ -55,6 +57,7 @@ class PreferenceWindow(wx.Frame):
         self.InitUI()
         self.init_instrument_tab()
         self.init_text_tab()
+        self.init_save_settings_tab()
         self.LoadSettings()
 
     def init_text_tab(self):
@@ -142,6 +145,105 @@ class PreferenceWindow(wx.Frame):
         self.parent.update_plot_preferences()
         self.parent.clear_and_replot()
 
+    def init_save_settings_tab(self):
+        save_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Excel File Settings
+        excel_box = wx.StaticBox(self.save_tab, label="Excel File Settings")
+        excel_sizer = wx.StaticBoxSizer(excel_box, wx.VERTICAL)
+        excel_grid = wx.GridBagSizer(5, 5)
+
+        # Core Level settings
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Core Level:"), pos=(0, 0), span=(1, 2))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 0))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 0))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 0))
+
+        self.excel_width = wx.SpinCtrlDouble(self.save_tab, value='5.2', min=1, max=20, inc=0.1)
+        self.excel_height = wx.SpinCtrlDouble(self.save_tab, value='5.2', min=1, max=20, inc=0.1)
+        self.excel_dpi = wx.SpinCtrl(self.save_tab, value='100', min=50, max=1200)
+
+        excel_grid.Add(self.excel_width, pos=(1, 1))
+        excel_grid.Add(self.excel_height, pos=(2, 1))
+        excel_grid.Add(self.excel_dpi, pos=(3, 1))
+
+        # Survey settings
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Survey:"), pos=(0, 2), span=(1, 2))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 2))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 2))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 2))
+
+        self.survey_excel_width = wx.SpinCtrlDouble(self.save_tab, value='8', min=1, max=20, inc=0.1)
+        self.survey_excel_height = wx.SpinCtrlDouble(self.save_tab, value='4', min=1, max=20, inc=0.1)
+        self.survey_excel_dpi = wx.SpinCtrl(self.save_tab, value='100', min=50, max=1200)
+
+        excel_grid.Add(self.survey_excel_width, pos=(1, 3))
+        excel_grid.Add(self.survey_excel_height, pos=(2, 3))
+        excel_grid.Add(self.survey_excel_dpi, pos=(3, 3))
+
+        excel_sizer.Add(excel_grid, 0, wx.ALL, 5)
+
+        # Word Report Settings
+        word_box = wx.StaticBox(self.save_tab, label="Word Report Settings")
+        word_sizer = wx.StaticBoxSizer(word_box, wx.VERTICAL)
+        word_grid = wx.GridBagSizer(5, 5)
+
+        # Core Level settings
+        word_grid.Add(wx.StaticText(self.save_tab, label="Core Level:"), pos=(0, 0), span=(1, 2))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 0))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 0))
+        word_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 0))
+
+        self.word_width = wx.SpinCtrlDouble(self.save_tab, value='5', min=1, max=20, inc=0.1)
+        self.word_height = wx.SpinCtrlDouble(self.save_tab, value='5', min=1, max=20, inc=0.1)
+        self.word_dpi = wx.SpinCtrl(self.save_tab, value='300', min=50, max=1200)
+
+        word_grid.Add(self.word_width, pos=(1, 1))
+        word_grid.Add(self.word_height, pos=(2, 1))
+        word_grid.Add(self.word_dpi, pos=(3, 1))
+
+        # Survey settings
+        word_grid.Add(wx.StaticText(self.save_tab, label="Survey:"), pos=(0, 2), span=(1, 2))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 2))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 2))
+        word_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 2))
+
+        self.survey_word_width = wx.SpinCtrlDouble(self.save_tab, value='8', min=1, max=20, inc=0.1)
+        self.survey_word_height = wx.SpinCtrlDouble(self.save_tab, value='4', min=1, max=20, inc=0.1)
+        self.survey_word_dpi = wx.SpinCtrl(self.save_tab, value='300', min=50, max=1200)
+
+        word_grid.Add(self.survey_word_width, pos=(1, 3))
+        word_grid.Add(self.survey_word_height, pos=(2, 3))
+        word_grid.Add(self.survey_word_dpi, pos=(3, 3))
+
+        word_sizer.Add(word_grid, 0, wx.ALL, 5)
+
+        # Export Settings
+        other_box = wx.StaticBox(self.save_tab, label="PNG/SVG/PDF Export Settings")
+        other_sizer = wx.StaticBoxSizer(other_box, wx.VERTICAL)
+        other_grid = wx.GridBagSizer(5, 5)
+
+        other_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(0, 0))
+        other_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(1, 0))
+        other_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(2, 0))
+
+        self.export_width = wx.SpinCtrlDouble(self.save_tab, value='8', min=1, max=20, inc=0.1)
+        self.export_height = wx.SpinCtrlDouble(self.save_tab, value='6', min=1, max=20, inc=0.1)
+        self.export_dpi = wx.SpinCtrl(self.save_tab, value='300', min=50, max=1200)
+
+        other_grid.Add(self.export_width, pos=(0, 1))
+        other_grid.Add(self.export_height, pos=(1, 1))
+        other_grid.Add(self.export_dpi, pos=(2, 1))
+
+        other_sizer.Add(other_grid, 0, wx.ALL, 5)
+
+        save_sizer.Add(excel_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        save_sizer.Add(word_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        save_sizer.Add(other_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.save_tab.SetSizer(save_sizer)
+
+
     def init_instrument_tab(self):
         sizer = wx.GridBagSizer(5, 5)
 
@@ -168,8 +270,18 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.library_type_label, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.library_type_combo, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
+        # Add Transmission
         self.use_transmission = wx.CheckBox(self.instrument_tab, label="Use Transmission")
         sizer.Add(self.use_transmission, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Add angular correction controls
+        self.use_angular_correction = wx.CheckBox(self.instrument_tab, label="Use Angular Correction")
+        sizer.Add(self.use_angular_correction, pos=(3, 0), flag=wx.EXPAND | wx.ALL, border=5)
+
+        angle_label = wx.StaticText(self.instrument_tab, label="Analysis Angle (°):")
+        self.angle_spin = wx.SpinCtrlDouble(self.instrument_tab, value='54.7', min=0, max=90, inc=0.1)
+        sizer.Add(angle_label, pos=(4, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.angle_spin, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         self.instrument_tab.SetSizer(sizer)
 
@@ -565,12 +677,31 @@ class PreferenceWindow(wx.Frame):
         self.peak_fill_type_combo.SetValue(self.parent.peak_fill_types[current_peak])
         self.peak_hatch_combo.SetValue(self.parent.peak_hatch_patterns[current_peak])
 
+        # Add save settings
+        self.excel_width.SetValue(self.parent.excel_width)
+        self.excel_height.SetValue(self.parent.excel_height)
+        self.excel_dpi.SetValue(self.parent.excel_dpi)
+        self.survey_excel_width.SetValue(self.parent.survey_excel_width)
+        self.survey_excel_height.SetValue(self.parent.survey_excel_height)
+        self.survey_excel_dpi.SetValue(self.parent.survey_excel_dpi)
+        self.word_width.SetValue(self.parent.word_width)
+        self.word_height.SetValue(self.parent.word_height)
+        self.word_dpi.SetValue(self.parent.word_dpi)
+        self.export_width.SetValue(self.parent.export_width)
+        self.export_height.SetValue(self.parent.export_height)
+        self.export_dpi.SetValue(self.parent.export_dpi)
+
         if hasattr(self.parent, 'current_instrument'):
             self.instrument_combo.SetValue(self.parent.current_instrument)
         if hasattr(self.parent, 'library_type'):
             self.library_type_combo.SetValue(self.parent.library_type +
                                              (" (KE^0.6)" if self.parent.library_type == "Scofield" else
                                               " (KE^1.0)" if self.parent.library_type == "Wagner" else "None"))
+
+        if hasattr(self.parent, 'use_angular_correction'):
+            self.use_angular_correction.SetValue(self.parent.use_angular_correction)
+        if hasattr(self.parent, 'analysis_angle'):
+            self.angle_spin.SetValue(self.parent.analysis_angle)
 
     def OnPeakNumberChange(self, event):
         current_peak = event.GetPosition() - 1
@@ -683,11 +814,34 @@ class PreferenceWindow(wx.Frame):
         self.parent.ax.set_ylabel(self.parent.y_axis_label)
         self.parent.canvas.draw_idle()
 
+        # Update the files plot settingg
+        self.parent.excel_width = self.excel_width.GetValue()
+        self.parent.excel_height = self.excel_height.GetValue()
+        self.parent.excel_dpi = self.excel_dpi.GetValue()
+        self.parent.survey_excel_width = self.survey_excel_width.GetValue()
+        self.parent.survey_excel_height = self.survey_excel_height.GetValue()
+        self.parent.survey_excel_dpi = self.survey_excel_dpi.GetValue()
+
+        self.parent.word_width = self.word_width.GetValue()
+        self.parent.word_height = self.word_height.GetValue()
+        self.parent.word_dpi = self.word_dpi.GetValue()
+        self.parent.survey_word_width = self.survey_word_width.GetValue()
+        self.parent.survey_word_height = self.survey_word_height.GetValue()
+        self.parent.survey_word_dpi = self.survey_word_dpi.GetValue()
+
+        self.parent.export_width = self.export_width.GetValue()
+        self.parent.export_height = self.export_height.GetValue()
+        self.parent.export_dpi = self.export_dpi.GetValue()
+
+
         self.parent.current_instrument = self.instrument_combo.GetValue()
 
         value = self.library_type_combo.GetValue()
         self.parent.library_type = value.split()[0] if value else "ALTHERMO01"
         self.parent.use_transmission = self.use_transmission.GetValue()
+
+        self.parent.use_angular_correction = self.use_angular_correction.GetValue()
+        self.parent.analysis_angle = self.angle_spin.GetValue()
 
         # Save the configuration
         self.parent.save_config()

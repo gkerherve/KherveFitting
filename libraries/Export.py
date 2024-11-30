@@ -236,6 +236,15 @@ def _calculate_peak_areas(window, peak_params, row):
     else:
         ecf = 1.0
 
+    # Angular correction
+    angular_correction = 1.0
+    if window.use_angular_correction:
+        orbital_type = peak_params['name'][-1].lower()  # Get orbital type from name
+        angular_correction = AtomicConcentrations.calculate_angular_correction(
+            window.analysis_angle,
+            orbital_type
+        )
+
     txfn = 1.0
     normalized_area = area / (rsf * txfn * ecf)
     rel_area = normalized_area

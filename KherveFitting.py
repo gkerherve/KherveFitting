@@ -249,6 +249,14 @@ class MyFrame(wx.Frame):
         self.peak_fill_types = ["Solid Fill" for _ in range(15)]  # List of types for each peak
         self.peak_hatch_patterns = ["/", "\\", "|", "-", "+", "x", "o", "O", ".", "*"] * 2
 
+        # Add to plot preferences section
+        self.excel_width = 5.2
+        self.excel_height = 5.2
+        self.excel_dpi = 100
+        self.survey_excel_width = 10
+        self.survey_excel_height = 5
+        self.survey_excel_dpi = 100
+
         # Most recent File Initialisation
         self.recent_files = []
         self.max_recent_files = 10  # Maximum number of recent files to keep
@@ -2388,7 +2396,7 @@ class MyFrame(wx.Frame):
         # Replot the peaks with updated parameters
         self.clear_and_replot()
 
-    def update_ratios(self):
+    def update_ratios_OLD(self):
         num_peaks = self.peak_params_grid.GetNumberRows() // 2
         if num_peaks < 1:
             return  # No peaks to calculate ratios for
@@ -2435,6 +2443,50 @@ class MyFrame(wx.Frame):
 
         self.peak_params_grid.ForceRefresh()
 
+    def update_ratios(self):
+        num_peaks = self.peak_params_grid.GetNumberRows() // 2
+        if num_peaks < 1:
+            return
+
+            # Calculate total area for concentrations
+        total_area = 0
+        for i in range(num_peaks):
+            row = i * 2
+            try:
+                area = float(self.peak_params_grid.GetCellValue(row, 6))
+                total_area += area
+            except ValueError:
+                continue
+
+        # Get first peak area for A/Aa ratio calculation
+        try:
+            first_position = float(self.peak_params_grid.GetCellValue(0, 2))
+            first_area = float(self.peak_params_grid.GetCellValue(0, 6))
+        except ValueError:
+            return
+
+        for i in range(num_peaks):
+            row = i * 2
+            try:
+                position = float(self.peak_params_grid.GetCellValue(row, 2))
+                area = float(self.peak_params_grid.GetCellValue(row, 6))
+
+                # Calculate concentration from area
+                concentration = (area / total_area * 100) if total_area > 0 else 0
+
+                # Calculate A/Aa ratio
+                a_ratio = area / first_area if first_area != 0 else 0
+
+                split = position - first_position
+
+                # Update grid
+                self.peak_params_grid.SetCellValue(row, 10, f"{concentration:.1f}")
+                self.peak_params_grid.SetCellValue(row, 11, f"{a_ratio * 100:.1f}")
+                self.peak_params_grid.SetCellValue(row, 12, f"{split:.2f}")
+            except ValueError:
+                continue
+
+        self.peak_params_grid.ForceRefresh()
     def refresh_peak_params_grid(self):
         sheet_name = self.sheet_combobox.GetValue()
         if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
@@ -2698,6 +2750,21 @@ class MyFrame(wx.Frame):
                 self.legend_font_size = config.get('legend_font_size', 8)
                 self.core_level_text_size = config.get('core_level_text_size', 15)
                 self.library_type = config.get('library_type', 'TPP-2M')
+                self.excel_width = config.get('excel_width', 5.2)
+                self.excel_height = config.get('excel_height', 5.2)
+                self.excel_dpi = config.get('excel_dpi', 100)
+                self.survey_excel_width = config.get('survey_excel_width', 10)
+                self.survey_excel_height = config.get('survey_excel_height', 7)
+                self.survey_excel_dpi = config.get('survey_excel_dpi', 100)
+                self.word_width = config.get('word_width', 5)
+                self.word_height = config.get('word_height', 5)
+                self.survey_word_width = config.get('survey_word_width', 10)
+                self.survey_word_height = config.get('survey_word_height', 5)
+                self.survey_word_dpi = config.get('survey_word_dpi', 200)
+                self.word_dpi = config.get('word_dpi', 300)
+                self.export_width = config.get('export_width', 8)
+                self.export_height = config.get('export_height', 6)
+                self.export_dpi = config.get('export_dpi', 300)
 
         else:
             config = {}
@@ -2744,6 +2811,27 @@ class MyFrame(wx.Frame):
             'legend_font_size': self.legend_font_size,
             'core_level_text_size': self.core_level_text_size,
             'library_type': self.library_type,
+
+            # Excel file settings
+            'excel_width': self.excel_width,
+            'excel_height': self.excel_height,
+            'excel_dpi': self.excel_dpi,
+            'survey_excel_width': self.survey_excel_width,
+            'survey_excel_height': self.survey_excel_height,
+            'survey_excel_dpi': self.survey_excel_dpi,
+
+            # Word report settings
+            'word_width': self.word_width,
+            'word_height': self.word_height,
+            'word_dpi': self.word_dpi,
+            'survey_word_width': self.survey_word_width,
+            'survey_word_height': self.survey_word_height,
+            'survey_word_dpi': self.survey_word_dpi,
+
+            # Export settings
+            'export_width': self.export_width,
+            'export_height': self.export_height,
+            'export_dpi': self.export_dpi,
         }
 
         with open('config.json', 'w') as f:
