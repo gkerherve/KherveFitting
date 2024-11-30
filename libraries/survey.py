@@ -153,11 +153,11 @@ class PeriodicTableWindow(wx.Frame):
                 if 'C-Any' in data:
                     instrument = 'C-Any'  # For Auger lines
                 else:
-                    instrument = 'C-Al' if 'C-Al' in data else next(iter(data))
+                    instrument = 'C-Al1486' if 'C-Al1486' in data else next(iter(data))
 
                 if 'position' in data[instrument] and float(data[instrument]['position']) >= 20:
                     # Check if it's a core level or Auger transition
-                    is_auger = instrument == 'Any'
+                    is_auger = instrument == 'C-Any'
                     # is_auger = data[instrument]['Auger'] == '1'  # Corrected this line
                     orbital_lower = orbital.lower()
 

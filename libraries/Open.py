@@ -469,16 +469,20 @@ def open_vamas_file(window, file_path):
                 x_label = block.x_label
 
             # Write data to sheet
-            ws.append([x_label, "Intensity"])
-            for x, y in zip(x_values, y_values):
-                ws.append([x, y])
+            ws.append([x_label, "Corrected Data", "Raw Data", "Transmission"])
 
-            # Add transmission function if it exists
+            # Get transmission data if it exists
+            transmission_data = None
             if hasattr(block, 'corresponding_variables') and len(block.corresponding_variables) > 1:
-                ws.insert_cols(3)  # Insert column C
-                ws.cell(row=1, column=3, value="Transmission")
-                for row, trans in enumerate(block.corresponding_variables[1].y_values, start=2):
-                    ws.cell(row=row, column=3, value=trans)
+                transmission_data = block.corresponding_variables[1].y_values
+            else:
+                transmission_data = [1.0] * len(y_values)
+
+            # Write data row by row
+            for i, (x, y) in enumerate(zip(x_values, y_values)):
+                trans = transmission_data[i]
+                corrected_y = y / trans
+                ws.append([x, corrected_y, y, trans])
 
             # Store experimental setup data
             exp_data.append([
