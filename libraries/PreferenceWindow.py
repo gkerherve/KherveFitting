@@ -155,33 +155,39 @@ class PreferenceWindow(wx.Frame):
 
         # Core Level settings
         excel_grid.Add(wx.StaticText(self.save_tab, label="Core Level:"), pos=(0, 0), span=(1, 2))
-        excel_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 0))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):     "), pos=(1, 0))
         excel_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 0))
         excel_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 0))
 
         self.excel_width = wx.SpinCtrlDouble(self.save_tab, value='5.2', min=1, max=20, inc=0.1)
+        self.excel_width.SetMinSize((100, -1))
         self.excel_height = wx.SpinCtrlDouble(self.save_tab, value='5.2', min=1, max=20, inc=0.1)
+        self.excel_height.SetMinSize((100, -1))
         self.excel_dpi = wx.SpinCtrl(self.save_tab, value='100', min=50, max=1200)
+        self.excel_dpi.SetMinSize((100, -1))
 
         excel_grid.Add(self.excel_width, pos=(1, 1))
         excel_grid.Add(self.excel_height, pos=(2, 1))
         excel_grid.Add(self.excel_dpi, pos=(3, 1))
 
         # Survey settings
-        excel_grid.Add(wx.StaticText(self.save_tab, label="Survey:"), pos=(0, 2), span=(1, 2))
-        excel_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 2))
-        excel_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 2))
-        excel_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 2))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Survey:"), pos=(0, 4), span=(1, 2))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):     "), pos=(1, 4))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 4))
+        excel_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 4))
 
         self.survey_excel_width = wx.SpinCtrlDouble(self.save_tab, value='8', min=1, max=20, inc=0.1)
+        self.survey_excel_width.SetMinSize((100, -1))
         self.survey_excel_height = wx.SpinCtrlDouble(self.save_tab, value='4', min=1, max=20, inc=0.1)
+        self.survey_excel_height.SetMinSize((100, -1))
         self.survey_excel_dpi = wx.SpinCtrl(self.save_tab, value='100', min=50, max=1200)
+        self.survey_excel_dpi.SetMinSize((100, -1))
 
-        excel_grid.Add(self.survey_excel_width, pos=(1, 3))
-        excel_grid.Add(self.survey_excel_height, pos=(2, 3))
-        excel_grid.Add(self.survey_excel_dpi, pos=(3, 3))
+        excel_grid.Add(self.survey_excel_width, pos=(1, 5))
+        excel_grid.Add(self.survey_excel_height, pos=(2, 5))
+        excel_grid.Add(self.survey_excel_dpi, pos=(3, 5))
 
-        excel_sizer.Add(excel_grid, 0, wx.ALL, 5)
+        excel_sizer.Add(excel_grid, 5, wx.ALL, 5)
 
         # Word Report Settings
         word_box = wx.StaticBox(self.save_tab, label="Word Report Settings")
@@ -190,52 +196,62 @@ class PreferenceWindow(wx.Frame):
 
         # Core Level settings
         word_grid.Add(wx.StaticText(self.save_tab, label="Core Level:"), pos=(0, 0), span=(1, 2))
-        word_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 0))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):     "), pos=(1, 0))
         word_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 0))
         word_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 0))
 
         self.word_width = wx.SpinCtrlDouble(self.save_tab, value='5', min=1, max=20, inc=0.1)
+        self.word_width.SetMinSize((100, -1))
         self.word_height = wx.SpinCtrlDouble(self.save_tab, value='5', min=1, max=20, inc=0.1)
+        self.word_height.SetMinSize((100, -1))
         self.word_dpi = wx.SpinCtrl(self.save_tab, value='300', min=50, max=1200)
+        self.word_dpi.SetMinSize((100, -1))
 
         word_grid.Add(self.word_width, pos=(1, 1))
         word_grid.Add(self.word_height, pos=(2, 1))
         word_grid.Add(self.word_dpi, pos=(3, 1))
 
         # Survey settings
-        word_grid.Add(wx.StaticText(self.save_tab, label="Survey:"), pos=(0, 2), span=(1, 2))
-        word_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(1, 2))
-        word_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 2))
-        word_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 2))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Survey:"), pos=(0, 4), span=(1, 2))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):     "), pos=(1, 4))
+        word_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(2, 4))
+        word_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(3, 4))
 
         self.survey_word_width = wx.SpinCtrlDouble(self.save_tab, value='8', min=1, max=20, inc=0.1)
+        self.survey_word_width.SetMinSize((100, -1))
         self.survey_word_height = wx.SpinCtrlDouble(self.save_tab, value='4', min=1, max=20, inc=0.1)
+        self.survey_word_height.SetMinSize((100, -1))
         self.survey_word_dpi = wx.SpinCtrl(self.save_tab, value='300', min=50, max=1200)
+        self.survey_word_dpi.SetMinSize((100, -1))
 
-        word_grid.Add(self.survey_word_width, pos=(1, 3))
-        word_grid.Add(self.survey_word_height, pos=(2, 3))
-        word_grid.Add(self.survey_word_dpi, pos=(3, 3))
+        word_grid.Add(self.survey_word_width, pos=(1, 5))
+        word_grid.Add(self.survey_word_height, pos=(2, 5))
+        word_grid.Add(self.survey_word_dpi, pos=(3, 5))
 
-        word_sizer.Add(word_grid, 0, wx.ALL, 5)
+        word_sizer.Add(word_grid, 5, wx.ALL, 5)
 
         # Export Settings
         other_box = wx.StaticBox(self.save_tab, label="PNG/SVG/PDF Export Settings")
         other_sizer = wx.StaticBoxSizer(other_box, wx.VERTICAL)
         other_grid = wx.GridBagSizer(5, 5)
 
-        other_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):"), pos=(0, 0))
+        other_grid.Add(wx.StaticText(self.save_tab, label="Width (inches):     "), pos=(0, 0))
         other_grid.Add(wx.StaticText(self.save_tab, label="Height (inches):"), pos=(1, 0))
         other_grid.Add(wx.StaticText(self.save_tab, label="DPI:"), pos=(2, 0))
 
         self.export_width = wx.SpinCtrlDouble(self.save_tab, value='8', min=1, max=20, inc=0.1)
+        self.export_width.SetMinSize((100, -1))
         self.export_height = wx.SpinCtrlDouble(self.save_tab, value='6', min=1, max=20, inc=0.1)
+        self.export_height.SetMinSize((100, -1))
         self.export_dpi = wx.SpinCtrl(self.save_tab, value='300', min=50, max=1200)
+        self.export_dpi.SetMinSize((100, -1))
 
         other_grid.Add(self.export_width, pos=(0, 1))
         other_grid.Add(self.export_height, pos=(1, 1))
         other_grid.Add(self.export_dpi, pos=(2, 1))
 
-        other_sizer.Add(other_grid, 0, wx.ALL, 5)
+
+        other_sizer.Add(other_grid, 5, wx.ALL, 5)
 
         save_sizer.Add(excel_sizer, 0, wx.EXPAND | wx.ALL, 5)
         save_sizer.Add(word_sizer, 0, wx.EXPAND | wx.ALL, 5)

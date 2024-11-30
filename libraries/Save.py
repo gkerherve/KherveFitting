@@ -645,7 +645,10 @@ def save_plot_as_png(window):
         png_filepath = os.path.join(os.path.dirname(file_path), png_filename)
 
         # Save the figure as PNG
-        window.figure.savefig(png_filepath, format='png', dpi=300, bbox_inches='tight')
+        original_size = window.figure.get_size_inches()
+        window.figure.set_size_inches(window.export_width, window.export_height)
+        window.figure.savefig(png_filepath, format='png', dpi=window.export_dpi, bbox_inches='tight')
+        window.figure.set_size_inches(original_size)
 
         print(f"Plot saved as PNG: {png_filepath}")
         window.show_popup_message2("Plot saved as PNG", f"File: {png_filename}")
@@ -672,7 +675,10 @@ def save_plot_as_pdf(window):
         pdf_filepath = os.path.join(os.path.dirname(file_path), pdf_filename)
 
         # Save the figure as PDF
-        window.figure.savefig(pdf_filepath, format='pdf', dpi=300, bbox_inches='tight')
+        original_size = window.figure.get_size_inches()
+        window.figure.set_size_inches(window.export_width, window.export_height)
+        window.figure.savefig(pdf_filepath, format='pdf', dpi=window.export_dpi, bbox_inches='tight')
+        window.figure.set_size_inches(original_size)
 
         print(f"Plot saved as PDF: {pdf_filepath}")
         window.show_popup_message2("Plot saved as PDF", f"File: {pdf_filename}")
@@ -699,7 +705,10 @@ def save_plot_as_svg(window):
         svg_filepath = os.path.join(os.path.dirname(file_path), svg_filename)
 
         # Save the figure as SVG
-        window.figure.savefig(svg_filepath, format='svg', dpi=300, bbox_inches='tight')
+        original_size = window.figure.get_size_inches()
+        window.figure.set_size_inches(window.export_width, window.export_height)
+        window.figure.savefig(svg_filepath, format='svg', dpi=window.export_dpi, bbox_inches='tight')
+        window.figure.set_size_inches(original_size)
 
         print(f"Plot saved as SVG: {svg_filepath}")
         window.show_popup_message2("Plot saved as SVG", f"File: {svg_filename}")

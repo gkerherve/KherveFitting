@@ -406,7 +406,17 @@ def export_word_report(window):
         doc.add_heading(sheet_name, level=1)
 
         plot_path = f"{base_path}_{sheet_name}_plot.png"
-        window.figure.savefig(plot_path, dpi=300, bbox_inches='tight')
+
+        is_survey = "survey" in sheet_name.lower() or "wide" in sheet_name.lower()
+        width = window.survey_word_width if is_survey else window.word_width
+        height = window.survey_word_height if is_survey else window.word_height
+        dpi = window.survey_word_dpi if is_survey else window.word_dpi
+
+        original_size = window.figure.get_size_inches()
+        window.figure.set_size_inches(width, height)
+        window.figure.savefig(plot_path, dpi=dpi, bbox_inches='tight')
+        window.figure.set_size_inches(original_size)
+
         doc.add_picture(plot_path, width=Inches(7))
         os.remove(plot_path)
 
