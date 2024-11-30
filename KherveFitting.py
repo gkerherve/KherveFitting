@@ -2749,7 +2749,6 @@ class MyFrame(wx.Frame):
                 self.y_sublines = config.get('y_sublines', 5)
                 self.legend_font_size = config.get('legend_font_size', 8)
                 self.core_level_text_size = config.get('core_level_text_size', 15)
-                self.library_type = config.get('library_type', 'TPP-2M')
                 self.excel_width = config.get('excel_width', 5.2)
                 self.excel_height = config.get('excel_height', 5.2)
                 self.excel_dpi = config.get('excel_dpi', 100)
@@ -2765,6 +2764,9 @@ class MyFrame(wx.Frame):
                 self.export_width = config.get('export_width', 8)
                 self.export_height = config.get('export_height', 6)
                 self.export_dpi = config.get('export_dpi', 300)
+                self.library_type = config.get('library_type', 'TPP-2M')
+                self.use_angular_correction = config.get('use_angular_correction', False)
+                self.analysis_angle = config.get('analysis_angle', 54.7)
 
         else:
             config = {}
@@ -2810,7 +2812,11 @@ class MyFrame(wx.Frame):
             'y_sublines': self.y_sublines,
             'legend_font_size': self.legend_font_size,
             'core_level_text_size': self.core_level_text_size,
+
+            # Instruments settings
             'library_type': self.library_type,
+            'use_angular_correction': self.use_angular_correction,
+            'analysis_angle': self.analysis_angle,
 
             # Excel file settings
             'excel_width': self.excel_width,
