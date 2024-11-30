@@ -473,6 +473,13 @@ def open_vamas_file(window, file_path):
             for x, y in zip(x_values, y_values):
                 ws.append([x, y])
 
+            # Add transmission function if it exists
+            if hasattr(block, 'corresponding_variables') and len(block.corresponding_variables) > 1:
+                ws.insert_cols(3)  # Insert column C
+                ws.cell(row=1, column=3, value="Transmission")
+                for row, trans in enumerate(block.corresponding_variables[1].y_values, start=2):
+                    ws.cell(row=row, column=3, value=trans)
+
             # Store experimental setup data
             exp_data.append([
                 f"Block {i}",
