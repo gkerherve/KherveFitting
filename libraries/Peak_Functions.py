@@ -726,7 +726,7 @@ class AtomicConcentrations:
         return imfp
 
     @staticmethod
-    def calculate_angular_correction(angle_degrees, orbital_type):
+    def calculate_angular_correction(window, peak_name, angle_degrees):
         """
         Calculate angular correction factor for non-magic angle analysis.
 
@@ -737,6 +737,9 @@ class AtomicConcentrations:
         Returns:
             float: Angular correction factor
         """
+
+        orbital_type = AtomicConcentrations.extract_orbital_type(peak_name)
+
         angle_rad = angle_degrees * np.pi / 180
 
         # Set beta parameter based on orbital type
@@ -749,9 +752,35 @@ class AtomicConcentrations:
         beta = beta_values.get(orbital_type, 0)
 
         correction = 1 + beta * (3 * np.cos(angle_rad) ** 2 - 1) / 2
-
-        print(f'Angle correction: {correction}')
         return correction
+
+    @staticmethod
+    def extract_orbital_type(peak_name):
+        """
+        Extract orbital type (s, p, d, f) from peak name.
+        Examples:
+        'Ti2p3/2' -> 'p'
+        'C1s' -> 's'
+        'Sr3d5/2' -> 'd'
+        'Ti 2p3/2' -> 'p'
+        'C 1s' -> 's'
+        'Sr 3d5/2' -> 'd'
+        """
+        # Split name and take first part (core level)
+        core_level = peak_name.split()[0]
+
+        # Start from second character
+        i = 1
+        while i < len(core_level):
+            # If current char is a letter
+            if core_level[i].isalpha():
+                # Check if next char exists and is a number
+                if i + 1 < len(core_level) and core_level[i + 1].isdigit():
+                    print(f'Peak name: {peak_name} Chosen name: {core_level[i+2].lower()}')
+                    return core_level[i+2].lower()
+            i += 1
+
+        return 's'  # Default to s if no orbital found
 
 
 class OtherCalc:

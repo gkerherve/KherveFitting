@@ -211,6 +211,7 @@ def get_rsf_from_library(library_data, element, orbital, instrument):
 
 def _calculate_peak_areas(window, peak_params, row):
     area = float(window.peak_params_grid.GetCellValue(row, 6))
+    peak_name = window.peak_params_grid.GetCellValue(row, 0)
     rsf = peak_params['rsf']
 
     binding_energy = float(window.peak_params_grid.GetCellValue(row, 2))
@@ -241,12 +242,13 @@ def _calculate_peak_areas(window, peak_params, row):
     if window.use_angular_correction:
         orbital_type = peak_params['name'][-1].lower()  # Get orbital type from name
         angular_correction = AtomicConcentrations.calculate_angular_correction(
-            window.analysis_angle,
-            orbital_type
+            window,
+            peak_name,
+            window.analysis_angle
         )
 
     txfn = 1.0
-    normalized_area = area / (rsf * txfn * ecf)
+    normalized_area = area / (rsf * txfn * ecf * angular_correction)
     rel_area = normalized_area
 
     return round(area, 2), round(normalized_area, 2), round(rel_area, 2)

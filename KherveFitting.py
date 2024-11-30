@@ -2087,9 +2087,16 @@ class MyFrame(wx.Frame):
         # Calculate ECF for each peak
         for i in range(current_rows):
             if self.results_grid.GetCellValue(i, 7) == '1':  # If checkbox ticked
+                # Get values from grid
+                peak_name = self.results_grid.GetCellValue(i, 0)
                 binding_energy = float(self.results_grid.GetCellValue(i, 1))
+                area = float(self.results_grid.GetCellValue(i, 5))
+                rsf = float(self.results_grid.GetCellValue(i, 8))
+
+                # Calculate kinetic energy
                 kinetic_energy = self.photons - binding_energy
                 print(f"Library Type:{self.library_type}")
+
                 # Calculate ECF based on method selected
                 if self.library_type == "Scofield":
                     ecf = kinetic_energy ** 0.6
@@ -2110,9 +2117,21 @@ class MyFrame(wx.Frame):
                 area = float(self.results_grid.GetCellValue(i, 5))
                 rsf = float(self.results_grid.GetCellValue(i, 8))
 
-                # Calculate normalized area with ECF correction
+
+                # Calculate Transmission function
                 txfn = 1.0  # Transmission function
-                normalized_area = area / (rsf * txfn * ecf)
+
+                # Angular correction
+                angular_correction = 1.0
+                if self.use_angular_correction:
+                    angular_correction = AtomicConcentrations.calculate_angular_correction(
+                        self,
+                        peak_name,
+                        self.analysis_angle
+                    )
+
+                # Calculate normalized area with ECF correction
+                normalized_area = area / (rsf * txfn * ecf * angular_correction)
 
                 total_normalized_area += normalized_area
                 checked_indices.append((i, normalized_area))
