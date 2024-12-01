@@ -30,6 +30,10 @@ class LabelWindow(wx.Frame):
         remove_btn.Bind(wx.EVT_BUTTON, self.on_remove)
 
         sizer.Add(btn_sizer, 0, wx.ALIGN_CENTER)
+
+
+
+
         panel.SetSizer(sizer)
 
         self.update_list()

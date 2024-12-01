@@ -4,7 +4,50 @@ import os
 import sys
 import pygame
 
+def show_libraries_used(window):
+    text = """-------------------
+Libraries Used:
+-------------------
 
+wxPython
+Copyright (c) 2018-2023 wxPython Team
+License: LGPL 2.1
+
+NumPy
+Copyright (c) 2005-2023, NumPy Developers 
+License: BSD 3-Clause
+
+SciPy
+Copyright (c) 2001-2023 SciPy Developers
+License: BSD 3-Clause
+
+Matplotlib
+Copyright (c) 2012-2023 Matplotlib Development Team
+License: BSD Compatible
+
+LMFIT
+Copyright (c) 2012-2023 Matthew Newville, The University of Chicago
+License: BSD-3
+
+Pandas
+Copyright (c) 2008-2023, AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team
+License: BSD 3-Clause
+
+python-docx
+Copyright (c) 2013 Steve Canny
+License: MIT
+
+openpyxl
+Copyright (c) 2010 openpyxl
+License: MIT
+
+Pillow
+Copyright (c) 2010-2023 Alex Clark and contributors
+License: HPND"""
+
+    dlg = wx.MessageDialog(window, text, "Libraries Used", wx.OK | wx.ICON_INFORMATION)
+    dlg.ShowModal()
+    dlg.Destroy()
 
 def on_about(self, event):
     about_dialog = wx.Dialog(None, title="About KherveFitting", size=(400, 430))
@@ -19,7 +62,6 @@ def on_about(self, event):
     website = wx.adv.HyperlinkCtrl(panel, -1, "Imperial College Profile", "https://www.imperial.ac.uk/people/g.kerherve")
     developers = wx.StaticText(panel, label="Developers:\nDr. Gwilherm Kerherve / g.kerherve@imperial.ac.uk\nWilliam Skinner")
     copyright = wx.StaticText(panel, label="(C) 2024 Gwilherm Kerherve")
-
 
 
     # Add all elements to sizer
@@ -40,7 +82,6 @@ def on_about(self, event):
         qr_image = qr_image.Scale(150, 150, wx.IMAGE_QUALITY_HIGH)
         qr_bitmap = wx.StaticBitmap(panel, -1, wx.Bitmap(qr_image))
         sizer.Add(qr_bitmap, 0, wx.ALIGN_CENTER | wx.ALL, 5)
-
     about_dialog.ShowModal()
     about_dialog.Destroy()
 

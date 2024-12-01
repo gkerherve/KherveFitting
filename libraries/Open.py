@@ -8,6 +8,9 @@ import pandas as pd
 import shutil
 from vamas import Vamas
 from openpyxl import Workbook
+import numpy as np
+from scipy.interpolate import interp1d
+import pandas as pd
 from openpyxl.styles import Alignment
 
 from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
@@ -23,10 +26,24 @@ class ExcelDropTarget(wx.FileDropTarget):
         from libraries.Open import open_xlsx_file, open_vamas_file
         for file in filenames:
             if file.lower().endswith('.xlsx'):
-                wx.CallAfter(open_xlsx_file, self.window, file)
-                return True
+                # Check if it's an Avantage file
+                try:
+                    wb = openpyxl.load_workbook(file)
+                    if "Titles" in wb.sheetnames:
+                        wx.CallAfter(import_avantage_file_direct, self.window, file)
+                    else:
+                        wx.CallAfter(open_xlsx_file, self.window, file)
+                    return True
+                except Exception:
+                    return False
             elif file.lower().endswith('.vms'):
                 wx.CallAfter(open_vamas_file, self.window, file)
+                return True
+            elif file.lower().endswith('.kal'):
+                wx.CallAfter(open_kal_file, self.window, file)
+                return True
+            elif file.lower().endswith('.avg'):
+                wx.CallAfter(open_avg_file_direct, self.window, file)
                 return True
         return False
 
@@ -82,6 +99,41 @@ def update_recent_files(window, file_path):
     window.recent_files = window.recent_files[:window.max_recent_files]
     update_recent_files_menu(window)
     window.save_config()  # Call save_config directly on the window object
+
+
+def import_avantage_file_direct(window, file_path):
+    wb = openpyxl.load_workbook(file_path)
+    new_file_path = os.path.splitext(file_path)[0] + "_Kfitting.xlsx"
+
+    sheets_to_remove = []
+    for sheet_name in wb.sheetnames:
+        sheet = wb[sheet_name]
+        if "Survey" in sheet_name or "Scan" in sheet_name:
+            new_name = "Survey XPS" if "Survey" in sheet_name or "survey" in sheet_name else sheet_name.split()[0]
+            wb.create_sheet(new_name)
+            new_sheet = wb[new_name]
+            new_sheet['A1'] = "Binding Energy"
+            new_sheet['B1'] = "Raw Data"
+            for row in sheet.iter_rows(min_row=17, values_only=True):
+                new_sheet.append([row[0]] + list(row[2:]))
+            sheets_to_remove.append(sheet_name)
+
+            for col in new_sheet.iter_cols(min_col=3, max_col=24):
+                for cell in col:
+                    cell.value = None
+        else:
+            sheets_to_remove.append(sheet_name)
+
+    for sheet_name in sheets_to_remove:
+        del wb[sheet_name]
+
+    wb.save(new_file_path)
+    open_xlsx_file(window, new_file_path)
+
+
+def open_avg_file_direct(window, avg_file_path):
+    excel_file_path = create_excel_from_avg(avg_file_path)
+    open_xlsx_file(window, excel_file_path)
 
 def import_avantage_file(window):
     # Open file dialog to select the Avantage Excel file
@@ -638,6 +690,104 @@ def open_xlsx_file_vamas(window, file_path):
         wx.MessageBox(f"Error reading Excel file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
+def extract_transmission_data(block):
+    """
+    Extract transmission function data from a Kratos .kal file block.
+
+    Args:
+        block (str): Text block containing transmission data
+
+    Returns:
+        tuple: (ke_trans, trans_values) arrays of kinetic energies and transmission values
+    """
+    if 'Transmission Function Object (ke,t)' in block:
+        trans_section = block.split('Transmission Function Object (ke,t)')[1].split('Dataset filename')[0]
+
+        ke_line = trans_section.split('Transmission Function Kinetic Energy =')[1].split('\n')[0]
+        ke_str = ke_line.strip().strip('{}').strip()
+        ke_trans = np.array([float(x.strip()) for x in ke_str.split(',')])
+
+        val_line = trans_section.split('Transmission Function Value          =')[1].split('\n')[0]
+        val_str = val_line.strip().strip('{}').strip()
+        trans_values = np.array([float(x.strip()) for x in val_str.split(',')])
+
+        return ke_trans, trans_values
+    return None, None
+
+
+def convert_kal_to_excel(file_path):
+    """
+    Convert Kratos .kal file to Excel format suitable for KherveFitting.
+
+    Args:
+        file_path (str): Path to the .kal file
+
+    Returns:
+        str: Path to the created Excel file
+    """
+    with open(file_path, 'r') as f:
+
+        content = f.read()
+
+    blocks = content.split('Dataset filename')
+    spectra = {}
+    PHOTON_ENERGY = 1486.67
+
+    for block in blocks:
+        if 'Ordinate values' in block and 'Object name' in block:
+            name = block.split('Object name               = ')[1].split('/')[0].strip()
+
+            ke_trans, trans_values = extract_transmission_data(block)
+            if ke_trans is not None and trans_values is not None:
+                trans_func = interp1d(ke_trans, trans_values, kind='linear', bounds_error=False,
+                                      fill_value='extrapolate')
+
+                start_ke = float(block.split('Spectrum scan start')[1].split('=')[1].split('eV')[0].strip())
+                step = float(block.split('Spectrum scan step size')[1].split('=')[1].split('eV')[0].strip())
+                raw_str = block.split('Ordinate values')[1].split('=')[1].split('}')[0].strip().strip('{').strip()
+                raw_data = np.array([float(x.strip()) for x in raw_str.split(',')])
+
+                num_points = len(raw_data)
+                ke_values = np.linspace(start_ke, start_ke + (num_points - 1) * step, num_points)
+                be_values = PHOTON_ENERGY - ke_values
+
+                transmission = trans_func(ke_values)
+                corrected_data = raw_data / transmission
+
+                df = pd.DataFrame({
+                    'BE': be_values,
+                    'Corrected Data': corrected_data,
+                    'Raw Data': raw_data,
+                    'Transmission': transmission
+                })
+
+                spectra[name] = df
+
+    output_file = file_path.replace('.kal', '.xlsx')
+    with pd.ExcelWriter(output_file) as writer:
+        for name, df in spectra.items():
+            sheet_name = name.replace(' ', '')
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    return output_file
+
+def open_kal_file_dialog(window):
+    """Open a file dialog for selecting a Kratos .kal file"""
+    with wx.FileDialog(window, "Open Kratos file", wildcard="Kratos files (*.kal)|*.kal",
+                      style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        file_path = fileDialog.GetPath()
+        open_kal_file(window, file_path)
+
+def open_kal_file(window, file_path):
+    """Process a Kratos .kal file and convert it to Excel format"""
+
+    try:
+        output_excel = convert_kal_to_excel(file_path)
+        open_xlsx_file(window, output_excel)
+    except Exception as e:
+        wx.MessageBox(f"Error processing Kratos file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 # ------------------ HISTORRY DEF ---------------------------------------------------
 # -----------------------------------------------------------------------------------

@@ -11,8 +11,9 @@ from libraries.Open import ExcelDropTarget, open_xlsx_file
 from libraries.Plot_Operations import PlotManager
 from Functions import toggle_Col_1
 from libraries.Save import update_undo_redo_state
-from libraries.Open import open_vamas_file_dialog
+from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog
 from libraries.Export import export_word_report
+from libraries.Help import show_libraries_used
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
     on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, show_mini_game, on_about)
@@ -253,6 +254,9 @@ def create_menu(window):
     import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage file (.xlsx)")
     window.Bind(wx.EVT_MENU, lambda event: import_avantage_file(window), import_avantage_item)
 
+    import_kal_item = import_menu.Append(wx.NewId(), "Import Kratos file (.kal)")
+    window.Bind(wx.EVT_MENU, lambda event: open_kal_file_dialog(window), import_kal_item)
+
     import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file (.avg)")
     window.Bind(wx.EVT_MENU, lambda event: open_avg_file(window), import_avg_item)
 
@@ -351,6 +355,9 @@ def create_menu(window):
 
     coffee_item = help_menu.Append(wx.NewId(), "Buy Me a Coffee")
     window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://buymeacoffee.com/gkerherve"), coffee_item)
+
+    libraries_item = help_menu.Append(wx.NewId(), "Libraries Used")
+    window.Bind(wx.EVT_MENU, lambda event: show_libraries_used(window), libraries_item)
 
     about_item = help_menu.Append(wx.ID_ABOUT, "About")
     window.Bind(wx.EVT_MENU, lambda event: on_about(window, event), about_item)
