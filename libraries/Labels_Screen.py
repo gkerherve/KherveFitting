@@ -31,12 +31,91 @@ class LabelWindow(wx.Frame):
 
         sizer.Add(btn_sizer, 0, wx.ALIGN_CENTER)
 
+        buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        movement_sizer = wx.BoxSizer(wx.VERTICAL)
+        horizontal_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        top_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        bottom_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
+        up_btn = wx.Button(panel, label="↑")
+        down_btn = wx.Button(panel, label="↓")
+        left_btn = wx.Button(panel, label="←")
+        right_btn = wx.Button(panel, label="→")
+
+        top_sizer.AddSpacer(40)
+        top_sizer.Add(up_btn, 0, wx.ALL, 2)
+        movement_sizer.Add(top_sizer, 0, wx.ALL, 2)
+        horizontal_sizer.Add(left_btn, 0, wx.RIGHT, 2)
+        horizontal_sizer.Add(right_btn, 0, wx.LEFT, 2)
+        movement_sizer.Add(horizontal_sizer, 0, wx.ALL, 2)
+        bottom_sizer.AddSpacer(40)
+        bottom_sizer.Add(down_btn, 0, wx.ALL, 2)
+        movement_sizer.Add(bottom_sizer, 0, wx.ALL, 2)
+
+        buttons_sizer.AddSpacer(40)
+        buttons_sizer.Add(movement_sizer, 0, wx.LEFT | wx.TOP, 10)
+
+        sizer.Add(buttons_sizer, 0, wx.LEFT | wx.TOP, 10)  # Changed ALIGN_RIGHT to LEFT
+
+        up_btn.Bind(wx.EVT_BUTTON, self.move_up)
+        down_btn.Bind(wx.EVT_BUTTON, self.move_down)
+        left_btn.Bind(wx.EVT_BUTTON, self.move_left)
+        right_btn.Bind(wx.EVT_BUTTON, self.move_right)
 
 
         panel.SetSizer(sizer)
 
         self.update_list()
+
+    def move_label(self, direction):
+        selection = self.list_box.GetSelection()
+        if selection == wx.NOT_FOUND:
+            return
+
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        label = self.parent.Data['Core levels'][sheet_name]['Labels'][selection]
+        max_y = max(self.parent.y_values)
+
+        if direction == 'left':
+            label['x'] += 2
+        elif direction == 'right':
+            label['x'] -= 2
+        elif direction == 'up':
+            label['y'] += max_y * 0.02
+        elif direction == 'down':
+            label['y'] -= max_y * 0.02
+
+        for txt in self.parent.ax.texts[:]:
+            txt.remove()
+
+        for label_data in self.parent.Data['Core levels'][sheet_name]['Labels']:
+            self.parent.ax.text(
+                label_data['x'],
+                label_data['y'],
+                label_data['text'],
+                rotation=label_data.get('rotation', 90),
+                fontsize=label_data.get('fontsize', 10),
+                fontfamily=label_data.get('fontfamily', 'Arial'),
+                va='bottom',
+                ha='center'
+            )
+
+        self.parent.canvas.draw_idle()
+        self.update_list()
+        self.list_box.SetSelection(selection)  # Maintain selection
+
+    def move_up(self, event):
+        self.move_label('up')
+
+    def move_down(self, event):
+        self.move_label('down')
+
+    def move_left(self, event):
+        self.move_label('left')
+
+    def move_right(self, event):
+        self.move_label('right')
+
 
     def update_list(self):
         self.list_box.Clear()
