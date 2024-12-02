@@ -11,7 +11,7 @@ from libraries.Open import ExcelDropTarget, open_xlsx_file
 from libraries.Plot_Operations import PlotManager
 from Functions import toggle_Col_1
 from libraries.Save import update_undo_redo_state
-from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog
+from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog
 from libraries.Export import export_word_report
 from libraries.Help import show_libraries_used
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
@@ -256,6 +256,12 @@ def create_menu(window):
 
     import_kal_item = import_menu.Append(wx.NewId(), "Import Kratos file (.kal)")
     window.Bind(wx.EVT_MENU, lambda event: open_kal_file_dialog(window), import_kal_item)
+
+    import_spe_item = import_menu.Append(wx.NewId(), "Import SPEC file (.spe)")
+    window.Bind(wx.EVT_MENU, lambda event: open_spe_file_dialog(window), import_spe_item)
+
+    import_mrs_item = import_menu.Append(wx.NewId(), "Import MRS file (.mrs)")
+    window.Bind(wx.EVT_MENU, lambda event: import_mrs_file(window), import_mrs_item)
 
     import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file (.avg)")
     window.Bind(wx.EVT_MENU, lambda event: open_avg_file(window), import_avg_item)

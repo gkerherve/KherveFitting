@@ -5,6 +5,8 @@ import openpyxl
 import wx
 import re
 import pandas as pd
+import struct
+from pathlib import Path
 import shutil
 from vamas import Vamas
 from openpyxl import Workbook
@@ -17,6 +19,8 @@ from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
 from libraries.Save import update_undo_redo_state, save_state
 from libraries.Sheet_Operations import on_sheet_selected
 from libraries.Grid_Operations import populate_results_grid
+
+
 class ExcelDropTarget(wx.FileDropTarget):
     def __init__(self, window):
         wx.FileDropTarget.__init__(self)
@@ -99,6 +103,278 @@ def update_recent_files(window, file_path):
     window.recent_files = window.recent_files[:window.max_recent_files]
     update_recent_files_menu(window)
     window.save_config()  # Call save_config directly on the window object
+
+
+def open_spe_file_dialog(window):
+    with wx.FileDialog(window, "Open SPE file", wildcard="SPE files (*.spe)|*.spe",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        file_path = fileDialog.GetPath()
+        open_spe_file(window, file_path)
+
+
+def open_spe_file(window, file_path):
+    try:
+        # Get data and core level name
+        df, core_level = read_spe_file(file_path)
+
+        # Create Excel filename
+        excel_path = str(Path(file_path).with_suffix('.xlsx'))
+
+        # Save to Excel with core level as sheet name
+        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name=core_level, index=False)
+
+        # Open the created Excel file
+        open_xlsx_file(window, excel_path)
+
+    except Exception as e:
+        wx.MessageBox(f"Error processing SPE file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+def read_spe_file_OLD(filename):
+    try:
+        # Read the file in binary mode
+        with open(filename, 'rb') as f:
+            # Read until we find 'EOFH' which marks end of header
+            header = ''
+            while 'EOFH' not in header:
+                chunk = f.read(1)
+                if not chunk:
+                    raise ValueError("End of header marker 'EOFH' not found")
+                header += chunk.decode('ascii', errors='ignore')
+
+            # Read binary data
+            binary_data = f.read()
+
+            # Convert binary data using float32 (single precision)
+            # Skip first few bytes after EOFH marker
+            offset = 2  # May need adjustment based on file format
+            intensities = []
+            i = offset
+            while i < len(binary_data):
+                try:
+                    # Try little-endian first
+                    value = struct.unpack('<f', binary_data[i:i + 4])[0]
+                    intensities.append(value)
+                    i += 4
+                except:
+                    # If fails, try to recover
+                    i += 1
+                    continue
+
+        # Parameters from file
+        work_function = 4.359  # eV
+        xray_energy = 1486.6  # eV (Al Kα)
+        start_ke = -0.8
+        end_ke = 1351.6
+        num_points = 1788
+
+        # Validate number of intensity values
+        if len(intensities) < num_points:
+            raise ValueError(f"Not enough data points. Expected {num_points}, got {len(intensities)}")
+
+        # Trim to exact number of points
+        intensities = np.array(intensities[:num_points])
+
+        # Calculate binding energies
+        ke_values = np.linspace(start_ke, end_ke, num_points)
+        be_values = xray_energy - ke_values - work_function
+
+        # Create DataFrame with high precision
+        df = pd.DataFrame({
+            'Binding Energy': be_values,
+            'Corrected Data': intensities,
+            'Raw Data': intensities,
+            'Transmission': np.ones(num_points)
+        })
+
+        # Create Excel output filename
+        output_filename = Path(filename).with_suffix('.xlsx')
+
+        # Save to Excel with sheet name 'AuWide'
+        with pd.ExcelWriter(output_filename, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='AuWide', index=False, float_format='%.15f')
+
+        print(f"Successfully saved to {output_filename}")
+        return df
+
+    except Exception as e:
+        print(f"Error processing file: {str(e)}")
+        raise
+
+def read_spe_file(filename):
+    try:
+        # Read the file in binary mode
+        with open(filename, 'rb') as f:
+            # Read until we find 'EOFH' which marks end of header
+            header = ''
+            while 'EOFH' not in header:
+                chunk = f.read(1)
+                if not chunk:
+                    raise ValueError("End of header marker 'EOFH' not found")
+                header += chunk.decode('ascii', errors='ignore')
+
+            # Parse header for parameters
+            header_lines = header.split('\n')
+            for line in header_lines:
+                if line.startswith('AnalyserWorkFcn:'):
+                    work_function = float(line.split()[1])
+                elif line.startswith('XraySource:'):
+                    if 'Al' in line:
+                        xray_energy = 1486.6
+                    elif 'Mg' in line:
+                        xray_energy = 1253.6
+                elif line.startswith('SpectralRegDef:'):
+                    parts = line.split()
+                    num_points = int(parts[5])
+                    start_ke = float(parts[7])
+                    end_ke = float(parts[8])
+                    core_level = str(parts[3])
+                    if core_level.lower().startswith('su'):
+                        core_level = 'Survey'
+                # elif line.startswith('FileDesc:'):
+                #     core_level = line.split(':')[1].strip()
+
+            # Read binary data
+            binary_data = f.read()
+
+            # Convert binary data using float32 (single precision)
+            offset = 2
+            intensities = []
+            i = offset
+            while i < len(binary_data):
+                try:
+                    value = struct.unpack('<f', binary_data[i:i + 4])[0]
+                    intensities.append(value)
+                    i += 4
+                except:
+                    i += 1
+                    continue
+
+            # Validate number of intensity values
+            if len(intensities) < num_points:
+                raise ValueError(f"Not enough data points. Expected {num_points}, got {len(intensities)}")
+
+            # Trim to exact number of points
+            intensities = np.array(intensities[:num_points])
+
+            # Calculate binding energies exactly as in the working version
+            ke_values = np.linspace(start_ke, end_ke, num_points)
+            # be_values = xray_energy - ke_values - work_function
+            be_values = ke_values
+
+            # Create DataFrame
+            df = pd.DataFrame({
+                'Binding Energy': be_values,
+                'Corrected Data': intensities,
+                'Raw Data': intensities,
+                'Transmission': np.ones(num_points)
+            })
+
+            return df, core_level
+
+    except Exception as e:
+        print(f"Error processing file: {str(e)}")
+        raise
+def validate_data(df):
+    """Validate the processed data"""
+    issues = []
+
+    if df['Binding Energy'].isna().any():
+        issues.append("Missing binding energy values detected")
+
+    if df['Raw Data'].isna().any():
+        issues.append("Missing intensity values detected")
+
+    if not np.allclose(df['Raw Data'], df['Corrected Data']):
+        issues.append("Mismatch between raw and corrected data")
+
+    if not np.allclose(df['Transmission'], 1.0):
+        issues.append("Transmission values not all set to 1.0")
+
+    return issues
+
+
+
+def import_mrs_file(window):
+    import wx
+    from openpyxl import Workbook
+    import os
+
+    with wx.FileDialog(window, "Open MRS file", wildcard="MRS files (*.mrs)|*.mrs",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        file_path = fileDialog.GetPath()
+
+    try:
+        # Create new Excel workbook
+        wb = Workbook()
+        wb.remove(wb.active)
+
+        raw_data = []
+        be_start = None
+        be_end = None
+        step_size = None
+
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+
+        # Extract metadata and data block
+        in_data_section = False
+        delimiter_count = 0  # Track the number of "!" encountered
+
+        for line in lines:
+            if line.strip() == "!":
+                delimiter_count += 1
+                if delimiter_count == 2:  # Stop processing after the second "!"
+                    break
+                in_data_section = True
+                continue
+
+            if in_data_section and line.strip().isdigit():
+                raw_data.append(int(line.strip()))
+
+            # Parse metadata
+            if 'lo_be=' in line:
+                be_start = float(line.split('=')[1].strip())
+            elif 'up_be=' in line:
+                be_end = float(line.split('=')[1].strip())
+
+        # Calculate step size if not directly provided
+        if be_start is not None and be_end is not None:
+            step_size = (be_end - be_start) / (len(raw_data) - 1)
+
+        if be_start is None or (be_end is None and step_size is None):
+            raise ValueError("Missing essential metadata: 'lo_be', 'up_be', or step size.")
+
+        # Compute BE scale
+        be_values = [be_start + i * step_size for i in range(len(raw_data))]
+
+        # Create Excel sheet
+        sheet_name = os.path.splitext(os.path.basename(file_path))[0]
+        ws = wb.create_sheet(sheet_name)
+
+        # Add headers
+        ws['A1'] = 'BE'
+        ws['B1'] = 'Raw Data'
+
+        # Add data
+        for i, (be, intensity) in enumerate(zip(be_values, raw_data), start=2):
+            ws[f'A{i}'] = be
+            ws[f'B{i}'] = intensity
+
+        # Save Excel file
+        excel_path = os.path.splitext(file_path)[0] + ".xlsx"
+        wb.save(excel_path)
+
+        # Open the created Excel file
+        open_xlsx_file(window, excel_path)
+
+    except Exception as e:
+        wx.MessageBox(f"Error processing MRS file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
 
 
 def import_avantage_file_direct(window, file_path):

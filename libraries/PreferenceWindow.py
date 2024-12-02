@@ -286,18 +286,18 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.library_type_label, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.library_type_combo, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
-        # Add Transmission
-        self.use_transmission = wx.CheckBox(self.instrument_tab, label="Use Transmission")
-        sizer.Add(self.use_transmission, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        # # Add Transmission
+        # self.use_transmission = wx.CheckBox(self.instrument_tab, label="Use Transmission")
+        # sizer.Add(self.use_transmission, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Add angular correction controls
         self.use_angular_correction = wx.CheckBox(self.instrument_tab, label="Use Angular Correction")
-        sizer.Add(self.use_angular_correction, pos=(3, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.use_angular_correction, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
 
         angle_label = wx.StaticText(self.instrument_tab, label="Analysis Angle (°):")
         self.angle_spin = wx.SpinCtrlDouble(self.instrument_tab, value='54.7', min=0, max=90, inc=0.1)
-        sizer.Add(angle_label, pos=(4, 0), flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(self.angle_spin, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(angle_label, pos=(3, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.angle_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         self.instrument_tab.SetSizer(sizer)
 
@@ -813,8 +813,6 @@ class PreferenceWindow(wx.Frame):
         self.parent.peak_hatch_patterns[current_peak] = self.peak_hatch_combo.GetValue()
         self.parent.hatch_density = self.hatch_density_spin.GetValue()
 
-        self.parent.use_transmission = self.use_transmission.GetValue()
-
         # Save text settings
         self.parent.plot_font = self.font_combo.GetValue()
         self.parent.axis_title_size = self.axis_title_spin.GetValue()
@@ -854,7 +852,7 @@ class PreferenceWindow(wx.Frame):
 
         value = self.library_type_combo.GetValue()
         self.parent.library_type = value.split()[0] if value else "ALTHERMO01"
-        self.parent.use_transmission = self.use_transmission.GetValue()
+        # self.parent.use_transmission = self.use_transmission.GetValue()
 
         self.parent.use_angular_correction = self.use_angular_correction.GetValue()
         self.parent.analysis_angle = self.angle_spin.GetValue()
