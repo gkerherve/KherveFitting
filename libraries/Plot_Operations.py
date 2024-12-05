@@ -359,9 +359,15 @@ class PlotManager:
 
 
             # Initialize background to raw data if not already present
+            # if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
+            #         window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
+            #     window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = window.y_values.tolist()
+            # window.background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+
+            # Initialize background to zeros if not already present
             if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
                     window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
-                window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = window.y_values.tolist()
+                window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = np.zeros_like(window.y_values).tolist()
             window.background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
 
             # Initialize Bkg X if not already present
@@ -907,6 +913,13 @@ class PlotManager:
         # Calculate the overall fit as the sum of all peaks
         overall_fit = window.background.astype(float).copy()
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
+
+        # Check if peaks exist in the peak fitting grids
+        if num_peaks == 0:
+            if hasattr(self, 'rsd_text') and self.rsd_text:
+                self.rsd_text.remove()
+                self.rsd_text = None
+            return
 
         fitting_model = ""  # Default empty string
 

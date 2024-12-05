@@ -50,6 +50,9 @@ class ExcelDropTarget(wx.FileDropTarget):
             elif file.lower().endswith('.avg'):
                 wx.CallAfter(open_avg_file_direct, self.window, file)
                 return True
+            elif file.lower().endswith('.spe'):
+                wx.CallAfter(open_spe_file, self.window, file)
+                return True
         return False
 
 
@@ -240,6 +243,7 @@ def open_spe_file(window, file_path):
         from yadg.extractors.phi.spe import extract
         import openpyxl
         import numpy as np
+        import re
 
         # Extract data from SPE file
         data = extract(fn=file_path)
@@ -250,6 +254,8 @@ def open_spe_file(window, file_path):
             for line in f:
                 try:
                     decoded_line = line.decode('utf-8', errors='ignore').strip()
+                    if b'SOFH\n' in line:
+                        continue
                     if 'IntensityCalCoeff:' in decoded_line:
                         _, coeffs = decoded_line.split(':', 1)
                         a, b = map(float, coeffs.strip().split())
