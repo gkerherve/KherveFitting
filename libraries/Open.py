@@ -14,6 +14,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 import pandas as pd
 from openpyxl.styles import Alignment
+from yadg.extractors.phi.spe import extract  # NOTE THIS LIBRARY HAS BEEN TRANSFORMED
 
 from libraries.ConfigFile import Init_Measurement_Data, add_core_level_Data
 from libraries.Save import update_undo_redo_state, save_state
@@ -106,7 +107,7 @@ def update_recent_files(window, file_path):
 
 
 def open_spe_file_dialog(window):
-    with wx.FileDialog(window, "Open SPE file", wildcard="SPE files (*.spe)|*.spe",
+    with wx.FileDialog(window, "Open SPE file", wildcard="PHI files (*.spe)|*.spe",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
         if fileDialog.ShowModal() == wx.ID_CANCEL:
             return
@@ -114,17 +115,216 @@ def open_spe_file_dialog(window):
         open_spe_file(window, file_path)
 
 
+def open_spe_fileOLD1(window, file_path):
+    try:
+        from yadg.extractors.phi.spe import extract
+        import openpyxl
+
+        # Extract data from SPE file
+        data = extract(fn=file_path)
+
+        # Create new Excel workbook
+        wb = openpyxl.Workbook()
+        wb.remove(wb.active)
+
+        # Process each core level
+        for core_level in data:
+            # Create sheet with core level name
+            ws = wb.create_sheet(title=core_level)
+
+            # Get energy and intensity values
+            energy = data[core_level].coords["E"].values
+            intensity = data[core_level].data_vars["y"].values
+
+            # Set column headers
+            ws["A1"] = "BE"
+            ws["B1"] = "Corrected Data"
+            ws["C1"] = "Raw Data"
+            ws["D1"] = "Transmission"
+
+            # Fill data
+            for i, (e, inten) in enumerate(zip(energy, intensity), start=2):
+                ws[f"A{i}"] = e
+                ws[f"B{i}"] = inten
+                ws[f"C{i}"] = inten
+                ws[f"D{i}"] = 1.0
+
+        # Save Excel file
+        excel_path = os.path.splitext(file_path)[0] + ".xlsx"
+        wb.save(excel_path)
+
+        # Open the created Excel file using existing function
+        open_xlsx_file(window, excel_path)
+
+    except Exception as e:
+        wx.MessageBox(f"Error processing SPE file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+# With header
+def open_spe_file2(window, file_path):
+    try:
+        from yadg.extractors.phi.spe import extract
+        import openpyxl
+
+        # Extract data from SPE file
+        data = extract(fn=file_path)
+
+        # Create new Excel workbook
+        wb = openpyxl.Workbook()
+        wb.remove(wb.active)
+
+        # Process each core level
+        for core_level in data:
+            # Create sheet with core level name
+            ws = wb.create_sheet(title=core_level)
+
+            # Get energy and intensity values
+            energy = data[core_level].coords["E"].values
+            intensity = data[core_level].data_vars["y"].values
+
+            # Set column headers
+            ws["A1"] = "BE"
+            ws["B1"] = "Corrected Data"
+            ws["C1"] = "Raw Data"
+            ws["D1"] = "Transmission"
+
+            # Fill data
+            for i, (e, inten) in enumerate(zip(energy, intensity), start=2):
+                ws[f"A{i}"] = e
+                ws[f"B{i}"] = inten
+                ws[f"C{i}"] = inten
+                ws[f"D{i}"] = 1.0
+
+        # Create Experimental Description sheet
+        exp_sheet = wb.create_sheet("Experimental description")
+        exp_sheet.column_dimensions['A'].width = 30
+        exp_sheet.column_dimensions['B'].width = 50
+
+        # Read header information using binary mode
+        with open(file_path, 'rb') as f:
+            header_lines = []
+            in_header = False
+            for line in f:
+                try:
+                    decoded_line = line.decode('utf-8', errors='ignore').strip()
+                    if decoded_line == 'SOFH':
+                        in_header = True
+                        continue
+                    if decoded_line == 'EOFH':
+                        break
+                    if in_header and decoded_line:
+                        header_lines.append(decoded_line)
+                except UnicodeDecodeError:
+                    continue
+
+        # Write header info to exp sheet
+        for i, line in enumerate(header_lines, start=1):
+            if ':' in line:
+                key, value = line.split(':', 1)
+                exp_sheet[f"A{i}"] = key.strip()
+                exp_sheet[f"B{i}"] = value.strip()
+
+        # Save Excel file
+        excel_path = os.path.splitext(file_path)[0] + ".xlsx"
+        wb.save(excel_path)
+
+        # Open the created Excel file using existing function
+        open_xlsx_file(window, excel_path)
+
+    except Exception as e:
+        wx.MessageBox(f"Error processing SPE file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
 def open_spe_file(window, file_path):
     try:
-        # Get data and core level name
-        df, core_level = read_spe_file(file_path)
+        from yadg.extractors.phi.spe import extract
+        import openpyxl
+        import numpy as np
 
-        # Create Excel filename
-        excel_path = str(Path(file_path).with_suffix('.xlsx'))
+        # Extract data from SPE file
+        data = extract(fn=file_path)
 
-        # Save to Excel with core level as sheet name
-        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name=core_level, index=False)
+        # Read header to get transmission coefficients
+        a, b = None, None
+        with open(file_path, 'rb') as f:
+            for line in f:
+                try:
+                    decoded_line = line.decode('utf-8', errors='ignore').strip()
+                    if 'IntensityCalCoeff:' in decoded_line:
+                        _, coeffs = decoded_line.split(':', 1)
+                        a, b = map(float, coeffs.strip().split())
+                        break
+                except:
+                    continue
+
+        if a is None or b is None:
+            a, b = 31.826, 0.229  # Default values if not found
+
+        # Create new Excel workbook
+        wb = openpyxl.Workbook()
+        wb.remove(wb.active)
+
+        # Process each core level
+        for core_level in data:
+            ws = wb.create_sheet(title=core_level)
+
+            # Get energy values (currently in BE)
+            energy = data[core_level].coords["E"].values
+            intensity = data[core_level].data_vars["y"].values
+
+            # Calculate KE for transmission function
+            ke_values = 1486.6 - energy  # Using Al Ka
+            transmission = a * np.power(ke_values, -b)
+
+            # Calculate corrected intensity
+            corrected_intensity = intensity / transmission
+
+            # Set column headers
+            ws["A1"] = "BE"
+            ws["B1"] = "Corrected Data"
+            ws["C1"] = "Raw Data"
+            ws["D1"] = "Transmission"
+
+            # Fill data
+            for i, (e, corr_i, raw_i, trans) in enumerate(zip(energy, corrected_intensity, intensity, transmission),
+                                                          start=2):
+                ws[f"A{i}"] = float(e)
+                ws[f"B{i}"] = float(corr_i)
+                ws[f"C{i}"] = float(raw_i)
+                ws[f"D{i}"] = float(trans)
+
+        # Create Experimental Description sheet
+        exp_sheet = wb.create_sheet("Experimental description")
+        exp_sheet.column_dimensions['A'].width = 30
+        exp_sheet.column_dimensions['B'].width = 50
+
+        # Read header information
+        with open(file_path, 'rb') as f:
+            header_lines = []
+            in_header = False
+            for line in f:
+                try:
+                    decoded_line = line.decode('utf-8', errors='ignore').strip()
+                    if decoded_line == 'SOFH':
+                        in_header = True
+                        continue
+                    if decoded_line == 'EOFH':
+                        break
+                    if in_header and decoded_line:
+                        header_lines.append(decoded_line)
+                except:
+                    continue
+
+        # Write header info to exp sheet
+        for i, line in enumerate(header_lines, start=1):
+            if ':' in line:
+                key, value = line.split(':', 1)
+                exp_sheet[f"A{i}"] = key.strip()
+                exp_sheet[f"B{i}"] = value.strip()
+
+        # Save Excel file
+        excel_path = os.path.splitext(file_path)[0] + ".xlsx"
+        wb.save(excel_path)
 
         # Open the created Excel file
         open_xlsx_file(window, excel_path)
@@ -132,151 +332,17 @@ def open_spe_file(window, file_path):
     except Exception as e:
         wx.MessageBox(f"Error processing SPE file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
-def read_spe_file_OLD(filename):
-    try:
-        # Read the file in binary mode
-        with open(filename, 'rb') as f:
-            # Read until we find 'EOFH' which marks end of header
-            header = ''
-            while 'EOFH' not in header:
-                chunk = f.read(1)
-                if not chunk:
-                    raise ValueError("End of header marker 'EOFH' not found")
-                header += chunk.decode('ascii', errors='ignore')
 
-            # Read binary data
-            binary_data = f.read()
+def open_spe_file_dialog(window):
+    with wx.FileDialog(window, "Open SPE file", wildcard="PHI files (*.spe)|*.spe",
+                       style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        file_path = fileDialog.GetPath()
+        open_spe_file(window, file_path)
 
-            # Convert binary data using float32 (single precision)
-            # Skip first few bytes after EOFH marker
-            offset = 2  # May need adjustment based on file format
-            intensities = []
-            i = offset
-            while i < len(binary_data):
-                try:
-                    # Try little-endian first
-                    value = struct.unpack('<f', binary_data[i:i + 4])[0]
-                    intensities.append(value)
-                    i += 4
-                except:
-                    # If fails, try to recover
-                    i += 1
-                    continue
 
-        # Parameters from file
-        work_function = 4.359  # eV
-        xray_energy = 1486.6  # eV (Al Kα)
-        start_ke = -0.8
-        end_ke = 1351.6
-        num_points = 1788
 
-        # Validate number of intensity values
-        if len(intensities) < num_points:
-            raise ValueError(f"Not enough data points. Expected {num_points}, got {len(intensities)}")
-
-        # Trim to exact number of points
-        intensities = np.array(intensities[:num_points])
-
-        # Calculate binding energies
-        ke_values = np.linspace(start_ke, end_ke, num_points)
-        be_values = xray_energy - ke_values - work_function
-
-        # Create DataFrame with high precision
-        df = pd.DataFrame({
-            'Binding Energy': be_values,
-            'Corrected Data': intensities,
-            'Raw Data': intensities,
-            'Transmission': np.ones(num_points)
-        })
-
-        # Create Excel output filename
-        output_filename = Path(filename).with_suffix('.xlsx')
-
-        # Save to Excel with sheet name 'AuWide'
-        with pd.ExcelWriter(output_filename, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='AuWide', index=False, float_format='%.15f')
-
-        print(f"Successfully saved to {output_filename}")
-        return df
-
-    except Exception as e:
-        print(f"Error processing file: {str(e)}")
-        raise
-
-def read_spe_file(filename):
-    try:
-        # Read the file in binary mode
-        with open(filename, 'rb') as f:
-            # Read until we find 'EOFH' which marks end of header
-            header = ''
-            while 'EOFH' not in header:
-                chunk = f.read(1)
-                if not chunk:
-                    raise ValueError("End of header marker 'EOFH' not found")
-                header += chunk.decode('ascii', errors='ignore')
-
-            # Parse header for parameters
-            header_lines = header.split('\n')
-            for line in header_lines:
-                if line.startswith('AnalyserWorkFcn:'):
-                    work_function = float(line.split()[1])
-                elif line.startswith('XraySource:'):
-                    if 'Al' in line:
-                        xray_energy = 1486.6
-                    elif 'Mg' in line:
-                        xray_energy = 1253.6
-                elif line.startswith('SpectralRegDef:'):
-                    parts = line.split()
-                    num_points = int(parts[5])
-                    start_ke = float(parts[7])
-                    end_ke = float(parts[8])
-                    core_level = str(parts[3])
-                    if core_level.lower().startswith('su'):
-                        core_level = 'Survey'
-                # elif line.startswith('FileDesc:'):
-                #     core_level = line.split(':')[1].strip()
-
-            # Read binary data
-            binary_data = f.read()
-
-            # Convert binary data using float32 (single precision)
-            offset = 2
-            intensities = []
-            i = offset
-            while i < len(binary_data):
-                try:
-                    value = struct.unpack('<f', binary_data[i:i + 4])[0]
-                    intensities.append(value)
-                    i += 4
-                except:
-                    i += 1
-                    continue
-
-            # Validate number of intensity values
-            if len(intensities) < num_points:
-                raise ValueError(f"Not enough data points. Expected {num_points}, got {len(intensities)}")
-
-            # Trim to exact number of points
-            intensities = np.array(intensities[:num_points])
-
-            # Calculate binding energies exactly as in the working version
-            ke_values = np.linspace(start_ke, end_ke, num_points)
-            # be_values = xray_energy - ke_values - work_function
-            be_values = ke_values
-
-            # Create DataFrame
-            df = pd.DataFrame({
-                'Binding Energy': be_values,
-                'Corrected Data': intensities,
-                'Raw Data': intensities,
-                'Transmission': np.ones(num_points)
-            })
-
-            return df, core_level
-
-    except Exception as e:
-        print(f"Error processing file: {str(e)}")
-        raise
 def validate_data(df):
     """Validate the processed data"""
     issues = []
@@ -294,7 +360,6 @@ def validate_data(df):
         issues.append("Transmission values not all set to 1.0")
 
     return issues
-
 
 
 def import_mrs_file(window):
@@ -374,7 +439,6 @@ def import_mrs_file(window):
 
     except Exception as e:
         wx.MessageBox(f"Error processing MRS file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
-
 
 
 def import_avantage_file_direct(window, file_path):

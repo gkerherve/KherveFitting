@@ -248,19 +248,19 @@ def create_menu(window):
     file_menu.AppendSubMenu(save_menu, "Save")
 
     # Import submenu items
-    import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas file (.vms)")
+    import_vamas_item = import_menu.Append(wx.NewId(), "Import Vamas Data file (.vms)")
     window.Bind(wx.EVT_MENU, lambda event: open_vamas_file_dialog(window), import_vamas_item)
 
-    import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage file (.xlsx)")
+    import_avantage_item = import_menu.Append(wx.NewId(), "Import Avantage Data file (.xlsx)")
     window.Bind(wx.EVT_MENU, lambda event: import_avantage_file(window), import_avantage_item)
 
-    import_kal_item = import_menu.Append(wx.NewId(), "Import Kratos file (.kal)")
+    import_kal_item = import_menu.Append(wx.NewId(), "Import Kratos Data file (.kal)")
     window.Bind(wx.EVT_MENU, lambda event: open_kal_file_dialog(window), import_kal_item)
 
-    import_spe_item = import_menu.Append(wx.NewId(), "Import SPEC file (.spe)")
+    import_spe_item = import_menu.Append(wx.NewId(), "Import Phi Data file (.spe)")
     window.Bind(wx.EVT_MENU, lambda event: open_spe_file_dialog(window), import_spe_item)
 
-    import_mrs_item = import_menu.Append(wx.NewId(), "Import MRS file (.mrs)")
+    import_mrs_item = import_menu.Append(wx.NewId(), "Import MRS Data file (.mrs)")
     window.Bind(wx.EVT_MENU, lambda event: import_mrs_file(window), import_mrs_item)
 
     import_avg_item = import_menu.Append(wx.NewId(), "Import AVG file (.avg)")

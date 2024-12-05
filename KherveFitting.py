@@ -14,6 +14,8 @@ from matplotlib.ticker import ScalarFormatter, AutoMinorLocator
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
 import lmfit
 import wx.lib.agw.aui as aui
+import struct
+from pathlib import Path
 from libraries.Fitting_Screen import *
 from libraries.AreaFit_Screen import *
 from libraries.Save import *
