@@ -651,6 +651,172 @@ class BackgroundCalculations:
 
         return background[1:-1]  # Remove padding before returning
 
+    def calculate_tougaard_background(x, y, sheet_name, window):
+        bg_data = window.Data['Core levels'][sheet_name]['Background']
+        B = bg_data.get('Tougaard_B', 2866)
+        C = bg_data.get('Tougaard_C', 1643)
+        D = bg_data.get('Tougaard_D', 1)
+        T0 = bg_data.get('Tougaard_T0', 0)
+
+        # Get the baseline value (lowest BE intensity)
+        baseline = y[-1]  # Assuming x is in BE, so highest KE/lowest BE is at the end
+
+        # Shift data to zero baseline
+        y_shifted = y  - baseline
+
+        dx = np.mean(np.diff(x))
+        background = np.zeros_like(y)
+        for i in range(len(x)):
+            E = x[i:] - x[i]
+            K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
+            background[i] = np.trapz(K * y_shifted[i:], dx=dx) + T0
+
+        background = background + baseline
+        return background
+
+    def calculate_double_tougaard_background(x, y, sheet_name, window):
+        bg_data = window.Data['Core levels'][sheet_name]['Background']
+
+        # First Tougaard parameters
+        B1 = bg_data.get('Tougaard_B', 2866)
+        C1 = bg_data.get('Tougaard_C', 1643)
+        D1 = bg_data.get('Tougaard_D', 1)
+        T01 = bg_data.get('Tougaard_T0', 0)
+
+        # Second Tougaard parameters
+        B2 = bg_data.get('Tougaard_B2', 2866)
+        C2 = bg_data.get('Tougaard_C2', 1643)
+        D2 = bg_data.get('Tougaard_D2', 1)
+        T02 = bg_data.get('Tougaard_T02', 0)
+
+        baseline = y[-1]
+        y_shifted = y - baseline
+
+        dx = np.mean(np.diff(x))
+        background1 = np.zeros_like(y)
+        background2 = np.zeros_like(y)
+
+        for i in range(len(x)):
+            E = x[i:] - x[i]
+            K1 = B1 * E / ((C1 - E ** 2) ** 2 + D1 * E ** 2)
+            K2 = B2 * E / ((C2 - E ** 2) ** 2 + D2 * E ** 2)
+            background1[i] = np.trapz(K1 * y_shifted[i:], dx=dx) + T01
+            background2[i] = np.trapz(K2 * y_shifted[i:], dx=dx) + T02
+
+        background = background1 + background2 + baseline
+        return background
+
+    def calculate_triple_tougaard_background(x, y, sheet_name, window):
+        bg_data = window.Data['Core levels'][sheet_name]['Background']
+
+        # Parameters for all three Tougaard backgrounds
+        B1 = bg_data.get('Tougaard_B', 2866)
+        C1 = bg_data.get('Tougaard_C', 1643)
+        D1 = bg_data.get('Tougaard_D', 1)
+        T01 = bg_data.get('Tougaard_T0', 0)
+
+        B2 = bg_data.get('Tougaard_B2', 2866)
+        C2 = bg_data.get('Tougaard_C2', 1643)
+        D2 = bg_data.get('Tougaard_D2', 1)
+        T02 = bg_data.get('Tougaard_T02', 0)
+
+        B3 = bg_data.get('Tougaard_B3', 2866)
+        C3 = bg_data.get('Tougaard_C3', 1643)
+        D3 = bg_data.get('Tougaard_D3', 1)
+        T03 = bg_data.get('Tougaard_T03', 0)
+
+        baseline = y[-1]
+        y_shifted = y - baseline
+
+        dx = np.mean(np.diff(x))
+        background1 = np.zeros_like(y)
+        background2 = np.zeros_like(y)
+        background3 = np.zeros_like(y)
+
+        for i in range(len(x)):
+            E = x[i:] - x[i]
+            K1 = B1 * E / ((C1 - E ** 2) ** 2 + D1 * E ** 2)
+            K2 = B2 * E / ((C2 - E ** 2) ** 2 + D2 * E ** 2)
+            K3 = B3 * E / ((C3 - E ** 2) ** 2 + D3 * E ** 2)
+            background1[i] = np.trapz(K1 * y_shifted[i:], dx=dx) + T01
+            background2[i] = np.trapz(K2 * y_shifted[i:], dx=dx) + T02
+            background3[i] = np.trapz(K3 * y_shifted[i:], dx=dx) + T03
+
+        background = background1 + background2 + background3 + baseline
+        return background
+
+    @staticmethod
+    def calculate_w_tougaard_background(x, y, B=2866, C=1643, T0=0):
+        """
+        Calculate W Tougaard background with endpoint adjustment.
+
+        Parameters:
+        x : array-like
+            Energy axis (eV).
+        y : array-like
+            Intensity axis.
+        B : float
+            Initial Tougaard parameter, to be adjusted.
+        C : float
+            Tougaard parameter, controls energy-loss dependence.
+        T0 : float
+            Offset term for the background.
+
+        Returns:
+        background : array-like
+            Computed W Tougaard background.
+        """
+        dx = np.mean(np.diff(x))  # Ensure uniform step size in x
+        background = np.zeros_like(y)
+
+        # Adjust B based on endpoint intensities
+        I1, I2 = y[0], y[-1]  # Intensities at the endpoints
+        B_adjusted = B * (I1 / I2) if I2 != 0 else B
+
+        for i in range(len(x)):
+            E = x[i:] - x[i]  # Energy loss
+            K = B_adjusted * E / (C + E ** 2)  # Kernel computation
+            background[i] = np.trapz(K * y[i:], dx=dx) + T0
+
+        return background
+
+    @staticmethod
+    def calculate_u_poly_tougaard_background(x, y, B=2866, C=1643, D=1, T0=0):
+        """
+        Calculate U Poly Tougaard background for specific materials.
+
+        Parameters:
+        x : array-like
+            Energy axis (eV).
+        y : array-like
+            Intensity axis.
+        B : float
+            Tougaard parameter related to scattering cross-section.
+        C : float
+            Tougaard parameter, energy-dependent term.
+        D : float
+            Tougaard parameter, higher-order correction term.
+        T0 : float
+            Energy loss threshold.
+
+        Returns:
+        background : array-like
+            Computed U Poly Tougaard background.
+        """
+        dx = np.mean(np.diff(x))
+        background = np.zeros_like(y)
+
+        for i in range(len(x)):
+            E = x[i:] - x[i]  # Energy loss
+            K = np.where(
+                E > T0,
+                B * E / (C + D * E ** 2),
+                0  # Zero for energy below threshold
+            )
+            background[i] = np.trapz(K * y[i:], dx=dx)
+
+        return background
+
 
 class AtomicConcentrations:
     @staticmethod

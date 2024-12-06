@@ -64,7 +64,8 @@ class FittingWindow(wx.Frame):
         background_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
         method_label = wx.StaticText(self.background_panel, label="Method:")
-        self.method_combobox = wx.ComboBox(self.background_panel, choices=["Multi-Regions Smart", "Smart", "Shirley", "Linear"],
+        self.method_combobox = wx.ComboBox(self.background_panel, choices=["Multi-Regions Smart", "Smart", "Shirley",
+                                            "Linear", 'U4-Tougaard', "Double U4-Tougaard", "Triple U4-Tougaard"],
                                            style=wx.CB_READONLY)
         method_index = self.method_combobox.FindString(self.parent.background_method)
         self.method_combobox.SetSelection(method_index)
@@ -84,6 +85,44 @@ class FittingWindow(wx.Frame):
         averaging_points_label = wx.StaticText(self.background_panel, label="Averaging Points:")
         self.averaging_points_text = wx.TextCtrl(self.background_panel, value="5")
         self.averaging_points_text.Bind(wx.EVT_TEXT, self.on_averaging_points_change)
+
+        self.cross_section_label = wx.StaticText(self.background_panel, label = 'Cross Section\n --Tougaard--')
+        self.cross_section = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
+        self.cross_section.Bind(wx.EVT_TEXT, self.on_cross_section_change)
+
+        # Add two more labels and TextCtrls
+        self.cross_section2_label = wx.StaticText(self.background_panel, label='Cross Section 2\n --Tougaard--')
+        self.cross_section2 = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
+        self.cross_section2.Bind(wx.EVT_TEXT, self.on_cross_section2_change)
+
+        self.cross_section3_label = wx.StaticText(self.background_panel, label='Cross Section 3\n --Tougaard--')
+        self.cross_section3 = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
+        self.cross_section3.Bind(wx.EVT_TEXT, self.on_cross_section3_change)
+
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        if 'Background' in self.parent.Data['Core levels'][sheet_name]:
+            bg_data = self.parent.Data['Core levels'][sheet_name]['Background']
+            saved_values = [
+                bg_data.get('Tougaard_B', 2866),
+                bg_data.get('Tougaard_C', 1643),
+                bg_data.get('Tougaard_D', 1),
+                bg_data.get('Tougaard_T0', 0)
+            ]
+            saved_values2 = [
+                bg_data.get('Tougaard_B2', 2866),
+                bg_data.get('Tougaard_C2', 1643),
+                bg_data.get('Tougaard_D2', 1),
+                bg_data.get('Tougaard_T02', 0)
+            ]
+            saved_values3 = [
+                bg_data.get('Tougaard_B2', 2866),
+                bg_data.get('Tougaard_C2', 1643),
+                bg_data.get('Tougaard_D2', 1),
+                bg_data.get('Tougaard_T02', 0)
+            ]
+            self.cross_section.SetValue(','.join(map(str, saved_values)))
+            self.cross_section2.SetValue(','.join(map(str, saved_values2)))
+            self.cross_section2.SetValue(','.join(map(str, saved_values3)))
 
         background_button = wx.Button(self.background_panel, label="Background")
         background_button.SetMinSize((125, 40))
@@ -111,11 +150,17 @@ class FittingWindow(wx.Frame):
         background_sizer.Add(self.offset_l_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(averaging_points_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         background_sizer.Add(self.averaging_points_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.cross_section_label,  pos=(5, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.cross_section, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.cross_section2_label,  pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.cross_section2, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.cross_section3_label,  pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.cross_section3, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        background_sizer.Add(reset_vlines_button, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(clear_background_only_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(background_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(clear_background_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(reset_vlines_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_only_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(background_button, pos=(12, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_button, pos=(12, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         self.background_panel.SetSizer(background_sizer)
         notebook.AddPage(self.background_panel, "Background")
@@ -563,6 +608,7 @@ class FittingWindow(wx.Frame):
             "Shirley": "Iterative background calculation. Reliable for on positive background when "
             "the data contains symmetrical peak.",
             "Linear": "Simple linear background. Usually used on negative background"
+            "Tougaard: U4 Tougaard background for Advanced users"
         }
         return descriptions.get(method, "No description available")
 
@@ -649,8 +695,51 @@ class FittingWindow(wx.Frame):
         self.parent.deselect_all_peaks()
         self.Destroy()
 
+    def parse_cross_section(self, text):
+        try:
+            values = [float(x.strip()) for x in text.split(',')]
+            if len(values) == 4:
+                sheet_name = self.parent.sheet_combobox.GetValue()
+                self.parent.Data['Core levels'][sheet_name]['Background'].update({
+                    'Tougaard_B': values[0],
+                    'Tougaard_C': values[1],
+                    'Tougaard_D': values[2],
+                    'Tougaard_T0': values[3]
+                })
+                return values
+            raise ValueError
+        except ValueError:
+            return [2866, 1643, 1, 0]
 
+    def on_cross_section_change(self, event):
+        self.parse_cross_section(self.cross_section.GetValue())
+        # self.parent.plot_manager.plot_background(self.parent)
 
+    def on_cross_section2_change(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        values = self.cross_section2.GetValue().split(',')
+        try:
+            self.parent.Data['Core levels'][sheet_name]['Background'].update({
+                'Tougaard_B2': float(values[0]),
+                'Tougaard_C2': float(values[1]),
+                'Tougaard_D2': float(values[2]),
+                'Tougaard_T02': float(values[3])
+            })
+        except (ValueError, IndexError):
+            pass
+
+    def on_cross_section3_change(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        values = self.cross_section3.GetValue().split(',')
+        try:
+            self.parent.Data['Core levels'][sheet_name]['Background'].update({
+                'Tougaard_B3': float(values[0]),
+                'Tougaard_C3': float(values[1]),
+                'Tougaard_D3': float(values[2]),
+                'Tougaard_T03': float(values[3])
+            })
+        except (ValueError, IndexError):
+            pass
 class CustomComboBox(wx.ComboBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

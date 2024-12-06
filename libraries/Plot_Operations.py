@@ -364,11 +364,18 @@ class PlotManager:
             #     window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = window.y_values.tolist()
             # window.background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
 
-            # Initialize background to zeros if not already present
-            if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
-                    window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
-                window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = np.zeros_like(window.y_values).tolist()
-            window.background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+
+            # THIS MAY BE NEEDED
+            # # Initialize background to zeros if not already present
+            # if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
+            #         window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
+            #     window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = np.zeros_like(window.y_values).tolist()
+            # window.background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+
+            window.background = np.array(
+                window.Data['Core levels'][sheet_name]['Background']['Bkg Y']) if 'Background' in \
+                            window.Data['Core levels'][sheet_name] and 'Bkg Y' in window.Data['Core levels'][
+                                sheet_name]['Background'] else window.y_values
 
             # Initialize Bkg X if not already present
             if 'Bkg X' not in window.Data['Core levels'][sheet_name]['Background'] or not \
@@ -1042,8 +1049,7 @@ class PlotManager:
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
             residual_height = 1.07 * max(window.y_values)
-            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1,
-                                           label='Residuals')
+            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1)
 
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
@@ -1054,8 +1060,7 @@ class PlotManager:
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
             residual_height = 1.07 * max(window.y_values)
-            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1,zorder=3,
-                                         label='l_Residuals')
+            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1) # zorder=3
 
             residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
                                          color=self.residual_color, linestyle=self.residual_linestyle,
@@ -1434,6 +1439,25 @@ class PlotManager:
                                                                                     y_values_filtered, offset_h,
                                                                                     offset_l)
             label = 'Background (Smart)'
+
+        elif method == "U4-Tougaard":
+            background_filtered = BackgroundCalculations.calculate_tougaard_background(x_values_filtered,
+                                                                                       y_values_filtered,
+                                                                                       sheet_name,
+                                                                                       window)
+            label = 'Background (Tougaard)'
+        elif method == "Double U4-Tougaard":
+            background_filtered = BackgroundCalculations.calculate_double_tougaard_background(x_values_filtered,
+                                                                                       y_values_filtered,
+                                                                                       sheet_name,
+                                                                                       window)
+            label = 'Background (Tougaard)'
+        elif method == "Triple U4-Tougaard":
+            background_filtered = BackgroundCalculations.calculate_tripple_tougaard_background(x_values_filtered,
+                                                                                       y_values_filtered,
+                                                                                       sheet_name,
+                                                                                       window)
+            label = 'Background (Tougaard)'
         else:
             raise ValueError(f"Unknown background method: {method}")
 

@@ -17,7 +17,7 @@ class BackgroundWindow(wx.Frame):
 
         # Create controls
         method_label = wx.StaticText(panel, label="Method:")
-        self.method_combobox = wx.ComboBox(panel, choices=["Multi-Regions Smart", "Smart", "Shirley", "Linear"],
+        self.method_combobox = wx.ComboBox(panel, choices=["Multi-Regions Smart", "Smart", "Shirley", "Linear", 'Tougaard'],
                                            style=wx.CB_READONLY)
         self.method_combobox.SetSelection(0)  # Default to Shirley
 
@@ -34,7 +34,7 @@ class BackgroundWindow(wx.Frame):
         background_button.SetMinSize((110, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
-        clear_background_button = wx.Button(panel, label="Clear Background")
+        clear_background_button = wx.Button(panel, label="Clear \npeaks, Background")
         clear_background_button.SetMinSize((110, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
