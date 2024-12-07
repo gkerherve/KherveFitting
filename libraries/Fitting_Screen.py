@@ -861,6 +861,10 @@ class TougaardFitWindow(wx.Frame):
         self.ax.set_xlabel('Binding Energy (eV)')
         self.ax.set_ylabel('Intensity (CPS)')
         self.ax.legend()
+
+        # Reverse x-axis
+        self.ax.set_xlim(max(self.x_values), min(self.x_values))
+
         self.canvas.draw()
 
         # Layout
@@ -878,52 +882,120 @@ class TougaardFitWindow(wx.Frame):
     def on_fit(self, event):
         min_e = self.min_range.GetValue()
         max_e = self.max_range.GetValue()
-        print("FITTING")
+        bg_start = self.bg_start.GetValue()
+
         params = lmfit.Parameters()
         for name in ['B', 'C', 'D']:
             params.add(name,
                        value=self.params[name]['value'].GetValue(),
                        min=self.params[name]['min'].GetValue(),
-                       max=self.params[name]['max'].GetValue())
+                       max=self.params[name]['max'].GetValue(),
+                       vary=True)
 
-        bg_start = self.bg_start.GetValue()
-        mask = (self.x_values >= min_e) & (self.x_values <= max_e)
-        x_fit = self.x_values[mask]
-        y_fit = self.y_values[mask]
-        print(f'XFIT {x_fit} \n YFIT {y_fit}')
+        # Get data above background start for calculation
+        bg_mask = self.x_values >= bg_start
+        x_bg = self.x_values[bg_mask]
+        y_bg = self.y_values[bg_mask]
 
-        def tougaard_model(params, x, y):
+        # Get fit range for residuals evaluation
+        fit_mask = (self.x_values >= min_e) & (self.x_values <= max_e)
+        x_fit = self.x_values[fit_mask]
+        y_fit = self.y_values[fit_mask]
+
+        def tougaard_model(params, x_bg, y_bg, x_fit, y_fit):
             B = params['B'].value
             C = params['C'].value
             D = params['D'].value
 
-            sheet_name = self.parent.parent.sheet_combobox.GetValue()
-            window = self.parent.parent
+            # Calculate background using full range above bg_start
+            baseline = y_bg[-1]
+            y_shifted = y_bg - baseline
+            dx = np.mean(np.diff(x_bg))
+            background = np.zeros_like(y_bg)
 
-            bg = BackgroundCalculations.calculate_tougaard_background(
-                x[x >= bg_start],
-                y[x >= bg_start],
-                sheet_name,
-                window
-            )
-            return bg - y[x >= bg_start]
+            for i in range(len(x_bg)):
+                E = x_bg[i:] - x_bg[i]
+                K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
+                background[i] = np.trapz(K * y_shifted[i:], dx=dx)
 
-        result = lmfit.minimize(tougaard_model, params, args=(x_fit, y_fit))
-        self.plot_results(x_fit, y_fit, result.params)
+            background = background + baseline
 
-    def plot_results(self, x, y, fitted_params):
+            # Interpolate background to fit range
+            bg_interp = np.interp(x_fit, x_bg, background)
+
+            # Return residuals only for fit range
+            residuals = y_fit - bg_interp
+            return residuals
+
+        result = lmfit.minimize(tougaard_model,
+                                params,
+                                args=(x_bg, y_bg, x_fit, y_fit),
+                                method='least_squares',
+                                ftol=1e-10,
+                                xtol=1e-10,
+                                max_nfev=100,
+                                scale_covar=True,
+                                # nan_policy='omit',
+                                verbose=True)
+                                # **({'fit_kws': fit_kws} if fit_kws else {}))
+        # print(f"Fit report: {result.fit_report()}")
+        self.plot_results(x_fit, y_fit, result.params, result)
+
+    def plot_results(self, x, y, fitted_params, result):
         self.ax.clear()
-        sheet_name = self.parent.parent.sheet_combobox.GetValue()
-        window = self.parent.parent
+        bg_start = self.bg_start.GetValue()
 
-        bg = BackgroundCalculations.calculate_tougaard_background(
-            x, y, sheet_name, window
-        )
-        self.ax.plot(x, y, 'k-', label='Data')
-        self.ax.plot(x, bg, 'r-', label='Fit')
+        # Update control values with fitted parameters
+        self.params['B']['value'].SetValue(fitted_params['B'].value)
+        self.params['C']['value'].SetValue(fitted_params['C'].value)
+        self.params['D']['value'].SetValue(fitted_params['D'].value)
+
+        # Calculate fit result using same function as the fit
+        B = fitted_params['B'].value
+        C = fitted_params['C'].value
+        D = fitted_params['D'].value
+
+        baseline = y[-1]
+        y_shifted = y - baseline
+        dx = np.mean(np.diff(x))
+        fit_bg = np.zeros_like(y)
+
+        for i in range(len(x)):
+            E = x[i:] - x[i]
+            K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
+            fit_bg[i] = np.trapz(K * y_shifted[i:], dx=dx)
+
+        fit_bg = fit_bg + baseline
+        fit_result = fit_bg
+
+        # Calculate background for display range
+        mask = self.x_values >= bg_start
+        x_bg = self.x_values[mask]
+        y_bg = self.y_values[mask]
+
+        baseline = y_bg[-1]
+        y_shifted = y_bg - baseline
+        dx = np.mean(np.diff(x_bg))
+        background = np.zeros_like(y_bg)
+
+        for i in range(len(x_bg)):
+            E = x_bg[i:] - x_bg[i]
+            K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
+            background[i] = np.trapz(K * y_shifted[i:], dx=dx)
+
+        background = background + baseline
+
+        # Plot
+        self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
+        self.ax.plot(x, fit_result, 'r-', label='Fit Result')
+        self.ax.plot(x_bg, background, 'b--', label='Calculated')
+
         self.ax.set_xlabel('Binding Energy (eV)')
         self.ax.set_ylabel('Intensity (CPS)')
         self.ax.legend()
+
+        self.ax.set_xlim(max(self.x_values), min(self.x_values))
+
         self.canvas.draw()
 
 
