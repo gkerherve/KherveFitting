@@ -2,10 +2,14 @@
 import re
 import wx
 from Functions import fit_peaks, remove_peak
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+import lmfit
+from libraries.Peak_Functions import BackgroundCalculations
+from libraries.Save import save_state
 from libraries.Plot_Operations import PlotManager
 from libraries.Open import load_library_data
-
-from libraries.Save import save_state
 
 class FittingWindow(wx.Frame):
     def __init__(self, parent, *args, **kw):
@@ -136,9 +140,13 @@ class FittingWindow(wx.Frame):
         reset_vlines_button.SetMinSize((125, 40))
         reset_vlines_button.Bind(wx.EVT_BUTTON, self.on_reset_vlines)
 
-        clear_background_only_button = wx.Button(self.background_panel, label="Clear\nBackground")
+        clear_background_only_button = wx.Button(self.background_panel, label="Fit Tougaard")
         clear_background_only_button.SetMinSize((125, 40))
         clear_background_only_button.Bind(wx.EVT_BUTTON, self.on_clear_background_only)
+
+        tougaard_fit_btn = wx.Button(self.background_panel, label="Fit Tougaard")
+        tougaard_fit_btn.SetMinSize((125, 40))
+        tougaard_fit_btn.Bind(wx.EVT_BUTTON, lambda evt: TougaardFitWindow(self).Show())
 
         # Layout Background Tab
         background_sizer.Add(method_label, pos=(0, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
@@ -157,13 +165,17 @@ class FittingWindow(wx.Frame):
         background_sizer.Add(self.cross_section3_label,  pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(self.cross_section3, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
+
         background_sizer.Add(reset_vlines_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(tougaard_fit_btn, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(clear_background_only_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(background_button, pos=(12, 0), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(clear_background_button, pos=(12, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         self.background_panel.SetSizer(background_sizer)
         notebook.AddPage(self.background_panel, "Background")
+
+        self.update_tougaard_controls_visibility(self.parent.background_method)
 
     def init_fitting_tab(self, notebook):
         """Initialize the peak fitting tab in the notebook."""
@@ -346,6 +358,39 @@ class FittingWindow(wx.Frame):
         new_method = self.method_combobox.GetValue()
         self.parent.set_background_method(new_method)
         self.update_background_info_button()
+        self.update_tougaard_controls_visibility(new_method)
+
+    def update_tougaard_controls_visibility(self,new_method):
+        if new_method.startswith("U4-Tougaard"):
+            self.cross_section.Enable(True)
+            self.cross_section_label.Enable(True)
+            self.cross_section2.Enable(False)
+            self.cross_section2_label.Enable(False)
+            self.cross_section3.Enable(False)
+            self.cross_section3_label.Enable(False)
+        elif new_method.startswith("Double U4-Tougaard"):
+            self.cross_section.Enable(True)
+            self.cross_section_label.Enable(True)
+            self.cross_section2.Enable(True)
+            self.cross_section2_label.Enable(True)
+            self.cross_section3.Enable(False)
+            self.cross_section3_label.Enable(False)
+        elif new_method.startswith("Triple U4-Tougaard"):
+            self.cross_section.Enable(True)
+            self.cross_section_label.Enable(True)
+            self.cross_section2.Enable(True)
+            self.cross_section2_label.Enable(True)
+            self.cross_section3.Enable(True)
+            self.cross_section3_label.Enable(True)
+        else:
+            self.cross_section.Enable(False)
+            self.cross_section_label.Enable(False)
+            self.cross_section2.Enable(False)
+            self.cross_section2_label.Enable(False)
+            self.cross_section3.Enable(False)
+            self.cross_section3_label.Enable(False)
+        self.background_panel.Layout()
+
 
     def on_clear_background_only(self, event):
         self.parent.plot_manager.clear_background_only(self.parent)
@@ -740,6 +785,148 @@ class FittingWindow(wx.Frame):
             })
         except (ValueError, IndexError):
             pass
+
+
+class TougaardFitWindow(wx.Frame):
+    def __init__(self, parent):
+        wx.Frame.__init__(self, parent, title="Tougaard Fit", size=(1000, 600))
+
+        self.parent = parent
+
+        self.panel = wx.Panel(self)
+        main_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Get data from parent window
+        sheet_name = self.parent.parent.sheet_combobox.GetValue()
+        self.x_values = np.array(self.parent.parent.Data['Core levels'][sheet_name]['B.E.'])
+        self.y_values = np.array(self.parent.parent.Data['Core levels'][sheet_name]['Raw Data'])
+
+        # Left panel for controls
+        control_panel = wx.Panel(self.panel)
+        control_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Range controls using grid
+        range_box = wx.StaticBox(control_panel, label="Fit Range")
+        range_sizer = wx.StaticBoxSizer(range_box, wx.VERTICAL)
+        range_grid = wx.GridSizer(1, 4, 5, 5)
+
+        self.min_range = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value='465')
+        self.max_range = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value='475')
+
+        range_grid.Add(wx.StaticText(control_panel, label="Min:"), 0)
+        range_grid.Add(self.min_range, 0)
+        range_grid.Add(wx.StaticText(control_panel, label="Max:"), 0)
+        range_grid.Add(self.max_range, 0)
+        range_sizer.Add(range_grid, 0, wx.ALL | wx.EXPAND, 5)
+
+        # Background range control
+        bg_box = wx.StaticBox(control_panel, label="Background Start")
+        bg_sizer = wx.StaticBoxSizer(bg_box, wx.HORIZONTAL)
+        self.bg_start = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value='450')
+        bg_sizer.Add(self.bg_start, 1, wx.ALL, 5)
+
+        # Parameter controls with default values
+        params_box = wx.StaticBox(control_panel, label="Parameters")
+        params_sizer = wx.StaticBoxSizer(params_box, wx.VERTICAL)
+
+        self.params = {}
+        default_values = {'B': 2866, 'C': 1643, 'D': 1}
+
+        for param in ['B', 'C', 'D']:
+            param_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            self.params[param] = {
+                'value': wx.SpinCtrlDouble(control_panel, min=0, max=6000, inc=0.1, value=str(default_values[param])),
+                'min': wx.SpinCtrlDouble(control_panel, min=0, max=6000, inc=0.1),
+                'max': wx.SpinCtrlDouble(control_panel, min=0, max=6000, inc=0.1, value='6000')
+            }
+            param_sizer.Add(wx.StaticText(control_panel, label=f"{param}:"), 0, wx.ALL, 5)
+            param_sizer.Add(self.params[param]['value'], 1, wx.ALL, 5)
+            param_sizer.Add(wx.StaticText(control_panel, label="Min:"), 0, wx.ALL, 5)
+            param_sizer.Add(self.params[param]['min'], 1, wx.ALL, 5)
+            param_sizer.Add(wx.StaticText(control_panel, label="Max:"), 0, wx.ALL, 5)
+            param_sizer.Add(self.params[param]['max'], 1, wx.ALL, 5)
+            params_sizer.Add(param_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        # Fit button
+        self.fit_button = wx.Button(control_panel, label="Fit")
+        self.fit_button.Bind(wx.EVT_BUTTON, self.on_fit)
+
+        # Right panel for plot
+        self.figure = Figure(figsize=(6, 4))
+        self.canvas = FigureCanvas(self.panel, -1, self.figure)
+        self.ax = self.figure.add_subplot(111)
+
+        # Initial plot
+        self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
+        self.ax.set_xlabel('Binding Energy (eV)')
+        self.ax.set_ylabel('Intensity (CPS)')
+        self.ax.legend()
+        self.canvas.draw()
+
+        # Layout
+        control_sizer.Add(range_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        control_sizer.Add(bg_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        control_sizer.Add(params_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        control_sizer.Add(self.fit_button, 0, wx.ALL | wx.CENTER, 5)
+        control_panel.SetSizer(control_sizer)
+
+        main_sizer.Add(control_panel, 0, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(self.canvas, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.panel.SetSizer(main_sizer)
+
+    def on_fit(self, event):
+        min_e = self.min_range.GetValue()
+        max_e = self.max_range.GetValue()
+        print("FITTING")
+        params = lmfit.Parameters()
+        for name in ['B', 'C', 'D']:
+            params.add(name,
+                       value=self.params[name]['value'].GetValue(),
+                       min=self.params[name]['min'].GetValue(),
+                       max=self.params[name]['max'].GetValue())
+
+        bg_start = self.bg_start.GetValue()
+        mask = (self.x_values >= min_e) & (self.x_values <= max_e)
+        x_fit = self.x_values[mask]
+        y_fit = self.y_values[mask]
+        print(f'XFIT {x_fit} \n YFIT {y_fit}')
+
+        def tougaard_model(params, x, y):
+            B = params['B'].value
+            C = params['C'].value
+            D = params['D'].value
+
+            sheet_name = self.parent.parent.sheet_combobox.GetValue()
+            window = self.parent.parent
+
+            bg = BackgroundCalculations.calculate_tougaard_background(
+                x[x >= bg_start],
+                y[x >= bg_start],
+                sheet_name,
+                window
+            )
+            return bg - y[x >= bg_start]
+
+        result = lmfit.minimize(tougaard_model, params, args=(x_fit, y_fit))
+        self.plot_results(x_fit, y_fit, result.params)
+
+    def plot_results(self, x, y, fitted_params):
+        self.ax.clear()
+        sheet_name = self.parent.parent.sheet_combobox.GetValue()
+        window = self.parent.parent
+
+        bg = BackgroundCalculations.calculate_tougaard_background(
+            x, y, sheet_name, window
+        )
+        self.ax.plot(x, y, 'k-', label='Data')
+        self.ax.plot(x, bg, 'r-', label='Fit')
+        self.ax.set_xlabel('Binding Energy (eV)')
+        self.ax.set_ylabel('Intensity (CPS)')
+        self.ax.legend()
+        self.canvas.draw()
+
+
 class CustomComboBox(wx.ComboBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
