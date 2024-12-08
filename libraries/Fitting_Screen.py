@@ -800,6 +800,10 @@ class TougaardFitWindow(wx.Frame):
         self.x_values = np.array(self.parent.parent.Data['Core levels'][sheet_name]['B.E.'])
         self.y_values = np.array(self.parent.parent.Data['Core levels'][sheet_name]['Raw Data'])
 
+        min_x = min(self.x_values)
+        max_x = max(self.x_values)
+
+
         # Left panel for controls
         control_panel = wx.Panel(self.panel)
         control_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -809,8 +813,8 @@ class TougaardFitWindow(wx.Frame):
         range_sizer = wx.StaticBoxSizer(range_box, wx.VERTICAL)
         range_grid = wx.GridSizer(1, 4, 5, 5)
 
-        self.min_range = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value='465')
-        self.max_range = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value='475')
+        self.min_range = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value=str(max_x - 15))
+        self.max_range = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value=str(max_x - 1))
 
         range_grid.Add(wx.StaticText(control_panel, label="Min:"), 0)
         range_grid.Add(self.min_range, 0)
@@ -821,7 +825,7 @@ class TougaardFitWindow(wx.Frame):
         # Background range control
         bg_box = wx.StaticBox(control_panel, label="Background Start")
         bg_sizer = wx.StaticBoxSizer(bg_box, wx.HORIZONTAL)
-        self.bg_start = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value='450')
+        self.bg_start = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value=str(min_x + 1))
         bg_sizer.Add(self.bg_start, 1, wx.ALL, 5)
 
         # Parameter controls with default values
