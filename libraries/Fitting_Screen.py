@@ -5,6 +5,7 @@ from Functions import fit_peaks, remove_peak
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+import matplotlib.pyplot as plt
 import lmfit
 from libraries.Peak_Functions import BackgroundCalculations
 from libraries.Save import save_state
@@ -141,13 +142,13 @@ class FittingWindow(wx.Frame):
         reset_vlines_button.SetMinSize((125, 40))
         reset_vlines_button.Bind(wx.EVT_BUTTON, self.on_reset_vlines)
 
-        clear_background_only_button = wx.Button(self.background_panel, label="Fit Tougaard")
+        clear_background_only_button = wx.Button(self.background_panel, label="Clear\nBackground")
         clear_background_only_button.SetMinSize((125, 40))
         clear_background_only_button.Bind(wx.EVT_BUTTON, self.on_clear_background_only)
 
-        tougaard_fit_btn = wx.Button(self.background_panel, label="Fit Tougaard")
-        tougaard_fit_btn.SetMinSize((125, 40))
-        tougaard_fit_btn.Bind(wx.EVT_BUTTON, lambda evt: TougaardFitWindow(self).Show())
+        self.tougaard_fit_btn = wx.Button(self.background_panel, label="Get Tougaard\n B, C, D Values")
+        self.tougaard_fit_btn.SetMinSize((125, 40))
+        self.tougaard_fit_btn.Bind(wx.EVT_BUTTON, lambda evt: TougaardFitWindow(self).Show())
 
         # Layout Background Tab
         background_sizer.Add(method_label, pos=(0, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
@@ -168,7 +169,7 @@ class FittingWindow(wx.Frame):
 
 
         background_sizer.Add(reset_vlines_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(tougaard_fit_btn, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.tougaard_fit_btn, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(clear_background_only_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(background_button, pos=(12, 0), flag=wx.ALL | wx.EXPAND, border=5)
         background_sizer.Add(clear_background_button, pos=(12, 1), flag=wx.ALL | wx.EXPAND, border=5)
@@ -365,6 +366,7 @@ class FittingWindow(wx.Frame):
         if new_method.startswith("U4-Tougaard"):
             self.cross_section.Enable(True)
             self.cross_section_label.Enable(True)
+            self.tougaard_fit_btn.Enable(True)
             self.cross_section2.Enable(False)
             self.cross_section2_label.Enable(False)
             self.cross_section3.Enable(False)
@@ -372,6 +374,7 @@ class FittingWindow(wx.Frame):
         elif new_method.startswith("Double U4-Tougaard"):
             self.cross_section.Enable(True)
             self.cross_section_label.Enable(True)
+            self.tougaard_fit_btn.Enable(True)
             self.cross_section2.Enable(True)
             self.cross_section2_label.Enable(True)
             self.cross_section3.Enable(False)
@@ -379,6 +382,7 @@ class FittingWindow(wx.Frame):
         elif new_method.startswith("Triple U4-Tougaard"):
             self.cross_section.Enable(True)
             self.cross_section_label.Enable(True)
+            self.tougaard_fit_btn.Enable(True)
             self.cross_section2.Enable(True)
             self.cross_section2_label.Enable(True)
             self.cross_section3.Enable(True)
@@ -386,6 +390,7 @@ class FittingWindow(wx.Frame):
         else:
             self.cross_section.Enable(False)
             self.cross_section_label.Enable(False)
+            self.tougaard_fit_btn.Enable(False)
             self.cross_section2.Enable(False)
             self.cross_section2_label.Enable(False)
             self.cross_section3.Enable(False)
@@ -846,8 +851,15 @@ class TougaardFitWindow(wx.Frame):
         self.create_tougaard_params(1)
 
         # Fit button
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.fit_button = wx.Button(control_panel, label="Fit")
+        self.fit_button.SetMinSize((110, 40))
         self.fit_button.Bind(wx.EVT_BUTTON, self.on_fit)
+        self.copy_button = wx.Button(control_panel, label="Copy to Background")
+        self.copy_button.SetMinSize((110, 40))
+        self.copy_button.Bind(wx.EVT_BUTTON, self.on_copy_values)
+        button_sizer.Add(self.fit_button, 1, wx.ALL, 5)
+        button_sizer.Add(self.copy_button, 1, wx.ALL, 5)
 
 
         # Initialize vertical lines as None
@@ -877,7 +889,7 @@ class TougaardFitWindow(wx.Frame):
         control_sizer.Add(range_sizer, 0, wx.EXPAND | wx.ALL, 5)
         control_sizer.Add(bg_sizer, 0, wx.EXPAND | wx.ALL, 5)
         control_sizer.Add(self.param_scroll, 1, wx.EXPAND | wx.ALL, 5)
-        control_sizer.Add(self.fit_button, 0, wx.ALL | wx.CENTER, 5)
+        control_sizer.Add(button_sizer, 0, wx.EXPAND|wx.ALL, 5)
         control_panel.SetSizer(control_sizer)
 
         main_sizer.Add(control_panel, 0, wx.EXPAND | wx.ALL, 5)
@@ -906,7 +918,6 @@ class TougaardFitWindow(wx.Frame):
                 'D': params['D']['fixed'].GetValue()
             })
 
-        # Clear existing params
         self.param_sizer.Clear(True)
         self.tougaard_params = []
 
@@ -915,10 +926,9 @@ class TougaardFitWindow(wx.Frame):
             box_sizer = wx.StaticBoxSizer(param_box, wx.VERTICAL)
 
             params = {}
-            for param in ['B', 'C', 'D']:
-                param_grid = wx.GridBagSizer(5, 5)
+            param_grid = wx.GridBagSizer(5, 5)
 
-                # Get default or previous value
+            for row, param in enumerate(['B', 'C', 'D']):
                 if i < len(old_values):
                     value = old_values[i][param]
                     is_fixed = old_fixed[i][param]
@@ -927,25 +937,27 @@ class TougaardFitWindow(wx.Frame):
                     is_fixed = False
 
                 params[param] = {
-                    'value': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1, value=str(value)),
+                    'value': wx.SpinCtrlDouble(param_box, min=0, max=20000, inc=0.1, value=str(value)),
                     'min': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1),
-                    'max': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1, value='6000'),
+                    'max': wx.SpinCtrlDouble(param_box, min=0, max=20000, inc=0.1, value='6000'),
                     'fixed': wx.CheckBox(param_box, label="Fix")
                 }
                 params[param]['fixed'].SetValue(is_fixed)
 
-                param_grid.Add(wx.StaticText(param_box, label=f"{param}:"), pos=(0, 0))
-                param_grid.Add(params[param]['value'], pos=(0, 1))
-                param_grid.Add(params[param]['fixed'], pos=(0, 2))
-                param_grid.Add(wx.StaticText(param_box, label="Min:"), pos=(0, 3))
-                param_grid.Add(params[param]['min'], pos=(0, 4))
-                param_grid.Add(wx.StaticText(param_box, label="Max:"), pos=(0, 5))
-                param_grid.Add(params[param]['max'], pos=(0, 6))
+                param_grid.Add(wx.StaticText(param_box, label=f"{param}:"), pos=(row, 0), flag=wx.ALIGN_CENTER_VERTICAL)
+                param_grid.Add(params[param]['value'], pos=(row, 1), flag=wx.EXPAND)
+                param_grid.Add(params[param]['fixed'], pos=(row, 2), flag=wx.ALIGN_CENTER_VERTICAL)
+                param_grid.Add(wx.StaticText(param_box, label="Min:"), pos=(row, 3), flag=wx.ALIGN_CENTER_VERTICAL)
+                param_grid.Add(params[param]['min'], pos=(row, 4), flag=wx.EXPAND)
+                param_grid.Add(wx.StaticText(param_box, label="Max:"), pos=(row, 5), flag=wx.ALIGN_CENTER_VERTICAL)
+                param_grid.Add(params[param]['max'], pos=(row, 6), flag=wx.EXPAND)
 
-                box_sizer.Add(param_grid, 0, wx.EXPAND | wx.ALL, 5)
-
+            box_sizer.Add(param_grid, 0, wx.EXPAND | wx.ALL, 5)
             self.tougaard_params.append(params)
             self.param_sizer.Add(box_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.param_scroll.SetSizer(self.param_sizer)
+        self.param_scroll.Layout()
 
 
 
@@ -1046,6 +1058,12 @@ class TougaardFitWindow(wx.Frame):
         self.ax.clear()
         bg_start = self.bg_start.GetValue()
 
+        # Update control values with fitted parameters
+        for i, tougaard in enumerate(self.tougaard_params):
+            tougaard['B']['value'].SetValue(fitted_params[f'B{i + 1}'].value)
+            tougaard['C']['value'].SetValue(fitted_params[f'C{i + 1}'].value)
+            tougaard['D']['value'].SetValue(fitted_params[f'D{i + 1}'].value)
+
         # Calculate each background separately
         mask = self.x_values >= bg_start
         x_bg = self.x_values[mask]
@@ -1072,7 +1090,7 @@ class TougaardFitWindow(wx.Frame):
                 K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
                 background[i] += np.trapz(K * y_shifted[i:], dx=dx)
 
-            background += baseline
+            # background += baseline
             total_background += (background - baseline)
             self.ax.plot(x_bg, background, '--', color=color, alpha=0.5,
                          label=f'Tougaard {j + 1}')
@@ -1122,6 +1140,19 @@ class TougaardFitWindow(wx.Frame):
         if self.vline_max is not None:
             self.vline_max.set_xdata([self.max_range.GetValue(), self.max_range.GetValue()])
         self.canvas.draw()
+
+    def on_copy_values(self, event):
+        for i, tougaard in enumerate(self.tougaard_params):
+            B = tougaard['B']['value'].GetValue()
+            C = tougaard['C']['value'].GetValue()
+            D = tougaard['D']['value'].GetValue()
+
+            if i == 0:
+                self.parent.cross_section.SetValue(f"{B},{C},{D},0")
+            elif i == 1:
+                self.parent.cross_section2.SetValue(f"{B},{C},{D},0")
+            elif i == 2:
+                self.parent.cross_section3.SetValue(f"{B},{C},{D},0")
 
 
 class CustomComboBox(wx.ComboBox):

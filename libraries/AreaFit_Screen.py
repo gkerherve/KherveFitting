@@ -13,7 +13,7 @@ class BackgroundWindow(wx.Frame):
         self.SetMaxSize((270, 300))
 
         panel = wx.Panel(self)
-        panel.SetBackgroundColour(wx.Colour(255, 255, 255))
+        panel.SetBackgroundColour(wx.Colour(245, 245, 245))
 
         # Create controls
         method_label = wx.StaticText(panel, label="Method:")
