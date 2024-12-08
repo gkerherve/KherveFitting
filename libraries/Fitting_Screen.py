@@ -891,11 +891,25 @@ class TougaardFitWindow(wx.Frame):
         self.num_tougaard.Bind(wx.EVT_SPINCTRL, self.on_num_tougaard_change)
 
     def create_tougaard_params(self, num_tougaard):
+        # Store current values if they exist
+        old_values = []
+        old_fixed = []
+        for params in self.tougaard_params:
+            old_values.append({
+                'B': params['B']['value'].GetValue(),
+                'C': params['C']['value'].GetValue(),
+                'D': params['D']['value'].GetValue()
+            })
+            old_fixed.append({
+                'B': params['B']['fixed'].GetValue(),
+                'C': params['C']['fixed'].GetValue(),
+                'D': params['D']['fixed'].GetValue()
+            })
+
         # Clear existing params
         self.param_sizer.Clear(True)
         self.tougaard_params = []
 
-        # Create parameter controls for each Tougaard background
         for i in range(num_tougaard):
             param_box = wx.StaticBox(self.param_scroll, label=f"Tougaard {i + 1}")
             box_sizer = wx.StaticBoxSizer(param_box, wx.VERTICAL)
@@ -903,28 +917,37 @@ class TougaardFitWindow(wx.Frame):
             params = {}
             for param in ['B', 'C', 'D']:
                 param_grid = wx.GridBagSizer(5, 5)
-                value = 2866 if param == 'B' else 1643 if param == 'C' else 1
+
+                # Get default or previous value
+                if i < len(old_values):
+                    value = old_values[i][param]
+                    is_fixed = old_fixed[i][param]
+                else:
+                    value = 2866 if param == 'B' else 1643 if param == 'C' else 1
+                    is_fixed = False
 
                 params[param] = {
                     'value': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1, value=str(value)),
                     'min': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1),
-                    'max': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1, value='6000')
+                    'max': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1, value='6000'),
+                    'fixed': wx.CheckBox(param_box, label="Fix")
                 }
+                params[param]['fixed'].SetValue(is_fixed)
 
                 param_grid.Add(wx.StaticText(param_box, label=f"{param}:"), pos=(0, 0))
                 param_grid.Add(params[param]['value'], pos=(0, 1))
-                param_grid.Add(wx.StaticText(param_box, label="Min:"), pos=(0, 2))
-                param_grid.Add(params[param]['min'], pos=(0, 3))
-                param_grid.Add(wx.StaticText(param_box, label="Max:"), pos=(0, 4))
-                param_grid.Add(params[param]['max'], pos=(0, 5))
+                param_grid.Add(params[param]['fixed'], pos=(0, 2))
+                param_grid.Add(wx.StaticText(param_box, label="Min:"), pos=(0, 3))
+                param_grid.Add(params[param]['min'], pos=(0, 4))
+                param_grid.Add(wx.StaticText(param_box, label="Max:"), pos=(0, 5))
+                param_grid.Add(params[param]['max'], pos=(0, 6))
 
                 box_sizer.Add(param_grid, 0, wx.EXPAND | wx.ALL, 5)
 
             self.tougaard_params.append(params)
             self.param_sizer.Add(box_sizer, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.param_scroll.SetSizer(self.param_sizer)
-        self.param_scroll.Layout()
+
 
     def on_num_tougaard_change(self, event):
         num = self.num_tougaard.GetValue()
@@ -942,18 +965,17 @@ class TougaardFitWindow(wx.Frame):
 
         params = lmfit.Parameters()
         for i, tougaard in enumerate(self.tougaard_params):
-            params.add(f'B{i + 1}', value=float(tougaard['B']['value'].GetValue()),
-                       min=float(tougaard['B']['min'].GetValue()),
-                       max=float(tougaard['B']['max'].GetValue()),
-                       vary=True)
-            params.add(f'C{i + 1}', value=float(tougaard['C']['value'].GetValue()),
-                       min=float(tougaard['C']['min'].GetValue()),
-                       max=float(tougaard['C']['max'].GetValue()),
-                       vary=True)
-            params.add(f'D{i + 1}', value=float(tougaard['D']['value'].GetValue()),
-                       min=float(tougaard['D']['min'].GetValue()),
-                       max=float(tougaard['D']['max'].GetValue()),
-                       vary=True)
+            for param_name in ['B', 'C', 'D']:
+                name = f'{param_name}{i + 1}'
+                value = float(tougaard[param_name]['value'].GetValue())
+                is_fixed = tougaard[param_name]['fixed'].GetValue()
+
+                if is_fixed:
+                    params.add(name, value=value, vary=False)
+                else:
+                    min_val = float(tougaard[param_name]['min'].GetValue())
+                    max_val = float(tougaard[param_name]['max'].GetValue())
+                    params.add(name, value=value, min=min_val, max=max_val, vary=True)
 
         bg_mask = self.x_values >= bg_start
         x_full = self.x_values[bg_mask]
@@ -1024,44 +1046,45 @@ class TougaardFitWindow(wx.Frame):
         self.ax.clear()
         bg_start = self.bg_start.GetValue()
 
-        # Update control values with fitted parameters
-        for i, tougaard in enumerate(self.tougaard_params):
-            tougaard['B']['value'].SetValue(fitted_params[f'B{i + 1}'].value)
-            tougaard['C']['value'].SetValue(fitted_params[f'C{i + 1}'].value)
-            tougaard['D']['value'].SetValue(fitted_params[f'D{i + 1}'].value)
-
-        # Calculate background for display range
+        # Calculate each background separately
         mask = self.x_values >= bg_start
         x_bg = self.x_values[mask]
         y_bg = self.y_values[mask]
-
         baseline = y_bg[-1]
-        y_shifted = y_bg - baseline
-        dx = np.mean(np.diff(x_bg))
-        background = np.zeros_like(y_bg)
 
-        for i in range(len(x_bg)):
-            E = x_bg[i:] - x_bg[i]
-            K_total = 0
-            for j in range(len(self.tougaard_params)):
+        total_background = np.zeros_like(y_bg) + baseline
+
+        # Plot data
+        self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
+
+        # Plot each Tougaard background
+        colors = plt.cm.tab10(np.linspace(0, 1, len(self.tougaard_params)))
+        for j, color in enumerate(colors):
+            background = np.zeros_like(y_bg) + baseline
+            y_shifted = y_bg - baseline
+            dx = np.mean(np.diff(x_bg))
+
+            for i in range(len(x_bg)):
+                E = x_bg[i:] - x_bg[i]
                 B = fitted_params[f'B{j + 1}'].value
                 C = fitted_params[f'C{j + 1}'].value
                 D = fitted_params[f'D{j + 1}'].value
-                K_total += B * E / ((C - E ** 2) ** 2 + D * E ** 2)
-            background[i] = np.trapz(K_total * y_shifted[i:], dx=dx)
+                K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
+                background[i] += np.trapz(K * y_shifted[i:], dx=dx)
 
-        background += baseline
+            background += baseline
+            total_background += (background - baseline)
+            self.ax.plot(x_bg, background, '--', color=color, alpha=0.5,
+                         label=f'Tougaard {j + 1}')
 
-        # Plot
-        self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
+        # Plot total background
+        self.ax.plot(x_bg, total_background, 'b-', label='Total Background')
 
-        # Add vertical lines for fit range
+        # Add vertical lines
         min_e = self.min_range.GetValue()
         max_e = self.max_range.GetValue()
         self.vline_min = self.ax.axvline(x=min_e, color='red', linestyle='--', alpha=0.5)
         self.vline_max = self.ax.axvline(x=max_e, color='red', linestyle='--', alpha=0.5)
-
-        self.ax.plot(x_bg, background, 'b--', label='Calculated')
 
         self.ax.set_xlabel('Binding Energy (eV)')
         self.ax.set_ylabel('Intensity (CPS)')
