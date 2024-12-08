@@ -36,7 +36,8 @@ class FittingWindow(wx.Frame):
 
     def init_ui(self):
         panel = wx.Panel(self)
-        panel.SetBackgroundColour(wx.Colour(255, 255, 255))
+        # panel.SetBackgroundColour(wx.Colour(255, 255, 255))
+        panel.SetBackgroundColour(wx.Colour(250, 250, 250))
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -803,12 +804,17 @@ class TougaardFitWindow(wx.Frame):
         min_x = min(self.x_values)
         max_x = max(self.x_values)
 
-
         # Left panel for controls
         control_panel = wx.Panel(self.panel)
         control_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Range controls using grid
+        # Number of Tougaard backgrounds control
+        num_box = wx.StaticBox(control_panel, label="Number of Tougaard Backgrounds")
+        num_sizer = wx.StaticBoxSizer(num_box, wx.HORIZONTAL)
+        self.num_tougaard = wx.SpinCtrl(control_panel, min=1, max=10, initial=1)
+        num_sizer.Add(self.num_tougaard, 1, wx.ALL, 5)
+
+        # Range controls
         range_box = wx.StaticBox(control_panel, label="Fit Range")
         range_sizer = wx.StaticBoxSizer(range_box, wx.VERTICAL)
         range_grid = wx.GridSizer(1, 4, 5, 5)
@@ -822,68 +828,55 @@ class TougaardFitWindow(wx.Frame):
         range_grid.Add(self.max_range, 0)
         range_sizer.Add(range_grid, 0, wx.ALL | wx.EXPAND, 5)
 
-        # Background range control
+        # Background start control
         bg_box = wx.StaticBox(control_panel, label="Background Start")
         bg_sizer = wx.StaticBoxSizer(bg_box, wx.HORIZONTAL)
         self.bg_start = wx.SpinCtrlDouble(control_panel, min=0, max=2000, inc=0.1, value=str(min_x + 1))
         bg_sizer.Add(self.bg_start, 1, wx.ALL, 5)
 
-        # Parameter controls with default values
-        params_box = wx.StaticBox(control_panel, label="Parameters")
-        params_sizer = wx.StaticBoxSizer(params_box, wx.VERTICAL)
+        # Scrolled window for Tougaard parameters
+        self.param_scroll = wx.ScrolledWindow(control_panel)
+        self.param_scroll.SetScrollRate(0, 20)
+        self.param_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.params = {}
-        default_values = {'B': 2866, 'C': 1643, 'D': 1}
+        # Initialize empty list for parameter controls
+        self.tougaard_params = []
 
-        for param in ['B', 'C', 'D']:
-            param_sizer = wx.BoxSizer(wx.HORIZONTAL)
-            self.params[param] = {
-                'value': wx.SpinCtrlDouble(control_panel, min=0, max=6000, inc=0.1, value=str(default_values[param])),
-                'min': wx.SpinCtrlDouble(control_panel, min=0, max=6000, inc=0.1),
-                'max': wx.SpinCtrlDouble(control_panel, min=0, max=6000, inc=0.1, value='6000')
-            }
-            param_sizer.Add(wx.StaticText(control_panel, label=f"{param}:"), 0, wx.ALL, 5)
-            param_sizer.Add(self.params[param]['value'], 1, wx.ALL, 5)
-            param_sizer.Add(wx.StaticText(control_panel, label="Min:"), 0, wx.ALL, 5)
-            param_sizer.Add(self.params[param]['min'], 1, wx.ALL, 5)
-            param_sizer.Add(wx.StaticText(control_panel, label="Max:"), 0, wx.ALL, 5)
-            param_sizer.Add(self.params[param]['max'], 1, wx.ALL, 5)
-            params_sizer.Add(param_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        # Create initial parameter set
+        self.create_tougaard_params(1)
 
         # Fit button
         self.fit_button = wx.Button(control_panel, label="Fit")
         self.fit_button.Bind(wx.EVT_BUTTON, self.on_fit)
 
-        # Right panel for plot
-        self.figure = Figure(figsize=(6, 4))
-        self.canvas = FigureCanvas(self.panel, -1, self.figure)
-        self.ax = self.figure.add_subplot(111)
 
         # Initialize vertical lines as None
         self.vline_min = None
         self.vline_max = None
 
-        # Initial plot
+        # Plot setup
+        self.figure = Figure(figsize=(6, 4))
+        self.canvas = FigureCanvas(self.panel, -1, self.figure)
+        self.ax = self.figure.add_subplot(111)
+
+        # Initial plot setup
         self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
         self.ax.set_xlabel('Binding Energy (eV)')
         self.ax.set_ylabel('Intensity (CPS)')
         self.ax.legend()
-
-        # Reverse x-axis
         self.ax.set_xlim(max(self.x_values), min(self.x_values))
 
-        # Initial plot with vertical lines
-        self.plot_initial_data()
-
-        self.canvas.draw()
-
-        self.min_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
-        self.max_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
+        # Add vertical lines for fit range
+        min_e = self.min_range.GetValue()
+        max_e = self.max_range.GetValue()
+        self.vline_min = self.ax.axvline(x=min_e, color='red', linestyle='--', alpha=0.5)
+        self.vline_max = self.ax.axvline(x=max_e, color='red', linestyle='--', alpha=0.5)
 
         # Layout
+        control_sizer.Add(num_sizer, 0, wx.EXPAND | wx.ALL, 5)
         control_sizer.Add(range_sizer, 0, wx.EXPAND | wx.ALL, 5)
         control_sizer.Add(bg_sizer, 0, wx.EXPAND | wx.ALL, 5)
-        control_sizer.Add(params_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        control_sizer.Add(self.param_scroll, 1, wx.EXPAND | wx.ALL, 5)
         control_sizer.Add(self.fit_button, 0, wx.ALL | wx.CENTER, 5)
         control_panel.SetSizer(control_sizer)
 
@@ -892,8 +885,51 @@ class TougaardFitWindow(wx.Frame):
 
         self.panel.SetSizer(main_sizer)
 
-        # Plot initial data
-        self.plot_initial_data()
+        # Bind events
+        self.min_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
+        self.max_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
+        self.num_tougaard.Bind(wx.EVT_SPINCTRL, self.on_num_tougaard_change)
+
+    def create_tougaard_params(self, num_tougaard):
+        # Clear existing params
+        self.param_sizer.Clear(True)
+        self.tougaard_params = []
+
+        # Create parameter controls for each Tougaard background
+        for i in range(num_tougaard):
+            param_box = wx.StaticBox(self.param_scroll, label=f"Tougaard {i + 1}")
+            box_sizer = wx.StaticBoxSizer(param_box, wx.VERTICAL)
+
+            params = {}
+            for param in ['B', 'C', 'D']:
+                param_grid = wx.GridBagSizer(5, 5)
+                value = 2866 if param == 'B' else 1643 if param == 'C' else 1
+
+                params[param] = {
+                    'value': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1, value=str(value)),
+                    'min': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1),
+                    'max': wx.SpinCtrlDouble(param_box, min=0, max=6000, inc=0.1, value='6000')
+                }
+
+                param_grid.Add(wx.StaticText(param_box, label=f"{param}:"), pos=(0, 0))
+                param_grid.Add(params[param]['value'], pos=(0, 1))
+                param_grid.Add(wx.StaticText(param_box, label="Min:"), pos=(0, 2))
+                param_grid.Add(params[param]['min'], pos=(0, 3))
+                param_grid.Add(wx.StaticText(param_box, label="Max:"), pos=(0, 4))
+                param_grid.Add(params[param]['max'], pos=(0, 5))
+
+                box_sizer.Add(param_grid, 0, wx.EXPAND | wx.ALL, 5)
+
+            self.tougaard_params.append(params)
+            self.param_sizer.Add(box_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.param_scroll.SetSizer(self.param_sizer)
+        self.param_scroll.Layout()
+
+    def on_num_tougaard_change(self, event):
+        num = self.num_tougaard.GetValue()
+        self.create_tougaard_params(num)
+        self.param_scroll.FitInside()
 
     def on_fit(self, event):
         min_e = self.min_range.GetValue()
@@ -905,14 +941,20 @@ class TougaardFitWindow(wx.Frame):
             return
 
         params = lmfit.Parameters()
-        for name in ['B', 'C', 'D']:
-            params.add(name,
-                       value=self.params[name]['value'].GetValue(),
-                       min=self.params[name]['min'].GetValue(),
-                       max=self.params[name]['max'].GetValue(),
+        for i, tougaard in enumerate(self.tougaard_params):
+            params.add(f'B{i + 1}', value=float(tougaard['B']['value'].GetValue()),
+                       min=float(tougaard['B']['min'].GetValue()),
+                       max=float(tougaard['B']['max'].GetValue()),
+                       vary=True)
+            params.add(f'C{i + 1}', value=float(tougaard['C']['value'].GetValue()),
+                       min=float(tougaard['C']['min'].GetValue()),
+                       max=float(tougaard['C']['max'].GetValue()),
+                       vary=True)
+            params.add(f'D{i + 1}', value=float(tougaard['D']['value'].GetValue()),
+                       min=float(tougaard['D']['min'].GetValue()),
+                       max=float(tougaard['D']['max'].GetValue()),
                        vary=True)
 
-        # Get data from background start point
         bg_mask = self.x_values >= bg_start
         x_full = self.x_values[bg_mask]
         y_full = self.y_values[bg_mask]
@@ -921,7 +963,6 @@ class TougaardFitWindow(wx.Frame):
             print("Error: No data points in selected range")
             return
 
-        # Get fitting range for optimization
         fit_mask = (x_full >= min_e) & (x_full <= max_e)
         x_fit = x_full[fit_mask]
         y_fit = y_full[fit_mask]
@@ -931,11 +972,6 @@ class TougaardFitWindow(wx.Frame):
             return
 
         def tougaard_model(params, x_full, y_full, x_fit, y_fit):
-            B = params['B'].value
-            C = params['C'].value
-            D = params['D'].value
-
-            # Calculate background for full range from bg_start
             baseline = y_full[-1]
             y_shifted = y_full - baseline
             dx = np.mean(np.diff(x_full))
@@ -943,45 +979,95 @@ class TougaardFitWindow(wx.Frame):
 
             for i in range(len(x_full)):
                 E = x_full[i:] - x_full[i]
-                K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
-                background_full[i] = np.trapz(K * y_shifted[i:], dx=dx)
+                K_total = 0
+                for j in range(len(self.tougaard_params)):
+                    B = params[f'B{j + 1}'].value
+                    C = params[f'C{j + 1}'].value
+                    D = params[f'D{j + 1}'].value
+                    K_total += B * E / ((C - E ** 2) ** 2 + D * E ** 2)
+                background_full[i] = np.trapz(K_total * y_shifted[i:], dx=dx)
 
-            background_full = background_full + baseline
-
-            # Get background values only in fit range
+            background_full += baseline
             fit_indices = np.where(fit_mask)[0]
             background_fit = background_full[fit_indices]
-
-            # Return residuals for fit range
             return y_fit - background_fit
 
         result = lmfit.minimize(tougaard_model,
                                 params,
                                 args=(x_full, y_full, x_fit, y_fit),
                                 method='least_squares',
-                                ftol= 1e-10,
-                                xtol= 1e-10,
+                                ftol=1e-10,
+                                xtol=1e-10,
                                 max_nfev=100,
                                 scale_covar=True,
                                 verbose=True)
 
-        # Print detailed fit results
         print("\nFit Results:")
         print(result.message)
         print(f"Success: {result.success}")
         print(f"Number of function evaluations: {result.nfev}")
-        # print(f"Initial cost: {result.cost}")
         print("\nFitted Parameters:")
-        for name in ['B', 'C', 'D']:
-            value = result.params[name].value
-            stderr = result.params[name].stderr if result.params[name].stderr is not None else 0
-            print(f"{name}: {value:.2f} ± {stderr:.2f}")
+        for i in range(len(self.tougaard_params)):
+            for param in ['B', 'C', 'D']:
+                name = f"{param}{i + 1}"
+                value = result.params[name].value
+                stderr = result.params[name].stderr if result.params[name].stderr is not None else 0
+                print(f"{name}: {value:.2f} ± {stderr:.2f}")
 
         if result.success:
             self.plot_results(x_fit, y_fit, result.params, result)
         else:
             self.plot_results(x_fit, y_fit, result.params, result)
             print("Warning: Fit did not converge")
+
+    def plot_results(self, x, y, fitted_params, result):
+        self.ax.clear()
+        bg_start = self.bg_start.GetValue()
+
+        # Update control values with fitted parameters
+        for i, tougaard in enumerate(self.tougaard_params):
+            tougaard['B']['value'].SetValue(fitted_params[f'B{i + 1}'].value)
+            tougaard['C']['value'].SetValue(fitted_params[f'C{i + 1}'].value)
+            tougaard['D']['value'].SetValue(fitted_params[f'D{i + 1}'].value)
+
+        # Calculate background for display range
+        mask = self.x_values >= bg_start
+        x_bg = self.x_values[mask]
+        y_bg = self.y_values[mask]
+
+        baseline = y_bg[-1]
+        y_shifted = y_bg - baseline
+        dx = np.mean(np.diff(x_bg))
+        background = np.zeros_like(y_bg)
+
+        for i in range(len(x_bg)):
+            E = x_bg[i:] - x_bg[i]
+            K_total = 0
+            for j in range(len(self.tougaard_params)):
+                B = fitted_params[f'B{j + 1}'].value
+                C = fitted_params[f'C{j + 1}'].value
+                D = fitted_params[f'D{j + 1}'].value
+                K_total += B * E / ((C - E ** 2) ** 2 + D * E ** 2)
+            background[i] = np.trapz(K_total * y_shifted[i:], dx=dx)
+
+        background += baseline
+
+        # Plot
+        self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
+
+        # Add vertical lines for fit range
+        min_e = self.min_range.GetValue()
+        max_e = self.max_range.GetValue()
+        self.vline_min = self.ax.axvline(x=min_e, color='red', linestyle='--', alpha=0.5)
+        self.vline_max = self.ax.axvline(x=max_e, color='red', linestyle='--', alpha=0.5)
+
+        self.ax.plot(x_bg, background, 'b--', label='Calculated')
+
+        self.ax.set_xlabel('Binding Energy (eV)')
+        self.ax.set_ylabel('Intensity (CPS)')
+        self.ax.legend()
+        self.ax.set_xlim(max(self.x_values), min(self.x_values))
+        self.canvas.draw()
 
     def plot_initial_data(self):
         self.ax.clear()
@@ -998,69 +1084,12 @@ class TougaardFitWindow(wx.Frame):
         self.ax.set_ylabel('Intensity (CPS)')
         self.ax.legend()
         self.ax.set_xlim(max(self.x_values), min(self.x_values))
-        self.canvas.draw()
 
-    def plot_results(self, x, y, fitted_params, result):
-        self.ax.clear()
-        bg_start = self.bg_start.GetValue()
-
-        # Update control values with fitted parameters
-        self.params['B']['value'].SetValue(fitted_params['B'].value)
-        self.params['C']['value'].SetValue(fitted_params['C'].value)
-        self.params['D']['value'].SetValue(fitted_params['D'].value)
-
-        # Calculate fit result using same function as the fit
-        B = fitted_params['B'].value
-        C = fitted_params['C'].value
-        D = fitted_params['D'].value
-
-        baseline = y[-1]
-        y_shifted = y - baseline
-        dx = np.mean(np.diff(x))
-        fit_bg = np.zeros_like(y)
-
-        for i in range(len(x)):
-            E = x[i:] - x[i]
-            K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
-            fit_bg[i] = np.trapz(K * y_shifted[i:], dx=dx)
-
-        fit_bg = fit_bg + baseline
-        fit_result = fit_bg
-
-        # Calculate background for display range
-        mask = self.x_values >= bg_start
-        x_bg = self.x_values[mask]
-        y_bg = self.y_values[mask]
-
-        baseline = y_bg[-1]
-        y_shifted = y_bg - baseline
-        dx = np.mean(np.diff(x_bg))
-        background = np.zeros_like(y_bg)
-
-        for i in range(len(x_bg)):
-            E = x_bg[i:] - x_bg[i]
-            K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
-            background[i] = np.trapz(K * y_shifted[i:], dx=dx)
-
-        background = background + baseline
-
-        # Plot
-        self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
-        # self.ax.plot(x, fit_result, 'r-', label='Fit Result')
-
-        # Add vertical lines again
+        # Add vertical lines for fit range
         min_e = self.min_range.GetValue()
         max_e = self.max_range.GetValue()
         self.vline_min = self.ax.axvline(x=min_e, color='red', linestyle='--', alpha=0.5)
         self.vline_max = self.ax.axvline(x=max_e, color='red', linestyle='--', alpha=0.5)
-
-        self.ax.plot(x_bg, background, 'b--', label='Calculated')
-
-        self.ax.set_xlabel('Binding Energy (eV)')
-        self.ax.set_ylabel('Intensity (CPS)')
-        self.ax.legend()
-
-        self.ax.set_xlim(max(self.x_values), min(self.x_values))
 
         self.canvas.draw()
 
