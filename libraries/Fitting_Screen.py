@@ -884,6 +884,10 @@ class TougaardFitWindow(wx.Frame):
         max_e = self.max_range.GetValue()
         bg_start = self.bg_start.GetValue()
 
+        if self.x_values is None or self.y_values is None:
+            print("Error: No data available for fitting")
+            return
+
         params = lmfit.Parameters()
         for name in ['B', 'C', 'D']:
             params.add(name,
@@ -892,54 +896,76 @@ class TougaardFitWindow(wx.Frame):
                        max=self.params[name]['max'].GetValue(),
                        vary=True)
 
-        # Get data above background start for calculation
+        # Get data from background start point
         bg_mask = self.x_values >= bg_start
-        x_bg = self.x_values[bg_mask]
-        y_bg = self.y_values[bg_mask]
+        x_full = self.x_values[bg_mask]
+        y_full = self.y_values[bg_mask]
 
-        # Get fit range for residuals evaluation
-        fit_mask = (self.x_values >= min_e) & (self.x_values <= max_e)
-        x_fit = self.x_values[fit_mask]
-        y_fit = self.y_values[fit_mask]
+        if len(x_full) == 0 or len(y_full) == 0:
+            print("Error: No data points in selected range")
+            return
 
-        def tougaard_model(params, x_bg, y_bg, x_fit, y_fit):
+        # Get fitting range for optimization
+        fit_mask = (x_full >= min_e) & (x_full <= max_e)
+        x_fit = x_full[fit_mask]
+        y_fit = y_full[fit_mask]
+
+        if len(x_fit) == 0 or len(y_fit) == 0:
+            print("Error: No data points in fitting range")
+            return
+
+        def tougaard_model(params, x_full, y_full, x_fit, y_fit):
             B = params['B'].value
             C = params['C'].value
             D = params['D'].value
 
-            # Calculate background using full range above bg_start
-            baseline = y_bg[-1]
-            y_shifted = y_bg - baseline
-            dx = np.mean(np.diff(x_bg))
-            background = np.zeros_like(y_bg)
+            # Calculate background for full range from bg_start
+            baseline = y_full[-1]
+            y_shifted = y_full - baseline
+            dx = np.mean(np.diff(x_full))
+            background_full = np.zeros_like(y_full)
 
-            for i in range(len(x_bg)):
-                E = x_bg[i:] - x_bg[i]
+            for i in range(len(x_full)):
+                E = x_full[i:] - x_full[i]
                 K = B * E / ((C - E ** 2) ** 2 + D * E ** 2)
-                background[i] = np.trapz(K * y_shifted[i:], dx=dx)
+                background_full[i] = np.trapz(K * y_shifted[i:], dx=dx)
 
-            background = background + baseline
+            background_full = background_full + baseline
 
-            # Interpolate background to fit range
-            bg_interp = np.interp(x_fit, x_bg, background)
+            # Get background values only in fit range
+            fit_indices = np.where(fit_mask)[0]
+            background_fit = background_full[fit_indices]
 
-            # Return residuals only for fit range
-            residuals = y_fit - bg_interp
-            return residuals
+            # Return residuals for fit range
+            return y_fit - background_fit
 
         result = lmfit.minimize(tougaard_model,
                                 params,
-                                args=(x_bg, y_bg, x_fit, y_fit),
+                                args=(x_full, y_full, x_fit, y_fit),
                                 method='least_squares',
-                                ftol=1e-10,
-                                xtol=1e-10,
+                                ftol= 1e-10,
+                                xtol= 1e-10,
                                 max_nfev=100,
                                 scale_covar=True,
-                                # nan_policy='omit',
                                 verbose=True)
-                                # **({'fit_kws': fit_kws} if fit_kws else {}))
-        # print(f"Fit report: {result.fit_report()}")
-        self.plot_results(x_fit, y_fit, result.params, result)
+
+        # Print detailed fit results
+        print("\nFit Results:")
+        print(result.message)
+        print(f"Success: {result.success}")
+        print(f"Number of function evaluations: {result.nfev}")
+        # print(f"Initial cost: {result.cost}")
+        print("\nFitted Parameters:")
+        for name in ['B', 'C', 'D']:
+            value = result.params[name].value
+            stderr = result.params[name].stderr if result.params[name].stderr is not None else 0
+            print(f"{name}: {value:.2f} ± {stderr:.2f}")
+
+        if result.success:
+            self.plot_results(x_fit, y_fit, result.params, result)
+        else:
+            self.plot_results(x_fit, y_fit, result.params, result)
+            print("Warning: Fit did not converge")
 
     def plot_results(self, x, y, fitted_params, result):
         self.ax.clear()
