@@ -792,7 +792,6 @@ class TougaardFitWindow(wx.Frame):
         wx.Frame.__init__(self, parent, title="Tougaard Fit", size=(1000, 600))
 
         self.parent = parent
-
         self.panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -856,6 +855,10 @@ class TougaardFitWindow(wx.Frame):
         self.canvas = FigureCanvas(self.panel, -1, self.figure)
         self.ax = self.figure.add_subplot(111)
 
+        # Initialize vertical lines as None
+        self.vline_min = None
+        self.vline_max = None
+
         # Initial plot
         self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
         self.ax.set_xlabel('Binding Energy (eV)')
@@ -865,7 +868,13 @@ class TougaardFitWindow(wx.Frame):
         # Reverse x-axis
         self.ax.set_xlim(max(self.x_values), min(self.x_values))
 
+        # Initial plot with vertical lines
+        self.plot_initial_data()
+
         self.canvas.draw()
+
+        self.min_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
+        self.max_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
 
         # Layout
         control_sizer.Add(range_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -878,6 +887,9 @@ class TougaardFitWindow(wx.Frame):
         main_sizer.Add(self.canvas, 1, wx.EXPAND | wx.ALL, 5)
 
         self.panel.SetSizer(main_sizer)
+
+        # Plot initial data
+        self.plot_initial_data()
 
     def on_fit(self, event):
         min_e = self.min_range.GetValue()
@@ -967,6 +979,23 @@ class TougaardFitWindow(wx.Frame):
             self.plot_results(x_fit, y_fit, result.params, result)
             print("Warning: Fit did not converge")
 
+    def plot_initial_data(self):
+        self.ax.clear()
+        self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
+
+        # Add vertical lines for fit range
+        min_e = self.min_range.GetValue()
+        max_e = self.max_range.GetValue()
+
+        self.vline_min = self.ax.axvline(x=min_e, color='red', linestyle='--', alpha=0.5)
+        self.vline_max = self.ax.axvline(x=max_e, color='red', linestyle='--', alpha=0.5)
+
+        self.ax.set_xlabel('Binding Energy (eV)')
+        self.ax.set_ylabel('Intensity (CPS)')
+        self.ax.legend()
+        self.ax.set_xlim(max(self.x_values), min(self.x_values))
+        self.canvas.draw()
+
     def plot_results(self, x, y, fitted_params, result):
         self.ax.clear()
         bg_start = self.bg_start.GetValue()
@@ -1013,7 +1042,14 @@ class TougaardFitWindow(wx.Frame):
 
         # Plot
         self.ax.plot(self.x_values, self.y_values, 'k-', label='Data')
-        self.ax.plot(x, fit_result, 'r-', label='Fit Result')
+        # self.ax.plot(x, fit_result, 'r-', label='Fit Result')
+
+        # Add vertical lines again
+        min_e = self.min_range.GetValue()
+        max_e = self.max_range.GetValue()
+        self.vline_min = self.ax.axvline(x=min_e, color='red', linestyle='--', alpha=0.5)
+        self.vline_max = self.ax.axvline(x=max_e, color='red', linestyle='--', alpha=0.5)
+
         self.ax.plot(x_bg, background, 'b--', label='Calculated')
 
         self.ax.set_xlabel('Binding Energy (eV)')
@@ -1022,6 +1058,13 @@ class TougaardFitWindow(wx.Frame):
 
         self.ax.set_xlim(max(self.x_values), min(self.x_values))
 
+        self.canvas.draw()
+
+    def on_range_change(self, event):
+        if self.vline_min is not None:
+            self.vline_min.set_xdata([self.min_range.GetValue(), self.min_range.GetValue()])
+        if self.vline_max is not None:
+            self.vline_max.set_xdata([self.max_range.GetValue(), self.max_range.GetValue()])
         self.canvas.draw()
 
 
