@@ -329,7 +329,7 @@ class PreferenceWindow(wx.Frame):
 
         # Scatter marker
         marker_label = wx.StaticText(self.plot_tab, label="Scatter Marker:")
-        self.marker_choice = wx.Choice(self.plot_tab, choices=["o", "s", "^", "D", "*"])
+        self.marker_choice = wx.Choice(self.plot_tab, choices=['.', ',', 'o', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 's', 'p', '*', 'h', 'H', '+', 'x', 'D', 'd', '|', '_'] )# ["o", "s", "^", "D", "*"])
         self.marker_choice.SetMinSize((100, -1))
         sizer.Add(marker_label, pos=(2, 0), flag=wx.ALL, border=5)
         sizer.Add(self.marker_choice, pos=(2, 1), flag=wx.ALL, border=5)

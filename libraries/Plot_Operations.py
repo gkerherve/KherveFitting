@@ -1453,7 +1453,7 @@ class PlotManager:
                                                                                        window)
             label = 'Background (Tougaard)'
         elif method == "Triple U4-Tougaard":
-            background_filtered = BackgroundCalculations.calculate_tripple_tougaard_background(x_values_filtered,
+            background_filtered = BackgroundCalculations.calculate_triple_tougaard_background(x_values_filtered,
                                                                                        y_values_filtered,
                                                                                        sheet_name,
                                                                                        window)

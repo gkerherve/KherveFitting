@@ -453,45 +453,39 @@ class FittingWindow(wx.Frame):
     def on_export_results(self, event):
         self.parent.export_results()
 
-
-    def load_doublet_splittings_OLD(self, library_data):
-        splittings = {}
-        for key, value in library_data.items():
-            element, orbital = key
-            if orbital.endswith(('p', 'd', 'f')):
-                # splittings[f"{element}{orbital}"] = value['Al']['ds']  # Default to Al instrument
-                splittings[f"{element}{orbital}"] = value['Al1486']['ds']  # Default to Al instrument
-        return splittings
-
     def load_doublet_splittings(self, library_data):
         splittings = {}
+        return
         for key, value in library_data.items():
             element, orbital = key
             if orbital.endswith(('p', 'd', 'f')):
                 try:
                     splittings[f"{element}{orbital}"] = value['C-Al1486']['ds']  # Must match Excel exactly
+                    print(f'Loading Splittings for {element} {orbital} Value {value['C-Al1486']['ds']}, split'
+                          f' {splittings[f"{element}{orbital}"]}')
+                    # print(f'Element: {element} , Orbital:{orbital}, Split: {splittings}')
                 except KeyError:
-                    # print(f"Available instruments for {element}{orbital}: {list(value.keys())}")
+                    print(f"Error\nAvailable instruments for {element}{orbital}: {list(value.keys())}")
                     # print(f"Full value data: {value}")
                     continue
         return splittings
 
     def get_doublet_splitting(self, element, orbital, instrument):
-        # Try with the orbital as is
-        key = (element, orbital)
-        if key in self.library_data and instrument in self.library_data[key]:
-            return self.library_data[key][instrument]['ds']
+        # Extract number and letter from orbital (e.g., "3d" -> "3" and "d")
+        orbital_match = re.match(r'(\d)([spdf])', orbital)
+        if orbital_match:
+            num, letter = orbital_match.groups()
+            key = (element, f"{num}{letter}")
 
-        # If not found, try prepending numbers to the orbital
-        for num in range(1, 6):  # Trying 1d, 2d, 3d, 4d, 5d
-            key = (element, f"{num}{orbital}")
-            if key in self.library_data and instrument in self.library_data[key]:
-                # return self.library_data[key][instrument]['ds']
+            if key in self.library_data and 'C-Al1486' in self.library_data[key]:
+                print(f'Found splitting for {element}{num}{letter}: {self.library_data[key]["C-Al1486"]["ds"]}')
                 return self.library_data[key]['C-Al1486']['ds']
+            else:
+                print(f'No splitting found for key: {key}')
 
-        # If still not found, return a default value or raise an error
         print(f"Warning: No doublet splitting found for {element} {orbital}")
-        return 0.0  # or whatever default value makes sense for your application
+        return 0.0
+
 
     def on_add_doublet(self, event):
         if self.parent.bg_min_energy is None or self.parent.bg_max_energy is None:
@@ -499,23 +493,34 @@ class FittingWindow(wx.Frame):
             return
 
         sheet_name = self.parent.sheet_combobox.GetValue()
-        first_word = sheet_name.split()[0]  # Get the first word of the sheet name
-        orbital = re.search(r'[spdf]', first_word)
+        # first_word = sheet_name.split()[0]  # Get the first word of the sheet name
+        # orbital = re.search(r'[spdf]', first_word)
+
+        # Looking into library
+        first_word = sheet_name.split()[0]
+        print(f'First word {first_word}')
+        # element = re.match(r'([A-Z][a-z]*)', first_word).group(1)
+        orbital = re.search(r'([2-5][spdf])', first_word)
+        # print(f'Element: {first_word} , Orbital:{orbital.group(1)}')
+        # if orbital:
+        #     orbital = orbital.group(1)
+        #     print(f"Looking up splitting for element: {element}, orbital: {orbital}")
 
         if not orbital:
-            wx.MessageBox("Invalid sheet name. Cannot determine orbital type. It needs to of the form Au4f and NOT Au 4f, Error",
-                          wx.OK | wx.ICON_ERROR)
+            wx.MessageBox("Invalid sheet name. Cannot determine orbital type. It needs to be of the form Au4f and NOT "
+                          "Au 4f", "Error", wx.OK | wx.ICON_ERROR)
             return
 
         orbital = orbital.group()
 
-        if orbital == 's':
+
+        if orbital[-1] == 's':
             self.parent.add_peak_params()
         else:
             first_peak = self.parent.add_peak_params()
             second_peak = self.parent.add_peak_params()
 
-            # Add this block here to copy fill type and hatch pattern
+
             self.parent.peak_fill_types[second_peak] = self.parent.peak_fill_types[first_peak]
             self.parent.peak_hatch_patterns[second_peak] = self.parent.peak_hatch_patterns[first_peak]
             self.hatch_density = 2
@@ -538,12 +543,12 @@ class FittingWindow(wx.Frame):
 
             # Height constraint
             height_factor = {'p': 0.5, 'd': 0.667, 'f': 0.75}
-            height_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.05"
+            height_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital[1]]}#0.05"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 3, height_constraint)
 
             # Area constraint
             Area_factor = {'p': 0.5, 'd': 0.667, 'f': 0.75}
-            area_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital]}#0.05"
+            area_constraint = f"{chr(65 + first_peak)}*{height_factor[orbital[-1]]}#0.05"
             self.parent.peak_params_grid.SetCellValue(row2 + 1, 6, area_constraint)
 
             # Position constraint
@@ -575,13 +580,13 @@ class FittingWindow(wx.Frame):
             peak_number2 = second_peak + 1
 
             # Set peak names
-            if orbital == 'p':
+            if orbital[-1] == 'p':
                 peak1_name = f"{first_word}3/2 p{peak_number1}"
                 peak2_name = f"{first_word}1/2 p{peak_number2}"
-            elif orbital == 'd':
+            elif orbital[-1] == 'd':
                 peak1_name = f"{first_word}5/2 p{peak_number1}"
                 peak2_name = f"{first_word}3/2 p{peak_number2}"
-            elif orbital == 'f':
+            elif orbital[-1] == 'f':
                 peak1_name = f"{first_word}7/2 p{peak_number1}"
                 peak2_name = f"{first_word}5/2 p{peak_number2}"
 
@@ -795,7 +800,7 @@ class FittingWindow(wx.Frame):
 
 class TougaardFitWindow(wx.Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, title="Tougaard Fit", size=(1000, 600))
+        wx.Frame.__init__(self, parent, title="Tougaard Fit", size=(1050, 600))
 
         self.parent = parent
         self.panel = wx.Panel(self)
@@ -922,7 +927,8 @@ class TougaardFitWindow(wx.Frame):
         self.tougaard_params = []
 
         for i in range(num_tougaard):
-            param_box = wx.StaticBox(self.param_scroll, label=f"Tougaard {i + 1}")
+            param_box = wx.StaticBox(self.param_scroll, label=f"Tougaard {i + 1} B [Scaling], C [Position], "
+                                                              f"D [Width], T0 is 0")
             box_sizer = wx.StaticBoxSizer(param_box, wx.VERTICAL)
 
             params = {}
