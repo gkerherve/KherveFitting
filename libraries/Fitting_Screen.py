@@ -871,6 +871,9 @@ class TougaardFitWindow(wx.Frame):
         self.vline_min = None
         self.vline_max = None
 
+        self.y_max = max(self.y_values)
+        self.y_min = 0
+
         # Plot setup
         self.figure = Figure(figsize=(6, 4))
         self.canvas = FigureCanvas(self.panel, -1, self.figure)
@@ -906,6 +909,24 @@ class TougaardFitWindow(wx.Frame):
         self.min_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
         self.max_range.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
         self.num_tougaard.Bind(wx.EVT_SPINCTRL, self.on_num_tougaard_change)
+        self.panel.Bind(wx.EVT_CHAR_HOOK, self.on_key_press)
+
+    def on_key_press(self, event):
+        if event.ControlDown():
+            if event.GetKeyCode() in [wx.WXK_UP, wx.WXK_DOWN]:
+                y_min = 0
+                intensity_factor = 0.05
+
+                if event.GetKeyCode() == wx.WXK_DOWN:
+                    self.y_max = max(self.y_max - intensity_factor * max(self.y_values), y_min)
+                else:
+                    self.y_max += intensity_factor * max(self.y_values)
+
+                self.ax.set_ylim(y_min, self.y_max)
+                self.canvas.draw_idle()
+                return
+
+        event.Skip()
 
     def create_tougaard_params(self, num_tougaard):
         # Store current values if they exist
@@ -1114,6 +1135,7 @@ class TougaardFitWindow(wx.Frame):
         self.ax.set_ylabel('Intensity (CPS)')
         self.ax.legend()
         self.ax.set_xlim(max(self.x_values), min(self.x_values))
+        self.ax.set_ylim(0, self.y_max)  # Use stored y_max
         self.canvas.draw()
 
     def plot_initial_data(self):

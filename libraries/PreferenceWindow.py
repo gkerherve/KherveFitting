@@ -646,7 +646,7 @@ class PreferenceWindow(wx.Frame):
     def LoadSettings(self):
         self.plot_style.SetSelection(0 if self.parent.plot_style == "scatter" else 1)
         self.point_size_spin.SetValue(self.parent.scatter_size)
-        self.marker_choice.SetSelection(["o", "s", "^", "D", "*"].index(self.parent.scatter_marker))
+        self.marker_choice.SetSelection(['.', ',', 'o', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 's', 'p', '*', 'h', 'H', '+', 'x', 'D', 'd', '|', '_'].index(self.parent.scatter_marker))
         self.scatter_color_picker.SetColour(self.parent.scatter_color)
         self.line_width_spin.SetValue(self.parent.line_width)
         self.line_alpha_spin.SetValue(self.parent.line_alpha)

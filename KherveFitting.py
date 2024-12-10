@@ -454,7 +454,7 @@ class MyFrame(wx.Frame):
                                            f"{self.bg_min_energy:.2f}" if self.bg_min_energy is not None else "")  # Bkg Low
         self.peak_params_grid.SetCellValue(row, 16,
                                            f"{self.bg_max_energy:.2f}" if self.bg_max_energy is not None else "")  # Bkg High
-        self.peak_params_grid.SetCellValue(row, 17, f"{self.offset_l:.2f}")  # Bkg Offset Low
+        self.peak_params_grid.SetCellValue(row, 17, f"{float(self.offset_l):.2f}")  # Bkg Offset Low
         self.peak_params_grid.SetCellValue(row, 18, f"{self.offset_h:.2f}")  # Bkg Offset High
 
         # Set position constraint to background range
@@ -3089,7 +3089,7 @@ if __name__ == '__main__':
     # app.SetHighDPIAware(True)  # Add this line to enable High DPI awareness
     splash = show_splash(duration=3000, delay=2)
 
-    frame = MyFrame(None, "KherveFitting - V1.2 - Nov 2024")
+    frame = MyFrame(None, "KherveFitting - V1.3 - Dec 2024")
     frame.Show(True)
 
     if splash:
