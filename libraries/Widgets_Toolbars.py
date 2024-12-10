@@ -439,6 +439,8 @@ def create_horizontal_toolbar(window):
     # Plot adjustment tools
     plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot', wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
     toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill', wx.Bitmap(os.path.join(icon_path, "STO-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Peak Fill")
+    toggle_y_axis_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Y Axis', wx.Bitmap(os.path.join(icon_path, "Y-25.png"),
+                                                                               wx.BITMAP_TYPE_PNG), shortHelp="Toggle Y Axis Label and Values")
     toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend', wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Legend")
     toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results', wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
     toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Residuals")
@@ -476,6 +478,13 @@ def create_horizontal_toolbar(window):
     toolbar.AddStretchableSpace()
 
     # Export and toggle tools
+    save_peaks_tool = toolbar.AddTool(wx.ID_ANY, 'Save Peaks Library',
+                                      wx.Bitmap(os.path.join(icon_path, "LibSave.png"), wx.BITMAP_TYPE_PNG),
+                                      shortHelp="Save peaks parameters to library")
+
+    open_peaks_tool = toolbar.AddTool(wx.ID_ANY, 'Open Peaks Library',
+                                      wx.Bitmap(os.path.join(icon_path, "LibOpen.png"), wx.BITMAP_TYPE_PNG),
+                                      shortHelp="Load peaks parameters from library")
     export_tool = toolbar.AddTool(wx.ID_ANY, 'Export Results', wx.Bitmap(os.path.join(icon_path, "Export-25g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Export to Results Grid")
     toggle_Col_1_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "HideColumn-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
     window.toggle_right_panel_tool = window.add_toggle_tool(toolbar, "Toggle Right Panel", wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR))
@@ -486,6 +495,9 @@ def create_horizontal_toolbar(window):
     bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, bkg_tool, fitting_tool, noise_analysis_tool,
                         toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, save_tool, save_plot_tool,
                         save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, toggle_peak_fill_tool, id_tool)
+    toolbar.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_y_axis(), toggle_y_axis_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.save_peaks_library(), save_peaks_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.load_peaks_library(), open_peaks_tool)
 
     return toolbar
 

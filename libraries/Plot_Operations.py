@@ -57,6 +57,13 @@ class PlotManager:
         self.legend_visible = True
         self.rsd_text = None
 
+        self.y_axis_visible = True
+
+    def toggle_y_axis(self):
+        self.y_axis_visible = not self.y_axis_visible
+        self.ax.yaxis.set_visible(self.y_axis_visible)
+        self.canvas.draw_idle()
+
     def toggle_energy_scale(self, window):
         window.energy_scale = 'KE' if window.energy_scale == 'BE' else 'BE'
         self.clear_and_replot(window)
