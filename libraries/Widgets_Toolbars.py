@@ -11,6 +11,7 @@ from libraries.Open import ExcelDropTarget, open_xlsx_file
 from libraries.Plot_Operations import PlotManager
 from Functions import toggle_Col_1
 from libraries.Save import update_undo_redo_state
+from libraries.Save import save_peaks_library, load_peaks_library
 from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog
 from libraries.Export import export_word_report
 from libraries.Help import show_libraries_used
@@ -496,8 +497,8 @@ def create_horizontal_toolbar(window):
                         toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, save_tool, save_plot_tool,
                         save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, toggle_peak_fill_tool, id_tool)
     toolbar.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_y_axis(), toggle_y_axis_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.save_peaks_library(), save_peaks_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.load_peaks_library(), open_peaks_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: save_peaks_library(window), save_peaks_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), open_peaks_tool)
 
     return toolbar
 
