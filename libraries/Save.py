@@ -1186,7 +1186,7 @@ def create_plot_script_from_excel(window):
     print(f"Plot script created: {py_filepath}")
 
 
-def save_peaks_library(window):
+def save_peaks_libraryOLD(window):
     sheet_name = window.sheet_combobox.GetValue()
 
     with wx.FileDialog(window, "Save peaks library",
@@ -1207,7 +1207,6 @@ def save_peaks_library(window):
 
         with open(path, 'w') as f:
             json.dump(peaks_data, f, indent=2)
-
 
 def load_peaks_library_OLD(window):
     with wx.FileDialog(window, "Load peaks library",
@@ -1273,11 +1272,35 @@ def load_peaks_library_OLD(window):
         window.clear_and_replot()
 
 
+def save_peaks_library(window):
+    sheet_name = window.sheet_combobox.GetValue()
+
+    with wx.FileDialog(window, "Save peaks library",
+                       wildcard="JSON files (*.json)|*.json",
+                       defaultDir="Peaks Library",
+                       style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+
+        path = fileDialog.GetPath()
+        peaks_data = {
+            'Core levels': {
+                sheet_name: {
+                    'Fitting': window.Data['Core levels'][sheet_name]['Fitting'],
+                    'Background': window.Data['Core levels'][sheet_name]['Background']
+                }
+            }
+        }
+
+        with open(path, 'w') as f:
+            json.dump(peaks_data, f, indent=2)
+
 def load_peaks_library(window):
     with wx.FileDialog(window, "Load peaks library",
                        wildcard="JSON files (*.json)|*.json",
                        defaultDir="Peaks Library",
                        style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+
         if fileDialog.ShowModal() == wx.ID_CANCEL:
             return
 
@@ -1286,18 +1309,22 @@ def load_peaks_library(window):
             peaks_data = json.load(f)
 
         sheet_name = window.sheet_combobox.GetValue()
-        loaded_fitting_data = peaks_data['Core levels'][list(peaks_data['Core levels'].keys())[0]]['Fitting']
+        source_sheet = list(peaks_data['Core levels'].keys())[0]
+        source_data = peaks_data['Core levels'][source_sheet]
 
-        # Update background data with proper type conversion
-        window.background_method = loaded_fitting_data.get('Background Type', 'Smart')
-        window.bg_min_energy = float(loaded_fitting_data.get('Bkg Low', 0))
-        window.bg_max_energy = float(loaded_fitting_data.get('Bkg High', 0))
-        window.offset_h = float(loaded_fitting_data.get('Bkg Offset High', 0))
-        window.offset_l = float(loaded_fitting_data.get('Bkg Offset Low', 0))
+        # Copy fitting data
+        window.Data['Core levels'][sheet_name]['Fitting'] = source_data['Fitting']
 
-        # Calculate background with loaded parameters
-        window.plot_manager.plot_background(window)
+        # Copy background data
+        if 'Background' in source_data:
+            window.Data['Core levels'][sheet_name]['Background'] = source_data['Background']
+            window.background = np.array(source_data['Background']['Bkg Y'])
+            window.bg_min_energy = float(source_data['Background'].get('Bkg Low', 0))
+            window.bg_max_energy = float(source_data['Background'].get('Bkg High', 0))
+            window.background_method = str(source_data['Background'].get('Bkg Type', 'Smart'))
+            window.offset_h = float(source_data['Background'].get('Bkg Offset High', 0))
+            window.offset_l = float(source_data['Background'].get('Bkg Offset Low', 0))
 
-        window.Data['Core levels'][sheet_name]['Fitting'] = loaded_fitting_data
+        # Update display
         from libraries.Sheet_Operations import on_sheet_selected
         on_sheet_selected(window, sheet_name)
