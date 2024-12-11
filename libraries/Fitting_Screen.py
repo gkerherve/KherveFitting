@@ -130,11 +130,11 @@ class FittingWindow(wx.Frame):
             self.cross_section2.SetValue(','.join(map(str, saved_values2)))
             self.cross_section2.SetValue(','.join(map(str, saved_values3)))
 
-        background_button = wx.Button(self.background_panel, label="Background")
+        background_button = wx.Button(self.background_panel, label="Create\nBackground")
         background_button.SetMinSize((125, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
-        clear_background_button = wx.Button(self.background_panel, label="Clear All")
+        clear_background_button = wx.Button(self.background_panel, label="Clear\nBackground & Peaks")
         clear_background_button.SetMinSize((125, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 

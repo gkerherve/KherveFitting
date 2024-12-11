@@ -785,10 +785,10 @@ class MyFrame(wx.Frame):
         self.plot_manager.update_peak_fwhm(self, x)
 
 
-    def adjust_plot_limits_OLD(self, axis, direction):
+    def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)
 
-    def adjust_plot_limits(self, axis, direction):
+    def adjust_plot_limits_NOTWORKING(self, axis, direction):
         sheet_name = self.parent.sheet_combobox.GetValue()
         limits = self.plot_config.get_plot_limits(self, sheet_name)
         intensity_factor = 0.05
@@ -1431,8 +1431,32 @@ class MyFrame(wx.Frame):
     def on_click(self, event):
         if event.inaxes:
             x_click = event.xdata
+            if event.button == 1 and event.key == 'shift' and self.background_tab_selected:
+                sheet_name = self.sheet_combobox.GetValue()
+                x_click = event.xdata
+                if self.vline1 is not None and self.vline2 is not None:
+                    vline1_x = self.vline1.get_xdata()[0]
+                    vline2_x = self.vline2.get_xdata()[0]
 
-            if event.button == 1:  # Left click
+                    dist1 = abs(x_click - vline1_x)
+                    dist2 = abs(x_click - vline2_x)
+
+                    if dist1 < dist2:
+                        self.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = x_click
+                        self.vline1.set_xdata([x_click, x_click])
+                        raw_y = self.y_values[np.argmin(np.abs(self.x_values - x_click))]
+                        self.offset_l = event.ydata - raw_y
+                    else:
+                        self.Data['Core levels'][sheet_name]['Background']['Bkg High'] = x_click
+                        self.vline2.set_xdata([x_click, x_click])
+                        raw_y = self.y_values[np.argmin(np.abs(self.x_values - x_click))]
+                        self.offset_h = event.ydata - raw_y
+
+                    self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
+                    self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
+                    self.plot_manager.plot_background(self)
+                    self.canvas.draw_idle()
+            elif event.button == 1:  # Left click
                 if event.key == 'shift':  # SHIFT + left click
                     if self.peak_fitting_tab_selected and self.selected_peak_index is not None:
                         row = self.selected_peak_index * 2  # Each peak uses two rows in the grid
@@ -1914,7 +1938,32 @@ class MyFrame(wx.Frame):
         self.canvas.draw_idle()
 
     def on_motion(self, event):
-        if event.inaxes and self.moving_vline is not None:
+        if event.key == 'shift' and event.button == 1 and self.background_tab_selected:
+            sheet_name = self.sheet_combobox.GetValue()
+            x_click = event.xdata
+            if self.vline1 is not None and self.vline2 is not None:
+                vline1_x = self.vline1.get_xdata()[0]
+                vline2_x = self.vline2.get_xdata()[0]
+
+                dist1 = abs(x_click - vline1_x)
+                dist2 = abs(x_click - vline2_x)
+
+                if dist1 < dist2:
+                    self.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = x_click
+                    self.vline1.set_xdata([x_click, x_click])
+                    raw_y = self.y_values[np.argmin(np.abs(self.x_values - x_click))]
+                    self.offset_l = event.ydata - raw_y
+                else:
+                    self.Data['Core levels'][sheet_name]['Background']['Bkg High'] = x_click
+                    self.vline2.set_xdata([x_click, x_click])
+                    raw_y = self.y_values[np.argmin(np.abs(self.x_values - x_click))]
+                    self.offset_h = event.ydata - raw_y
+
+                self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
+                self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
+                self.plot_manager.plot_background(self)
+                self.canvas.draw_idle()
+        elif event.inaxes and self.moving_vline is not None:
             x_click = event.xdata
             self.moving_vline.set_xdata([x_click])
 
