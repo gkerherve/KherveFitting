@@ -1565,6 +1565,11 @@ class PlotManager:
             if 'Fitting' in window.Data['Core levels'][sheet_name]:
                 window.Data['Core levels'][sheet_name]['Fitting'] = {}
 
+            window.offset_l = 0
+            window.offset_h = 0
+            window.fitting_window.offset_l_text.SetValue('0')
+            window.fitting_window.offset_h_text.SetValue('0')
+
             # Redraw the canvas and update layout
             self.canvas.draw_idle()
             window.panel.Layout()
@@ -1593,6 +1598,11 @@ class PlotManager:
             window.vline1 = None
             window.vline2 = None
             window.show_hide_vlines()
+
+            window.offset_l = 0
+            window.offset_h = 0
+            window.fitting_window.offset_l_text.SetValue('0')
+            window.fitting_window.offset_h_text.SetValue('0')
 
             # Redraw the plot
             self.clear_and_replot(window)
