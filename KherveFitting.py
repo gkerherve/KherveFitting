@@ -1432,14 +1432,19 @@ class MyFrame(wx.Frame):
         if event.inaxes:
             x_click = event.xdata
             if event.button == 1 and event.key == 'shift' and self.background_tab_selected:
+                # Store current motion handler if it exists
+                self.motion_notify_id = self.canvas.mpl_connect('motion_notify_event', self.on_motion)
+                self.button_release_id = self.canvas.mpl_connect('button_release_event', self.on_release)
+
                 x_click = event.xdata
+                sheet_name = self.sheet_combobox.GetValue()
                 if self.vline1 is not None and self.vline2 is not None:
                     vline1_x = self.vline1.get_xdata()[0]
                     vline2_x = self.vline2.get_xdata()[0]
 
                     # Determine which vline is at low/high BE
-                    low_be_x = max(vline1_x, vline2_x)  # Higher value = lower BE
-                    high_be_x = min(vline1_x, vline2_x)  # Lower value = higher BE
+                    low_be_x = min(vline1_x, vline2_x)
+                    high_be_x = max(vline1_x, vline2_x)
 
                     dist1 = abs(x_click - vline1_x)
                     dist2 = abs(x_click - vline2_x)
@@ -1448,17 +1453,21 @@ class MyFrame(wx.Frame):
                         raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline1_x))]
                         if vline1_x == low_be_x:
                             self.offset_l = event.ydata - raw_y
+                            self.Data['Core levels'][sheet_name]['Background']['Bkg Offset Low'] = self.offset_l
                             self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
                         else:
                             self.offset_h = event.ydata - raw_y
+                            self.Data['Core levels'][sheet_name]['Background']['Bkg Offset High'] = self.offset_h
                             self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
                     else:  # Closer to vline2
                         raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline2_x))]
                         if vline2_x == low_be_x:
                             self.offset_l = event.ydata - raw_y
+                            self.Data['Core levels'][sheet_name]['Background']['Bkg Offset Low'] = self.offset_l
                             self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
                         else:
                             self.offset_h = event.ydata - raw_y
+                            self.Data['Core levels'][sheet_name]['Background']['Bkg Offset High'] = self.offset_h
                             self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
 
                     self.plot_manager.plot_background(self)
@@ -1945,14 +1954,16 @@ class MyFrame(wx.Frame):
 
     def on_motion(self, event):
         if event.button == 1 and event.key == 'shift' and self.background_tab_selected:
+            # print('ON MOTION')
             x_click = event.xdata
+            sheet_name = self.sheet_combobox.GetValue()
             if self.vline1 is not None and self.vline2 is not None:
                 vline1_x = self.vline1.get_xdata()[0]
                 vline2_x = self.vline2.get_xdata()[0]
 
                 # Determine which vline is at low/high BE
-                low_be_x = min(vline1_x, vline2_x)  # Higher value = lower BE
-                high_be_x = max(vline1_x, vline2_x)  # Lower value = higher BE
+                low_be_x = min(vline1_x, vline2_x)
+                high_be_x = max(vline1_x, vline2_x)
 
                 dist1 = abs(x_click - vline1_x)
                 dist2 = abs(x_click - vline2_x)
@@ -1961,17 +1972,21 @@ class MyFrame(wx.Frame):
                     raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline1_x))]
                     if vline1_x == low_be_x:
                         self.offset_l = event.ydata - raw_y
+                        self.Data['Core levels'][sheet_name]['Background']['Bkg Offset Low'] = self.offset_l
                         self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
                     else:
                         self.offset_h = event.ydata - raw_y
+                        self.Data['Core levels'][sheet_name]['Background']['Bkg Offset High'] = self.offset_h
                         self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
                 else:  # Closer to vline2
                     raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline2_x))]
                     if vline2_x == low_be_x:
                         self.offset_l = event.ydata - raw_y
+                        self.Data['Core levels'][sheet_name]['Background']['Bkg Offset Low'] = self.offset_l
                         self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
                     else:
                         self.offset_h = event.ydata - raw_y
+                        self.Data['Core levels'][sheet_name]['Background']['Bkg Offset High'] = self.offset_h
                         self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
 
                 self.plot_manager.plot_background(self)
@@ -2014,6 +2029,14 @@ class MyFrame(wx.Frame):
 
     def on_release(self, event):
         if self.moving_vline is not None:
+            # Disconnect motion handler when mouse is released
+            if hasattr(self, 'motion_notify_id'):
+                self.canvas.mpl_disconnect(self.motion_notify_id)
+                delattr(self, 'motion_notify_id')
+            if hasattr(self, 'button_release_id'):
+                self.canvas.mpl_disconnect(self.button_release_id)
+                delattr(self, 'button_release_id')
+
             # self.canvas.mpl_disconnect(self.motion_cid)
             # self.canvas.mpl_disconnect(self.release_cid)
             self.moving_vline = None

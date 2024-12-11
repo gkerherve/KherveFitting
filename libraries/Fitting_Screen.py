@@ -146,7 +146,7 @@ class FittingWindow(wx.Frame):
         clear_background_only_button.SetMinSize((125, 40))
         clear_background_only_button.Bind(wx.EVT_BUTTON, self.on_clear_background_only)
 
-        self.tougaard_fit_btn = wx.Button(self.background_panel, label="Get Tougaard\n B, C, D Values")
+        self.tougaard_fit_btn = wx.Button(self.background_panel, label="Create Tougaard\n Model")
         self.tougaard_fit_btn.SetMinSize((125, 40))
         self.tougaard_fit_btn.Bind(wx.EVT_BUTTON, lambda evt: TougaardFitWindow(self).Show())
 
@@ -870,7 +870,7 @@ class TougaardFitWindow(wx.Frame):
         self.fit_button = wx.Button(control_panel, label="Fit")
         self.fit_button.SetMinSize((110, 40))
         self.fit_button.Bind(wx.EVT_BUTTON, self.on_fit)
-        self.copy_button = wx.Button(control_panel, label="Copy to Background")
+        self.copy_button = wx.Button(control_panel, label="Copy to Peak Fitting Screen")
         self.copy_button.SetMinSize((110, 40))
         self.copy_button.Bind(wx.EVT_BUTTON, self.on_copy_values)
         button_sizer.Add(self.fit_button, 1, wx.ALL, 5)

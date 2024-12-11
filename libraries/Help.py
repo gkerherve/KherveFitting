@@ -310,7 +310,8 @@ def show_shortcuts(parent):
     <li><b>Alt+Right:</b> Move peak to Low BE</li>
     <li><b>Alt+SHIFT+Left:</b> increase FWHM</li>
     <li><b>Alt+SHIFT+Right:</b> Decrease FWHM</li>
-    <li><b>SHIFT+Mouse Left button:</b> increase/decrease FWHM</li>
+    <li><b>SHIFT+Mouse Left button:</b> increase/decrease FWHM in Peak Fitting Tab</li>
+    <li><b>SHIFT+Mouse Left button:</b> increase/decrease Offset Low or High in Background Tab</li>
     </ul>
     </body>
     </html>
