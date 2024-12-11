@@ -1437,17 +1437,29 @@ class MyFrame(wx.Frame):
                     vline1_x = self.vline1.get_xdata()[0]
                     vline2_x = self.vline2.get_xdata()[0]
 
+                    # Determine which vline is at low/high BE
+                    low_be_x = max(vline1_x, vline2_x)  # Higher value = lower BE
+                    high_be_x = min(vline1_x, vline2_x)  # Lower value = higher BE
+
                     dist1 = abs(x_click - vline1_x)
                     dist2 = abs(x_click - vline2_x)
 
-                    if dist1 < dist2:
+                    if dist1 < dist2:  # Closer to vline1
                         raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline1_x))]
-                        self.offset_l = event.ydata - raw_y
-                        self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
-                    else:
+                        if vline1_x == low_be_x:
+                            self.offset_l = event.ydata - raw_y
+                            self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
+                        else:
+                            self.offset_h = event.ydata - raw_y
+                            self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
+                    else:  # Closer to vline2
                         raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline2_x))]
-                        self.offset_h = event.ydata - raw_y
-                        self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
+                        if vline2_x == low_be_x:
+                            self.offset_l = event.ydata - raw_y
+                            self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
+                        else:
+                            self.offset_h = event.ydata - raw_y
+                            self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
 
                     self.plot_manager.plot_background(self)
             elif event.button == 1:  # Left click
@@ -1938,17 +1950,29 @@ class MyFrame(wx.Frame):
                 vline1_x = self.vline1.get_xdata()[0]
                 vline2_x = self.vline2.get_xdata()[0]
 
+                # Determine which vline is at low/high BE
+                low_be_x = min(vline1_x, vline2_x)  # Higher value = lower BE
+                high_be_x = max(vline1_x, vline2_x)  # Lower value = higher BE
+
                 dist1 = abs(x_click - vline1_x)
                 dist2 = abs(x_click - vline2_x)
 
-                if dist1 < dist2:
+                if dist1 < dist2:  # Closer to vline1
                     raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline1_x))]
-                    self.offset_l = event.ydata - raw_y
-                    self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
-                else:
+                    if vline1_x == low_be_x:
+                        self.offset_l = event.ydata - raw_y
+                        self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
+                    else:
+                        self.offset_h = event.ydata - raw_y
+                        self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
+                else:  # Closer to vline2
                     raw_y = self.y_values[np.argmin(np.abs(self.x_values - vline2_x))]
-                    self.offset_h = event.ydata - raw_y
-                    self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
+                    if vline2_x == low_be_x:
+                        self.offset_l = event.ydata - raw_y
+                        self.fitting_window.offset_l_text.SetValue(f'{self.offset_l:.1f}')
+                    else:
+                        self.offset_h = event.ydata - raw_y
+                        self.fitting_window.offset_h_text.SetValue(f'{self.offset_h:.1f}')
 
                 self.plot_manager.plot_background(self)
         elif event.inaxes and self.moving_vline is not None:
