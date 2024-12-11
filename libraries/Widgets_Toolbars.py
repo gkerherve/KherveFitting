@@ -499,6 +499,10 @@ def create_horizontal_toolbar(window):
     toolbar.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_y_axis(), toggle_y_axis_tool)
     window.Bind(wx.EVT_TOOL, lambda event: save_peaks_library(window), save_peaks_tool)
     window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), open_peaks_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: save_peaks_to_github(window), save_peaks_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), open_peaks_tool)
+
+
 
     return toolbar
 

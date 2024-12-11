@@ -1077,31 +1077,30 @@ class PlotManager:
         residual_base.set_visible(self.residuals_visible)
         rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
 
+
         if rsd is not None:
             y_max = self.ax.get_ylim()[1]
             residual_height = 1.07 * max(window.y_values)
-            x_min = self.ax.get_xlim()[1] + 0.4
 
-            if self.rsd_text:
-                self.rsd_text.remove()
+            # Only show RSD if residuals are within plot range
+            if residual_height <= y_max:
+                x_min = self.ax.get_xlim()[1] + 0.4
 
-            self.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
-                                         horizontalalignment='right',
-                                         verticalalignment='center',
-                                         fontsize=9,
-                                         # color='grey',
-                                         color=self.residual_color,
-                                         alpha=self.residual_alpha+0.2,
-                                         bbox=dict(facecolor='white', edgecolor='none'))
+                if self.rsd_text:
+                    self.rsd_text.remove()
 
-            self.rsd_text.set_visible(self.residuals_visible)
-        else:
-            # If RSD is None, remove the text if it exists
-            if self.rsd_text:
-                self.rsd_text.remove()
-                self.rsd_text = None
-
-
+                self.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
+                                             horizontalalignment='right',
+                                             verticalalignment='center',
+                                             fontsize=9,
+                                             color=self.residual_color,
+                                             alpha=self.residual_alpha + 0.2,
+                                             bbox=dict(facecolor='white', edgecolor='none'))
+                self.rsd_text.set_visible(self.residuals_visible)
+            else:
+                if self.rsd_text:
+                    self.rsd_text.remove()
+                    self.rsd_text = None
 
         # Update the Y-axis label
         self.ax.set_ylabel(f'Intensity (CPS), residual x {scaling_factor:.2f}')
@@ -1466,7 +1465,11 @@ class PlotManager:
                                                                                        window)
             label = 'Background (Tougaard)'
         else:
-            raise ValueError(f"Unknown background method: {method}")
+            background_filtered = BackgroundCalculations.calculate_smart_background(x_values_filtered,
+                                                                                    y_values_filtered, offset_h,
+                                                                                    offset_l)
+            label = 'Background (Smart)'
+            # raise ValueError(f"Unknown background method: {method}")
 
         new_background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
         new_background[mask] = background_filtered

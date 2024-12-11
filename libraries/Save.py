@@ -4,6 +4,8 @@ from scipy import interpolate
 import json
 import numpy as np
 import wx
+# import requests
+import base64
 import io
 import os
 import pandas as pd
@@ -1185,7 +1187,7 @@ def create_plot_script_from_excel(window):
 
     print(f"Plot script created: {py_filepath}")
 
-def save_peaks_library(window):
+def save_peaks_library_OLD(window):
     sheet_name = window.sheet_combobox.GetValue()
 
     with wx.FileDialog(window, "Save peaks library",
@@ -1208,7 +1210,7 @@ def save_peaks_library(window):
         with open(path, 'w') as f:
             json.dump(peaks_data, f, indent=2)
 
-def load_peaks_library(window):
+def load_peaks_library_OLD(window):
     with wx.FileDialog(window, "Load peaks library",
                        wildcard="JSON files (*.json)|*.json",
                        defaultDir="Peaks Library",
@@ -1241,3 +1243,136 @@ def load_peaks_library(window):
         # Update display
         from libraries.Sheet_Operations import on_sheet_selected
         on_sheet_selected(window, sheet_name)
+
+
+def save_peaks_library(window):
+    sheet_name = window.sheet_combobox.GetValue()
+    with wx.FileDialog(window, "Save peaks library", wildcard="JSON files (*.json)|*.json",
+                       defaultDir="Peaks Library", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        path = fileDialog.GetPath()
+
+        peaks_data = {
+            'Core levels': {
+                sheet_name: {
+                    'Fitting': window.Data['Core levels'][sheet_name]['Fitting']
+                }
+            }
+        }
+
+        with open(path, 'w') as f:
+            json.dump(peaks_data, f, indent=2)
+
+
+def load_peaks_library(window):
+    import wx
+    import json
+    from libraries.Sheet_Operations import on_sheet_selected
+    from libraries.Fitting_Screen import FittingWindow
+
+    with wx.FileDialog(window, "Load peaks library", wildcard="JSON files (*.json)|*.json",
+                       defaultDir="Peaks Library", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        path = fileDialog.GetPath()
+
+    with open(path) as f:
+        peaks_data = json.load(f)
+
+    sheet_name = window.sheet_combobox.GetValue()
+    source_sheet = list(peaks_data['Core levels'].keys())[0]
+    source_data = peaks_data['Core levels'][source_sheet]
+
+    # Copy only fitting data
+    window.Data['Core levels'][sheet_name]['Fitting'] = source_data['Fitting']
+
+    # Update display
+    on_sheet_selected(window, sheet_name)
+
+    # Ensure `fitting_window` exists and call `on_background`
+    if not hasattr(window, 'fitting_window') or window.fitting_window is None:
+        window.fitting_window = FittingWindow(parent=window)  # Initialize if necessary
+
+    bg_low = window.peak_params_grid.GetCellValue(0, 15)
+    bg_high = window.peak_params_grid.GetCellValue(0, 16)
+
+    if bg_low and bg_high:
+        window.bg_min_energy = float(bg_low)
+        window.bg_max_energy = float(bg_high)
+    else:
+        x_values = window.Data['Core levels'][sheet_name]['B.E.']
+        window.bg_min_energy = min(x_values) + 0.2
+        window.bg_max_energy = max(x_values) - 0.2
+
+    # window.fitting_window.on_background(None)
+
+
+
+def save_peaks_to_github(window, filename):
+    API_URL = "https://api.github.com/repos/KherveFitting/peaks-library/contents/peaks"
+
+    sheet_name = window.sheet_combobox.GetValue()
+    peaks_data = {
+        'Core levels': {
+            sheet_name: {
+                'Fitting': window.Data['Core levels'][sheet_name]['Fitting'],
+                'Background': window.Data['Core levels'][sheet_name]['Background']
+            }
+        }
+    }
+
+    content = base64.b64encode(json.dumps(peaks_data).encode()).decode()
+
+    headers = {
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    # List existing files to check if file exists
+    try:
+        response = requests.get(f"{API_URL}/{filename}.json", headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.RequestException:
+        wx.MessageBox("Error accessing peaks library. Check your internet connection.", "Error")
+        return
+def load_peaks_from_github(window):
+    API_URL = "https://api.github.com/repos/KherveFitting/peaks-library/contents/peaks"
+
+    try:
+        # Get list of available peak libraries
+        response = requests.get(API_URL)
+        response.raise_for_status()
+        files = [f['name'] for f in response.json() if f['name'].endswith('.json')]
+
+        # Show file selection dialog
+        dialog = wx.SingleChoiceDialog(window, "Select a peak library to load:",
+                                       "Load Peak Library", files)
+        if dialog.ShowModal() == wx.ID_OK:
+            filename = dialog.GetStringSelection()
+
+            # Get file content
+            response = requests.get(f"{API_URL}/{filename}")
+            response.raise_for_status()
+            content = base64.b64decode(response.json()['content']).decode()
+            peaks_data = json.loads(content)
+
+            # Rest of your existing load code...
+            sheet_name = window.sheet_combobox.GetValue()
+            source_sheet = list(peaks_data['Core levels'].keys())[0]
+            source_data = peaks_data['Core levels'][source_sheet]
+
+            window.Data['Core levels'][sheet_name]['Fitting'] = source_data['Fitting']
+            if 'Background' in source_data:
+                window.Data['Core levels'][sheet_name]['Background'] = source_data['Background']
+                window.background = np.array(source_data['Background']['Bkg Y'])
+                window.bg_min_energy = float(source_data['Background'].get('Bkg Low', 0))
+                window.bg_max_energy = float(source_data['Background'].get('Bkg High', 0))
+                window.background_method = str(source_data['Background'].get('Bkg Type', 'Smart'))
+                window.offset_h = float(source_data['Background'].get('Bkg Offset High', 0))
+                window.offset_l = float(source_data['Background'].get('Bkg Offset Low', 0))
+
+            from libraries.Sheet_Operations import on_sheet_selected
+            on_sheet_selected(window, sheet_name)
+
+    except requests.exceptions.RequestException:
+        wx.MessageBox("Error accessing peaks library. Check your internet connection.", "Error")
