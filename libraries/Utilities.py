@@ -6,6 +6,7 @@ from openpyxl import load_workbook
 import os
 import pandas as pd
 import libraries.Sheet_Operations
+import json
 
 def _clear_peak_params_grid(window):
     num_rows = window.peak_params_grid.GetNumberRows()
@@ -288,6 +289,7 @@ class CropWindow(wx.Frame):
 
         # Update window.Data
         self.parent.Data['Core levels'][new_name] = new_data
+        self.parent.Data['Number of Core levels'] += 1
 
         # Update Excel file
         wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
@@ -300,10 +302,19 @@ class CropWindow(wx.Frame):
         with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a') as writer:
             df.to_excel(writer, sheet_name=new_name, index=False)
 
+        # Update JSON file
+        json_file_path = os.path.splitext(self.parent.Data['FilePath'])[0] + '.json'
+        if os.path.exists(json_file_path):
+            from libraries.Save import convert_to_serializable_and_round
+            json_data = convert_to_serializable_and_round(self.parent.Data)
+            with open(json_file_path, 'w') as json_file:
+                json.dump(json_data, json_file, indent=2)
+
         # Update sheet list
         self.parent.sheet_combobox.Append(new_name)
         self.parent.sheet_combobox.SetValue(new_name)
-        self.parent.on_sheet_selected(new_name)
+        from libraries.Sheet_Operations import on_sheet_selected
+        on_sheet_selected(self.parent, new_name)
 
         self.Close()
 
