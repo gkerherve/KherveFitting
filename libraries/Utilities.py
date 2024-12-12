@@ -200,6 +200,40 @@ def on_canvas_click(event):
     window.canvas.Unbind(wx.EVT_LEFT_DOWN)
 
 
+def on_delete_sheet(window, event):
+    sheet_name = window.sheet_combobox.GetValue()
+    dlg = wx.MessageDialog(window, f"Are you sure you want to delete sheet {sheet_name}?",
+                           "Confirm Delete", wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+
+    if dlg.ShowModal() == wx.ID_YES:
+        # Remove from Excel file
+        wb = openpyxl.load_workbook(window.Data['FilePath'])
+        if sheet_name in wb.sheetnames:
+            wb.remove(wb[sheet_name])
+            wb.save(window.Data['FilePath'])
+
+        # Remove from window.Data
+        if sheet_name in window.Data['Core levels']:
+            del window.Data['Core levels'][sheet_name]
+            window.Data['Number of Core levels'] -= 1
+
+        # Update combobox
+        window.sheet_combobox.Delete(window.sheet_combobox.FindString(sheet_name))
+        if window.sheet_combobox.GetCount() > 0:
+            window.sheet_combobox.SetSelection(0)
+            from libraries.Sheet_Operations import on_sheet_selected
+            on_sheet_selected(window, window.sheet_combobox.GetString(0))
+
+        # Clear plots if no sheets remain
+        if window.sheet_combobox.GetCount() == 0:
+            window.ax.clear()
+            window.canvas.draw()
+
+    dlg.Destroy()
+
+
+
+
 
 class CropWindow(wx.Frame):
     def __init__(self, parent,*args, **kw):
@@ -462,7 +496,7 @@ class PlotModWindow(wx.Frame):
             kernel = np.ones(width) / width
             smoothed = np.convolve(y, kernel, mode='same')
 
-        new_sheet = f"{sheet_name}_smoothed"
+        new_sheet = f"{sheet_name}_s"
         self.save_modified_data(x, smoothed, new_sheet, "Smoothed")
 
     def on_differentiate(self, event):
@@ -475,7 +509,7 @@ class PlotModWindow(wx.Frame):
         derivative = np.gradient(y, x)
         smoothed_deriv = savgol_filter(derivative, width, 3)
 
-        new_sheet = f"{sheet_name}_diff"
+        new_sheet = f"{sheet_name}_d"
         self.save_modified_data(x, smoothed_deriv, new_sheet, "Differentiated")
 
     def on_integrate(self, event):
@@ -488,6 +522,6 @@ class PlotModWindow(wx.Frame):
         integrated = cumtrapz(y, x, initial=0)
         smoothed_int = savgol_filter(integrated, width, 3)
 
-        new_sheet = f"{sheet_name}_int"
+        new_sheet = f"{sheet_name}_i"
         self.save_modified_data(x, smoothed_int, new_sheet, "Integrated")
 

@@ -14,7 +14,7 @@ from libraries.Save import update_undo_redo_state
 from libraries.Save import save_peaks_library, load_peaks_library
 from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog
 from libraries.Export import export_word_report
-from libraries.Utilities import CropWindow, PlotModWindow
+from libraries.Utilities import CropWindow, PlotModWindow, on_delete_sheet
 from libraries.Help import show_libraries_used
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
@@ -421,6 +421,11 @@ def create_horizontal_toolbar(window):
     window.sheet_combobox.SetToolTip("Select Sheet")
     toolbar.AddControl(window.sheet_combobox)
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected(window, event))
+
+    delete_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Delete Sheet',
+                                        wx.Bitmap(os.path.join(icon_path, "delete-25.png"), wx.BITMAP_TYPE_PNG),
+                                        shortHelp="Delete current sheet")
+    window.Bind(wx.EVT_TOOL, lambda event: on_delete_sheet(window, event), delete_sheet_tool)
 
     toolbar.AddSeparator()
     add_vertical_separator(toolbar, separators)
