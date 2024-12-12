@@ -1,7 +1,11 @@
 # libraries/utilities.py
 import wx
 import numpy as np
-
+import openpyxl
+from openpyxl import load_workbook
+import os
+import pandas as pd
+import libraries.Sheet_Operations
 
 def _clear_peak_params_grid(window):
     num_rows = window.peak_params_grid.GetNumberRows()
@@ -191,3 +195,122 @@ def on_canvas_click(event):
     window.canvas.Unbind(wx.EVT_LEFT_DOWN)
 
 
+
+class CropWindow(wx.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, title="Crop Data", size=(300, 200))
+        self.parent = parent
+        self.panel = wx.Panel(self)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Range controls
+        range_box = wx.StaticBox(self.panel, label="Crop Range")
+        range_sizer = wx.StaticBoxSizer(range_box, wx.VERTICAL)
+
+        min_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.min_ctrl = wx.SpinCtrlDouble(self.panel, min=0, max=2000, inc=0.1)
+        min_sizer.Add(wx.StaticText(self.panel, label="Min BE:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        min_sizer.Add(self.min_ctrl, 1)
+
+        max_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.max_ctrl = wx.SpinCtrlDouble(self.panel, min=0, max=2000, inc=0.1)
+        max_sizer.Add(wx.StaticText(self.panel, label="Max BE:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        max_sizer.Add(self.max_ctrl, 1)
+
+        range_sizer.Add(min_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        range_sizer.Add(max_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        # Sheet name control
+        name_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.name_ctrl = wx.TextCtrl(self.panel)
+        name_sizer.Add(wx.StaticText(self.panel, label="New Sheet:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        name_sizer.Add(self.name_ctrl, 1)
+
+        # Crop button
+        self.crop_btn = wx.Button(self.panel, label="Crop")
+        self.crop_btn.Bind(wx.EVT_BUTTON, self.on_crop)
+
+        sizer.Add(range_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(self.crop_btn, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.panel.SetSizer(sizer)
+
+        self.vline_min = None
+        self.vline_max = None
+
+        self.init_values()
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.min_ctrl.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
+        self.max_ctrl.Bind(wx.EVT_SPINCTRLDOUBLE, self.on_range_change)
+
+    def init_values(self):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        x_values = self.parent.Data['Core levels'][sheet_name]['B.E.']
+        min_be = min(x_values) + 2
+        max_be = max(x_values) - 2
+        self.min_ctrl.SetValue(min_be)
+        self.max_ctrl.SetValue(max_be)
+        self.name_ctrl.SetValue(f"{sheet_name}_crop")
+        self.show_vlines()
+
+    def show_vlines(self):
+        if self.vline_min:
+            self.vline_min.remove()
+        if self.vline_max:
+            self.vline_max.remove()
+
+        self.vline_min = self.parent.ax.axvline(self.min_ctrl.GetValue(), color='green', linestyle='--', alpha=0.5)
+        self.vline_max = self.parent.ax.axvline(self.max_ctrl.GetValue(), color='green', linestyle='--', alpha=0.5)
+        self.parent.canvas.draw_idle()
+
+    def on_range_change(self, event):
+        self.show_vlines()
+
+    def on_crop(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        new_name = self.name_ctrl.GetValue()
+        min_be = self.min_ctrl.GetValue()
+        max_be = self.max_ctrl.GetValue()
+
+        data = self.parent.Data['Core levels'][sheet_name]
+        x_values = np.array(data['B.E.'])
+        mask = (x_values >= min_be) & (x_values <= max_be)
+
+        # Create new sheet data
+        new_data = {
+            'B.E.': x_values[mask].tolist(),
+            'Raw Data': np.array(data['Raw Data'])[mask].tolist(),
+            'Background': {'Bkg Y': np.array(data['Background']['Bkg Y'])[mask].tolist()},
+            'Transmission': np.ones(sum(mask)).tolist()
+        }
+
+        # Update window.Data
+        self.parent.Data['Core levels'][new_name] = new_data
+
+        # Update Excel file
+        wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        df = pd.DataFrame({
+            'BE': new_data['B.E.'],
+            'Raw Data': new_data['Raw Data'],
+            'Background': new_data['Background']['Bkg Y'],
+            'Transmission': new_data['Transmission']
+        })
+        with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a') as writer:
+            df.to_excel(writer, sheet_name=new_name, index=False)
+
+        # Update sheet list
+        self.parent.sheet_combobox.Append(new_name)
+        self.parent.sheet_combobox.SetValue(new_name)
+        self.parent.on_sheet_selected(new_name)
+
+        self.Close()
+
+    def on_close(self, event):
+        if self.vline_min:
+            self.vline_min.remove()
+        if self.vline_max:
+            self.vline_max.remove()
+        self.parent.canvas.draw_idle()
+        self.Destroy()
