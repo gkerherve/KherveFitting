@@ -396,28 +396,26 @@ class PlotModWindow(wx.Frame):
         import pandas as pd
         import openpyxl
 
+        original_sheet = sheet_name.split('_')[0]
+
         # Create DataFrame with required columns
         df = pd.DataFrame({
             'BE': x,
             'Modified Data': y,
-            'Raw Data': self.parent.Data['Core levels'][sheet_name]['Raw Data'],
-            'Transmission': np.ones_like(x)  # Column of ones for transmission
+            'Raw Data': self.parent.Data['Core levels'][original_sheet]['Raw Data'],
+            'Transmission': np.ones_like(x)
         })
 
-        # Load workbook and save data
+        # Load workbook and add new sheet
         wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
-        if sheet_name in wb.sheetnames:
-            wb.remove(wb[sheet_name])
-        wb.save(self.parent.Data['FilePath'])
-
-        # Write new data to Excel
-        with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a') as writer:
+        with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a',
+                            if_sheet_exists='replace') as writer:
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        # Update window.Data
+        # Update window.Data - convert to list only if needed
         self.parent.Data['Core levels'][sheet_name] = {
-            'B.E.': x.tolist(),
-            'Raw Data': y.tolist(),
+            'B.E.': x if isinstance(x, list) else x.tolist(),
+            'Raw Data': y if isinstance(y, list) else y.tolist(),
             'Background': {'Bkg Y': np.ones_like(x).tolist()},
             'Transmission': np.ones_like(x).tolist()
         }
