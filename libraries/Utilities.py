@@ -7,6 +7,10 @@ import os
 import pandas as pd
 import libraries.Sheet_Operations
 import json
+from scipy.ndimage import gaussian_filter
+from scipy.signal import savgol_filter
+from scipy.integrate import cumtrapz
+
 
 def _clear_peak_params_grid(window):
     num_rows = window.peak_params_grid.GetNumberRows()
@@ -325,3 +329,150 @@ class CropWindow(wx.Frame):
             self.vline_max.remove()
         self.parent.canvas.draw_idle()
         self.Destroy()
+
+
+class PlotModWindow(wx.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, title="Plot Modifications", size=(300, 400))
+
+        self.parent = parent
+        panel = wx.Panel(self)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Smoothing section
+        smooth_box = wx.StaticBox(panel, label="Smoothing")
+        smooth_sizer = wx.StaticBoxSizer(smooth_box, wx.VERTICAL)
+
+        self.smooth_method = wx.ComboBox(panel, choices=["Gaussian", "Savitzky-Golay", "Moving Average"],
+                                         style=wx.CB_READONLY)
+        self.smooth_method.SetValue("Gaussian")  # Set default
+        self.smooth_width = wx.SpinCtrl(panel, min=1, max=100, initial=5)
+
+        smooth_sizer.Add(wx.StaticText(panel, label="Method:"), 0, wx.ALL, 5)
+        smooth_sizer.Add(self.smooth_method, 0, wx.EXPAND | wx.ALL, 5)
+        smooth_sizer.Add(wx.StaticText(panel, label="Width:"), 0, wx.ALL, 5)
+        smooth_sizer.Add(self.smooth_width, 0, wx.EXPAND | wx.ALL, 5)
+
+        smooth_btn = wx.Button(panel, label="Apply Smoothing")
+        smooth_btn.SetMinSize((125, 40))  # Standard button size
+        smooth_btn.Bind(wx.EVT_BUTTON, self.on_smooth)
+        smooth_sizer.Add(smooth_btn, 0, wx.EXPAND | wx.ALL, 5)
+
+        # Differentiation section
+        diff_box = wx.StaticBox(panel, label="Differentiation")
+        diff_sizer = wx.StaticBoxSizer(diff_box, wx.VERTICAL)
+
+        self.diff_width = wx.SpinCtrl(panel, min=1, max=100, initial=5)
+        diff_sizer.Add(wx.StaticText(panel, label="Width:"), 0, wx.ALL, 5)
+        diff_sizer.Add(self.diff_width, 0, wx.EXPAND | wx.ALL, 5)
+
+        diff_btn = wx.Button(panel, label="Apply Differentiation")
+        diff_btn.SetMinSize((125, 40))
+        diff_btn.Bind(wx.EVT_BUTTON, self.on_differentiate)
+        diff_sizer.Add(diff_btn, 0, wx.EXPAND | wx.ALL, 5)
+
+        # Integration section
+        int_box = wx.StaticBox(panel, label="Integration")
+        int_sizer = wx.StaticBoxSizer(int_box, wx.VERTICAL)
+
+        self.int_width = wx.SpinCtrl(panel, min=1, max=100, initial=5)
+        int_sizer.Add(wx.StaticText(panel, label="Width:"), 0, wx.ALL, 5)
+        int_sizer.Add(self.int_width, 0, wx.EXPAND | wx.ALL, 5)
+
+        int_btn = wx.Button(panel, label="Apply Integration")
+        int_btn.SetMinSize((125, 40))
+        int_btn.Bind(wx.EVT_BUTTON, self.on_integrate)
+        int_sizer.Add(int_btn, 0, wx.EXPAND | wx.ALL, 5)
+
+        sizer.Add(smooth_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(diff_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(int_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        panel.SetSizer(sizer)
+        self.Centre()
+
+    def save_modified_data(self, x, y, sheet_name, operation_type):
+        import pandas as pd
+        import openpyxl
+
+        # Load existing workbook
+        workbook = openpyxl.load_workbook(self.parent.Data['FilePath'])
+
+        # Create new sheet or get existing one
+        if sheet_name in workbook.sheetnames:
+            workbook.remove(workbook[sheet_name])
+
+        # Save workbook
+        workbook.save(self.parent.Data['FilePath'])
+
+        # Now write the new data
+        with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a') as writer:
+            df = pd.DataFrame({'BE': x, f'{operation_type} Data': y})
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    def on_smooth(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        method = self.smooth_method.GetValue()
+        width = self.smooth_width.GetValue()
+
+        x = self.parent.Data['Core levels'][sheet_name]['B.E.']
+        y = self.parent.Data['Core levels'][sheet_name]['Raw Data']
+
+        if method == "Gaussian":
+            smoothed = gaussian_filter(y, width)
+        elif method == "Savitzky-Golay":
+            smoothed = savgol_filter(y, width, 3)
+        else:
+            kernel = np.ones(width) / width
+            smoothed = np.convolve(y, kernel, mode='same')
+
+        new_sheet = f"{sheet_name}_smoothed"
+        self.save_modified_data(x, smoothed, new_sheet, "Smoothed")
+
+    def on_differentiate(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        width = self.diff_width.GetValue()
+
+        x = self.parent.Data['Core levels'][sheet_name]['B.E.']
+        y = self.parent.Data['Core levels'][sheet_name]['Raw Data']
+
+        derivative = np.gradient(y, x)
+        smoothed_deriv = savgol_filter(derivative, width, 3)
+
+        new_sheet = f"{sheet_name}_diff"
+        self.save_modified_data(x, smoothed_deriv, new_sheet, "Differentiated")
+
+    def on_integrate(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        width = self.int_width.GetValue()
+
+        x = self.parent.Data['Core levels'][sheet_name]['B.E.']
+        y = self.parent.Data['Core levels'][sheet_name]['Raw Data']
+
+        integrated = cumtrapz(y, x, initial=0)
+        smoothed_int = savgol_filter(integrated, width, 3)
+
+        new_sheet = f"{sheet_name}_int"
+        self.save_modified_data(x, smoothed_int, new_sheet, "Integrated")
+
+    def save_modified_data(self, x, y, sheet_name, operation_type):
+        import pandas as pd
+
+        # Add to Excel
+        with pd.ExcelWriter(self.parent.Data['FilePath'], mode='a', if_sheet_exists='replace') as writer:
+            df = pd.DataFrame({'BE': x, f'{operation_type} Data': y})
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        # Add to window.Data
+        self.parent.Data['Core levels'][sheet_name] = {
+            'B.E.': x,
+            'Raw Data': y,
+            'Operation': operation_type
+        }
+
+        # Update sheets in parent window
+        from libraries.Sheet_Operations import on_sheet_selected
+        self.parent.sheet_combobox.Append(sheet_name)
+        self.parent.sheet_combobox.SetValue(sheet_name)
+        on_sheet_selected(self.parent, sheet_name)
