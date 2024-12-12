@@ -2448,6 +2448,17 @@ class MyFrame(wx.Frame):
                                 self.peak_params_grid.SetCellValue(row, 7, f"{sigma:.2f}")
                             elif col == 9:
                                 pass
+                        elif model in ["Voigt (Area, L/G, \u03c3)"]:
+                            if col == 5: # L/G ratio changed
+                                sigma = float(self.peak_params_grid.GetCellValue(row, 7))
+                                gamma = (fraction / 100) * sigma / (1 - fraction / 100)
+                                self.peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
+                            elif col == 7:  # Sigma changed
+                                fraction = float(self.peak_params_grid.GetCellValue(row, 5))
+                                gamma = (fraction / 100) * sigma / (1 - fraction / 100)
+                                self.peak_params_grid.SetCellValue(row, 8, f"{gamma:.2f}")
+                            elif col == 8:
+                                pass
                         elif model in ["LA (Area, \u03c3, \u03b3)"]:
                             if col == 5:  # L/G ratio changed
                                 pass

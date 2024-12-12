@@ -54,10 +54,6 @@ def load_rsf_data(file_path):
     return rsf_dict
 
 
-import wx
-import numpy as np
-
-
 class DraggableText:
     def __init__(self, text):
         self.text = text

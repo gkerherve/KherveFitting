@@ -401,7 +401,7 @@ def fit_peaks(window, peak_params_grid):
 
                     GAMMA_TOLERANCE = 1e-6  # Small tolerance value
 
-                    # In your gamma calculation section:
+                    # Gamma calculation section:
                     gamma = calc_gamma(fraction, sigma)
                     gamma_min = calc_gamma(fraction_min, sigma)
                     gamma_max = calc_gamma(fraction_max, sigma)

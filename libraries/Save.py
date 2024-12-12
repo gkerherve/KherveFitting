@@ -1245,7 +1245,7 @@ def load_peaks_library_OLD(window):
         on_sheet_selected(window, sheet_name)
 
 
-def save_peaks_library(window):
+def save_peaks_library_OLD2(window):
     sheet_name = window.sheet_combobox.GetValue()
     with wx.FileDialog(window, "Save peaks library", wildcard="JSON files (*.json)|*.json",
                        defaultDir="Peaks Library", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
@@ -1264,6 +1264,35 @@ def save_peaks_library(window):
         with open(path, 'w') as f:
             json.dump(peaks_data, f, indent=2)
 
+
+def save_peaks_library(window):
+    sheet_name = window.sheet_combobox.GetValue()
+    with wx.FileDialog(window, "Save peaks library", wildcard="JSON files (*.json)|*.json",
+                       defaultDir="Peaks Library", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+        if fileDialog.ShowModal() == wx.ID_CANCEL:
+            return
+        path = fileDialog.GetPath()
+
+        # Convert numpy arrays to lists before saving
+        def convert_numpy_to_list(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, dict):
+                return {k: convert_numpy_to_list(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_to_list(item) for item in obj]
+            return obj
+
+        peaks_data = {
+            'Core levels': {
+                sheet_name: {
+                    'Fitting': convert_numpy_to_list(window.Data['Core levels'][sheet_name]['Fitting'])
+                }
+            }
+        }
+
+        with open(path, 'w') as f:
+            json.dump(peaks_data, f, indent=2)
 
 def load_peaks_library(window):
     import wx
