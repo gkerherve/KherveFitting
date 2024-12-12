@@ -886,7 +886,7 @@ class PlotManager:
             peak_y = peak_model.eval(params, x=window.x_values) + window.background
 
             # Update overall fit and residuals
-            if model in ["D-parameter", "SurveyID"]:
+            if peak_model in ["D-parameter", "SurveyID"]:
                 print("")
             else:
                 window.update_overall_fit_and_residuals()

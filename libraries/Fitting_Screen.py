@@ -92,16 +92,16 @@ class FittingWindow(wx.Frame):
         self.averaging_points_text = wx.TextCtrl(self.background_panel, value="5")
         self.averaging_points_text.Bind(wx.EVT_TEXT, self.on_averaging_points_change)
 
-        self.cross_section_label = wx.StaticText(self.background_panel, label = 'Cross Section\n --Tougaard--')
+        self.cross_section_label = wx.StaticText(self.background_panel, label = 'Tougaard 1 / B,C,D,T0')
         self.cross_section = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
         self.cross_section.Bind(wx.EVT_TEXT, self.on_cross_section_change)
 
         # Add two more labels and TextCtrls
-        self.cross_section2_label = wx.StaticText(self.background_panel, label='Cross Section 2\n --Tougaard--')
+        self.cross_section2_label = wx.StaticText(self.background_panel, label='Tougaard 2 / B,C,D,T0')
         self.cross_section2 = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
         self.cross_section2.Bind(wx.EVT_TEXT, self.on_cross_section2_change)
 
-        self.cross_section3_label = wx.StaticText(self.background_panel, label='Cross Section 3\n --Tougaard--')
+        self.cross_section3_label = wx.StaticText(self.background_panel, label='Tougaard 3 / B,C,D,T0')
         self.cross_section3 = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
         self.cross_section3.Bind(wx.EVT_TEXT, self.on_cross_section3_change)
 
@@ -134,13 +134,17 @@ class FittingWindow(wx.Frame):
         background_button.SetMinSize((125, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
-        clear_background_button = wx.Button(self.background_panel, label="Clear\nBackground & Peaks")
+        clear_background_button = wx.Button(self.background_panel, label="Clear\nBackground and Peaks")
         clear_background_button.SetMinSize((125, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
         reset_vlines_button = wx.Button(self.background_panel, label="Reset \nVertical Lines")
         reset_vlines_button.SetMinSize((125, 40))
         reset_vlines_button.Bind(wx.EVT_BUTTON, self.on_reset_vlines)
+
+        clear_between_vlines_button = wx.Button(self.background_panel, label="Clear Between\nVertical Lines")
+        clear_between_vlines_button.SetMinSize((125, 40))
+        clear_between_vlines_button.Bind(wx.EVT_BUTTON, self.on_clear_between_vlines)
 
         clear_background_only_button = wx.Button(self.background_panel, label="Clear\nBackground")
         clear_background_only_button.SetMinSize((125, 40))
@@ -168,11 +172,12 @@ class FittingWindow(wx.Frame):
         background_sizer.Add(self.cross_section3, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
 
-        background_sizer.Add(reset_vlines_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(self.tougaard_fit_btn, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(clear_background_only_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(background_button, pos=(12, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        background_sizer.Add(clear_background_button, pos=(12, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(reset_vlines_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_between_vlines_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(self.tougaard_fit_btn, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_only_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(background_button, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        background_sizer.Add(clear_background_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         self.background_panel.SetSizer(background_sizer)
         notebook.AddPage(self.background_panel, "Background")
@@ -806,6 +811,25 @@ class FittingWindow(wx.Frame):
             })
         except (ValueError, IndexError):
             pass
+
+    def on_clear_between_vlines(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        if sheet_name in self.parent.Data['Core levels']:
+            core_level_data = self.parent.Data['Core levels'][sheet_name]
+            if 'Background' in core_level_data:
+                bg_low = core_level_data['Background']['Bkg Low']
+                bg_high = core_level_data['Background']['Bkg High']
+                if bg_low is not None and bg_high is not None:
+                    x_values = np.array(self.parent.x_values)
+                    raw_data = np.array(core_level_data['Raw Data'])
+                    background = np.array(core_level_data['Background']['Bkg Y'])
+
+                    mask = (x_values >= min(bg_low, bg_high)) & (x_values <= max(bg_low, bg_high))
+                    background[mask] = raw_data[mask]
+
+                    core_level_data['Background']['Bkg Y'] = background.tolist()
+                    self.parent.background = background
+                    self.parent.clear_and_replot()
 
 
 class TougaardFitWindow(wx.Frame):
