@@ -202,10 +202,15 @@ def on_canvas_click(event):
 
 
 class CropWindow(wx.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, title="Crop Data", size=(300, 200))
+    def __init__(self, parent,*args, **kw):
+        super().__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(
+                    wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent
+        self.SetTitle("Crop Data")
+        self.SetSize(250, 220)
+
         self.panel = wx.Panel(self)
+
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -234,6 +239,7 @@ class CropWindow(wx.Frame):
 
         # Crop button
         self.crop_btn = wx.Button(self.panel, label="Crop")
+        self.crop_btn.SetMinSize((125, 40))
         self.crop_btn.Bind(wx.EVT_BUTTON, self.on_crop)
 
         sizer.Add(range_sizer, 0, wx.EXPAND | wx.ALL, 5)
