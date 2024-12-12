@@ -396,20 +396,45 @@ class PlotModWindow(wx.Frame):
         import pandas as pd
         import openpyxl
 
-        # Load existing workbook
-        workbook = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        # Create DataFrame with required columns
+        df = pd.DataFrame({
+            'BE': x,
+            'Modified Data': y,
+            'Raw Data': self.parent.Data['Core levels'][sheet_name]['Raw Data'],
+            'Transmission': np.ones_like(x)  # Column of ones for transmission
+        })
 
-        # Create new sheet or get existing one
-        if sheet_name in workbook.sheetnames:
-            workbook.remove(workbook[sheet_name])
+        # Load workbook and save data
+        wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        if sheet_name in wb.sheetnames:
+            wb.remove(wb[sheet_name])
+        wb.save(self.parent.Data['FilePath'])
 
-        # Save workbook
-        workbook.save(self.parent.Data['FilePath'])
-
-        # Now write the new data
+        # Write new data to Excel
         with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a') as writer:
-            df = pd.DataFrame({'BE': x, f'{operation_type} Data': y})
             df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        # Update window.Data
+        self.parent.Data['Core levels'][sheet_name] = {
+            'B.E.': x.tolist(),
+            'Raw Data': y.tolist(),
+            'Background': {'Bkg Y': np.ones_like(x).tolist()},
+            'Transmission': np.ones_like(x).tolist()
+        }
+
+        # Update JSON file
+        json_file_path = os.path.splitext(self.parent.Data['FilePath'])[0] + '.json'
+        if os.path.exists(json_file_path):
+            from libraries.Save import convert_to_serializable_and_round
+            json_data = convert_to_serializable_and_round(self.parent.Data)
+            with open(json_file_path, 'w') as json_file:
+                json.dump(json_data, json_file, indent=2)
+
+        # Update sheet list
+        self.parent.sheet_combobox.Append(sheet_name)
+        self.parent.sheet_combobox.SetValue(sheet_name)
+        from libraries.Sheet_Operations import on_sheet_selected
+        on_sheet_selected(self.parent, sheet_name)
 
     def on_smooth(self, event):
         sheet_name = self.parent.sheet_combobox.GetValue()
@@ -456,23 +481,3 @@ class PlotModWindow(wx.Frame):
         new_sheet = f"{sheet_name}_int"
         self.save_modified_data(x, smoothed_int, new_sheet, "Integrated")
 
-    def save_modified_data(self, x, y, sheet_name, operation_type):
-        import pandas as pd
-
-        # Add to Excel
-        with pd.ExcelWriter(self.parent.Data['FilePath'], mode='a', if_sheet_exists='replace') as writer:
-            df = pd.DataFrame({'BE': x, f'{operation_type} Data': y})
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-        # Add to window.Data
-        self.parent.Data['Core levels'][sheet_name] = {
-            'B.E.': x,
-            'Raw Data': y,
-            'Operation': operation_type
-        }
-
-        # Update sheets in parent window
-        from libraries.Sheet_Operations import on_sheet_selected
-        self.parent.sheet_combobox.Append(sheet_name)
-        self.parent.sheet_combobox.SetValue(sheet_name)
-        on_sheet_selected(self.parent, sheet_name)
