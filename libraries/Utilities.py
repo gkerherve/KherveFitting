@@ -332,21 +332,26 @@ class CropWindow(wx.Frame):
 
 
 class PlotModWindow(wx.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, title="Plot Modifications", size=(300, 400))
+    def __init__(self, parent,*args, **kw):
+        super().__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(
+                    wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
+
+
+        self.SetTitle("Plot Modifications")
+        self.SetSize(340, 390)
 
         self.parent = parent
         panel = wx.Panel(self)
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        grid_sizer = wx.GridBagSizer(5, 5)
 
-        # Smoothing section
+        # First row - Smoothing
         smooth_box = wx.StaticBox(panel, label="Smoothing")
         smooth_sizer = wx.StaticBoxSizer(smooth_box, wx.VERTICAL)
 
         self.smooth_method = wx.ComboBox(panel, choices=["Gaussian", "Savitzky-Golay", "Moving Average"],
                                          style=wx.CB_READONLY)
-        self.smooth_method.SetValue("Gaussian")  # Set default
+        self.smooth_method.SetValue("Gaussian")
         self.smooth_width = wx.SpinCtrl(panel, min=1, max=100, initial=5)
 
         smooth_sizer.Add(wx.StaticText(panel, label="Method:"), 0, wx.ALL, 5)
@@ -355,11 +360,11 @@ class PlotModWindow(wx.Frame):
         smooth_sizer.Add(self.smooth_width, 0, wx.EXPAND | wx.ALL, 5)
 
         smooth_btn = wx.Button(panel, label="Apply Smoothing")
-        smooth_btn.SetMinSize((125, 40))  # Standard button size
+        smooth_btn.SetMinSize((125, 40))
         smooth_btn.Bind(wx.EVT_BUTTON, self.on_smooth)
         smooth_sizer.Add(smooth_btn, 0, wx.EXPAND | wx.ALL, 5)
 
-        # Differentiation section
+        # First row - Differentiation
         diff_box = wx.StaticBox(panel, label="Differentiation")
         diff_sizer = wx.StaticBoxSizer(diff_box, wx.VERTICAL)
 
@@ -372,7 +377,7 @@ class PlotModWindow(wx.Frame):
         diff_btn.Bind(wx.EVT_BUTTON, self.on_differentiate)
         diff_sizer.Add(diff_btn, 0, wx.EXPAND | wx.ALL, 5)
 
-        # Integration section
+        # Second row - Integration
         int_box = wx.StaticBox(panel, label="Integration")
         int_sizer = wx.StaticBoxSizer(int_box, wx.VERTICAL)
 
@@ -385,11 +390,12 @@ class PlotModWindow(wx.Frame):
         int_btn.Bind(wx.EVT_BUTTON, self.on_integrate)
         int_sizer.Add(int_btn, 0, wx.EXPAND | wx.ALL, 5)
 
-        sizer.Add(smooth_sizer, 0, wx.EXPAND | wx.ALL, 5)
-        sizer.Add(diff_sizer, 0, wx.EXPAND | wx.ALL, 5)
-        sizer.Add(int_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        # Add to grid
+        grid_sizer.Add(smooth_sizer, pos=(0, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        grid_sizer.Add(diff_sizer, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        grid_sizer.Add(int_sizer, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
 
-        panel.SetSizer(sizer)
+        panel.SetSizer(grid_sizer)
         self.Centre()
 
     def save_modified_data(self, x, y, sheet_name, operation_type):
