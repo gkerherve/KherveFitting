@@ -401,7 +401,8 @@ def create_horizontal_toolbar(window):
 
     # File operations
     open_file_tool = toolbar.AddTool(wx.ID_ANY, 'Open File', wx.Bitmap(os.path.join(icon_path, "open-folder-25-green.png"), wx.BITMAP_TYPE_PNG), shortHelp="Open File\tCtrl+O")
-    refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Excel File', wx.Bitmap(os.path.join(icon_path, "refresh-96g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Refresh Excel File")
+    refresh_folder_tool = toolbar.AddTool(wx.ID_ANY, 'Refresh Excel File', wx.Bitmap(os.path.join(icon_path, "refresh-25.png"),
+                                                                                     wx.BITMAP_TYPE_PNG), shortHelp="Refresh Excel File")
     save_tool = toolbar.AddTool(wx.ID_ANY, 'Save', wx.Bitmap(os.path.join(icon_path, "save-Excel-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save the Fitted Results to Excel for this Core Level \tCtrl+S")
     save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-PNG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
     save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
@@ -412,9 +413,9 @@ def create_horizontal_toolbar(window):
     toolbar.AddSeparator()
 
     # Skip rows spinbox
-    window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
-    window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
-    toolbar.AddControl(window.skip_rows_spinbox)
+    # window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
+    # window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
+    # toolbar.AddControl(window.skip_rows_spinbox)
 
     # Sheet selection
     window.sheet_combobox = wx.ComboBox(toolbar, style=wx.CB_READONLY)
@@ -426,6 +427,18 @@ def create_horizontal_toolbar(window):
                                         wx.Bitmap(os.path.join(icon_path, "delete-25.png"), wx.BITMAP_TYPE_PNG),
                                         shortHelp="Delete current sheet")
     window.Bind(wx.EVT_TOOL, lambda event: on_delete_sheet(window, event), delete_sheet_tool)
+
+    rename_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Rename Sheet',
+                                        wx.Bitmap(os.path.join(icon_path, "rename-25.png"), wx.BITMAP_TYPE_PNG),
+                                        shortHelp="Rename current sheet")
+    window.Bind(wx.EVT_TOOL, lambda evt: _show_rename_dialog(window), rename_sheet_tool)
+
+    def _show_rename_dialog(window):
+        dlg = wx.TextEntryDialog(window, 'Enter new sheet name:', 'Rename Sheet')
+        if dlg.ShowModal() == wx.ID_OK:
+            from libraries.Utilities import rename_sheet
+            rename_sheet(window, dlg.GetValue())
+        dlg.Destroy()
 
     toolbar.AddSeparator()
     add_vertical_separator(toolbar, separators)

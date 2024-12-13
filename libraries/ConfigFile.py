@@ -95,7 +95,8 @@ def add_core_level_Data(data, window, file_path, sheet_name):
     Uses the window.skip_rows_spinbox value to determine how many rows to skip.
     """
     # Get the number of rows to skip from the spinbox
-    skip_rows = window.skip_rows_spinbox.GetValue()
+    # skip_rows = window.skip_rows_spinbox.GetValue()
+    skip_rows = 0
 
     # Read the specified sheet from the Excel file, skipping the specified number of rows
     df = pd.read_excel(file_path, sheet_name=sheet_name, skiprows=skip_rows)

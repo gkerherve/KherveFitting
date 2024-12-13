@@ -232,6 +232,32 @@ def on_delete_sheet(window, event):
     dlg.Destroy()
 
 
+def rename_sheet(window, new_sheet_name):
+    if not new_sheet_name:
+        return
+
+    old_sheet_name = window.sheet_combobox.GetValue()
+    file_path = window.Data['FilePath']
+
+    # Rename in Excel file
+    wb = openpyxl.load_workbook(file_path)
+    if old_sheet_name in wb.sheetnames:
+        sheet = wb[old_sheet_name]
+        sheet.title = new_sheet_name
+        wb.save(file_path)
+
+    # Update window.Data
+    window.Data['Core levels'][new_sheet_name] = window.Data['Core levels'].pop(old_sheet_name)
+
+    # Update combobox
+    index = window.sheet_combobox.FindString(old_sheet_name)
+    window.sheet_combobox.Delete(index)
+    window.sheet_combobox.Insert(new_sheet_name, index)
+    window.sheet_combobox.SetSelection(index)
+
+    # Update plot
+    from libraries.Sheet_Operations import on_sheet_selected
+    on_sheet_selected(window, new_sheet_name)
 
 
 
@@ -338,11 +364,18 @@ class CropWindow(wx.Frame):
         # Update Excel file
         wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
         df = pd.DataFrame({
-            'BE': new_data['B.E.'],
+            'Binding Energy': new_data['B.E.'],
             'Raw Data': new_data['Raw Data'],
             'Background': new_data['Background']['Bkg Y'],
             'Transmission': new_data['Transmission']
         })
+        # df = pd.DataFrame({
+        #     'BE': x,
+        #     'Modified Data': y,
+        #     'Raw Data': self.parent.Data['Core levels'][original_sheet]['Raw Data'][:len(x)],  # Slice to match x length
+        #     'Transmission': np.ones_like(x)
+        # })
+
         with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a') as writer:
             df.to_excel(writer, sheet_name=new_name, index=False)
 
