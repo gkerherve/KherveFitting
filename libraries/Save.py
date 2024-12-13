@@ -533,6 +533,12 @@ def refresh_sheets(window, on_sheet_selected_func):
         # Update the number of core levels
         window.Data['Number of Core levels'] = len(sheet_names)
 
+        # Update B.E. and Raw Data with current Excel data
+        for sheet_name in sheet_names:
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            window.Data['Core levels'][sheet_name]['B.E.'] = df.iloc[:, 0].tolist()
+            window.Data['Core levels'][sheet_name]['Raw Data'] = df.iloc[:, 1].tolist()
+
         # Set the current sheet as selected if it still exists, otherwise select the first sheet
         if current_sheet in sheet_names:
             window.sheet_combobox.SetValue(current_sheet)
