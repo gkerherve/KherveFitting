@@ -23,10 +23,15 @@ class PlotManager:
     def __init__(self, ax, canvas):
         self.ax = ax
         self.canvas = canvas
+        self.figure = ax.figure # Add this line
         self.cross = None
         self.peak_fill_enabled = True
         self.fitting_results_text = None
         self.fitting_results_visible = False
+
+        self.residuals_state = 0  # Add this line
+        self.residuals_subplot = None  # Add this line
+        self.residuals_visible = True  # Keep existing
 
         # init for preference window
         self.plot_style = "scatter"
@@ -354,6 +359,12 @@ class PlotManager:
         try:
             self.ax.clear()
 
+            if hasattr(self, 'residuals_subplot'):
+                if self.residuals_subplot:
+                    self.figure.delaxes(self.residuals_subplot)
+                    self.residuals_subplot = None
+                    self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+
             x_values = window.Data['Core levels'][sheet_name]['B.E.']
             y_values = window.Data['Core levels'][sheet_name]['Raw Data']
 
@@ -552,7 +563,18 @@ class PlotManager:
 
         # Clear the plot
         self.ax.clear()
-        # x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else "Binding Energy (eV)"
+
+        if hasattr(self, 'residuals_state') and self.residuals_state == 2:
+            if self.residuals_subplot:
+                self.residuals_subplot.clear()
+                self.figure.subplots_adjust(hspace=0.3)
+                gs = self.figure.add_gridspec(5, 1)
+                self.ax.set_position(gs[0:4, 0].get_position(self.figure))
+                self.residuals_subplot.set_position(gs[4, 0].get_position(self.figure))
+        else:
+            self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+
+
         x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else window.x_axis_label
         self.ax.set_xlabel(x_label)
         # self.ax.set_xlabel("Binding Energy (eV)")
@@ -1116,7 +1138,11 @@ class PlotManager:
         Handles different fitting models for each peak and scales residuals for better visibility.
         """
         # Calculate the overall fit as the sum of all peaks
-        overall_fit = window.background.astype(float).copy()
+        # Ensure all arrays have same length at the start
+        x_values = window.x_values
+        y_values = window.y_values[:len(x_values)]
+        overall_fit = window.background.astype(float).copy()[:len(x_values)]
+
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
 
         # Check if peaks exist in the peak fitting grids
@@ -1220,7 +1246,9 @@ class PlotManager:
             overall_fit += peak_fit
 
         # Calculate residuals
-        residuals = window.y_values - overall_fit
+        # residuals = window.y_values - overall_fit
+        residuals = y_values - overall_fit
+
 
         # Determine the scaling factor
         max_raw_data = max(window.y_values) - min(window.y_values)
@@ -1241,6 +1269,8 @@ class PlotManager:
             if line.get_label() in ['Overall Fit', 'Residuals']:
                 line.remove()
 
+
+
         # Plot the overall fit
         if window.energy_scale == 'KE':
             self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
@@ -1255,43 +1285,37 @@ class PlotManager:
         if hasattr(self, 'residuals_state'):
             if self.residuals_state == 1:  # On main plot
                 residual_height = 1.07 * max(window.y_values)
-                self.residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1)
+                residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1)
 
-                if window.energy_scale == 'KE':
-                    residual_line = self.ax.plot(window.photons - window.x_values,
-                                                 masked_residuals + residual_height,
-                                                 color=self.residual_color,
-                                                 linestyle=self.residual_linestyle,
-                                                 alpha=self.residual_alpha,
-                                                 label='Residuals')
-                else:
-                    residual_line = self.ax.plot(window.x_values,
-                                                 masked_residuals + residual_height,
-                                                 color=self.residual_color,
-                                                 linestyle=self.residual_linestyle,
-                                                 alpha=self.residual_alpha,
-                                                 label='Residuals')
+                residual_line = self.ax.plot(window.x_values, masked_residuals + residual_height,
+                                             color=self.residual_color, linestyle=self.residual_linestyle,
+                                             alpha=self.residual_alpha, label='Residuals')
 
-                self.residual_base.set_visible(True)
                 residual_line[0].set_visible(True)
+                residual_base.set_visible(True)
 
             elif self.residuals_state == 2:  # Separate subplot
                 if self.residuals_subplot:
                     self.residuals_subplot.clear()
-                    if window.energy_scale == 'KE':
-                        self.residuals_subplot.plot(window.photons - window.x_values,
-                                                    masked_residuals,
-                                                    color=self.residual_color,
-                                                    linestyle=self.residual_linestyle,
-                                                    alpha=self.residual_alpha)
-                    else:
-                        self.residuals_subplot.plot(window.x_values,
-                                                    masked_residuals,
-                                                    color=self.residual_color,
-                                                    linestyle=self.residual_linestyle,
-                                                    alpha=self.residual_alpha)
+                    # Plot residuals in subplot
+                    self.residuals_subplot.plot(window.x_values, masked_residuals,
+                                                color=self.residual_color,
+                                                linestyle=self.residual_linestyle,
+                                                alpha=self.residual_alpha,
+                                                linewidth=2)
 
+                    # Configure subplot appearance
                     self.residuals_subplot.set_ylabel(f'Residuals (x{scaling_factor:.2f})')
+                    self.residuals_subplot.xaxis.set_label_text("")
+                    self.residuals_subplot.tick_params(axis='x', labelbottom=True)
+
+                    # Set subplot y limits
+                    y_min = min(masked_residuals)
+                    y_max = max(masked_residuals)
+                    margin = 0.1 * (y_max - y_min)
+                    self.residuals_subplot.set_ylim(y_min - margin, y_max + margin)
+
+                    # Match main plot x limits and direction
                     if window.energy_scale == 'KE':
                         self.residuals_subplot.set_xlim(window.photons - max(window.x_values),
                                                         window.photons - min(window.x_values))
@@ -1301,6 +1325,14 @@ class PlotManager:
                     # Apply same style as main plot
                     self.residuals_subplot.tick_params(axis='both', labelsize=window.axis_number_size)
                     self.residuals_subplot.grid(True, alpha=0.3)
+
+                    # Adjust subplot spacing
+                    self.figure.subplots_adjust(hspace=0.1)
+
+                    # Adjust subplot heights
+                    gs = self.figure.add_gridspec(6, 1)
+                    self.ax.set_position(gs[0:5, 0].get_position(self.figure))
+                    self.residuals_subplot.set_position(gs[5, 0].get_position(self.figure))
 
         # Handle RSD text
         rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
