@@ -1173,7 +1173,7 @@ class PlotManager:
             print(f"Unexpected error adding cross to peak: {e}")
             # You might want to show an error message to the user here
 
-    def toggle_residuals(self):
+    def toggle_residuals_OLD(self):
         self.residuals_visible = not self.residuals_visible
         for line in self.ax.get_lines():
             if line.get_label().startswith('Residuals'):
@@ -1183,6 +1183,39 @@ class PlotManager:
 
         if self.rsd_text:
             self.rsd_text.set_visible(self.residuals_visible)
+
+        self.canvas.draw_idle()
+
+    def toggle_residuals(self):
+        if not hasattr(self, 'residuals_state'):
+            self.residuals_state = 0  # 0: off, 1: on main plot, 2: separate subplot
+
+        self.residuals_state = (self.residuals_state + 1) % 3
+
+        # Remove existing residuals from main plot
+        for line in self.ax.lines:
+            if line.get_label() == 'Residuals':
+                line.remove()
+
+        # Remove residuals subplot if it exists
+        if hasattr(self, 'residuals_subplot'):
+            if self.residuals_subplot:
+                self.figure.delaxes(self.residuals_subplot)
+                self.residuals_subplot = None
+
+        if self.rsd_text:
+            self.rsd_text.set_visible(self.residuals_state > 0)
+
+        if self.residuals_state == 2:
+            # Create subplot for residuals
+            self.figure.subplots_adjust(hspace=0.3)
+            gs = self.figure.add_gridspec(5, 1)
+            self.ax.set_position(gs[0:4, 0].get_position(self.figure))
+            self.residuals_subplot = self.figure.add_subplot(gs[4, 0])
+            self.residuals_subplot.sharex(self.ax)
+        else:
+            # Restore main plot to full size
+            self.ax.set_position([0.1, 0.1, 0.8, 0.8])
 
         self.canvas.draw_idle()
 

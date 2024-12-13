@@ -412,7 +412,11 @@ def create_horizontal_toolbar(window):
     window.redo_tool = toolbar.AddTool(wx.ID_ANY, 'Redo', wx.Bitmap(os.path.join(icon_path, "redo-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Redo -- For peaks properties only")
     toolbar.AddSeparator()
 
-    # Skip rows spinbox
+    toolbar.AddSeparator()
+    add_vertical_separator(toolbar, separators)
+    toolbar.AddSeparator()
+
+    # # Skip rows spinbox
     # window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
     # window.skip_rows_spinbox.SetToolTip("Set the number of rows to skip in the sheet of the Excel file")
     # toolbar.AddControl(window.skip_rows_spinbox)
