@@ -1237,70 +1237,112 @@ class PlotManager:
         masked_residuals = ma.masked_where(np.isclose(scaled_residuals, 0, atol=5e-1), scaled_residuals)
 
         # Remove old overall fit and residuals, keep background lines
-        for line in self.ax.get_lines():
+        for line in self.ax.lines:
             if line.get_label() in ['Overall Fit', 'Residuals']:
                 line.remove()
 
-        # Plot the new overall fit and residuals
+        # Plot the overall fit
         if window.energy_scale == 'KE':
             self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
-                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
+                         linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
-
-            residual_height = 1.07 * max(window.y_values)
-            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1)
-
-            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
-                                         color=self.residual_color, linestyle=self.residual_linestyle,
-                                         alpha=self.residual_alpha, label='Residuals')
         else:
             self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
-                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
+                         linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
-            residual_height = 1.07 * max(window.y_values)
-            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1) # zorder=3
+        # Handle residuals based on state
+        if hasattr(self, 'residuals_state'):
+            if self.residuals_state == 1:  # On main plot
+                residual_height = 1.07 * max(window.y_values)
+                self.residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1)
 
-            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
-                                         color=self.residual_color, linestyle=self.residual_linestyle,
-                                         alpha=self.residual_alpha, label='Residuals')
+                if window.energy_scale == 'KE':
+                    residual_line = self.ax.plot(window.photons - window.x_values,
+                                                 masked_residuals + residual_height,
+                                                 color=self.residual_color,
+                                                 linestyle=self.residual_linestyle,
+                                                 alpha=self.residual_alpha,
+                                                 label='Residuals')
+                else:
+                    residual_line = self.ax.plot(window.x_values,
+                                                 masked_residuals + residual_height,
+                                                 color=self.residual_color,
+                                                 linestyle=self.residual_linestyle,
+                                                 alpha=self.residual_alpha,
+                                                 label='Residuals')
 
-        residual_line[0].set_visible(self.residuals_visible)
-        residual_base.set_visible(self.residuals_visible)
+                self.residual_base.set_visible(True)
+                residual_line[0].set_visible(True)
+
+            elif self.residuals_state == 2:  # Separate subplot
+                if self.residuals_subplot:
+                    self.residuals_subplot.clear()
+                    if window.energy_scale == 'KE':
+                        self.residuals_subplot.plot(window.photons - window.x_values,
+                                                    masked_residuals,
+                                                    color=self.residual_color,
+                                                    linestyle=self.residual_linestyle,
+                                                    alpha=self.residual_alpha)
+                    else:
+                        self.residuals_subplot.plot(window.x_values,
+                                                    masked_residuals,
+                                                    color=self.residual_color,
+                                                    linestyle=self.residual_linestyle,
+                                                    alpha=self.residual_alpha)
+
+                    self.residuals_subplot.set_ylabel(f'Residuals (x{scaling_factor:.2f})')
+                    if window.energy_scale == 'KE':
+                        self.residuals_subplot.set_xlim(window.photons - max(window.x_values),
+                                                        window.photons - min(window.x_values))
+                    else:
+                        self.residuals_subplot.set_xlim(max(window.x_values), min(window.x_values))
+
+                    # Apply same style as main plot
+                    self.residuals_subplot.tick_params(axis='both', labelsize=window.axis_number_size)
+                    self.residuals_subplot.grid(True, alpha=0.3)
+
+        # Handle RSD text
         rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
-
-
         if rsd is not None:
-            y_max = self.ax.get_ylim()[1]
-            residual_height = 1.07 * max(window.y_values)
+            if self.residuals_state == 1:  # On main plot
+                y_max = self.ax.get_ylim()[1]
+                residual_height = 1.07 * max(window.y_values)
+                if residual_height <= y_max:
+                    x_min = self.ax.get_xlim()[1] + 0.4
+                    if self.rsd_text:
+                        self.rsd_text.remove()
+                    self.rsd_text = self.ax.text(x_min, residual_height,
+                                                 f'RSD: {rsd:.2f}',
+                                                 horizontalalignment='right',
+                                                 verticalalignment='center',
+                                                 fontsize=9,
+                                                 color=self.residual_color,
+                                                 alpha=self.residual_alpha + 0.2,
+                                                 bbox=dict(facecolor='white', edgecolor='none'))
+            elif self.residuals_state == 2:  # On subplot
+                if self.residuals_subplot:
+                    x_min = self.residuals_subplot.get_xlim()[1] + 0.4
+                    y_pos = np.mean(self.residuals_subplot.get_ylim())
+                    if self.rsd_text:
+                        self.rsd_text.remove()
+                    self.rsd_text = self.residuals_subplot.text(x_min, y_pos,
+                                                                f'RSD: {rsd:.2f}',
+                                                                horizontalalignment='right',
+                                                                verticalalignment='center',
+                                                                fontsize=9,
+                                                                color=self.residual_color,
+                                                                alpha=self.residual_alpha + 0.2,
+                                                                bbox=dict(facecolor='white', edgecolor='none'))
 
-            # Only show RSD if residuals are within plot range
-            if residual_height <= y_max:
-                x_min = self.ax.get_xlim()[1] + 0.4
-
-                if self.rsd_text:
-                    self.rsd_text.remove()
-
-                self.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
-                                             horizontalalignment='right',
-                                             verticalalignment='center',
-                                             fontsize=9,
-                                             color=self.residual_color,
-                                             alpha=self.residual_alpha + 0.2,
-                                             bbox=dict(facecolor='white', edgecolor='none'))
-                self.rsd_text.set_visible(self.residuals_visible)
-            else:
-                if self.rsd_text:
-                    self.rsd_text.remove()
-                    self.rsd_text = None
-
-        # Update the Y-axis label
-        self.ax.set_ylabel(f'Intensity (CPS), residual x {scaling_factor:.2f}')
+        # Only update main plot ylabel if residuals are not in subplot
+        if self.residuals_state != 2:
+            self.ax.set_ylabel(f'Intensity (CPS), residual x {scaling_factor:.2f}')
+        else:
+            self.ax.set_ylabel('Intensity (CPS)')
 
         self.canvas.draw_idle()
-
         return residuals
-
     def update_peak_fwhm(self, window, x):
         if window.initial_fwhm is not None and window.initial_x is not None:
             row = window.selected_peak_index * 2
