@@ -1295,6 +1295,7 @@ class PlotManager:
 
                 residual_line[0].set_visible(True)
                 residual_base.set_visible(True)
+                self.ax.get_xaxis().set_visible(True)
 
             elif self.residuals_state == 2:  # Separate subplot
                 if self.residuals_subplot:
@@ -1358,10 +1359,10 @@ class PlotManager:
                     self.residuals_subplot.grid(True, alpha=0.8)
 
                     # # Adjust subplot heights
-                    gs = self.figure.add_gridspec(10, 1, hspace=0.0)  # Change to 8 rows for better proportion,
+                    gs = self.figure.add_gridspec(20, 1, hspace=0.0)  # Change to 8 rows for better proportion,
                     # remove spacing
-                    self.ax.set_position(gs[0:9, 0].get_position(self.figure))  # Main plot takes 6/8
-                    self.residuals_subplot.set_position(gs[9:, 0].get_position(self.figure))  # Residuals takes 2/8
+                    self.ax.set_position(gs[0:17, 0].get_position(self.figure))  # Main plot takes 6/8
+                    self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))  # Residuals takes 2/8
 
                     # Explicitly ensure visibility
                     self.residuals_subplot.set_visible(True)
