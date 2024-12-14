@@ -1264,6 +1264,8 @@ class PlotManager:
         # Create a masked array where 0 values are masked
         masked_residuals = ma.masked_where(np.isclose(scaled_residuals, 0, atol=5e-1), scaled_residuals)
 
+        masked_residuals2 = ma.masked_where(np.isclose(scaled_residuals, 0, atol=5e-1), residuals)
+
         # Remove old overall fit and residuals, keep background lines
         for line in self.ax.lines:
             if line.get_label() in ['Overall Fit', 'Residuals']:
@@ -1296,23 +1298,52 @@ class PlotManager:
 
             elif self.residuals_state == 2:  # Separate subplot
                 if self.residuals_subplot:
+
                     self.residuals_subplot.clear()
+
+                    if window.energy_scale == 'KE':
+                        x_plot = window.photons - x_values
+                    else:
+                        x_plot = x_values
+
                     # Plot residuals in subplot
-                    self.residuals_subplot.plot(window.x_values, masked_residuals,
+                    self.residuals_subplot.plot(x_plot, masked_residuals2,
                                                 color=self.residual_color,
                                                 linestyle=self.residual_linestyle,
                                                 alpha=self.residual_alpha,
                                                 linewidth=2)
 
+                    # Hide main plot x-axis labels and ticks
+                    # self.ax.set_xticklabels([])
+                    # self.ax.tick_params(axis='x', labelbottom=False, bottom=False)
+                    # self.ax.set_xlabel('')
+                    self.ax.get_xaxis().set_visible(False)
+
                     # Configure subplot appearance
-                    self.residuals_subplot.set_ylabel(f'Residuals (x{scaling_factor:.2f})')
-                    self.residuals_subplot.xaxis.set_label_text("")
+                    self.residuals_subplot.set_ylabel(f'Res.')#(x{scaling_factor:.2f})')
+                    self.residuals_subplot.set_xlabel('Binding Energy (eV)')
+
+                    # Explicitly show ticks and labels
+                    self.residuals_subplot.tick_params(axis='x',
+                                                       bottom=True,  # Show ticks
+                                                       labelbottom=True,  # Show labels
+                                                       labelsize=window.axis_number_size, pad=8)
+
+                    # Use scientific notation for y-axis
+                    self.residuals_subplot.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
+
+                    # self.residuals_subplot.xaxis.set_label_text("")
                     self.residuals_subplot.tick_params(axis='x', labelbottom=True)
 
+                    # Match main plot font settings
+                    # self.residuals_subplot.tick_params(axis='both', labelsize=window.axis_number_size)
+                    self.residuals_subplot.xaxis.label.set_size(window.axis_title_size)
+                    self.residuals_subplot.yaxis.label.set_size(window.axis_title_size)
+
                     # Set subplot y limits
-                    y_min = min(masked_residuals)
-                    y_max = max(masked_residuals)
-                    margin = 0.1 * (y_max - y_min)
+                    y_min = min(masked_residuals2)
+                    y_max = max(masked_residuals2)
+                    margin = 0.3 * (y_max - y_min)
                     self.residuals_subplot.set_ylim(y_min - margin, y_max + margin)
 
                     # Match main plot x limits and direction
@@ -1324,15 +1355,18 @@ class PlotManager:
 
                     # Apply same style as main plot
                     self.residuals_subplot.tick_params(axis='both', labelsize=window.axis_number_size)
-                    self.residuals_subplot.grid(True, alpha=0.3)
+                    self.residuals_subplot.grid(True, alpha=0.8)
 
-                    # Adjust subplot spacing
-                    self.figure.subplots_adjust(hspace=0.1)
+                    # # Adjust subplot heights
+                    gs = self.figure.add_gridspec(10, 1, hspace=0.0)  # Change to 8 rows for better proportion,
+                    # remove spacing
+                    self.ax.set_position(gs[0:9, 0].get_position(self.figure))  # Main plot takes 6/8
+                    self.residuals_subplot.set_position(gs[9:, 0].get_position(self.figure))  # Residuals takes 2/8
 
-                    # Adjust subplot heights
-                    gs = self.figure.add_gridspec(6, 1)
-                    self.ax.set_position(gs[0:5, 0].get_position(self.figure))
-                    self.residuals_subplot.set_position(gs[5, 0].get_position(self.figure))
+                    # Explicitly ensure visibility
+                    self.residuals_subplot.set_visible(True)
+
+
 
         # Handle RSD text
         rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
@@ -1476,10 +1510,10 @@ class PlotManager:
 
         if self.residuals_state == 2:
             # Create subplot for residuals
-            self.figure.subplots_adjust(hspace=0.3)
-            gs = self.figure.add_gridspec(5, 1)
-            self.ax.set_position(gs[0:4, 0].get_position(self.figure))
-            self.residuals_subplot = self.figure.add_subplot(gs[4, 0])
+            self.figure.subplots_adjust(hspace=0)
+            gs = self.figure.add_gridspec(10, 1)
+            self.ax.set_position(gs[0:9, 0].get_position(self.figure))
+            self.residuals_subplot = self.figure.add_subplot(gs[9, 0])
             self.residuals_subplot.sharex(self.ax)
         else:
             # Restore main plot to full size
