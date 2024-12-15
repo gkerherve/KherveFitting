@@ -561,7 +561,7 @@ def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, 
     window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_legend(), toggle_legend_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_fitting_results(), toggle_fit_results_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(), toggle_residuals_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(window), toggle_residuals_tool)
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
     window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
     window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)

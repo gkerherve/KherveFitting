@@ -1549,7 +1549,7 @@ class PlotManager:
 
         self.canvas.draw_idle()
 
-    def toggle_residuals(self):
+    def toggle_residuals_OLD(self):
         if not hasattr(self, 'residuals_state'):
             self.residuals_state = 0  # 0: off, 1: on main plot, 2: separate subplot
 
@@ -1587,6 +1587,34 @@ class PlotManager:
             self.ax.set_position([0.1, 0.1, 0.8, 0.8])
 
         self.canvas.draw_idle()
+
+    def toggle_residuals(self, window):
+        if not hasattr(self, 'residuals_state'):
+            self.residuals_state = 0
+
+        self.residuals_state = (self.residuals_state + 1) % 3
+
+        # Remove existing residuals and baselines from main plot
+        for line in self.ax.lines:
+            if line.get_label() == 'Residuals':
+                line.remove()
+        if hasattr(self, 'residual_base'):
+            self.residual_base.remove()
+
+        # Remove residuals subplot if it exists
+        if hasattr(self, 'residuals_subplot'):
+            if self.residuals_subplot:
+                self.figure.delaxes(self.residuals_subplot)
+                self.residuals_subplot = None
+
+        if self.rsd_text:
+            self.rsd_text.set_visible(self.residuals_state > 0)
+
+        # Force a full replot which will handle residuals in new state
+        window.clear_and_replot()
+
+        self.canvas.draw_idle()
+
     def toggle_fitting_results(self):
         if self.fitting_results_text:
             self.fitting_results_visible = not self.fitting_results_visible
