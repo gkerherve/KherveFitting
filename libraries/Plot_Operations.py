@@ -945,197 +945,6 @@ class PlotManager:
 
             self.canvas.draw_idle()
 
-    def update_overall_fit_and_residuals_OLD(self, window):
-        """
-        Recalculates and updates the overall fit and residuals for all peaks.
-        Handles different fitting models for each peak and scales residuals for better visibility.
-        """
-        # Calculate the overall fit as the sum of all peaks
-        overall_fit = window.background.astype(float).copy()
-        num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
-
-        # Check if peaks exist in the peak fitting grids
-        if num_peaks == 0:
-            if hasattr(self, 'rsd_text') and self.rsd_text:
-                self.rsd_text.remove()
-                self.rsd_text = None
-            return
-
-        fitting_model = ""  # Default empty string
-
-        for i in range(num_peaks):
-            row = i * 2  # Each peak uses two rows in the grid
-
-            # Get cell values
-            position_str = window.peak_params_grid.GetCellValue(row, 2)  # Position
-            height_str = window.peak_params_grid.GetCellValue(row, 3)  # Height
-            fwhm_str = window.peak_params_grid.GetCellValue(row, 4)  # FWHM
-            lg_ratio_str = window.peak_params_grid.GetCellValue(row, 5)  # L/G
-            # sigma = window.peak_params_grid.GetCellValue(row, 7)
-            # gamma = window.peak_params_grid.GetCellValue(row, 8)
-            fitting_model = window.peak_params_grid.GetCellValue(row, 13)  # Fitting Model
-
-            # Check if any of the cells are empty
-            if not all([position_str, height_str, fwhm_str, lg_ratio_str, fitting_model]):
-                print(f"Warning: Incomplete data for peak {i + 1}. Skipping this peak.")
-                continue
-
-            try:
-                peak_x = float(position_str)
-                peak_y = float(height_str)
-                fwhm = float(fwhm_str)
-                lg_ratio = float(lg_ratio_str)
-            except ValueError:
-                print(f"Warning: Invalid data for peak {i + 1}. Skipping this peak.")
-                continue
-
-            # sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
-            # gamma = lg_ratio/100 * sigma
-            bkg_y = window.background[np.argmin(np.abs(window.x_values - peak_x))]
-
-            if fitting_model in ["Voigt (Area, L/G, \u03c3)", "Voigt (Area, \u03c3, \u03b3)"]:
-                peak_model = lmfit.models.VoigtModel()
-                sigma = float(window.peak_params_grid.GetCellValue(row, 7)) / 2.355
-                gamma = float(window.peak_params_grid.GetCellValue(row, 8)) / 2
-                amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, gamma=gamma, x=0)
-                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif fitting_model == "ExpGauss.(Area, \u03c3, \u03b3)":
-                peak_model = lmfit.models.ExponentialGaussianModel()
-                area = float(window.peak_params_grid.GetCellValue(row, 6))
-                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
-                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-                amplitude = area  # Use area directly as amplitude for area-based model
-                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma, gamma=gamma)
-            elif fitting_model == "Pseudo-Voigt (Area)":
-                sigma = fwhm / 2
-                peak_model = lmfit.models.PseudoVoigtModel()
-                amplitude = peak_y / peak_model.eval(center=0, amplitude=1, sigma=sigma, fraction=lg_ratio / 100, x=0)
-                params = peak_model.make_params(center=peak_x, amplitude=amplitude, sigma=sigma,
-                                                fraction=lg_ratio / 100)
-            elif fitting_model in ["LA (Area, \u03c3, \u03b3)", "LA (Area, \u03c3/\u03b3, \u03b3)"]:
-                peak_model = lmfit.Model(PeakFunctions.LA)
-                amplitude = float(window.peak_params_grid.GetCellValue(row, 6))
-                # area = float(window.peak_params_grid.GetCellValue(row, 6))
-                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
-                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-                params = peak_model.make_params(center=peak_x,amplitude=amplitude,fwhm=fwhm,sigma=sigma,gamma=gamma)
-            elif fitting_model in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
-                peak_model = lmfit.Model(PeakFunctions.LAxG)
-                area = float(window.peak_params_grid.GetCellValue(row, 6))
-                sigma = float(window.peak_params_grid.GetCellValue(row, 7))
-                gamma = float(window.peak_params_grid.GetCellValue(row, 8))
-                fwhm_g = float(window.peak_params_grid.GetCellValue(row, 9))
-                params = peak_model.make_params(center=peak_x,amplitude=area,fwhm=fwhm,sigma=sigma,gamma=gamma,
-                                                fwhm_g=fwhm_g)
-            elif fitting_model == "GL (Height)":
-                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz)
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-            elif fitting_model == "SGL (Height)":
-                peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz)
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, amplitude=peak_y)
-            elif fitting_model == "GL (Area)":
-                peak_model = lmfit.Model(PeakFunctions.gauss_lorentz_Area)
-                area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, area=area)
-            elif fitting_model == "SGL (Area)":
-                peak_model = lmfit.Model(PeakFunctions.S_gauss_lorentz_Area)
-                area = float(window.peak_params_grid.GetCellValue(row, 6))  # Assuming area is in column 6
-                params = peak_model.make_params(center=peak_x, fwhm=fwhm, fraction=lg_ratio, area=area)
-            elif fitting_model == "D-parameter":
-                # Skip D-parameter in overall fit calculation
-                continue
-            elif fitting_model == "SurveyID":
-                # Skip D-parameter in overall fit calculation
-                continue
-            else:
-                print(f"Warning: Unknown fitting model '{fitting_model}' for peak {i + 1}. Skipping this peak.")
-                continue
-
-            peak_fit = peak_model.eval(params, x=window.x_values)
-            overall_fit += peak_fit
-
-        # Calculate residuals
-        residuals = window.y_values - overall_fit
-
-        # Determine the scaling factor
-        max_raw_data = max(window.y_values) - min(window.y_values)
-        desired_max_residual = 0.05 * max_raw_data
-        actual_max_residual = max(abs(residuals))
-        scaling_factor = desired_max_residual / actual_max_residual if actual_max_residual != 0 else 1
-
-        # Scale residuals
-        scaled_residuals = residuals * scaling_factor
-
-        # Start of change for new residuals
-
-        # Create a masked array where 0 values are masked
-        masked_residuals = ma.masked_where(np.isclose(scaled_residuals, 0, atol=5e-1), scaled_residuals)
-
-        # Remove old overall fit and residuals, keep background lines
-        for line in self.ax.get_lines():
-            if line.get_label() in ['Overall Fit', 'Residuals']:
-                line.remove()
-
-        # Plot the new overall fit and residuals
-        if window.energy_scale == 'KE':
-            self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
-                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
-                         label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
-
-            residual_height = 1.07 * max(window.y_values)
-            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1)
-
-            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
-                                         color=self.residual_color, linestyle=self.residual_linestyle,
-                                         alpha=self.residual_alpha, label='Residuals')
-        else:
-            self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
-                    linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
-                         label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
-
-            residual_height = 1.07 * max(window.y_values)
-            residual_base = self.ax.axhline(y=residual_height, color='grey', linestyle='-.', alpha=0.1) # zorder=3
-
-            residual_line = self.ax.plot(window.x_values, masked_residuals + 1.07 * max(window.y_values),
-                                         color=self.residual_color, linestyle=self.residual_linestyle,
-                                         alpha=self.residual_alpha, label='Residuals')
-
-        residual_line[0].set_visible(self.residuals_visible)
-        residual_base.set_visible(self.residuals_visible)
-        rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
-
-
-        if rsd is not None:
-            y_max = self.ax.get_ylim()[1]
-            residual_height = 1.07 * max(window.y_values)
-
-            # Only show RSD if residuals are within plot range
-            if residual_height <= y_max:
-                x_min = self.ax.get_xlim()[1] + 0.4
-
-                if self.rsd_text:
-                    self.rsd_text.remove()
-
-                self.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
-                                             horizontalalignment='right',
-                                             verticalalignment='center',
-                                             fontsize=9,
-                                             color=self.residual_color,
-                                             alpha=self.residual_alpha + 0.2,
-                                             bbox=dict(facecolor='white', edgecolor='none'))
-                self.rsd_text.set_visible(self.residuals_visible)
-            else:
-                if self.rsd_text:
-                    self.rsd_text.remove()
-                    self.rsd_text = None
-
-        # Update the Y-axis label
-        self.ax.set_ylabel(f'Intensity (CPS), residual x {scaling_factor:.2f}')
-
-        self.canvas.draw_idle()
-
-        return residuals
-
     def update_overall_fit_and_residuals(self, window):
         """
         Recalculates and updates the overall fit and residuals for all peaks.
@@ -1303,76 +1112,9 @@ class PlotManager:
             elif self.residuals_state == 2:  # Separate subplot
                 self.setup_residual_subplot(window, x_values, masked_residuals, scaling_factor=1.0)
 
-            elif self.residuals_state == 3:  # Does not exist to be removed
-                if self.residuals_subplot:
+            else:
+                self.ax.get_xaxis().set_visible(True)
 
-                    self.residuals_subplot.clear()
-
-                    if window.energy_scale == 'KE':
-                        x_plot = window.photons - x_values
-                    else:
-                        x_plot = x_values
-
-                    # Plot residuals in subplot
-                    self.residuals_subplot.plot(x_plot, masked_residuals2,
-                                                color=self.residual_color,
-                                                linestyle=self.residual_linestyle,
-                                                alpha=self.residual_alpha,
-                                                linewidth=2)
-
-                    # Hide main plot x-axis labels and ticks
-                    # self.ax.set_xticklabels([])
-                    # self.ax.tick_params(axis='x', labelbottom=False, bottom=False)
-                    # self.ax.set_xlabel('')
-                    self.ax.get_xaxis().set_visible(False)
-
-                    # Configure subplot appearance
-                    self.residuals_subplot.set_ylabel(f'Res.')#(x{scaling_factor:.2f})')
-                    self.residuals_subplot.set_xlabel('Binding Energy (eV)')
-
-                    # Explicitly show ticks and labels
-                    self.residuals_subplot.tick_params(axis='x',
-                                                       bottom=True,  # Show ticks
-                                                       labelbottom=True,  # Show labels
-                                                       labelsize=window.axis_number_size, pad=8)
-
-                    # Use scientific notation for y-axis
-                    self.residuals_subplot.ticklabel_format(style='sci', axis='y', scilimits=(0, 0))
-
-                    # self.residuals_subplot.xaxis.set_label_text("")
-                    self.residuals_subplot.tick_params(axis='x', labelbottom=True)
-
-                    # Match main plot font settings
-                    # self.residuals_subplot.tick_params(axis='both', labelsize=window.axis_number_size)
-                    self.residuals_subplot.xaxis.label.set_size(window.axis_title_size)
-                    self.residuals_subplot.yaxis.label.set_size(window.axis_title_size)
-
-                    # Set subplot y limits
-                    y_min = min(masked_residuals2)
-                    y_max = max(masked_residuals2)
-                    margin = 0.3 * (y_max - y_min)
-                    self.residuals_subplot.set_ylim(y_min - margin, y_max + margin)
-
-                    # Match main plot x limits and direction
-                    if window.energy_scale == 'KE':
-                        self.residuals_subplot.set_xlim(window.photons - max(window.x_values),
-                                                        window.photons - min(window.x_values))
-                    else:
-                        self.residuals_subplot.set_xlim(max(window.x_values), min(window.x_values))
-
-                    # Apply same style as main plot
-                    self.residuals_subplot.tick_params(axis='both', labelsize=window.axis_number_size)
-                    self.residuals_subplot.grid(True, alpha=0.8)
-
-                    # # Adjust subplot heights
-                    gs = self.figure.add_gridspec(20, 1, hspace=0.0)  # Change to 8 rows for better proportion,
-                    # remove spacing
-                    self.ax.set_position(gs[0:17, 0].get_position(self.figure))  # Main plot takes 6/8
-                    self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))  # Residuals takes 2/8
-                    self.residuals_subplot.sharex(self.ax)
-
-                    # Explicitly ensure visibility
-                    self.residuals_subplot.set_visible(True)
 
 
 
@@ -1458,18 +1200,21 @@ class PlotManager:
         margin = 0.3 * (y_max - y_min)
         self.residuals_subplot.set_ylim(y_min - margin, y_max + margin)
 
-        # Set x limits
+        # Get current main plot limits
+        main_xlim = self.ax.get_xlim()
+
         if window.energy_scale == 'KE':
-            self.residuals_subplot.set_xlim(window.photons - max(x_values),
-                                            window.photons - min(x_values))
+            self.residuals_subplot.set_xlim(window.photons - main_xlim[1], window.photons - main_xlim[0])
         else:
-            self.residuals_subplot.set_xlim(max(x_values), min(x_values))
+            self.residuals_subplot.set_xlim(main_xlim[0], main_xlim[1])
+
+        # Set subplot to share x axis
+        self.residuals_subplot.sharex(self.ax)
 
         # Final styling
         self.residuals_subplot.tick_params(axis='both', labelsize=window.axis_number_size)
         self.residuals_subplot.grid(True, alpha=0.8)
         self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))
-        self.residuals_subplot.sharex(self.ax)
         self.residuals_subplot.set_visible(True)
 
     def update_peak_fwhm(self, window, x):

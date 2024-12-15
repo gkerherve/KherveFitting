@@ -294,8 +294,8 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.on_close)
         # self.peak_params_grid.Bind(wx.EVT_KEY_DOWN, self.on_grid_key)
 
-        # self.plot_manager = PlotManager(self.ax, self.canvas)
 
+        self.plot_manager.residuals_state = 2  # Set default state
 
 
 
@@ -1861,6 +1861,11 @@ class MyFrame(wx.Frame):
 
             # Update the plot
             self.ax.set_xlim(limits['Xmax'], limits['Xmin'])  # Reverse X-axis
+
+            # Update subplot limits if it exists
+            if hasattr(self, 'residuals_subplot') and self.residuals_subplot:
+                self.residuals_subplot.set_xlim(limits['Xmax'], limits['Xmin'])
+
             # After zooming, update residuals
             self.plot_manager.update_overall_fit_and_residuals(self)
 
