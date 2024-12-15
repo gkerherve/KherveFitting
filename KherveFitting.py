@@ -157,6 +157,9 @@ class MyFrame(wx.Frame):
         # Initial background method
         self.selected_bkg_method  = "Multi-Regions Smart"
 
+        # initial state for residual
+        self.Data['residuals_state'] = 2  # 0: off, 1: on main plot, 2: separate subplot
+
 
         # Zoom initialisation variables
         self.zoom_mode = False
