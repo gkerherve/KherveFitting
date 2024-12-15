@@ -791,30 +791,6 @@ class MyFrame(wx.Frame):
     def adjust_plot_limits(self, axis, direction):
         self.plot_config.adjust_plot_limits(self, axis, direction)
 
-    def adjust_plot_limits_NOTWORKING(self, axis, direction):
-        sheet_name = self.parent.sheet_combobox.GetValue()
-        limits = self.plot_config.get_plot_limits(self, sheet_name)
-        intensity_factor = 0.05
-        max_intensity = max(self.y_values)
-
-        if axis == 'high_int':
-            limits['Ymax'] += intensity_factor * max_intensity
-        elif axis == 'low_int':
-            limits['Ymax'] = max(limits['Ymax'] - intensity_factor * max_intensity, limits['Ymin'])
-
-        self.plot_config.update_plot_limits(self, sheet_name, y_max=limits['Ymax'])
-        self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
-
-        # Check RSD visibility against new y_max
-        if hasattr(self.plot_manager, 'rsd_text') and self.plot_manager.rsd_text:
-            residual_height = 1.07 * max(self.y_values)
-            if residual_height > limits['Ymax']:
-                self.plot_manager.rsd_text.remove()
-                self.plot_manager.rsd_text = None
-
-        self.canvas.draw_idle()
-
-
     def update_constraint(self, event):
         row = event.GetRow()
         col = event.GetCol()
@@ -1911,23 +1887,24 @@ class MyFrame(wx.Frame):
             self.ax.set_ylim(limits['Ymin'], limits['Ymax'])
 
             # Check RSD visibility
-            residual_height = 1.07 * max(self.y_values)
-            if residual_height > limits['Ymax']:
-                if hasattr(self.plot_manager, 'rsd_text') and self.plot_manager.rsd_text:
-                    self.plot_manager.rsd_text.remove()
-                    self.plot_manager.rsd_text = None
-            else:
-                if hasattr(self.plot_manager, 'rsd_text') and self.plot_manager.rsd_text is None:
-                    rsd = PeakFunctions.calculate_rsd(self.y_values, self.background)
-                    if rsd is not None:
-                        x_min = self.ax.get_xlim()[1] + 0.4
-                        self.plot_manager.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
-                                                                  horizontalalignment='right',
-                                                                  verticalalignment='center',
-                                                                  fontsize=9,
-                                                                  color=self.plot_manager.residual_color,
-                                                                  alpha=self.plot_manager.residual_alpha + 0.2,
-                                                                  bbox=dict(facecolor='white', edgecolor='none'))
+            if hasattr(self.plot_manager, 'residuals_state') and self.plot_manager.residuals_state == 1:
+                residual_height = 1.07 * max(self.y_values)
+                if residual_height > limits['Ymax']:
+                    if hasattr(self.plot_manager, 'rsd_text') and self.plot_manager.rsd_text:
+                        self.plot_manager.rsd_text.remove()
+                        self.plot_manager.rsd_text = None
+                else:
+                    if hasattr(self.plot_manager, 'rsd_text') and self.plot_manager.rsd_text is None:
+                        rsd = PeakFunctions.calculate_rsd(self.y_values, self.background)
+                        if rsd is not None:
+                            x_min = self.ax.get_xlim()[1] + 0.4
+                            self.plot_manager.rsd_text = self.ax.text(x_min, residual_height, f'RSD: {rsd:.2f}',
+                                                                      horizontalalignment='right',
+                                                                      verticalalignment='center',
+                                                                      fontsize=9,
+                                                                      color=self.plot_manager.residual_color,
+                                                                      alpha=self.plot_manager.residual_alpha + 0.2,
+                                                                      bbox=dict(facecolor='white', edgecolor='none'))
 
             self.canvas.draw_idle()
             return  # Prevent event from propagating

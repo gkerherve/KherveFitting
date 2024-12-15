@@ -577,6 +577,7 @@ class PlotManager:
 
         else:
             self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+            self.ax.get_xaxis().set_visible(True)
 
 
         x_label = "Kinetic Energy (eV)" if window.energy_scale == 'KE' else window.x_axis_label
@@ -1115,13 +1116,10 @@ class PlotManager:
             else:
                 self.ax.get_xaxis().set_visible(True)
 
-
-
-
         # Handle RSD text
         rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
         if rsd is not None:
-            if self.residuals_state == 1:  # On main plot
+            if self.residuals_state == 1:  # For main plot
                 y_max = self.ax.get_ylim()[1]
                 residual_height = 1.07 * max(window.y_values)
                 if residual_height <= y_max:
@@ -1136,7 +1134,7 @@ class PlotManager:
                                                  color=self.residual_color,
                                                  alpha=self.residual_alpha + 0.2,
                                                  bbox=dict(facecolor='white', edgecolor='none'))
-            elif self.residuals_state == 2:  # On subplot
+            elif self.residuals_state == 2:  # For subplot, don't check plot limits
                 if self.residuals_subplot:
                     x_min = self.residuals_subplot.get_xlim()[1] + 0.4
                     y_pos = np.mean(self.residuals_subplot.get_ylim())
@@ -1330,6 +1328,7 @@ class PlotManager:
         else:
             # Restore main plot to full size
             self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+            self.ax.get_xaxis().set_visible(True)
 
         self.canvas.draw_idle()
 
@@ -1391,9 +1390,13 @@ class PlotManager:
         # Retrieve the current handles and labels
         handles, labels = self.ax.get_legend_handles_labels()
 
-        # Define the desired order of legend entries
-        legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
-        legend_order2 = ["Raw Data", "Background", "Overall Fit", "Residuals"]
+        # Define legend order based on residuals_state
+        if hasattr(self, 'residuals_state') and self.residuals_state == 2:
+            legend_order = ["Raw Data", "Background", "Overall Fit"]
+            legend_order2 = ["Raw Data", "Background", "Overall Fit"]
+        else:
+            legend_order = ["Raw Data", "Background", "Overall Fit", "Residuals"]
+            legend_order2 = ["Raw Data", "Background", "Overall Fit", "Residuals"]
 
         # Collect peak labels
         num_peaks = window.peak_params_grid.GetNumberRows() // 2  # Assuming each peak uses two rows
