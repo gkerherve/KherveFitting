@@ -364,6 +364,7 @@ class PlotManager:
                     self.figure.delaxes(self.residuals_subplot)
                     self.residuals_subplot = None
                     self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+                    self.ax.get_xaxis().set_visible(True)
 
             x_values = window.Data['Core levels'][sheet_name]['B.E.']
             y_values = window.Data['Core levels'][sheet_name]['Raw Data']
@@ -1120,6 +1121,7 @@ class PlotManager:
         rsd = PeakFunctions.calculate_rsd(window.y_values, overall_fit)
         if rsd is not None:
             if self.residuals_state == 1:  # For main plot
+                self.ax.get_xaxis().set_visible(True)
                 y_max = self.ax.get_ylim()[1]
                 residual_height = 1.07 * max(window.y_values)
                 if residual_height <= y_max:
@@ -1318,13 +1320,6 @@ class PlotManager:
 
             self.setup_residual_subplot(window, x_values, masked_residuals, scaling_factor=1.0)
 
-            # # Create subplot for residuals
-            # self.figure.subplots_adjust(hspace=0)
-            # gs = self.figure.add_gridspec(20, 1, hspace=0.0)
-            # self.ax.set_position(gs[0:17, 0].get_position(self.figure))
-            # self.residuals_subplot = self.figure.add_subplot(gs[17:, 0])  # Add this line
-            # self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))
-            # self.residuals_subplot.sharex(self.ax)
         else:
             # Restore main plot to full size
             self.ax.set_position([0.1, 0.1, 0.8, 0.8])
