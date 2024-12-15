@@ -567,10 +567,14 @@ class PlotManager:
         if hasattr(self, 'residuals_state') and self.residuals_state == 2:
             if self.residuals_subplot:
                 self.residuals_subplot.clear()
-                self.figure.subplots_adjust(hspace=0.3)
-                gs = self.figure.add_gridspec(5, 1)
-                self.ax.set_position(gs[0:4, 0].get_position(self.figure))
-                self.residuals_subplot.set_position(gs[4, 0].get_position(self.figure))
+                gs = self.figure.add_gridspec(20, 1, hspace=0.0)
+                self.ax.set_position(gs[0:17, 0].get_position(self.figure))  # Main plot takes 6/8
+                self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))  # Residuals takes 2/8
+                self.residuals_subplot.sharex(self.ax)
+
+                # Explicitly ensure visibility
+                self.residuals_subplot.set_visible(True)
+
         else:
             self.ax.set_position([0.1, 0.1, 0.8, 0.8])
 
@@ -1363,6 +1367,7 @@ class PlotManager:
                     # remove spacing
                     self.ax.set_position(gs[0:17, 0].get_position(self.figure))  # Main plot takes 6/8
                     self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))  # Residuals takes 2/8
+                    self.residuals_subplot.sharex(self.ax)
 
                     # Explicitly ensure visibility
                     self.residuals_subplot.set_visible(True)
@@ -1512,9 +1517,10 @@ class PlotManager:
         if self.residuals_state == 2:
             # Create subplot for residuals
             self.figure.subplots_adjust(hspace=0)
-            gs = self.figure.add_gridspec(10, 1)
-            self.ax.set_position(gs[0:9, 0].get_position(self.figure))
-            self.residuals_subplot = self.figure.add_subplot(gs[9, 0])
+            gs = self.figure.add_gridspec(20, 1, hspace=0.0)
+            self.ax.set_position(gs[0:17, 0].get_position(self.figure))
+            self.residuals_subplot = self.figure.add_subplot(gs[17:, 0])  # Add this line
+            self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))
             self.residuals_subplot.sharex(self.ax)
         else:
             # Restore main plot to full size
