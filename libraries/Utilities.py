@@ -282,6 +282,46 @@ def get_unique_sheet_name(base_name, existing_sheets):
     return f"{prefix}_{number}"
 
 
+def copy_sheet(window):
+    sheet_name = window.sheet_combobox.GetValue()
+    new_sheet_name = f"{sheet_name}_copy"
+
+    # Check for existing sheets with the same name
+    counter = 1
+    while new_sheet_name in window.Data['Core levels']:
+        new_sheet_name = f"{sheet_name}_copy_{counter}"
+        counter += 1
+
+    # Copy data to new sheet
+    window.Data['Core levels'][new_sheet_name] = window.Data['Core levels'][sheet_name].copy()
+    window.Data['Number of Core levels'] += 1
+
+    # Create Excel sheet
+    wb = openpyxl.load_workbook(window.Data['FilePath'])
+    df = pd.DataFrame({
+        'BE': window.Data['Core levels'][sheet_name]['B.E.'],
+        'Raw Data': window.Data['Core levels'][sheet_name]['Raw Data'],
+        'Background': window.Data['Core levels'][sheet_name]['Background']['Bkg Y'],
+        'Transmission': np.ones_like(window.Data['Core levels'][sheet_name]['B.E.'])
+    })
+
+    with pd.ExcelWriter(window.Data['FilePath'], engine='openpyxl', mode='a') as writer:
+        df.to_excel(writer, sheet_name=new_sheet_name, index=False)
+
+    # Update JSON file
+    json_file_path = os.path.splitext(window.Data['FilePath'])[0] + '.json'
+    if os.path.exists(json_file_path):
+        from libraries.Save import convert_to_serializable_and_round
+        json_data = convert_to_serializable_and_round(window.Data)
+        with open(json_file_path, 'w') as json_file:
+            json.dump(json_data, json_file, indent=2)
+
+    # Update sheet list and display
+    window.sheet_combobox.Append(new_sheet_name)
+    window.sheet_combobox.SetValue(new_sheet_name)
+    from libraries.Sheet_Operations import on_sheet_selected
+    on_sheet_selected(window, new_sheet_name)
+
 def save_modified_data(self, x, y, sheet_name, operation_type):
     wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
     sheet_name = get_unique_sheet_name(sheet_name, wb.sheetnames)

@@ -14,7 +14,7 @@ from libraries.Save import update_undo_redo_state
 from libraries.Save import save_peaks_library, load_peaks_library
 from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog
 from libraries.Export import export_word_report
-from libraries.Utilities import CropWindow, PlotModWindow, on_delete_sheet
+from libraries.Utilities import CropWindow, PlotModWindow, on_delete_sheet, copy_sheet, join_sheets_tool
 from libraries.Help import show_libraries_used
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
@@ -432,6 +432,15 @@ def create_horizontal_toolbar(window):
                                         shortHelp="Delete current sheet")
     window.Bind(wx.EVT_TOOL, lambda event: on_delete_sheet(window, event), delete_sheet_tool)
 
+    copy_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Copy Sheet',
+                                      wx.Bitmap(os.path.join(icon_path, "copy-25.png"), wx.BITMAP_TYPE_PNG),
+                                      shortHelp="Copy current sheet")
+
+    join_sheets_tool = toolbar.AddTool(wx.ID_ANY, 'Join Sheets',
+                                       wx.Bitmap(os.path.join(icon_path, "join-25.png"), wx.BITMAP_TYPE_PNG),
+                                       shortHelp="Join Multiple Sheets")
+
+
     rename_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Rename Sheet',
                                         wx.Bitmap(os.path.join(icon_path, "rename-25.png"), wx.BITMAP_TYPE_PNG),
                                         shortHelp="Rename current sheet")
@@ -462,7 +471,9 @@ def create_horizontal_toolbar(window):
 
     # Plot adjustment tools
     plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot', wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
-    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill', wx.Bitmap(os.path.join(icon_path, "STO-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Peak Fill")
+    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill', wx.Bitmap(os.path.join(icon_path,
+                                                                                                  "STO-25-2.png"),
+                                                                                     wx.BITMAP_TYPE_PNG), shortHelp="Toggle Peak Fill")
     toggle_y_axis_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Y Axis', wx.Bitmap(os.path.join(icon_path, "Y-25.png"),
                                                                                wx.BITMAP_TYPE_PNG), shortHelp="Toggle Y Axis Label and Values")
     toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend', wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Legend")
@@ -538,6 +549,8 @@ def create_horizontal_toolbar(window):
     toolbar.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_y_axis(), toggle_y_axis_tool)
     window.Bind(wx.EVT_TOOL, lambda event: save_peaks_library(window), save_peaks_tool)
     window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), open_peaks_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: copy_sheet(window), copy_sheet_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: JoinSheetsWindow(window).Show(), join_sheets_tool)
     # window.Bind(wx.EVT_TOOL, lambda event: save_peaks_to_github(window), save_peaks_tool)
     # window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), open_peaks_tool)
 
