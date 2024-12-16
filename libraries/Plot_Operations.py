@@ -1086,7 +1086,6 @@ class PlotManager:
 
         # Create a masked array where 0 values are masked
         masked_residuals = ma.masked_where(np.isclose(scaled_residuals, 0, atol=5e-1), scaled_residuals)
-
         masked_residuals2 = ma.masked_where(np.isclose(scaled_residuals, 0, atol=5e-1), residuals)
 
         # Remove old overall fit and residuals, keep background lines
@@ -1208,7 +1207,7 @@ class PlotManager:
         self.residuals_subplot.yaxis.label.set_size(window.axis_title_size)
 
         # Set y limits with margin
-        y_min, y_max = min(masked_residuals), max(masked_residuals)
+        y_min, y_max = np.min(masked_residuals), np.max(masked_residuals)
         margin = 0.3 * (y_max - y_min)
         self.residuals_subplot.set_ylim(y_min - margin, y_max + margin)
 

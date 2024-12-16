@@ -260,6 +260,34 @@ def rename_sheet(window, new_sheet_name):
     on_sheet_selected(window, new_sheet_name)
 
 
+def get_unique_sheet_name(base_name, existing_sheets):
+    """Get unique sheet name by incrementing number suffix if name exists."""
+    if base_name not in existing_sheets:
+        return base_name
+
+    # Extract the base and any existing number
+    parts = base_name.split('_')
+    prefix = '_'.join(parts[:-1]) if len(parts) > 1 else base_name
+
+    # Check for existing number at end
+    number = 1
+    if parts[-1].isdigit():
+        number = int(parts[-1])
+        prefix = '_'.join(parts[:-1])
+
+    # Find next available number
+    while f"{prefix}_{number}" in existing_sheets:
+        number += 1
+
+    return f"{prefix}_{number}"
+
+
+def save_modified_data(self, x, y, sheet_name, operation_type):
+    wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+    sheet_name = get_unique_sheet_name(sheet_name, wb.sheetnames)
+
+    # Get unique sheet name
+    sheet_name = get_unique_sheet_name(sheet_name, existing_sheets)
 
 class CropWindow(wx.Frame):
     def __init__(self, parent,*args, **kw):
@@ -341,7 +369,9 @@ class CropWindow(wx.Frame):
 
     def on_crop(self, event):
         sheet_name = self.parent.sheet_combobox.GetValue()
-        new_name = self.name_ctrl.GetValue()
+        # new_name = self.name_ctrl.GetValue()
+        wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        new_name = get_unique_sheet_name(self.name_ctrl.GetValue(), wb.sheetnames)
         min_be = self.min_ctrl.GetValue()
         max_be = self.max_ctrl.GetValue()
 
@@ -529,7 +559,9 @@ class PlotModWindow(wx.Frame):
             kernel = np.ones(width) / width
             smoothed = np.convolve(y, kernel, mode='same')
 
-        new_sheet = f"{sheet_name}_s"
+        # new_sheet = f"{sheet_name}_s"
+        wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        new_sheet = get_unique_sheet_name(f"{sheet_name}_s", wb.sheetnames)
         self.save_modified_data(x, smoothed, new_sheet, "Smoothed")
 
     def on_differentiate(self, event):
@@ -542,7 +574,9 @@ class PlotModWindow(wx.Frame):
         derivative = np.gradient(y, x)
         smoothed_deriv = savgol_filter(derivative, width, 3)
 
-        new_sheet = f"{sheet_name}_d"
+        # new_sheet = f"{sheet_name}_d"
+        wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        new_sheet = get_unique_sheet_name(f"{sheet_name}_d", wb.sheetnames)
         self.save_modified_data(x, smoothed_deriv, new_sheet, "Differentiated")
 
     def on_integrate(self, event):
@@ -555,6 +589,8 @@ class PlotModWindow(wx.Frame):
         integrated = cumtrapz(y, x, initial=0)
         smoothed_int = savgol_filter(integrated, width, 3)
 
-        new_sheet = f"{sheet_name}_i"
+        # new_sheet = f"{sheet_name}_i"
+        wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        new_sheet = get_unique_sheet_name(f"{sheet_name}_i", wb.sheetnames)
         self.save_modified_data(x, smoothed_int, new_sheet, "Integrated")
 
