@@ -363,7 +363,8 @@ class PlotManager:
                 if self.residuals_subplot:
                     self.figure.delaxes(self.residuals_subplot)
                     self.residuals_subplot = None
-                    self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+                    # self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+                    self.ax.set_position([0.1, 0.125, 0.85, 0.85])
                     self.ax.get_xaxis().set_visible(True)
 
             x_values = window.Data['Core levels'][sheet_name]['B.E.']
@@ -568,6 +569,8 @@ class PlotManager:
         if hasattr(self, 'residuals_state') and self.residuals_state == 2:
             if self.residuals_subplot:
                 self.residuals_subplot.clear()
+                # self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+                self.ax.set_position([0.1, 0.125, 0.85, 0.85])
                 gs = self.figure.add_gridspec(20, 1, hspace=0.0)
                 self.ax.set_position(gs[0:17, 0].get_position(self.figure))  # Main plot takes 6/8
                 self.residuals_subplot.set_position(gs[17:, 0].get_position(self.figure))  # Residuals takes 2/8
@@ -577,7 +580,8 @@ class PlotManager:
                 self.residuals_subplot.set_visible(True)
 
         else:
-            self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+            # self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+            self.ax.set_position([0.1, 0.125, 0.85, 0.85])
             self.ax.get_xaxis().set_visible(True)
 
 
@@ -1061,7 +1065,11 @@ class PlotManager:
             overall_fit += peak_fit
 
         # Calculate residuals
-        # residuals = window.y_values - overall_fit
+        # Before the subtraction, ensure arrays have same length
+        min_length = min(len(y_values), len(overall_fit))
+        y_values = y_values[:min_length]
+        overall_fit = overall_fit[:min_length]
+
         residuals = y_values - overall_fit
 
 
@@ -1089,12 +1097,16 @@ class PlotManager:
 
 
         # Plot the overall fit
+        good_indices = ~np.isnan(overall_fit)
+        x_plot = x_values[good_indices]
+        y_plot = overall_fit[good_indices]
         if window.energy_scale == 'KE':
             self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
                          linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
         else:
-            self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
+            # self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
+            self.ax.plot(x_plot, y_plot, color=self.envelope_color,
                          linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
                          label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
 
@@ -1322,7 +1334,8 @@ class PlotManager:
 
         else:
             # Restore main plot to full size
-            self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+            # self.ax.set_position([0.1, 0.1, 0.8, 0.8])
+            self.ax.set_position([0.1, 0.125, 0.85, 0.85])
             self.ax.get_xaxis().set_visible(True)
 
         self.canvas.draw_idle()
