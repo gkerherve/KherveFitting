@@ -634,3 +634,68 @@ class PlotModWindow(wx.Frame):
         new_sheet = get_unique_sheet_name(f"{sheet_name}_i", wb.sheetnames)
         self.save_modified_data(x, smoothed_int, new_sheet, "Integrated")
 
+
+class JoinSheetsWindow(wx.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, title="Join Sheets", size=(300, 400))
+        self.parent = parent
+        panel = wx.Panel(self)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.sheet_list = wx.CheckListBox(panel, choices=self.parent.sheet_combobox.GetStrings())
+        sizer.Add(self.sheet_list, 1, wx.EXPAND | wx.ALL, 5)
+
+        join_btn = wx.Button(panel, label="Join Sheets")
+        join_btn.Bind(wx.EVT_BUTTON, self.on_join)
+        sizer.Add(join_btn, 0, wx.EXPAND | wx.ALL, 5)
+
+        panel.SetSizer(sizer)
+
+    def on_join(self, event):
+        selected_sheets = self.sheet_list.GetCheckedStrings()
+        if len(selected_sheets) < 2:
+            wx.MessageBox("Select at least 2 sheets to join", "Error")
+            return
+
+        # Sort sheets by highest BE
+        sheet_max_be = {sheet: max(self.parent.Data['Core levels'][sheet]['B.E.']) for sheet in selected_sheets}
+        sorted_sheets = sorted(selected_sheets, key=lambda x: sheet_max_be[x], reverse=True)
+
+        # Join data
+        joined_be = []
+        joined_data = []
+
+        for sheet in sorted_sheets:
+            be = self.parent.Data['Core levels'][sheet]['B.E.']
+            data = self.parent.Data['Core levels'][sheet]['Raw Data']
+            joined_be.extend(be)
+            joined_data.extend(data)
+
+        # Create new sheet
+        new_sheet = "Joined_Scan"
+        self.parent.Data['Core levels'][new_sheet] = {
+            'B.E.': joined_be,
+            'Raw Data': joined_data,
+            'Background': {'Bkg Y': joined_data},
+            'Transmission': [1.0] * len(joined_be)
+        }
+
+        # Update Excel file
+        df = pd.DataFrame({
+            'BE': joined_be,
+            'Raw Data': joined_data,
+            'Background': joined_data,
+            'Transmission': [1.0] * len(joined_be)
+        })
+
+        with pd.ExcelWriter(self.parent.Data['FilePath'], engine='openpyxl', mode='a') as writer:
+            df.to_excel(writer, sheet_name=new_sheet, index=False)
+
+        # Update UI
+        self.parent.sheet_combobox.Append(new_sheet)
+        self.parent.sheet_combobox.SetValue(new_sheet)
+        from libraries.Sheet_Operations import on_sheet_selected
+        on_sheet_selected(self.parent, new_sheet)
+
+        self.Close()

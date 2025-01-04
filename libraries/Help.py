@@ -2,7 +2,7 @@ import wx
 import wx.html
 import os
 import sys
-import pygame
+# import pygame
 
 def show_libraries_used(window):
     text = """-------------------

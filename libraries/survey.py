@@ -8,7 +8,7 @@ class PeriodicTableWindow(wx.Frame):
         super().__init__(parent, title="Survey Identification / Labelling",
                          style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         self.parent_window = parent  # Store the parent window
-        self.SetBackgroundColour(wx.WHITE)
+        # self.SetBackgroundColour(wx.WHITE)
 
         self.library_data = self.parent_window.library_data
 
@@ -21,7 +21,7 @@ class PeriodicTableWindow(wx.Frame):
 
     def InitUI(self):
         panel = wx.Panel(self)
-        panel.SetBackgroundColour(wx.WHITE)
+        # panel.SetBackgroundColour(wx.WHITE)
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 

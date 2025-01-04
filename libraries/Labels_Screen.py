@@ -7,7 +7,7 @@ class LabelWindow(wx.Frame):
         self.SetSize((300, 300))
 
         panel = wx.Panel(self)
-        panel.SetBackgroundColour(wx.WHITE)
+        # panel.SetBackgroundColour(wx.WHITE)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.list_box = wx.ListBox(panel, style=wx.LB_SINGLE)
@@ -126,7 +126,7 @@ class LabelWindow(wx.Frame):
 
     def on_add(self, event):
         dlg = wx.Dialog(self, title="Add Label", size=(250, 280))
-        dlg.SetBackgroundColour(wx.WHITE)
+        # dlg.SetBackgroundColour(wx.WHITE)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         text_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -213,7 +213,7 @@ class LabelWindow(wx.Frame):
             label = self.parent.Data['Core levels'][sheet_name]['Labels'][selection]
 
             dlg = wx.Dialog(self, title="Edit Label", size=(250, 200))
-            dlg.SetBackgroundColour(wx.WHITE)
+            # dlg.SetBackgroundColour(wx.WHITE)
             sizer = wx.BoxSizer(wx.VERTICAL)
 
             # Add text label and control

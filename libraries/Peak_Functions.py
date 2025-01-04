@@ -1,6 +1,6 @@
 
 import numpy as np
-from numba import jit, prange
+# from numba import jit, prange
 import lmfit
 from lmfit.models import VoigtModel
 from scipy.optimize import minimize_scalar, brentq

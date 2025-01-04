@@ -13,7 +13,7 @@ class BackgroundWindow(wx.Frame):
         self.SetMaxSize((270, 300))
 
         panel = wx.Panel(self)
-        panel.SetBackgroundColour(wx.Colour(245, 245, 245))
+        # panel.SetBackgroundColour(wx.Colour(245, 245, 245))
 
         # Create controls
         method_label = wx.StaticText(panel, label="Method:")
@@ -38,7 +38,7 @@ class BackgroundWindow(wx.Frame):
         clear_background_button.SetMinSize((110, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
-        export_button = wx.Button(panel, label="Accept")
+        export_button = wx.Button(panel, label="Export to\nResults Grid")
         export_button.SetMinSize((60, 40))
         export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 

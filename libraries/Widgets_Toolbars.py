@@ -14,7 +14,7 @@ from libraries.Save import update_undo_redo_state
 from libraries.Save import save_peaks_library, load_peaks_library
 from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog
 from libraries.Export import export_word_report
-from libraries.Utilities import CropWindow, PlotModWindow, on_delete_sheet, copy_sheet, join_sheets_tool
+from libraries.Utilities import CropWindow, PlotModWindow, on_delete_sheet, copy_sheet, JoinSheetsWindow
 from libraries.Help import show_libraries_used
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
@@ -33,6 +33,8 @@ def create_widgets(window):
     # Create the vertical toolbar as a child of the panel
     window.v_toolbar = create_vertical_toolbar(window.panel, window)
 
+    # window.r_toolbar = create_rightside_toolbar(window.panel, window)
+
     # Content sizer (everything except vertical toolbar)
     content_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -41,7 +43,7 @@ def create_widgets(window):
 
     # Right frame for the plot
     window.right_frame = wx.Panel(window.splitter)
-    window.right_frame.SetBackgroundColour(wx.Colour(255, 255, 255))
+    # window.right_frame.SetBackgroundColour(wx.Colour(255, 255, 255)) # To change
     right_frame_sizer = wx.BoxSizer(wx.VERTICAL)
 
     # Create the FigureCanvas
@@ -90,6 +92,7 @@ def create_widgets(window):
 
     # Create the horizontal toolbar
     window.toolbar = create_horizontal_toolbar(window)
+    # window.r_toolbar = create_rightside_toolbar(window)
     update_undo_redo_state(window)
     toggle_Col_1(window)
 
@@ -118,7 +121,7 @@ def create_peak_params_grid(window, parent):
     peak_params_sizer = wx.StaticBoxSizer(peak_params_frame_box, wx.VERTICAL)
 
     window.peak_params_frame = wx.Panel(peak_params_frame_box)
-    window.peak_params_frame.SetBackgroundColour(wx.Colour(255, 255, 255))
+    # window.peak_params_frame.SetBackgroundColour(wx.Colour(255, 255, 255)) # To change back
     peak_params_sizer_inner = wx.BoxSizer(wx.VERTICAL)
 
     window.peak_params_grid = wx.grid.Grid(window.peak_params_frame)
@@ -139,7 +142,8 @@ def create_peak_params_grid(window, parent):
     window.peak_params_grid.SetColLabelSize(35)
     window.peak_params_grid.SetDefaultColSize(60)
     # window.peak_params_grid.SetLabelBackgroundColour(wx.Colour(230, 250, 230))  # Green background for column labels
-    window.peak_params_grid.SetDefaultCellBackgroundColour(wx.WHITE)  # White background for all cells
+    # -------------------------------------------------------To change below to white
+    # window.peak_params_grid.SetDefaultCellBackgroundColour(wx.WHITE)  # White background for all cells
     window.peak_params_grid.SetRowLabelSize(25)
 
     # Ensure all cells have white background
@@ -186,7 +190,8 @@ def create_results_grid(window, parent):
     window.results_grid.SetRowLabelSize(25)
     window.results_grid.SetColLabelSize(35)
     # window.results_grid.SetLabelBackgroundColour(wx.Colour(255, 255, 255))
-    window.results_grid.SetDefaultCellBackgroundColour(wx.WHITE)
+    # ------------------------------------------> To change below for white
+    # window.results_grid.SetDefaultCellBackgroundColour(wx.WHITE)
 
     # Adjust specific column sizes
     col_sizes = [120, 70, 70, 70, 50, 80, 80, 20, 30, 40, 50, 80,120, 80, 80, 70, 70, 100, 100, 80, 80, 80, 120, 120,
@@ -358,8 +363,8 @@ def create_menu(window):
     shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
     window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
 
-    mini_game_item = help_menu.Append(wx.NewId(), "Mini Game")
-    window.Bind(wx.EVT_MENU, lambda event: show_mini_game(window), mini_game_item)
+    # mini_game_item = help_menu.Append(wx.NewId(), "Mini Game")
+    # window.Bind(wx.EVT_MENU, lambda event: show_mini_game(window), mini_game_item)
 
     coffee_item = help_menu.Append(wx.NewId(), "Buy Me a Coffee")
     window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://buymeacoffee.com/gkerherve"), coffee_item)
@@ -381,9 +386,31 @@ def create_menu(window):
 
     window.SetMenuBar(menubar)
 
+
+def create_rightside_toolbar(parent, window):
+    r_toolbar = wx.ToolBar(parent, style= wx.TB_RIGHT)
+    r_toolbar.SetToolBitmapSize(wx.Size(25, 25))
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(current_dir, "Icons")
+
+    r_save_peaks_tool = r_toolbar.AddTool(wx.ID_ANY, 'Save Peaks Library',
+                                          wx.Bitmap(os.path.join(icon_path, "LibSave.png"), wx.BITMAP_TYPE_PNG),
+                                          shortHelp="Save peaks parameters to library")
+
+    r_open_peaks_tool = r_toolbar.AddTool(wx.ID_ANY, 'Open Peaks Library',
+                                          wx.Bitmap(os.path.join(icon_path, "LibOpen.png"), wx.BITMAP_TYPE_PNG),
+                                          shortHelp="Load peaks parameters from library")
+
+    r_toolbar.Realize()
+    window.Bind(wx.EVT_TOOL, lambda event: save_peaks_library(window), r_save_peaks_tool)
+    window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), r_open_peaks_tool)
+
+    return r_toolbar
+
 def create_horizontal_toolbar(window):
-    toolbar = window.CreateToolBar()
-    toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
+    toolbar = window.CreateToolBar(style= wx.TB_FLAT)
+    # toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
     toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
     # # Determine the correct path for icons
@@ -407,14 +434,14 @@ def create_horizontal_toolbar(window):
     save_plot_tool = toolbar.AddTool(wx.ID_ANY, 'Save Plot', wx.Bitmap(os.path.join(icon_path, "save-PNG-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save this Figure to Excel")
     save_all_tool = toolbar.AddTool(wx.ID_ANY, 'Save All Sheets', wx.Bitmap(os.path.join(icon_path, "save-Multi-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Save all sheets with plots")
 
-    toolbar.AddSeparator()
+    # toolbar.AddSeparator()
     window.undo_tool = toolbar.AddTool(wx.ID_ANY, 'Undo', wx.Bitmap(os.path.join(icon_path, "undo-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Undo -- For peaks properties only")
     window.redo_tool = toolbar.AddTool(wx.ID_ANY, 'Redo', wx.Bitmap(os.path.join(icon_path, "redo-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Redo -- For peaks properties only")
-    toolbar.AddSeparator()
+    # toolbar.AddSeparator()
 
-    toolbar.AddSeparator()
-    add_vertical_separator(toolbar, separators)
-    toolbar.AddSeparator()
+    # toolbar.AddSeparator()
+    # add_vertical_separator(toolbar, separators)
+    # toolbar.AddSeparator()
 
     # # Skip rows spinbox
     # window.skip_rows_spinbox = wx.SpinCtrl(toolbar, min=0, max=200, initial=0, size=(60, -1))
@@ -427,23 +454,23 @@ def create_horizontal_toolbar(window):
     toolbar.AddControl(window.sheet_combobox)
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected(window, event))
 
-    delete_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Delete Sheet',
+    delete_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Delete Core Level/Survey',
                                         wx.Bitmap(os.path.join(icon_path, "delete-25.png"), wx.BITMAP_TYPE_PNG),
-                                        shortHelp="Delete current sheet")
+                                        shortHelp="Delete current Core Level/Survey")
     window.Bind(wx.EVT_TOOL, lambda event: on_delete_sheet(window, event), delete_sheet_tool)
 
-    copy_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Copy Sheet',
+    copy_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Copy Core Level/Survey',
                                       wx.Bitmap(os.path.join(icon_path, "copy-25.png"), wx.BITMAP_TYPE_PNG),
-                                      shortHelp="Copy current sheet")
+                                      shortHelp="Copy current Core Level/Survey")
 
-    join_sheets_tool = toolbar.AddTool(wx.ID_ANY, 'Join Sheets',
-                                       wx.Bitmap(os.path.join(icon_path, "join-25.png"), wx.BITMAP_TYPE_PNG),
-                                       shortHelp="Join Multiple Sheets")
+    join_sheets_tool = toolbar.AddTool(wx.ID_ANY, 'Join Core Level/Survey',
+                                       wx.Bitmap(os.path.join(icon_path, "join2-25.png"), wx.BITMAP_TYPE_PNG),
+                                       shortHelp="Join Multiple Core Level/Survey")
 
 
-    rename_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Rename Sheet',
+    rename_sheet_tool = toolbar.AddTool(wx.ID_ANY, 'Rename Core Level/Survey',
                                         wx.Bitmap(os.path.join(icon_path, "rename-25.png"), wx.BITMAP_TYPE_PNG),
-                                        shortHelp="Rename current sheet")
+                                        shortHelp="Rename current Core Level/Survey")
     window.Bind(wx.EVT_TOOL, lambda evt: _show_rename_dialog(window), rename_sheet_tool)
 
     def _show_rename_dialog(window):
@@ -453,8 +480,8 @@ def create_horizontal_toolbar(window):
             rename_sheet(window, dlg.GetValue())
         dlg.Destroy()
 
-    toolbar.AddSeparator()
-    add_vertical_separator(toolbar, separators)
+    # toolbar.AddSeparator()
+    # add_vertical_separator(toolbar, separators)
     toolbar.AddSeparator()
 
     # BE correction
@@ -465,8 +492,8 @@ def create_horizontal_toolbar(window):
 
     auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE', wx.Bitmap(os.path.join(icon_path, "BEcorrect-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Automatic binding energy correction")
 
-    toolbar.AddSeparator()
-    add_vertical_separator(toolbar, separators)
+    # toolbar.AddSeparator()
+    # add_vertical_separator(toolbar, separators)
     toolbar.AddSeparator()
 
     # Plot adjustment tools
@@ -480,8 +507,8 @@ def create_horizontal_toolbar(window):
     toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results', wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
     toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Residuals")
 
-    toolbar.AddSeparator()
-    add_vertical_separator(toolbar, separators)
+    # toolbar.AddSeparator()
+    # add_vertical_separator(toolbar, separators)
     toolbar.AddSeparator()
 
     # Analysis tools
@@ -503,8 +530,8 @@ def create_horizontal_toolbar(window):
     id_tool = toolbar.AddTool(wx.ID_ANY, 'ID', wx.Bitmap(os.path.join(icon_path, "ID-25.png"), wx.BITMAP_TYPE_PNG),
                               shortHelp="Element identifications (ID)")
 
-    toolbar.AddSeparator()
-    add_vertical_separator(toolbar, separators)
+    # toolbar.AddSeparator()
+    # add_vertical_separator(toolbar, separators)
     toolbar.AddSeparator()
 
     noise_analysis_tool = toolbar.AddTool(wx.ID_ANY, 'Noise Analysis',
@@ -592,7 +619,7 @@ def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, 
 
 def create_vertical_toolbar(parent, frame):
     v_toolbar = wx.ToolBar(parent, style=wx.TB_VERTICAL | wx.TB_FLAT)
-    v_toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
+    # v_toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
     v_toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
     # Get the correct path for icons

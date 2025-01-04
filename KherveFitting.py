@@ -2,20 +2,36 @@
 
 
 # LIBRARIES----------------------------------------------------------------------
+import multiprocessing
+import os
+import psutil
+os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())
+os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())
+os.environ['OPENBLAS_NUM_THREADS'] = str(multiprocessing.cpu_count())
+os.environ['VECLIB_MAXIMUM_THREADS'] = str(multiprocessing.cpu_count())
+os.environ['NUMEXPR_NUM_THREADS'] = str(multiprocessing.cpu_count())
+
+
 import matplotlib
-import matplotlib.widgets as widgets
+
 import wx.grid
 import wx.adv
 import sys
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
+
+# import matplotlib.pyplot as plt
+# from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+# from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
+
+
 from matplotlib.ticker import ScalarFormatter, AutoMinorLocator
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
-import lmfit
-import wx.lib.agw.aui as aui
-import struct
-from pathlib import Path
+
+# import lmfit
+# import wx.lib.agw.aui as aui
+# import struct
+# from pathlib import Path
+
+
 from libraries.Fitting_Screen import *
 from libraries.AreaFit_Screen import *
 from libraries.Save import *
@@ -23,28 +39,35 @@ from libraries.NoiseAnalysis import NoiseAnalysisWindow
 from libraries.ConfigFile import *
 from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig
-from libraries.Plot_Operations import PlotManager
+# from libraries.Plot_Operations import PlotManager
 from libraries.Peak_Functions import PeakFunctions
-from libraries.Peak_Functions import AtomicConcentrations
+
+# from libraries.Peak_Functions import AtomicConcentrations
 # from libraries.Peak_Functions import gauss_lorentz, S_gauss_lorentz
+
 from Functions import toggle_Col_1, update_sheet_names, rename_sheet
 from libraries.PreferenceWindow import PreferenceWindow
-from libraries.Sheet_Operations import on_sheet_selected
+
+# from libraries.Sheet_Operations import on_sheet_selected
+
 from libraries.Sheet_Operations import CheckboxRenderer, on_sheet_selected
 from libraries.SplashScreen import show_splash
 from libraries.Save import save_state, undo, redo
-from libraries.Open import ExcelDropTarget
-from libraries.Utilities import copy_cell, paste_cell
+
+# from libraries.Open import ExcelDropTarget
+# from libraries.Utilities import copy_cell, paste_cell
+
 from Functions import on_save, on_exit
 from libraries.Open import load_recent_files_from_config, open_avg_file
 from libraries.survey import PeriodicTableWindow
 from libraries.Widgets_Toolbars import create_widgets, create_menu
 from libraries.Widgets_Toolbars import create_statusbar, update_statusbar
 from libraries.Open import open_xlsx_file
-from libraries.Export import export_word_report
+
+# from libraries.Export import export_word_report
+
 from libraries.Peak_Functions import OtherCalc, AtomicConcentrations
 from libraries.Dpara_Screen import DParameterWindow
-
 
 
 class MyFrame(wx.Frame):
@@ -75,7 +98,7 @@ class MyFrame(wx.Frame):
 
         self.SetMinSize((800, 600))
         self.panel = wx.Panel(self)
-        self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white
+        # self.panel.SetBackgroundColour(wx.Colour(255, 255, 255))  # Set background color to white
 
 
 
@@ -2411,13 +2434,20 @@ class MyFrame(wx.Frame):
                     elif col == 2:  # Position
                         peaks[correct_peak_key]['Position'] = float(new_value)
                     elif col in [3, 4, 5, 6, 7, 8,9]:  # Height, FWHM, L/G, Area, Sigma, Gamma changed
+                        def try_float(value, default=0.0):
+                            try:
+                                return float(value)
+                            except (ValueError, TypeError):
+                                return default
+
+
                         model = peaks[correct_peak_key]['Fitting Model']
                         height = float(self.peak_params_grid.GetCellValue(row, 3))
                         fwhm = float(self.peak_params_grid.GetCellValue(row, 4))
                         fraction = float(self.peak_params_grid.GetCellValue(row, 5))
                         area = float(self.peak_params_grid.GetCellValue(row, 6))
-                        sigma = float(self.peak_params_grid.GetCellValue(row, 7))
-                        gamma = float(self.peak_params_grid.GetCellValue(row, 8))
+                        sigma = try_float(self.peak_params_grid.GetCellValue(row, 7), 0.0)
+                        gamma = try_float(self.peak_params_grid.GetCellValue(row, 8), 0.0)
                         skew = float(self.peak_params_grid.GetCellValue(row, 9))
 
                         if model in ["LA (Area, \u03c3/\u03b3, \u03b3)", "LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
@@ -3200,24 +3230,29 @@ class MyFrame(wx.Frame):
         self.labels_window.Show()
         self.labels_window.Raise()
 
+def set_high_priority():
+    try:
+        proc = psutil.Process(os.getpid())
+        if os.name == 'nt':  # Windows
+            proc.nice(psutil.HIGH_PRIORITY_CLASS)
+        else:  # Unix
+            proc.nice(-20)
+    except:
+        pass
+
 if __name__ == '__main__':
-    # Try Multiprocessing
-    # import multiprocessing
 
-    # multiprocessing.freeze_support()  # Required for Windows
+    multiprocessing.freeze_support()
+    set_high_priority()
 
-    # Set number of cores for numerical libraries
     import os
 
-    # os.environ['OMP_NUM_THREADS'] = str(multiprocessing.cpu_count())
-    # os.environ['MKL_NUM_THREADS'] = str(multiprocessing.cpu_count())
-    # os.environ['OPENBLAS_NUM_THREADS'] = str(multiprocessing.cpu_count())
 
     app = wx.App(False)
     # app.SetHighDPIAware(True)  # Add this line to enable High DPI awareness
     splash = show_splash(duration=3000, delay=2)
 
-    frame = MyFrame(None, "KherveFitting - V1.3 - Dec 2024")
+    frame = MyFrame(None, "KherveFitting - V1.31 - Jan 2025")
     frame.Show(True)
 
     if splash:

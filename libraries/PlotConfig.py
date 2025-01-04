@@ -166,7 +166,7 @@ class PlotConfig:
             y_values = window.Data['Core levels'][sheet_name]['Raw Data']
             original['Xmin'] = min(x_values)
             original['Xmax'] = max(x_values)
-            original['Ymin'] = min(y_values)
+            original['Ymin'] = min(y_values) - 0.015* max(y_values)
             original['Ymax'] = max(y_values) * 1.2  # Add 20% padding to the top
 
         # Update current limits

@@ -11,7 +11,7 @@ class DParameterWindow(wx.Frame):
         self.SetSize((300, 440))
 
         panel = wx.Panel(self)
-        panel.SetBackgroundColour(wx.WHITE)
+        # panel.SetBackgroundColour(wx.WHITE)
 
         # Parameters Box
         param_box = wx.StaticBox(panel, label="Parameters")

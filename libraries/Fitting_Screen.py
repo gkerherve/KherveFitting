@@ -31,14 +31,11 @@ class FittingWindow(wx.Frame):
         self.library_data = self.parent.library_data
         self.doublet_splittings = self.load_doublet_splittings(self.parent.library_data)
 
-        # self.library_data = load_library_data()  # Load once when the window is created
-        # self.doublet_splittings = self.load_doublet_splittings(self.library_data)
-        # self.doublet_splittings = self.load_doublet_splittings("DS.lib")
 
     def init_ui(self):
         panel = wx.Panel(self)
         # panel.SetBackgroundColour(wx.Colour(255, 255, 255))
-        panel.SetBackgroundColour(wx.Colour(250, 250, 250))
+        # panel.SetBackgroundColour(wx.Colour(250, 250, 250))
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -198,24 +195,26 @@ class FittingWindow(wx.Frame):
                  "SGL (Area)",
                  "LA (Area, \u03c3/\u03b3, \u03b3)",
                  "Voigt (Area, L/G, \u03c3)",
+                 "Others---------------",
                  "Area Based----------",
-                 "GL (Area)",
-                 "SGL (Area)",
+                 # "GL (Area)",
+                 # "SGL (Area)",
                  "Voigt (Area, \u03c3, \u03b3)",
-                 "Voigt (Area, L/G, \u03c3)",
+                 # "Voigt (Area, L/G, \u03c3)",
                  "LA (Area, \u03c3, \u03b3)",
-                 "LA (Area, \u03c3/\u03b3, \u03b3)",
+                 # "LA (Area, \u03c3/\u03b3, \u03b3)",
                  "LA*G (Area, \u03c3/\u03b3, \u03b3)",
                  "Pseudo-Voigt (Area)",
                  "ExpGauss.(Area, \u03c3, \u03b3)",
                  "Height Based---------",
                  "GL (Height)",
                  "SGL (Height)",
-                 "Under Test -----------"
+                 # "Under Test -----------"
                  ]
 
 
-        green_items = ["Area Based----------", "Height Based---------", "Under Test -----------", "Preferred Models-----"]
+        green_items = ["Others---------------","Area Based----------", "Height Based---------", "Under Test "
+                                                                                               "-----------", "Preferred Models-----"]
         self.model_combobox.SetItems(items)
         self.model_combobox.SetGreenItems(green_items)
 
@@ -1217,30 +1216,48 @@ class TougaardFitWindow(wx.Frame):
                 self.parent.cross_section3.SetValue(f"{B},{C},{D},0")
 
 
+class CustomComboBox2(wx.ComboBox):
+    def __init__(self, parent, style=wx.CB_READONLY):
+        style |= wx.CB_OWNERDRAW
+        super().__init__(parent, style=style)
+        self.green_items = []
+        self.Bind(wx.EVT_DRAW_ITEM, self.OnDrawItem)
+
+    def SetGreenItems(self, items):
+        self.green_items = items
+        self.Refresh()
+
+    def OnDrawItem(self, evt):
+        dc = wx.PaintDC(self)
+        dc.SetFont(self.GetFont())
+        text = self.GetString(evt.GetIndex())
+        rect = evt.GetRect()
+
+        if evt.IsSelected():
+            bg_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+            text_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
+        else:
+            bg_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
+            text_color = wx.GREEN if text in self.green_items else wx.BLACK
+
+        dc.SetBrush(wx.Brush(bg_color))
+        dc.SetTextForeground(text_color)
+        dc.DrawRectangle(rect)
+        dc.DrawText(text, rect.x + 3, rect.y + 2)
+
 class CustomComboBox(wx.ComboBox):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent, style=wx.CB_READONLY):
+        super().__init__(parent, style=style)
         self.green_items = []
 
     def SetGreenItems(self, items):
         self.green_items = items
+        for i, item in enumerate(self.GetItems()):
+            self.SetForegroundColour(wx.GREEN if item in self.green_items else wx.BLACK)
+            self.Refresh()
 
     def GetGreenItems(self):
         return self.green_items
-
-    def OnDrawItem(self, dc, rect, item, flags):
-        if flags & wx.CONTROL_SELECTED:
-            dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
-            dc.SetBrush(wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT), wx.BRUSHSTYLE_SOLID))
-        else:
-            dc.SetTextForeground(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT))
-            dc.SetBrush(wx.Brush(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW), wx.BRUSHSTYLE_SOLID))
-
-        dc.DrawRectangle(rect)
-        text = self.GetString(item)
-        if text in self.green_items:
-            dc.SetTextForeground(wx.GREEN)
-        dc.DrawText(text, rect.x + 3, rect.y + 2)
 
     def OnMeasureItem(self, item):
         return 24
