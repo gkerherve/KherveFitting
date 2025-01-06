@@ -72,6 +72,16 @@ def create_widgets(window):
     # Create grids panel
     grids_panel = create_grids_panel(window)
 
+    for grid in [window.peak_params_grid, window.results_grid]:
+        label_font = grid.GetLabelFont()
+        label_font.SetPointSize(8)
+        grid.SetLabelFont(label_font)
+
+        cell_font = grid.GetDefaultCellFont()
+        cell_font.SetPointSize(8)  # Change size as needed
+        grid.SetDefaultCellFont(cell_font)
+
+
     # Set up the splitter
     window.splitter.SplitVertically(window.right_frame, grids_panel)
     window.splitter.SetMinimumPaneSize(0)
@@ -153,7 +163,7 @@ def create_peak_params_grid(window, parent):
 
 
     # Adjust individual column sizes
-    col_sizes = [20, 90, 80, 80, 60, 50, 60, 60, 60, 60, 40, 40, 40, 130, 130, 80, 80, 100, 100]
+    col_sizes = [20, 90, 80, 60, 60, 50, 70, 50, 50, 50, 40, 40, 40, 130, 130, 80, 80, 100, 100]
     for i, size in enumerate(col_sizes):
         window.peak_params_grid.SetColSize(i, size)
 
@@ -413,13 +423,20 @@ def create_horizontal_toolbar(window):
     # toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
     toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
-    # # Determine the correct path for icons
-    # if getattr(sys, 'frozen', False):
-    #     application_path = sys._MEIPASS
-    # else:
-    #     application_path = os.path.dirname(os.path.abspath(__file__))
-    # icon_path = os.path.join(application_path, "Icons")
-    # Get the correct path for icons
+    # import ctypes
+    # user32 = ctypes.windll.user32
+    # user32.SetProcessDPIAware()
+    # dpi = user32.GetDpiForSystem()
+    # user32.SetProcessDPIAware(False)  # Remove DPI awareness
+    # scale_factor = dpi / 96
+    #
+    # print(f'Scale Factor: {scale_factor}')
+    # screen_height = wx.DisplaySize()[1] / scale_factor
+    # icon_size = int(screen_height * 0.04)
+    # toolbar.SetToolBitmapSize(wx.Size(icon_size, icon_size))
+
+    # toolbar.SetToolBitmapSize(wx.Size(20, 20))
+
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     icon_path = os.path.join(current_dir, "Icons")

@@ -72,7 +72,7 @@ from libraries.Dpara_Screen import DParameterWindow
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(1680, 780))
+        super().__init__(parent, title=title, size=(1640, 740))
 
 
 
@@ -512,9 +512,12 @@ class MyFrame(wx.Frame):
             # self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
             self.peak_params_grid.SetCellBackgroundColour(row + 1, col, wx.Colour(200,245,228))
 
+        for col in [10, 11, 12]:  # Columns for Area, sigma and gamma
+            self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(27, 140, 60))
+
         # Set background color for Height, FWHM, and L/G ratio cells if Voigt function
         if self.selected_fitting_method == "Voigt (Area, L/G, \u03c3)":
-            for col in [3, 4, 8,9]:  # Columns for Height, FWHM, L/G ratio
+            for col in [3, 4, 8]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
@@ -534,6 +537,11 @@ class MyFrame(wx.Frame):
             for col in [6, 7, 8]:  # Columns for Height, FWHM
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
+            for col in [9]:  # Columns for Area, sigma and gamma
+                self.peak_params_grid.SetCellValue(row, col, "0")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(255, 255, 255))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
         elif self.selected_fitting_method in ["LA (Area, \u03c3, \u03b3)" ]:
             for col in [3, 5]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
@@ -545,16 +553,21 @@ class MyFrame(wx.Frame):
             for col in [9]:  # Columns for Area, sigma and gamma
                 self.peak_params_grid.SetCellValue(row, col, "0")
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
-                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(128, 128, 128))
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(255, 255, 255))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
         elif self.selected_fitting_method in ["LA (Area, \u03c3/\u03b3, \u03b3)"]:
-            for col in [3,7,9]:  # Columns for Height, FWHM, L/G ratio
+            for col in [3,7,]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
                 self.peak_params_grid.SetCellTextColour(row , col, wx.Colour(128, 128, 128))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200,245,228))
             for col in [4, 5, 6, 8]:  # Columns for Height, FWHM
                 self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(0, 0, 0))
                 self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(0, 0, 0))
+            for col in [9]:  # Columns for Area, sigma and gamma
+                self.peak_params_grid.SetCellValue(row, col, "0")
+                self.peak_params_grid.SetCellValue(row + 1, col, "0")
+                self.peak_params_grid.SetCellTextColour(row, col, wx.Colour(255, 255, 255))
+                self.peak_params_grid.SetCellTextColour(row + 1, col, wx.Colour(200, 245, 228))
         elif self.selected_fitting_method in ["LA*G (Area, \u03c3/\u03b3, \u03b3)"]:
             for col in [3,7]:  # Columns for Height, FWHM, L/G ratio
                 self.peak_params_grid.SetCellValue(row + 1, col, "0")
@@ -2400,6 +2413,16 @@ class MyFrame(wx.Frame):
             peak_value = float(self.peak_params_grid.GetCellValue(row - 1, col))
             new_value = str(round(peak_value - float(new_value[1:]), 2)) + ':' + str(
                 round(peak_value + float(new_value[1:]), 2))
+        elif col == 2 and new_value.upper() in 'ABCDEFGHIJKLMNOP':
+            letter_index = ord(new_value.upper()) - 65
+            current_split = float(self.peak_params_grid.GetCellValue(row-1, 12))
+            print(f'Current split: {current_split}')
+            ref_split = float(self.peak_params_grid.GetCellValue(letter_index * 2, 12))
+            split_diff = current_split - ref_split
+            if split_diff != 0:
+                new_value = f"{new_value.upper()}+{split_diff:.2f}#0.1"
+            else:
+                new_value = new_value.upper() + '*1'
         # Convert lowercase letters to uppercase
         elif new_value.lower() in 'abcdefghijklmnop':
             new_value = new_value.upper() + '*1'
