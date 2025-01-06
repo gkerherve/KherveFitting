@@ -4,9 +4,9 @@ from libraries.Peak_Functions import OtherCalc
 
 
 class DParameterWindow(wx.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, title="D-Parameter Measurement",
-                         style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX))
+    def __init__(self, parent,*args, **kw):
+        super().__init__(parent, title="D-Parameter Measurement", *args, **kw,
+                         style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent
         self.SetSize((300, 440))
 
@@ -131,7 +131,7 @@ class DParameterWindow(wx.Frame):
         x_min = x_values[min_idx]
         x_max = x_values[max_idx]
         center = (x_max + x_min) / 2
-        d_param = abs(x_max - x_min)
+        d_param = round(abs(x_max - x_min), 2)
 
         # Update D-value display
         self.d_value.SetValue(f"{d_param:.2f}")

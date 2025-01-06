@@ -708,6 +708,17 @@ class MyFrame(wx.Frame):
     def on_open_background_window(self):
         if not hasattr(self, 'background_window') or not self.background_window:
             self.background_window = BackgroundWindow(self)
+
+            # Set position relative to main window
+            main_pos = self.GetPosition()
+            main_size = self.GetSize()
+            bg_size = self.background_window.GetSize()
+
+            x = main_pos.x + (main_size.width - bg_size.width) // 2
+            y = main_pos.y + (main_size.height - bg_size.height) // 2
+
+            self.background_window.SetPosition((x, y))
+
             self.background_tab_selected = True
             self.background_window.Bind(wx.EVT_CLOSE, self.on_background_window_close)
         self.background_window.Show()
@@ -3089,6 +3100,21 @@ class MyFrame(wx.Frame):
     def on_differentiate(self, event):
         if not hasattr(self, 'd_param_window') or not self.d_param_window:
             self.d_param_window = DParameterWindow(self)
+
+            # Get the position and size of the main window
+            main_pos = self.GetPosition()
+            main_size = self.GetSize()
+
+            # Get the size of the d-param window
+            d_param_size = self.d_param_window.GetSize()
+
+            # Calculate the position to center the d-param window on the main window
+            x = main_pos.x + (main_size.width - d_param_size.width) // 2
+            y = main_pos.y + (main_size.height - d_param_size.height) // 2
+
+            # Set the position of the d-param window
+            self.d_param_window.SetPosition((x, y))
+
         self.d_param_window.Show()
         self.d_param_window.Raise()
 
@@ -3177,6 +3203,17 @@ class MyFrame(wx.Frame):
 
     def open_periodic_table(self, event):
         periodic_table = PeriodicTableWindow(self)
+
+        # Set position relative to main window
+        main_pos = self.GetPosition()
+        main_size = self.GetSize()
+        pt_size = periodic_table.GetSize()
+
+        x = main_pos.x + (main_size.width - pt_size.width) // 2
+        y = main_pos.y + (main_size.height - pt_size.height) // 2
+
+        periodic_table.SetPosition((x, y))
+
         periodic_table.Show()
 
     def toggle_energy_scale(self):

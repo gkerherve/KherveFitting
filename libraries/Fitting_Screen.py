@@ -839,6 +839,15 @@ class TougaardFitWindow(wx.Frame):
         self.panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
+        main_pos = parent.parent.GetPosition()
+        main_size = parent.parent.GetSize()
+        tougaard_size = self.GetSize()
+
+        x = main_pos.x + (main_size.width - tougaard_size.width) // 2
+        y = main_pos.y + (main_size.height - tougaard_size.height) // 2
+
+        self.SetPosition((x, y))
+
         # Get data from parent window
         sheet_name = self.parent.parent.sheet_combobox.GetValue()
         self.x_values = np.array(self.parent.parent.Data['Core levels'][sheet_name]['B.E.'])

@@ -342,6 +342,15 @@ class CropWindow(wx.Frame):
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
+        main_pos = parent.GetPosition()
+        main_size = parent.GetSize()
+        crop_size = self.GetSize()
+
+        x = main_pos.x + (main_size.width - crop_size.width) // 2
+        y = main_pos.y + (main_size.height - crop_size.height) // 2
+
+        self.SetPosition((x, y))
+
         # Range controls
         range_box = wx.StaticBox(self.panel, label="Crop Range")
         range_sizer = wx.StaticBoxSizer(range_box, wx.VERTICAL)
@@ -485,6 +494,15 @@ class PlotModWindow(wx.Frame):
 
         self.parent = parent
         panel = wx.Panel(self)
+
+        main_pos = parent.GetPosition()
+        main_size = parent.GetSize()
+        mod_size = self.GetSize()
+
+        x = main_pos.x + (main_size.width - mod_size.width) // 2
+        y = main_pos.y + (main_size.height - mod_size.height) // 2
+
+        self.SetPosition((x, y))
 
         grid_sizer = wx.GridBagSizer(5, 5)
 
