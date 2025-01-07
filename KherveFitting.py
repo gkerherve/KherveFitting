@@ -2426,17 +2426,48 @@ class MyFrame(wx.Frame):
                 round(peak_value + float(new_value[1:]), 2))
         elif col == 2 and new_value.upper() in 'ABCDEFGHIJKLMNOP':
             letter_index = ord(new_value.upper()) - 65
-            current_split = float(self.peak_params_grid.GetCellValue(row-1, 12))
-            print(f'Current split: {current_split}')
-            ref_split = float(self.peak_params_grid.GetCellValue(letter_index * 2, 12))
-            split_diff = current_split - ref_split
-            if split_diff != 0:
-                new_value = f"{new_value.upper()}+{split_diff:.2f}#0.1"
+            if letter_index * 2 == row - 1:  # Same peak
+                new_value = "0:1000"  # Default value
+            else:
+                current_split = float(self.peak_params_grid.GetCellValue(row-1, 12))
+                print(f'Current split: {current_split}')
+                ref_split = float(self.peak_params_grid.GetCellValue(letter_index * 2, 12))
+                split_diff = current_split - ref_split
+                if split_diff != 0:
+                    new_value = f"{new_value.upper()}+{split_diff:.2f}#0.1"
+                else:
+                    new_value = new_value.upper() + '*1'
+        elif col == 6 and new_value.upper() in 'ABCDEFGHIJKLMNOP':
+            letter_index = ord(new_value.upper()) - 65
+            if letter_index * 2 == row - 1:  # Same peak
+                new_value = "1:1e7"  # Default value
+            else:
+                current_ratio = float(self.peak_params_grid.GetCellValue(row - 1, 11))
+                ref_ratio = float(self.peak_params_grid.GetCellValue(letter_index * 2, 11))
+                ratio = current_ratio / ref_ratio
+                if ratio != 1:
+                    new_value = f"{new_value.upper()}*{ratio:.2f}#0.01"
+                else:
+                    new_value = new_value.upper() + '*1'
+        elif new_value.lower() in 'abcdefghijklmnop':
+            letter_index = ord(new_value.upper()) - 65
+            if letter_index * 2 == row - 1:  # Same peak
+                if col == 2:
+                    new_value = "0:1000"
+                elif col ==4:
+                    new_value = "0.3:35"
+                elif col ==5:
+                    new_value = "1:80"
+                elif col ==6:
+                    new_value = "1:1e7"
+                elif col ==7:
+                    new_value = "0.2:3"
+                elif col ==8:
+                    new_value = "0.2:3"
+                elif col ==8:
+                    new_value = "0.1:1"
             else:
                 new_value = new_value.upper() + '*1'
-        # Convert lowercase letters to uppercase
-        elif new_value.lower() in 'abcdefghijklmnop':
-            new_value = new_value.upper() + '*1'
             self.peak_params_grid.SetCellValue(row, col, new_value)
 
         # Convert lowercase to uppercase in expressions like a*0.5

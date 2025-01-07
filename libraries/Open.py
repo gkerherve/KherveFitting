@@ -58,7 +58,7 @@ class ExcelDropTarget(wx.FileDropTarget):
 
 
 
-def load_library_data():
+def load_library_data_WITHEXCEL():
    wb = openpyxl.load_workbook('KherveFitting_library.xlsx')
    sheet = wb['Library']
    data = {}
@@ -74,6 +74,18 @@ def load_library_data():
            'row': row_idx
        }
    return data
+
+
+def load_library_data():
+    with open('KherveFitting_library.json', 'r') as f:
+        json_data = json.load(f)
+
+    # Convert string keys back to tuples
+    data = {}
+    for k, v in json_data.items():
+        element, orbital = k.split('_')
+        data[(element, orbital)] = v
+    return data
 
 
 def load_library_data_NEWBUTNO():
