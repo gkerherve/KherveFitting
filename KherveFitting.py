@@ -2105,6 +2105,13 @@ class MyFrame(wx.Frame):
                     core_level_data['Fitting']['Peaks'] = {}
 
                 peak_label = self.peak_params_grid.GetCellValue(row, 1)
+
+                def try_float(value, default=0.0):
+                    try:
+                        return float(value)
+                    except ValueError:
+                        return default
+
                 core_level_data['Fitting']['Peaks'][peak_label] = {
                     'Position': peak_x,
                     'Height': peak_y,
@@ -2115,12 +2122,6 @@ class MyFrame(wx.Frame):
                     'Gamma': float(self.peak_params_grid.GetCellValue(row, 8)),
                     'Skew': float(self.peak_params_grid.GetCellValue(row, 9))
                 }
-
-                def try_float(value, default=0.0):
-                    try:
-                        return float(value)
-                    except ValueError:
-                        return default
 
         self.selected_peak_index = None
         self.canvas.draw_idle()
