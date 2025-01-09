@@ -2106,6 +2106,7 @@ class MyFrame(wx.Frame):
 
                 peak_label = self.peak_params_grid.GetCellValue(row, 1)
 
+
                 def try_float(value, default=0.0):
                     try:
                         return float(value)
