@@ -2,6 +2,7 @@
 # CONFIG FILE FOR XPS DATA ------------------------------------
 # -------------------------------------------------------------
 import pandas as pd
+import wx
 
 def Init_Measurement_Data2(window):
     Data = {
@@ -89,48 +90,56 @@ def Init_Measurement_Data(window):
 
 
 def add_core_level_Data(data, window, file_path, sheet_name):
-    """
-    Extracts X and Y data from the given Excel file and adds it to the core level in the data dictionary.
-    The sheet_name corresponds to the core level label.
-    Uses the window.skip_rows_spinbox value to determine how many rows to skip.
-    """
-    # Get the number of rows to skip from the spinbox
-    # skip_rows = window.skip_rows_spinbox.GetValue()
-    skip_rows = 0
+   """
+   Extracts X and Y data from the given Excel file and adds it to the core level in the data dictionary.
+   The sheet_name corresponds to the core level label.
+   Uses the window.skip_rows_spinbox value to determine how many rows to skip.
+   """
+   if sheet_name.startswith('Sheet'):
+       wx.MessageBox(f"Sheet names must be core level names (e.g., C1s, O1s).\nInvalid sheet name: '{sheet_name}'",
+                    "Invalid Sheet Name", wx.OK | wx.ICON_WARNING)
+       return data
 
-    # Read the specified sheet from the Excel file, skipping the specified number of rows
-    df = pd.read_excel(file_path, sheet_name=sheet_name, skiprows=skip_rows)
+   # Get the number of rows to skip from the spinbox
+   # skip_rows = window.skip_rows_spinbox.GetValue()
+   skip_rows = 0
 
-    # Ensure we have at least two columns
-    if df.shape[1] < 2:
-        raise ValueError(f"Sheet '{sheet_name}' does not have enough columns after skipping {skip_rows} rows.")
+   # Read the specified sheet from the Excel file, skipping the specified number of rows
+   df = pd.read_excel(file_path, sheet_name=sheet_name, skiprows=skip_rows)
 
-    x_values = df.iloc[:, 0].tolist()
-    y_values = df.iloc[:, 1].tolist()
+   # Ensure we have at least two columns
+   if df.empty or df.shape[1] < 2:
+       wx.MessageBox(
+           f"All sheets must be filled with data and named after their core level (e.g., C1s, O1s).\nSheet '{sheet_name}' is empty or has insufficient columns.",
+           "Invalid Sheet", wx.OK | wx.ICON_WARNING)
+       return data
 
-    core_level = {
-        'Name': sheet_name,
-        'B.E.': df.iloc[:, 0].tolist(),
-        'Raw Data': df.iloc[:, 1].tolist(),
-        'Background': {
-            'Bkg Type': '',
-            'Bkg Low': '',
-            'Bkg High': '',
-            'Bkg Offset Low': '',
-            'Bkg Offset High': '',
-            'Bkg X': df.iloc[:, 0].tolist(),
-            'Bkg Y': df.iloc[:, 1].tolist()
-        },
-        'Fitting': {}
-    }
+   x_values = df.iloc[:, 0].tolist()
+   y_values = df.iloc[:, 1].tolist()
 
-    data['Core levels'][sheet_name] = core_level
-    data['Number of Core levels'] += 1
+   core_level = {
+       'Name': sheet_name,
+       'B.E.': df.iloc[:, 0].tolist(),
+       'Raw Data': df.iloc[:, 1].tolist(),
+       'Background': {
+           'Bkg Type': '',
+           'Bkg Low': '',
+           'Bkg High': '',
+           'Bkg Offset Low': '',
+           'Bkg Offset High': '',
+           'Bkg X': df.iloc[:, 0].tolist(),
+           'Bkg Y': df.iloc[:, 1].tolist()
+       },
+       'Fitting': {}
+   }
 
-    print(f"Added core level: {sheet_name}. Total core levels: {data['Number of Core levels']}")
-    print(f"Skipped {skip_rows} rows. Data starts from row {skip_rows + 1}")
+   data['Core levels'][sheet_name] = core_level
+   data['Number of Core levels'] += 1
 
-    return data
+   print(f"Added core level: {sheet_name}. Total core levels: {data['Number of Core levels']}")
+   print(f"Skipped {skip_rows} rows. Data starts from row {skip_rows + 1}")
+
+   return data
 
 
 def add_peak_to_core_level_Data(data, core_name, peak_data):

@@ -698,6 +698,14 @@ def open_xlsx_file(window, file_path=None):
         sheet_names = [name for name in all_sheet_names if
                        name.lower() not in ["results table", "experimental description"]]
 
+        # Check for invalid sheet names before proceeding
+        invalid_sheets = [name for name in sheet_names if name.startswith('Sheet')]
+        if invalid_sheets:
+            wx.MessageBox(
+                f"File contains invalid sheet names: {', '.join(invalid_sheets)}\n\nAll sheets must be named after their core level (e.g., C1s, O1s).",
+                "Invalid Sheet Names", wx.OK | wx.ICON_WARNING)
+            return
+
         results_table_index = -1
         for i, name in enumerate(all_sheet_names):
             if name.lower() == "results table":
