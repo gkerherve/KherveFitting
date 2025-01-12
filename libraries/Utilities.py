@@ -490,7 +490,7 @@ class PlotModWindow(wx.Frame):
 
 
         self.SetTitle("Plot Modifications")
-        self.SetSize(340, 390)
+        self.SetSize(340, 450)
 
         self.parent = parent
         panel = wx.Panel(self)
@@ -551,13 +551,61 @@ class PlotModWindow(wx.Frame):
         int_btn.Bind(wx.EVT_BUTTON, self.on_integrate)
         int_sizer.Add(int_btn, 0, wx.EXPAND | wx.ALL, 5)
 
+        # Constant Operation
+        const_box = wx.StaticBox(panel, label="Constant Operation")
+        const_sizer = wx.StaticBoxSizer(const_box, wx.VERTICAL)
+
+        self.const_radio = wx.RadioBox(panel, choices=["Multiply", "Divide"], style=wx.RA_HORIZONTAL)
+        const_sizer.Add(self.const_radio, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.const_value = wx.SpinCtrlDouble(panel, value="1.0", min=0.001, max=1000.0, inc=0.1)
+        const_sizer.Add(wx.StaticText(panel, label="Value:"), 0, wx.ALL, 5)
+        const_sizer.Add(self.const_value, 0, wx.EXPAND | wx.ALL, 5)
+
+        const_btn = wx.Button(panel, label="Apply Operation")
+        const_btn.SetMinSize((125, 40))
+        const_btn.Bind(wx.EVT_BUTTON, self.on_apply_constant)
+        const_sizer.Add(const_btn, 0, wx.EXPAND | wx.ALL, 5)
+
         # Add to grid
         grid_sizer.Add(smooth_sizer, pos=(0, 0), flag=wx.EXPAND | wx.ALL, border=5)
         grid_sizer.Add(diff_sizer, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
         grid_sizer.Add(int_sizer, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        grid_sizer.Add(const_sizer, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         panel.SetSizer(grid_sizer)
         self.Centre()
+
+    # Method for constant operation
+    def on_apply_constant(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        constant = self.const_value.GetValue()
+        operation = self.const_radio.GetStringSelection()
+
+        # Update both Data structure and Excel
+        if operation == "Multiply":
+            self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y * constant for y in
+                                                                       self.parent.Data['Core levels'][sheet_name][
+                                                                           'Raw Data']]
+            self.parent.Data['Core levels'][sheet_name]['Corrected Data'] = [y * constant for y in
+                                                                             self.parent.Data['Core levels'][
+                                                                                 sheet_name]['Corrected Data']]
+        else:
+            self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y / constant for y in
+                                                                       self.parent.Data['Core levels'][sheet_name][
+                                                                           'Raw Data']]
+            self.parent.Data['Core levels'][sheet_name]['Corrected Data'] = [y / constant for y in
+                                                                             self.parent.Data['Core levels'][
+                                                                                 sheet_name]['Corrected Data']]
+
+        # Update Excel file
+        wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
+        ws = wb[sheet_name]
+        for i, y in enumerate(self.parent.Data['Core levels'][sheet_name]['Raw Data'], start=2):
+            ws.cell(row=i, column=2).value = y
+        wb.save(self.parent.Data['FilePath'])
+
+        self.parent.plot_manager.plot_data(self.parent)
 
     def save_modified_data(self, x, y, sheet_name, operation_type):
         import pandas as pd
