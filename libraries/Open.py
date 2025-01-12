@@ -702,9 +702,25 @@ def open_xlsx_file(window, file_path=None):
         invalid_sheets = [name for name in sheet_names if name.startswith('Sheet')]
         if invalid_sheets:
             wx.MessageBox(
-                f"File contains invalid sheet names: {', '.join(invalid_sheets)}\n\nAll sheets must be named after their core level (e.g., C1s, O1s).",
+                f"File contains invalid sheet names: {', '.join(invalid_sheets)}\n\nAll sheets must be named after "
+                f"their core level (e.g., C1s, O1s) using one word in proper format without spaces.",
                 "Invalid Sheet Names", wx.OK | wx.ICON_WARNING)
+
             return
+
+        # Check first row values in each sheet
+        for sheet_name in sheet_names:
+            df = pd.read_excel(file_path, sheet_name=sheet_name, header=None)
+            col1_value = str(df.iloc[0, 0]).strip().upper()
+            col2_value = str(df.iloc[0, 1]).strip().upper()
+            print(f'HEADER: {df.iloc[0, 0]}')
+            if (isinstance(df.iloc[0, 0], (int, float)) or isinstance(df.iloc[0, 1], (int, float)) or
+                    not ('BE' in col1_value or 'BINDING' in col1_value) or
+                    not ('RAW DATA' in col2_value or 'CORRECTED DATA' in col2_value or 'INTENSITY' in col2_value)):
+                wx.MessageBox(
+                    f"Sheet '{sheet_name}' has invalid column labels in row 1.\nColumn A should contain 'BE' or 'Binding Energy'\nColumn B should contain 'Raw Data', 'Corrected Data' or 'Intensity'",
+                    "Invalid Column Labels", wx.OK | wx.ICON_WARNING)
+                return
 
         results_table_index = -1
         for i, name in enumerate(all_sheet_names):
