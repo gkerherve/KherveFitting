@@ -559,7 +559,7 @@ class PlotModWindow(wx.Frame):
         self.const_op.SetValue("Multiply")
         const_sizer.Add(self.const_op, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.const_value = wx.SpinCtrlDouble(panel, value="1.0", min=0.001, max=1000.0, inc=0.1)
+        self.const_value = wx.SpinCtrlDouble(panel, value="1.0", min=0.001, max=10000000.0, inc=0.1)
         const_sizer.Add(wx.StaticText(panel, label="Value:"), 0, wx.ALL, 5)
         const_sizer.Add(self.const_value, 0, wx.EXPAND | wx.ALL, 5)
 
