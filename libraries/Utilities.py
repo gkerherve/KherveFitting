@@ -581,15 +581,23 @@ class PlotModWindow(wx.Frame):
     def on_apply_constant(self, event):
         sheet_name = self.parent.sheet_combobox.GetValue()
         constant = self.const_value.GetValue()
-        operation = self.const_radio.GetStringSelection()
+        operation = self.const_op.GetValue()
 
-        # Update Data structure
+        # Update Data structure based on operation
         if operation == "Multiply":
             self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y * constant for y in
                                                                        self.parent.Data['Core levels'][sheet_name][
                                                                            'Raw Data']]
-        else:
+        elif operation == "Divide":
             self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y / constant for y in
+                                                                       self.parent.Data['Core levels'][sheet_name][
+                                                                           'Raw Data']]
+        elif operation == "Add":
+            self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y + constant for y in
+                                                                       self.parent.Data['Core levels'][sheet_name][
+                                                                           'Raw Data']]
+        elif operation == "Subtract":
+            self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y - constant for y in
                                                                        self.parent.Data['Core levels'][sheet_name][
                                                                            'Raw Data']]
 
