@@ -555,8 +555,9 @@ class PlotModWindow(wx.Frame):
         const_box = wx.StaticBox(panel, label="Constant Operation")
         const_sizer = wx.StaticBoxSizer(const_box, wx.VERTICAL)
 
-        self.const_radio = wx.RadioBox(panel, choices=["Multiply", "Divide"], style=wx.RA_HORIZONTAL)
-        const_sizer.Add(self.const_radio, 0, wx.EXPAND | wx.ALL, 5)
+        self.const_op = wx.ComboBox(panel, choices=["Multiply", "Divide", "Add", "Subtract"], style=wx.CB_READONLY)
+        self.const_op.SetValue("Multiply")
+        const_sizer.Add(self.const_op, 0, wx.EXPAND | wx.ALL, 5)
 
         self.const_value = wx.SpinCtrlDouble(panel, value="1.0", min=0.001, max=1000.0, inc=0.1)
         const_sizer.Add(wx.StaticText(panel, label="Value:"), 0, wx.ALL, 5)
@@ -582,29 +583,30 @@ class PlotModWindow(wx.Frame):
         constant = self.const_value.GetValue()
         operation = self.const_radio.GetStringSelection()
 
-        # Update both Data structure and Excel
+        # Update Data structure
         if operation == "Multiply":
             self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y * constant for y in
                                                                        self.parent.Data['Core levels'][sheet_name][
                                                                            'Raw Data']]
-            self.parent.Data['Core levels'][sheet_name]['Corrected Data'] = [y * constant for y in
-                                                                             self.parent.Data['Core levels'][
-                                                                                 sheet_name]['Corrected Data']]
         else:
             self.parent.Data['Core levels'][sheet_name]['Raw Data'] = [y / constant for y in
                                                                        self.parent.Data['Core levels'][sheet_name][
                                                                            'Raw Data']]
-            self.parent.Data['Core levels'][sheet_name]['Corrected Data'] = [y / constant for y in
-                                                                             self.parent.Data['Core levels'][
-                                                                                 sheet_name]['Corrected Data']]
 
         # Update Excel file
         wb = openpyxl.load_workbook(self.parent.Data['FilePath'])
         ws = wb[sheet_name]
-        for i, y in enumerate(self.parent.Data['Core levels'][sheet_name]['Raw Data'], start=2):
-            ws.cell(row=i, column=2).value = y
-        wb.save(self.parent.Data['FilePath'])
 
+        # Find the column header
+        for cell in ws[1]:
+            if cell.value in ["RAW DATA", "CORRECTED DATA"]:
+                col_letter = cell.column_letter
+                # Update column data
+                for i, y in enumerate(self.parent.Data['Core levels'][sheet_name]['Raw Data'], start=2):
+                    ws[f"{col_letter}{i}"].value = y
+                break
+
+        wb.save(self.parent.Data['FilePath'])
         self.parent.plot_manager.plot_data(self.parent)
 
     def save_modified_data(self, x, y, sheet_name, operation_type):
