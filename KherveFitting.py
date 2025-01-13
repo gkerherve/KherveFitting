@@ -3356,7 +3356,7 @@ if __name__ == '__main__':
     # app.SetHighDPIAware(True)  # Add this line to enable High DPI awareness
     splash = show_splash(duration=3000, delay=2)
 
-    frame = MyFrame(None, "KherveFitting - V1.31 - Jan 2025")
+    frame = MyFrame(None, "KherveFitting - V1.4 - Feb 2025")
     frame.Show(True)
 
     if splash:

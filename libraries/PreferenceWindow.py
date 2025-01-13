@@ -296,7 +296,7 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.angle_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Add photon source selection
-        photon_sources = ["Al Kα (1486.67 eV)", "Mg Kα (1253.6 eV)", "Custom"]
+        photon_sources = ["Al Kα", "Mg Kα", "Custom"]
         self.photon_combo = wx.ComboBox(self.instrument_tab, choices=photon_sources, style=wx.CB_READONLY)
         self.photon_combo.SetSelection(0)
 
@@ -309,14 +309,16 @@ class PreferenceWindow(wx.Frame):
         self.ref_peak_value = wx.SpinCtrlDouble(self.instrument_tab, value='284.8', min=0, max=1200, inc=0.1)
 
         # Add to sizer
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Photon Source:"), pos=(4, 0))
-        sizer.Add(self.photon_combo, pos=(4, 1))
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Custom Energy (eV):"), pos=(5, 0))
-        sizer.Add(self.custom_photon, pos=(5, 1))
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Reference Peak:"), pos=(6, 0))
-        sizer.Add(self.ref_peak_text, pos=(6, 1))
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Reference BE (eV):"), pos=(7, 0))
-        sizer.Add(self.ref_peak_value, pos=(7, 1))
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Photon Source:"), pos=(5, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.photon_combo, pos=(5, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Custom Energy (eV):"), pos=(6, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.custom_photon, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Reference Peak:"), pos=(8, 0), flag=wx.EXPAND | wx.ALL,
+                  border=5)
+        sizer.Add(self.ref_peak_text, pos=(8, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Reference BE (eV):"), pos=(9, 0), flag=wx.EXPAND |
+                                                                                                   wx.ALL, border=5)
+        sizer.Add(self.ref_peak_value, pos=(9, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Bind photon source selection
         self.photon_combo.Bind(wx.EVT_COMBOBOX, self.on_photon_source)
