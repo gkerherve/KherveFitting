@@ -146,6 +146,8 @@ class MyFrame(wx.Frame):
         # X axis correction from KE to BE
         self.photons = 1486.67
         self.workfunction = 0
+        self.ref_peak_name = "C1s C-C"
+        self.ref_peak_be = 284.8
 
         # Add a state variable for energy mode (default to Binding Energy)
         self.energy_scale = 'BE'  # 'BE' for binding energy, 'KE' for kinetic energy
@@ -3201,13 +3203,22 @@ class MyFrame(wx.Frame):
 
         print(f"Applied BE correction of {correction:.2f} eV")
 
-    def calculate_c1s_correction(self):
+    def calculate_c1s_correction_OLD(self):
         c1s_sheet = next((sheet for sheet in self.Data['Core levels'] if sheet.startswith('C1s')), None)
         if c1s_sheet:
             c1s_peaks = self.Data['Core levels'][c1s_sheet]['Fitting']['Peaks']
             c_c_peak = next((peak for label, peak in c1s_peaks.items() if 'C-C' in label), None)
             if c_c_peak:
                 return 284.8 - c_c_peak['Position']
+        return None
+
+    def calculate_c1s_correction(self):
+        ref_sheet = next((sheet for sheet in self.Data['Core levels'] if self.ref_peak_name in sheet), None)
+        if ref_sheet:
+            peaks = self.Data['Core levels'][ref_sheet]['Fitting']['Peaks']
+            ref_peak = next((peak for label, peak in peaks.items() if self.ref_peak_name in label), None)
+            if ref_peak:
+                return self.ref_peak_be - ref_peak['Position']
         return None
 
     def load_be_correction(self):

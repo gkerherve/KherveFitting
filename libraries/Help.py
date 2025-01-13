@@ -349,6 +349,9 @@ def show_version_log(window):
     version_log = """Version 1.4 (February 2025) 
 - Improved File checking before opening onto KherveFitting
 - Added Constant Multiplication in Mod window 
+- Added Version Log in Help Menu
+- Added Photon source energy in Instrument settings
+- Added possibility of changing the reference peak for binding energy correction in Instrument settings
 
 Version 1.3 (December 2024)
 - Added Tougaard background with fitting option

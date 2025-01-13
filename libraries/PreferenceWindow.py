@@ -286,10 +286,6 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.library_type_label, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.library_type_combo, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
-        # # Add Transmission
-        # self.use_transmission = wx.CheckBox(self.instrument_tab, label="Use Transmission")
-        # sizer.Add(self.use_transmission, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
-
         # Add angular correction controls
         self.use_angular_correction = wx.CheckBox(self.instrument_tab, label="Use Angular Correction")
         sizer.Add(self.use_angular_correction, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
@@ -298,6 +294,32 @@ class PreferenceWindow(wx.Frame):
         self.angle_spin = wx.SpinCtrlDouble(self.instrument_tab, value='54.7', min=0, max=90, inc=0.1)
         sizer.Add(angle_label, pos=(3, 0), flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.angle_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
+        # Add photon source selection
+        photon_sources = ["Al Kα (1486.67 eV)", "Mg Kα (1253.6 eV)", "Custom"]
+        self.photon_combo = wx.ComboBox(self.instrument_tab, choices=photon_sources, style=wx.CB_READONLY)
+        self.photon_combo.SetSelection(0)
+
+        # Custom photon energy input
+        self.custom_photon = wx.SpinCtrlDouble(self.instrument_tab, value='1486.67', min=0, max=3000, inc=0.01)
+        self.custom_photon.Enable(False)
+
+        # Reference peak controls
+        self.ref_peak_text = wx.TextCtrl(self.instrument_tab, value="C1s C-C")
+        self.ref_peak_value = wx.SpinCtrlDouble(self.instrument_tab, value='284.8', min=0, max=1200, inc=0.1)
+
+        # Add to sizer
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Photon Source:"), pos=(4, 0))
+        sizer.Add(self.photon_combo, pos=(4, 1))
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Custom Energy (eV):"), pos=(5, 0))
+        sizer.Add(self.custom_photon, pos=(5, 1))
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Reference Peak:"), pos=(6, 0))
+        sizer.Add(self.ref_peak_text, pos=(6, 1))
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Reference BE (eV):"), pos=(7, 0))
+        sizer.Add(self.ref_peak_value, pos=(7, 1))
+
+        # Bind photon source selection
+        self.photon_combo.Bind(wx.EVT_COMBOBOX, self.on_photon_source)
 
         self.instrument_tab.SetSizer(sizer)
 
@@ -719,6 +741,10 @@ class PreferenceWindow(wx.Frame):
         if hasattr(self.parent, 'analysis_angle'):
             self.angle_spin.SetValue(self.parent.analysis_angle)
 
+        self.custom_photon.SetValue(self.parent.photons)
+        self.ref_peak_text.SetValue(self.parent.ref_peak_name)
+        self.ref_peak_value.SetValue(self.parent.ref_peak_be)
+
     def OnPeakNumberChange(self, event):
         current_peak = event.GetPosition() - 1
         if current_peak < len(self.temp_peak_colors):
@@ -857,6 +883,10 @@ class PreferenceWindow(wx.Frame):
         self.parent.use_angular_correction = self.use_angular_correction.GetValue()
         self.parent.analysis_angle = self.angle_spin.GetValue()
 
+        self.parent.photons = self.custom_photon.GetValue()
+        self.parent.ref_peak_name = self.ref_peak_text.GetValue()
+        self.parent.ref_peak_be = self.ref_peak_value.GetValue()
+
         # Save the configuration
         self.parent.save_config()
 
@@ -865,4 +895,15 @@ class PreferenceWindow(wx.Frame):
 
         # Close the preference window
         self.Close()
+
+    def on_photon_source(self, event):
+        selection = self.photon_combo.GetValue()
+        if selection == "Al Kα (1486.67 eV)":
+            self.custom_photon.SetValue(1486.67)
+            self.custom_photon.Enable(False)
+        elif selection == "Mg Kα (1253.6 eV)":
+            self.custom_photon.SetValue(1253.6)
+            self.custom_photon.Enable(False)
+        else:
+            self.custom_photon.Enable(True)
 
