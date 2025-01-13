@@ -400,7 +400,7 @@ def show_version_log(window):
     version_log = """Version 1.4 (February 2025) 
 - Improved File checking before opening onto KherveFitting
 - Added Constant Multiplication in Mod window 
-- Added Version Log in Help Menu
+- Added Version Log and Libraries Used in the About Menu
 - Added Photon source energy in Instrument settings
 - Added possibility of changing the reference peak for binding energy correction in Instrument settings
 
@@ -438,8 +438,8 @@ Version 1.0 to 1.2 (November 2024)
     sizer = wx.BoxSizer(wx.VERTICAL)
     sizer.Add(text, 1, wx.EXPAND | wx.ALL, 5)
 
-    btn = wx.Button(dlg, wx.ID_OK, "Close")
-    sizer.Add(btn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+    btn = wx.Button(dlg, wx.ID_OK, "OK")
+    sizer.Add(btn, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
 
     dlg.SetSizer(sizer)
     dlg.ShowModal()

@@ -3164,10 +3164,14 @@ class MyFrame(wx.Frame):
             self.apply_be_correction(c1s_correction)
 
     def apply_be_correction(self, correction):
+        """
+        Apply binding energy correction to all data and update displays.
+
+        Args:
+            correction (float): New BE correction value in eV
+        """
         delta_correction = correction - self.be_correction
         self.be_correction = correction
-
-        # Update window.Data
         self.Data['BEcorrection'] = correction
 
         # Update all sheets
@@ -3175,14 +3179,14 @@ class MyFrame(wx.Frame):
             # Update B.E. values
             sheet_data['B.E.'] = [be + delta_correction for be in sheet_data['B.E.']]
 
-            # Update Background Low and High if they exist and are not empty strings
+            # Update Background
             if 'Background' in sheet_data:
                 if 'Bkg Low' in sheet_data['Background'] and sheet_data['Background']['Bkg Low'] != '':
                     sheet_data['Background']['Bkg Low'] += delta_correction
                 if 'Bkg High' in sheet_data['Background'] and sheet_data['Background']['Bkg High'] != '':
                     sheet_data['Background']['Bkg High'] += delta_correction
 
-            # Update peak positions in Fitting data
+            # Update peak positions
             if 'Fitting' in sheet_data and 'Peaks' in sheet_data['Fitting']:
                 for peak in sheet_data['Fitting']['Peaks'].values():
                     peak['Position'] += delta_correction
@@ -3194,6 +3198,17 @@ class MyFrame(wx.Frame):
                 limits['Xmin'] += delta_correction
                 limits['Xmax'] += delta_correction
 
+        # Update Results grid
+        for row in range(self.results_grid.GetNumberRows()):
+            try:
+                pos = float(self.results_grid.GetCellValue(row, 1))
+                self.results_grid.SetCellValue(row, 1, f"{pos + delta_correction:.2f}")
+            except ValueError:
+                continue
+
+        # Save state for undo/redo
+        save_state(self)
+
         # Update current sheet display
         current_sheet = self.sheet_combobox.GetValue()
         on_sheet_selected(self, current_sheet)
@@ -3203,17 +3218,9 @@ class MyFrame(wx.Frame):
 
         print(f"Applied BE correction of {correction:.2f} eV")
 
-    def calculate_c1s_correction_OLD(self):
-        c1s_sheet = next((sheet for sheet in self.Data['Core levels'] if sheet.startswith('C1s')), None)
-        if c1s_sheet:
-            c1s_peaks = self.Data['Core levels'][c1s_sheet]['Fitting']['Peaks']
-            c_c_peak = next((peak for label, peak in c1s_peaks.items() if 'C-C' in label), None)
-            if c_c_peak:
-                return 284.8 - c_c_peak['Position']
-        return None
 
     def calculate_c1s_correction(self):
-        ref_sheet = next((sheet for sheet in self.Data['Core levels'] if self.ref_peak_name in sheet), None)
+        ref_sheet = next((sheet for sheet in self.Data['Core levels'] if self.ref_peak_name[0] in sheet), None)
         if ref_sheet:
             peaks = self.Data['Core levels'][ref_sheet]['Fitting']['Peaks']
             ref_peak = next((peak for label, peak in peaks.items() if self.ref_peak_name in label), None)
