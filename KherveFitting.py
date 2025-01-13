@@ -3015,6 +3015,9 @@ class MyFrame(wx.Frame):
                 self.library_type = config.get('library_type', 'TPP-2M')
                 self.use_angular_correction = config.get('use_angular_correction', False)
                 self.analysis_angle = config.get('analysis_angle', 54.7)
+                self.ref_peak_name = config.get('ref_peak_name', 'C1s C-C')
+                self.ref_peak_be = config.get('ref_peak_be', 284.8)
+                self.photons = config.get('photons', 1486.67)
 
         else:
             config = {}
@@ -3065,6 +3068,10 @@ class MyFrame(wx.Frame):
             'library_type': self.library_type,
             'use_angular_correction': self.use_angular_correction,
             'analysis_angle': self.analysis_angle,
+            'ref_peak_name': self.ref_peak_name,
+            'ref_peak_be': self.ref_peak_be,
+            'photons': self.photons,
+
 
             # Excel file settings
             'excel_width': self.excel_width,

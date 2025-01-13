@@ -960,7 +960,7 @@ def save_results_table(window):
         wx.MessageBox(f"Error saving results table: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
-def save_state(window):
+def save_state_OLD(window):
     current_sheet = window.sheet_combobox.GetValue()
     state = {
         'Data': deepcopy(window.Data),
@@ -986,6 +986,37 @@ def save_state(window):
         window.history.pop(0)
     update_undo_redo_state(window)
 
+def save_state(window):
+    current_sheet = window.sheet_combobox.GetValue()
+    sheets_data = {}
+
+    for sheet in window.Data['Core levels'].keys():
+        if sheet == current_sheet:
+            sheets_data[sheet] = {
+                'peak_params_grid': get_grid_data(window.peak_params_grid),
+                'peak_count': window.peak_count,
+                'selected_peak_index': window.selected_peak_index
+            }
+
+    state = {
+        'Data': deepcopy(window.Data),
+        'current_sheet': current_sheet,
+        'sheets': sheets_data,
+        'results_grid': {
+            'data': get_grid_data(window.results_grid),
+            'num_rows': window.results_grid.GetNumberRows(),
+            'checkbox_states': [window.results_grid.GetCellValue(row, 7)
+                              for row in range(window.results_grid.GetNumberRows())]
+        },
+        'be_correction': window.be_correction  # Add BE correction to state
+    }
+
+    window.history.append(state)
+    if len(window.history) > window.max_history:
+        window.history.pop(0)
+    window.redo_stack.clear()
+    update_undo_redo_state(window)
+
 def undo(window):
     if len(window.history) > 1:
         current_state = window.history.pop()
@@ -1004,6 +1035,8 @@ def redo(window):
 
 def restore_state(window, state):
     window.Data = deepcopy(state['Data'])
+    window.be_correction = state.get('be_correction', 0)  # Restore BE correction with default 0
+    window.be_correction_spinbox.SetValue(window.be_correction)
 
     # Restore sheet-specific data
     for sheet, sheet_data in state['sheets'].items():

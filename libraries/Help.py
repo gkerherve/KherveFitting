@@ -398,6 +398,7 @@ def show_version_log(window):
     text = wx.TextCtrl(dlg, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
 
     version_log = """Version 1.4 (February 2025) 
+- Improved Undo / Redo States 
 - Improved File checking before opening onto KherveFitting
 - Added Constant Multiplication in Mod window 
 - Added Version Log and Libraries Used in the About Menu
