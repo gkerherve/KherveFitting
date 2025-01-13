@@ -15,7 +15,7 @@ from libraries.Save import save_peaks_library, load_peaks_library
 from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog
 from libraries.Export import export_word_report
 from libraries.Utilities import CropWindow, PlotModWindow, on_delete_sheet, copy_sheet, JoinSheetsWindow
-from libraries.Help import show_libraries_used
+from libraries.Help import show_libraries_used, show_version_log
 from Functions import (import_avantage_file, on_save, save_all_sheets_with_plots, save_results_table, open_avg_file,
                        import_multiple_avg_files, create_plot_script_from_excel, on_save_plot, \
     on_save_plot_pdf, on_save_plot_svg, on_exit, undo, redo, toggle_plot, show_shortcuts, show_mini_game, on_about)
@@ -369,6 +369,9 @@ def create_menu(window):
     yt_videos_item = help_menu.Append(wx.NewId(), "KherveFitting Videos")
     window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://www.youtube.com/@xpsexamples-imperialcolleg6571"),
                 yt_videos_item)
+
+    version_log_item = help_menu.Append(wx.NewId(), "Version Log")
+    window.Bind(wx.EVT_MENU, lambda event: show_version_log(window), version_log_item)
 
     shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
     window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)

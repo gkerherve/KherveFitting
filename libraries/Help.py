@@ -340,3 +340,53 @@ def show_mini_game(parent):
     sim = ParticleSimulation()
     sim.run()
     pygame.quit()
+
+
+def show_version_log(window):
+    dlg = wx.Dialog(window, title="Version Log", size=(600, 400))
+    text = wx.TextCtrl(dlg, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
+
+    version_log = """Version 1.4 (February 2025) 
+- Improved File checking before opening onto KherveFitting
+- Added Constant Multiplication in Mod window 
+
+Version 1.3 (December 2024)
+- Added Tougaard background with fitting option
+- Added D-parameter calculation for auger spectra
+- Export word report improved with automatic table of contents 
+- Added support for extracting transmission data from VAMAS files
+- Added support for Kratos, PHI SPE and MRS files
+- Raw data can now be shown either as scatter plot or lines
+- Added plot customisation options for Excel, Word, PNG... in preferences window
+- Added peak count and peak area ratio
+- Added survey scan customisation
+- Added labels option for spectra
+- Added EAL IMFP calculation for Thin Film
+- Added angular correction factor
+- Added axis title and label customization
+- Added draggable text annotations
+- Added labels manager window
+- Added keyboard shortcuts for text size
+- Fixed core level name display for doublet peaks
+
+Version 1.0 to 1.2 (November 2024)
+- Added LA, LA*G peak models from CasaXPS
+- Added new options for Voigt peaks
+- Added Gaussian peak with exponential tail
+- Added relative sensitivity factors from Scofield, Wagner
+- Added inelastic mean free path correction
+- Added energy scale toggle between BE and KE
+- Added Undo/Redo functionality
+- Added peak naming for doublet"""
+
+    text.SetValue(version_log)
+
+    sizer = wx.BoxSizer(wx.VERTICAL)
+    sizer.Add(text, 1, wx.EXPAND | wx.ALL, 5)
+
+    btn = wx.Button(dlg, wx.ID_OK, "Close")
+    sizer.Add(btn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+    dlg.SetSizer(sizer)
+    dlg.ShowModal()
+    dlg.Destroy()
