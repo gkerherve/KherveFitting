@@ -49,26 +49,77 @@ License: HPND"""
     dlg.ShowModal()
     dlg.Destroy()
 
-def on_about(self, event):
-    about_dialog = wx.Dialog(None, title="About KherveFitting", size=(400, 430))
+def on_about_OLD(self, event):
+    about_dialog = wx.Dialog(None, title="About KherveFitting", size=(400, 460))
     panel = wx.Panel(about_dialog)
     sizer = wx.BoxSizer(wx.VERTICAL)
 
     # Add text information
     name = wx.StaticText(panel, label="KherveFitting")
     name.SetFont(wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
-    version = wx.StaticText(panel, label="Version 1.2 November 24")
+    version = wx.StaticText(panel, label="Version 1.4 February 25")
     description = wx.StaticText(panel, label="An open-source XPS peak fitting software\ndeveloped by Dr. Gwilherm Kerherve\nat Imperial College London")
     website = wx.adv.HyperlinkCtrl(panel, -1, "Imperial College Profile", "https://www.imperial.ac.uk/people/g.kerherve")
     developers = wx.StaticText(panel, label="Developers:\nDr. Gwilherm Kerherve / g.kerherve@imperial.ac.uk\nWilliam Skinner")
     copyright = wx.StaticText(panel, label="(C) 2024 Gwilherm Kerherve")
 
 
+    libraries_button = wx.Button(panel, label="Libraries Used")
+    libraries_button.Bind(wx.EVT_BUTTON, lambda evt: show_libraries_used(self))
+
     # Add all elements to sizer
-    for item in [name, version, description, website, developers, copyright]:
+    for item in [name, version, description, website, developers, copyright, libraries_button]:
         sizer.Add(item, 0, wx.ALIGN_CENTER | wx.ALL, 5)
 
     panel.SetSizer(sizer)
+
+def on_about(self, event):
+    about_dialog = wx.Dialog(None, title="About KherveFitting", size=(400, 470))
+    panel = wx.Panel(about_dialog)
+    sizer = wx.BoxSizer(wx.VERTICAL)
+
+    name = wx.StaticText(panel, label="KherveFitting")
+    name.SetFont(wx.Font(14, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+    version = wx.StaticText(panel, label="Version 1.4 February 25")
+
+    button_grid = wx.GridBagSizer(2, 2)
+    libraries_button = wx.Button(panel, label="Libraries Used")
+    libraries_button.Bind(wx.EVT_BUTTON, lambda evt: show_libraries_used(self))
+    version_log_button = wx.Button(panel, label="Version Log")
+    version_log_button.Bind(wx.EVT_BUTTON, lambda evt: show_version_log(self))
+
+    button_grid.Add(libraries_button, pos=(0, 0), flag=wx.ALL, border=5)
+    button_grid.Add(version_log_button, pos=(0, 1), flag=wx.ALL, border=5)
+
+    description = wx.StaticText(panel,
+                                label="An open-source XPS peak fitting software\ndeveloped by Dr. Gwilherm Kerherve\nat Imperial College London")
+    website = wx.adv.HyperlinkCtrl(panel, -1, "Imperial College Profile",
+                                   "https://www.imperial.ac.uk/people/g.kerherve")
+    developers = wx.StaticText(panel,
+                               label="Developers:\nDr. Gwilherm Kerherve / g.kerherve@imperial.ac.uk\nWilliam Skinner")
+    copyright = wx.StaticText(panel, label="(C) 2024 Gwilherm Kerherve")
+
+
+
+    for item in [name, version]:
+        sizer.Add(item, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+    sizer.Add(button_grid, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+    panel.SetSizer(sizer)
+
+    for item in [description, website, developers, copyright]:
+        sizer.Add(item, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(current_dir, "Images")
+    qr_path = os.path.join(image_path, "buymeacoffee_qr.png")
+    if os.path.exists(qr_path):
+        qr_image = wx.Image(qr_path, wx.BITMAP_TYPE_PNG)
+        qr_image = qr_image.Scale(150, 150, wx.IMAGE_QUALITY_HIGH)
+        qr_bitmap = wx.StaticBitmap(panel, -1, wx.Bitmap(qr_image))
+        sizer.Add(qr_bitmap, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+    about_dialog.ShowModal()
+    about_dialog.Destroy()
 
 
 

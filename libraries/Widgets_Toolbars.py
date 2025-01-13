@@ -370,8 +370,8 @@ def create_menu(window):
     window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://www.youtube.com/@xpsexamples-imperialcolleg6571"),
                 yt_videos_item)
 
-    version_log_item = help_menu.Append(wx.NewId(), "Version Log")
-    window.Bind(wx.EVT_MENU, lambda event: show_version_log(window), version_log_item)
+    # version_log_item = help_menu.Append(wx.NewId(), "Version Log")
+    # window.Bind(wx.EVT_MENU, lambda event: show_version_log(window), version_log_item)
 
     shortcuts_item = help_menu.Append(wx.NewId(), "List of Shortcuts\tCtrl+K")
     window.Bind(wx.EVT_MENU, lambda event: show_shortcuts(window), shortcuts_item)
@@ -382,8 +382,8 @@ def create_menu(window):
     coffee_item = help_menu.Append(wx.NewId(), "Buy Me a Coffee")
     window.Bind(wx.EVT_MENU, lambda event: webbrowser.open("https://buymeacoffee.com/gkerherve"), coffee_item)
 
-    libraries_item = help_menu.Append(wx.NewId(), "Libraries Used")
-    window.Bind(wx.EVT_MENU, lambda event: show_libraries_used(window), libraries_item)
+    # libraries_item = help_menu.Append(wx.NewId(), "Libraries Used")
+    # window.Bind(wx.EVT_MENU, lambda event: show_libraries_used(window), libraries_item)
 
     about_item = help_menu.Append(wx.ID_ABOUT, "About")
     window.Bind(wx.EVT_MENU, lambda event: on_about(window, event), about_item)
