@@ -393,6 +393,57 @@ def show_mini_game(parent):
     pygame.quit()
 
 
+def report_bug(window):
+    dlg = wx.Dialog(window, title="Report Bug", size=(400, 300))
+    vbox = wx.BoxSizer(wx.VERTICAL)
+
+    description_label = wx.StaticText(dlg, label="Bug Description:")
+    description = wx.TextCtrl(dlg, style=wx.TE_MULTILINE, size=(380, 100))
+
+    def take_screenshot(evt):
+        window.Hide()
+        dlg.Hide()
+        wx.MilliSleep(500)
+
+        screen = wx.ScreenDC()
+        size = screen.GetSize()
+        bmp = wx.Bitmap(size.width, size.height)
+        mem = wx.MemoryDC(bmp)
+        mem.Blit(0, 0, size.width, size.height, screen, 0, 0)
+
+        with wx.FileDialog(window, "Save screenshot", wildcard="PNG files (*.png)|*.png",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            path = fileDialog.GetPath()
+            bmp.SaveFile(path, wx.BITMAP_TYPE_PNG)
+
+        window.Show()
+        dlg.Show()
+        wx.MessageBox("Screenshot saved to " + path, "Success")
+
+    screenshot_btn = wx.Button(dlg, label="Take Screenshot")
+    screenshot_btn.Bind(wx.EVT_BUTTON, take_screenshot)
+
+    def send_report(evt):
+        import webbrowser
+        subject = "KherveFitting Bug Report"
+        body = description.GetValue()
+        webbrowser.open(f'mailto:g.kerherve@imperial.ac.uk?subject={subject}&body={body}')
+        dlg.Close()
+
+    send_btn = wx.Button(dlg, label="Send Report")
+    send_btn.Bind(wx.EVT_BUTTON, send_report)
+
+    vbox.Add(description_label, 0, wx.ALL, 5)
+    vbox.Add(description, 1, wx.EXPAND | wx.ALL, 5)
+    vbox.Add(screenshot_btn, 0, wx.ALL | wx.CENTER, 5)
+    vbox.Add(send_btn, 0, wx.ALL | wx.CENTER, 5)
+
+    dlg.SetSizer(vbox)
+    dlg.ShowModal()
+
+
 def show_version_log(window):
     dlg = wx.Dialog(window, title="Version Log", size=(600, 400))
     text = wx.TextCtrl(dlg, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
