@@ -2,6 +2,8 @@ import wx
 import wx.html
 import os
 import sys
+import webbrowser
+import urllib.parse
 # import pygame
 
 def show_libraries_used(window):
@@ -392,56 +394,71 @@ def show_mini_game(parent):
     sim.run()
     pygame.quit()
 
+def report_bug_OLD(window):
+    """Displays a bug report dialog with options for describing the issue and sending a bug report."""
 
-def report_bug(window):
     dlg = wx.Dialog(window, title="Report Bug", size=(400, 300))
     vbox = wx.BoxSizer(wx.VERTICAL)
 
+    # Widgets
     description_label = wx.StaticText(dlg, label="Bug Description:")
     description = wx.TextCtrl(dlg, style=wx.TE_MULTILINE, size=(380, 100))
 
-    def take_screenshot(evt):
-        window.Hide()
-        dlg.Hide()
-        wx.MilliSleep(500)
-
-        screen = wx.ScreenDC()
-        size = screen.GetSize()
-        bmp = wx.Bitmap(size.width, size.height)
-        mem = wx.MemoryDC(bmp)
-        mem.Blit(0, 0, size.width, size.height, screen, 0, 0)
-
-        with wx.FileDialog(window, "Save screenshot", wildcard="PNG files (*.png)|*.png",
-                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT) as fileDialog:
-            if fileDialog.ShowModal() == wx.ID_CANCEL:
-                return
-            path = fileDialog.GetPath()
-            bmp.SaveFile(path, wx.BITMAP_TYPE_PNG)
-
-        window.Show()
-        dlg.Show()
-        wx.MessageBox("Screenshot saved to " + path, "Success")
-
-    screenshot_btn = wx.Button(dlg, label="Take Screenshot")
-    screenshot_btn.Bind(wx.EVT_BUTTON, take_screenshot)
-
     def send_report(evt):
-        import webbrowser
+        """Send the bug report via the default email client."""
         subject = "KherveFitting Bug Report"
-        body = description.GetValue()
-        webbrowser.open(f'mailto:g.kerherve@imperial.ac.uk?subject={subject}&body={body}')
-        dlg.Close()
+        body = (f"{description.GetValue()}\n\n"
+                "Please attach an image of the bug if applicable.")
+        body_encoded = urllib.parse.quote(body)  # URL-encode the body for proper formatting
 
+        if not description.GetValue().strip():
+            wx.MessageBox("Please provide a bug description before sending.", "Warning", wx.ICON_WARNING)
+            return
+
+        try:
+            webbrowser.open(
+                f'mailto:g.kerherve@imperial.ac.uk?subject={urllib.parse.quote(subject)}&body={body_encoded}')
+            wx.MessageBox("Bug report opened in your email client. Please attach any relevant images before sending.",
+                          "Success", wx.ICON_INFORMATION)
+            dlg.Close()
+        except Exception as e:
+            wx.MessageBox(f"Failed to open email client: {str(e)}", "Error", wx.ICON_ERROR)
+
+    # Buttons
     send_btn = wx.Button(dlg, label="Send Report")
     send_btn.Bind(wx.EVT_BUTTON, send_report)
 
+    # Layout
     vbox.Add(description_label, 0, wx.ALL, 5)
     vbox.Add(description, 1, wx.EXPAND | wx.ALL, 5)
-    vbox.Add(screenshot_btn, 0, wx.ALL | wx.CENTER, 5)
-    vbox.Add(send_btn, 0, wx.ALL | wx.CENTER, 5)
+    vbox.Add(send_btn, 0, wx.ALIGN_CENTER | wx.ALL, 10)
 
     dlg.SetSizer(vbox)
     dlg.ShowModal()
+    dlg.Destroy()
+
+def report_bug(window):
+    """Opens the bug report form in the user's default web browser."""
+    dlg = wx.MessageDialog(
+        parent=window,
+        message=(
+            "You will be redirected to the bug report form. "
+            "Please provide a description of the issue and attach any relevant files."
+        ),
+        caption="Report Bug",
+        style=wx.OK | wx.CANCEL | wx.ICON_INFORMATION
+    )
+
+    if dlg.ShowModal() == wx.ID_OK:
+        # Open the web form in the default browser
+        webbrowser.open("https://imperial.eu.qualtrics.com/jfe/form/SV_8IZDByjiBQrWdHU")
+        # https: // imperial.eu.qualtrics.com / jfe / form / SV_8IZDByjiBQrWdHU
+        wx.MessageBox(
+            "The bug report form has been opened in your browser.",
+            "Success",
+            wx.ICON_INFORMATION
+        )
+    dlg.Destroy()
 
 
 def show_version_log(window):
@@ -449,6 +466,7 @@ def show_version_log(window):
     text = wx.TextCtrl(dlg, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
 
     version_log = """Version 1.4 (February 2025) 
+- Added Bugs report
 - Improved Undo / Redo States 
 - Improved File checking before opening onto KherveFitting
 - Added Constant Multiplication in Mod window 

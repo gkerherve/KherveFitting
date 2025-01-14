@@ -343,6 +343,28 @@ def create_menu(window):
     window.Bind(wx.EVT_MENU, lambda event: window.toggle_energy_scale(), toggle_energy_item)
     window.toggle_energy_item = toggle_energy_item
 
+    # # Add theme submenu to View menu
+    # theme_submenu = wx.Menu()
+    # light_theme = theme_submenu.Append(wx.ID_ANY, "Light")
+    # dark_theme = theme_submenu.Append(wx.ID_ANY, "Dark")
+    # auto_theme = theme_submenu.Append(wx.ID_ANY, "Auto")
+    #
+    # def set_theme(color):
+    #     window.SetBackgroundColour(color)
+    #     window.panel.SetBackgroundColour(color)
+    #     window.right_frame.SetBackgroundColour(color)
+    #     window.peak_params_frame.SetBackgroundColour(color)
+    #     window.results_frame.SetBackgroundColour(color)
+    #     window.Refresh()
+    #     window.Update()
+    #
+    # window.Bind(wx.EVT_MENU, lambda evt: set_theme(wx.Colour(255, 255, 255)), light_theme)
+    # window.Bind(wx.EVT_MENU, lambda evt: set_theme(wx.Colour(50, 50, 50)), dark_theme)
+    # window.Bind(wx.EVT_MENU, lambda evt: set_theme(wx.NullColour), auto_theme)
+    #
+    # view_menu.AppendSubMenu(theme_submenu, "Theme")
+
+
     # Tools menu items
     Area_item = tools_menu.Append(wx.NewId(), "Calculate Area Under Curve\tCtrl+A")
     window.Bind(wx.EVT_MENU, lambda event: window.on_open_background_window(), Area_item)
@@ -587,6 +609,13 @@ def create_horizontal_toolbar(window):
                                       wx.Bitmap(os.path.join(icon_path, "LibOpen.png"), wx.BITMAP_TYPE_PNG),
                                       shortHelp="Load peaks parameters from library")
     export_tool = toolbar.AddTool(wx.ID_ANY, 'Export Results', wx.Bitmap(os.path.join(icon_path, "Export-25g.png"), wx.BITMAP_TYPE_PNG), shortHelp="Export to Results Grid")
+
+    Setting_tool = toolbar.AddTool(wx.ID_ANY, 'Load Settings',
+                                      wx.Bitmap(os.path.join(icon_path, "Settings-25.png"), wx.BITMAP_TYPE_PNG),
+                                      shortHelp="Open Preference Window")
+
+
+
     toggle_Col_1_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "HideColumn-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Columns Peak Fitting Parameters")
     window.toggle_right_panel_tool = window.add_toggle_tool(toolbar, "Toggle Right Panel", wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR))
 
@@ -597,6 +626,7 @@ def create_horizontal_toolbar(window):
                         toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, save_tool, save_plot_tool,
                         save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, toggle_peak_fill_tool, id_tool)
     toolbar.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_y_axis(), toggle_y_axis_tool)
+    window.Bind(wx.EVT_MENU, window.on_preferences, Setting_tool)
     window.Bind(wx.EVT_TOOL, lambda event: save_peaks_library(window), save_peaks_tool)
     window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), open_peaks_tool)
     window.Bind(wx.EVT_TOOL, lambda event: copy_sheet(window), copy_sheet_tool)
