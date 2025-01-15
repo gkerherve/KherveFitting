@@ -679,6 +679,35 @@ def create_vertical_toolbar(parent, frame):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     icon_path = os.path.join(current_dir, "Icons")
 
+    # Add master toggle tool
+    toggle_master_tool = v_toolbar.AddTool(wx.ID_ANY, 'Toggles',
+                                           wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG),
+                                           shortHelp="Toggle Options")
+
+    # Create popup menu for toggle options
+    toggle_menu = wx.Menu()
+
+    # Add toggle options as menu items
+    toggle_plot = toggle_menu.Append(wx.ID_ANY, "Toggle Plot")
+    toggle_peak_fill = toggle_menu.Append(wx.ID_ANY, "Toggle Peak Fill")
+    toggle_y_axis = toggle_menu.Append(wx.ID_ANY, "Toggle Y Axis")
+    toggle_legend = toggle_menu.Append(wx.ID_ANY, "Toggle Legend")
+    toggle_fit = toggle_menu.Append(wx.ID_ANY, "Toggle Fit Results")
+    toggle_residuals = toggle_menu.Append(wx.ID_ANY, "Toggle Residuals")
+
+    # Bind menu items to handlers
+    frame.Bind(wx.EVT_MENU, lambda event: toggle_plot(frame), toggle_plot)
+    frame.Bind(wx.EVT_MENU, frame.on_toggle_peak_fill, toggle_peak_fill)
+    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_y_axis(), toggle_y_axis)
+    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_legend(), toggle_legend)
+    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_fitting_results(), toggle_fit)
+    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_residuals(frame), toggle_residuals)
+
+    # Bind tool button to show popup menu
+    frame.Bind(wx.EVT_TOOL, lambda evt: v_toolbar.PopupMenu(toggle_menu), toggle_master_tool)
+
+    v_toolbar.AddSeparator()
+
     # Zoom tools
     zoom_in_tool = v_toolbar.AddTool(wx.ID_ANY, 'Zoom In',
                                      wx.Bitmap(os.path.join(icon_path, "ZoomIN-25.png"), wx.BITMAP_TYPE_PNG),
@@ -755,7 +784,7 @@ def create_vertical_toolbar(parent, frame):
                                     shortHelp="Open Labels Manager")
     frame.Bind(wx.EVT_TOOL, frame.open_labels_window, labels_tool)
 
-    v_toolbar.AddSeparator()
+    # v_toolbar.AddSeparator()
 
     v_toolbar.Realize()
 

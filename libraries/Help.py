@@ -466,6 +466,8 @@ def show_version_log(window):
     text = wx.TextCtrl(dlg, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
 
     version_log = """Version 1.4 (February 2025) 
+- Added KratosC1s and KratosF1s to the library
+- Added Settings Icon in the toolbar
 - Added Bugs report
 - Improved Undo / Redo States 
 - Improved File checking before opening onto KherveFitting
