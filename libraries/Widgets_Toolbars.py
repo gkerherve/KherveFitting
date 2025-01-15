@@ -447,7 +447,7 @@ def create_rightside_toolbar(parent, window):
     return r_toolbar
 
 def create_horizontal_toolbar(window):
-    toolbar = window.CreateToolBar(style= wx.TB_FLAT)
+    toolbar = window.CreateToolBar(style=  wx.TB_FLAT)
     # toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
     toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
@@ -537,24 +537,21 @@ def create_horizontal_toolbar(window):
 
     auto_be_button = toolbar.AddTool(wx.ID_ANY, 'Auto BE', wx.Bitmap(os.path.join(icon_path, "BEcorrect-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Automatic binding energy correction")
 
-    # toolbar.AddSeparator()
-    # add_vertical_separator(toolbar, separators)
+
     toolbar.AddSeparator()
 
-    # Plot adjustment tools
-    plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot', wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
-    toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill', wx.Bitmap(os.path.join(icon_path,
-                                                                                                  "STO-25-2.png"),
-                                                                                     wx.BITMAP_TYPE_PNG), shortHelp="Toggle Peak Fill")
-    toggle_y_axis_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Y Axis', wx.Bitmap(os.path.join(icon_path, "Y-25.png"),
-                                                                               wx.BITMAP_TYPE_PNG), shortHelp="Toggle Y Axis Label and Values")
-    toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend', wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Legend")
-    toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results', wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
-    toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Residuals")
-
+    # # Plot adjustment tools
+    # plot_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Plot', wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle between Raw Data and Fit")
+    # toggle_peak_fill_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill', wx.Bitmap(os.path.join(icon_path,
+    #                                                                                               "STO-25-2.png"),
+    #                                                                                  wx.BITMAP_TYPE_PNG), shortHelp="Toggle Peak Fill")
+    # toggle_y_axis_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Y Axis', wx.Bitmap(os.path.join(icon_path, "Y-25.png"),
+    #                                                                            wx.BITMAP_TYPE_PNG), shortHelp="Toggle Y Axis Label and Values")
+    # toggle_legend_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Legend', wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Legend")
+    # toggle_fit_results_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results', wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Fit Results")
+    # toggle_residuals_tool = toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals', wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG), shortHelp="Toggle Residuals")
+    #
     # toolbar.AddSeparator()
-    # add_vertical_separator(toolbar, separators)
-    toolbar.AddSeparator()
 
     # Analysis tools
     bkg_tool = toolbar.AddTool(wx.ID_ANY, 'Background', wx.Bitmap(os.path.join(icon_path, "BKG-25.png"),
@@ -622,10 +619,11 @@ def create_horizontal_toolbar(window):
     toolbar.Realize()
 
     # Bind events
-    bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, bkg_tool, fitting_tool, noise_analysis_tool,
-                        toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, save_tool, save_plot_tool,
-                        save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, toggle_peak_fill_tool, id_tool)
-    toolbar.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_y_axis(), toggle_y_axis_tool)
+    bind_toolbar_events(window, open_file_tool, refresh_folder_tool, bkg_tool, fitting_tool, noise_analysis_tool,
+                        # toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, plot_tool, toggle_peak_fill_tool,
+                        save_tool, save_plot_tool,
+                        save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, id_tool)
+    # toolbar.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_y_axis(), toggle_y_axis_tool)
     window.Bind(wx.EVT_MENU, window.on_preferences, Setting_tool)
     window.Bind(wx.EVT_TOOL, lambda event: save_peaks_library(window), save_peaks_tool)
     window.Bind(wx.EVT_TOOL, lambda event: load_peaks_library(window), open_peaks_tool)
@@ -643,18 +641,20 @@ def add_vertical_separator(toolbar, separators):
     separators[-1].SetSize((2, 24))
     toolbar.AddControl(separators[-1])
 
-def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, bkg_tool, fitting_tool, noise_analysis_tool,
-                        toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, save_tool, save_plot_tool,
-                        save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, toggle_peak_fill_tool, id_tool):
+def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, bkg_tool, fitting_tool, noise_analysis_tool,
+                        save_tool, save_plot_tool,
+                        save_all_tool, toggle_Col_1_tool, export_tool, auto_be_button, id_tool
+                        # toggle_legend_tool, toggle_fit_results_tool, toggle_residuals_tool, toggle_peak_fill_tool, plot_tool,
+                        ):
     window.Bind(wx.EVT_TOOL, lambda event: open_xlsx_file(window), open_file_tool)
     window.Bind(wx.EVT_TOOL, lambda event: refresh_sheets(window, on_sheet_selected_wrapper), refresh_folder_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: toggle_plot(window), plot_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: toggle_plot(window), plot_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_background_window(), bkg_tool)
     window.Bind(wx.EVT_TOOL, lambda event: window.on_open_fitting_window(), fitting_tool)
     window.Bind(wx.EVT_TOOL, window.on_open_noise_analysis_window, noise_analysis_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_legend(), toggle_legend_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_fitting_results(), toggle_fit_results_tool)
-    window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(window), toggle_residuals_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_legend(), toggle_legend_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_fitting_results(), toggle_fit_results_tool)
+    # window.Bind(wx.EVT_TOOL, lambda event: window.plot_manager.toggle_residuals(window), toggle_residuals_tool)
     window.sheet_combobox.Bind(wx.EVT_COMBOBOX, lambda event: on_sheet_selected_wrapper(window, event))
     window.Bind(wx.EVT_TOOL, lambda event: on_save(window), save_tool)
     window.Bind(wx.EVT_TOOL, lambda event: on_save_plot(window), save_plot_tool)
@@ -663,7 +663,7 @@ def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, 
     window.Bind(wx.EVT_TOOL, lambda event: window.export_results(), export_tool)
     window.be_correction_spinbox.Bind(wx.EVT_SPINCTRLDOUBLE, window.on_be_correction_change)
     window.Bind(wx.EVT_TOOL, window.on_auto_be, auto_be_button)
-    window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
+    # window.Bind(wx.EVT_TOOL, window.on_toggle_peak_fill, toggle_peak_fill_tool)
     window.Bind(wx.EVT_TOOL, lambda event: undo(window), window.undo_tool)
     window.Bind(wx.EVT_TOOL, lambda event: redo(window), window.redo_tool)
     window.Bind(wx.EVT_TOOL, window.open_periodic_table, id_tool)
@@ -672,39 +672,36 @@ def bind_toolbar_events(window, open_file_tool, refresh_folder_tool, plot_tool, 
 
 def create_vertical_toolbar(parent, frame):
     v_toolbar = wx.ToolBar(parent, style=wx.TB_VERTICAL | wx.TB_FLAT)
-    # v_toolbar.SetBackgroundColour(wx.Colour(220, 220, 220))
     v_toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
     # Get the correct path for icons
     current_dir = os.path.dirname(os.path.abspath(__file__))
     icon_path = os.path.join(current_dir, "Icons")
 
+    # Create toggle toolbar instance
+    frame.toggle_toolbar = ToggleToolbar(frame)
+
     # Add master toggle tool
     toggle_master_tool = v_toolbar.AddTool(wx.ID_ANY, 'Toggles',
-                                           wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG),
+                                           wx.Bitmap(os.path.join(icon_path, "Toggles-25.png"), wx.BITMAP_TYPE_PNG),
                                            shortHelp="Toggle Options")
 
-    # Create popup menu for toggle options
-    toggle_menu = wx.Menu()
+    def show_toggle_toolbar(event):
+        if not frame.toggle_toolbar.IsShown():
+            pos = v_toolbar.GetScreenPosition()
+            frame.toggle_toolbar.SetPosition((pos.x + v_toolbar.GetSize().width, pos.y))
+            frame.toggle_toolbar.Show()
 
-    # Add toggle options as menu items
-    toggle_plot = toggle_menu.Append(wx.ID_ANY, "Toggle Plot")
-    toggle_peak_fill = toggle_menu.Append(wx.ID_ANY, "Toggle Peak Fill")
-    toggle_y_axis = toggle_menu.Append(wx.ID_ANY, "Toggle Y Axis")
-    toggle_legend = toggle_menu.Append(wx.ID_ANY, "Toggle Legend")
-    toggle_fit = toggle_menu.Append(wx.ID_ANY, "Toggle Fit Results")
-    toggle_residuals = toggle_menu.Append(wx.ID_ANY, "Toggle Residuals")
+    frame.Bind(wx.EVT_TOOL, show_toggle_toolbar, toggle_master_tool)
 
-    # Bind menu items to handlers
-    frame.Bind(wx.EVT_MENU, lambda event: toggle_plot(frame), toggle_plot)
-    frame.Bind(wx.EVT_MENU, frame.on_toggle_peak_fill, toggle_peak_fill)
-    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_y_axis(), toggle_y_axis)
-    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_legend(), toggle_legend)
-    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_fitting_results(), toggle_fit)
-    frame.Bind(wx.EVT_MENU, lambda event: frame.plot_manager.toggle_residuals(frame), toggle_residuals)
+    # Bind the toggle toolbar tools
+    frame.Bind(wx.EVT_TOOL, lambda event: toggle_plot(frame), frame.toggle_toolbar.plot_tool)
+    frame.Bind(wx.EVT_TOOL, frame.on_toggle_peak_fill, frame.toggle_toolbar.peak_fill_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.plot_manager.toggle_y_axis(), frame.toggle_toolbar.y_axis_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.plot_manager.toggle_legend(), frame.toggle_toolbar.legend_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.plot_manager.toggle_fitting_results(), frame.toggle_toolbar.fit_tool)
+    frame.Bind(wx.EVT_TOOL, lambda event: frame.plot_manager.toggle_residuals(frame), frame.toggle_toolbar.residuals_tool)
 
-    # Bind tool button to show popup menu
-    frame.Bind(wx.EVT_TOOL, lambda evt: v_toolbar.PopupMenu(toggle_menu), toggle_master_tool)
 
     v_toolbar.AddSeparator()
 
@@ -858,3 +855,38 @@ def open_manual(window):
     manual_path = os.path.join(application_path, "Manual.pdf")
     webbrowser.open(manual_path)
 
+
+class ToggleToolbar(wx.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, style=wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT)
+
+        self.toolbar = wx.ToolBar(self, style=wx.TB_HORIZONTAL | wx.TB_DOCKABLE) #wx.TB_FLAT | wx.TB_NODIVIDER)
+        self.toolbar.SetToolBitmapSize(wx.Size(25, 25))
+
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Icons")
+
+        # Add tools
+        self.plot_tool = self.toolbar.AddTool(wx.ID_ANY, 'Toggle Plot',
+                                              wx.Bitmap(os.path.join(icon_path, "scatter-plot-25.png"),
+                                                        wx.BITMAP_TYPE_PNG))
+        self.peak_fill_tool = self.toolbar.AddTool(wx.ID_ANY, 'Toggle Peak Fill',
+                                                   wx.Bitmap(os.path.join(icon_path, "STO-25-2.png"),
+                                                             wx.BITMAP_TYPE_PNG))
+        self.y_axis_tool = self.toolbar.AddTool(wx.ID_ANY, 'Toggle Y Axis',
+                                                wx.Bitmap(os.path.join(icon_path, "Y-25.png"), wx.BITMAP_TYPE_PNG))
+        self.legend_tool = self.toolbar.AddTool(wx.ID_ANY, 'Toggle Legend',
+                                                wx.Bitmap(os.path.join(icon_path, "Legend-25.png"), wx.BITMAP_TYPE_PNG))
+        self.fit_tool = self.toolbar.AddTool(wx.ID_ANY, 'Toggle Fit Results',
+                                             wx.Bitmap(os.path.join(icon_path, "ToggleFit-25.png"), wx.BITMAP_TYPE_PNG))
+        self.residuals_tool = self.toolbar.AddTool(wx.ID_ANY, 'Toggle Residuals',
+                                                   wx.Bitmap(os.path.join(icon_path, "Res-25.png"), wx.BITMAP_TYPE_PNG))
+
+        self.toolbar.Realize()
+        self.SetSize(self.toolbar.GetBestSize())
+
+        # Bind close event
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_lose_focus)
+
+    def on_lose_focus(self, event):
+        self.Hide()
+        event.Skip()
