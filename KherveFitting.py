@@ -18,19 +18,8 @@ import wx.grid
 import wx.adv
 import sys
 
-# import matplotlib.pyplot as plt
-# from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-# from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
-
-
 from matplotlib.ticker import ScalarFormatter, AutoMinorLocator
 matplotlib.use('WXAgg')  # Use WXAgg backend for wxPython compatibility
-
-# import lmfit
-# import wx.lib.agw.aui as aui
-# import struct
-# from pathlib import Path
-
 
 from libraries.Fitting_Screen import *
 from libraries.AreaFit_Screen import *
@@ -39,7 +28,7 @@ from libraries.NoiseAnalysis import NoiseAnalysisWindow
 from libraries.ConfigFile import *
 from libraries.Export import export_results
 from libraries.PlotConfig import PlotConfig
-# from libraries.Plot_Operations import PlotManager
+
 from libraries.Peak_Functions import PeakFunctions
 
 # from libraries.Peak_Functions import AtomicConcentrations
@@ -68,6 +57,8 @@ from libraries.Open import open_xlsx_file
 
 from libraries.Peak_Functions import OtherCalc, AtomicConcentrations
 from libraries.Dpara_Screen import DParameterWindow
+
+from libraries.Update import UpdateChecker
 
 
 class MyFrame(wx.Frame):
@@ -3348,90 +3339,6 @@ class MyFrame(wx.Frame):
         self.labels_window.Show()
         self.labels_window.Raise()
 
-
-def check_latest_version():
-    try:
-        import requests
-        from bs4 import BeautifulSoup
-        import re
-
-        # Current software version
-        current_version = 1.4  # As a float
-
-        # SourceForge URL
-        url = "https://sourceforge.net/projects/khervefitting/files/"
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an error for bad status codes
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        # Find all file names
-        file_links = soup.find_all("a", {"title": re.compile(r"KherveFitting_.*\.exe")})
-
-        # Extract version numbers
-        version_pattern = re.compile(r"KherveFitting_(\d+\.\d+)_")
-        versions = []
-
-        for link in file_links:
-            match = version_pattern.search(link.get('title', ''))
-            if match:
-                versions.append(float(match.group(1)))  # Convert version to float
-
-        if not versions:
-            print("No version found.")
-            return False, None
-
-        latest_version = max(versions)
-        print(f"Latest version found: {latest_version}")
-
-        if latest_version > current_version:
-            print(f"Update available: {latest_version}")
-            return True, latest_version
-
-        print("No update available.")
-        return False, current_version
-
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        return None, None
-
-def check_update_delayed(window):
-    def delayed_check():
-        time.sleep(3)  # Wait 3 seconds
-        needs_update, latest_version = check_latest_version()
-        if needs_update:
-            wx.CallAfter(lambda: show_update_dialog(window, latest_version))
-
-    import threading
-    thread = threading.Thread(target=delayed_check)
-    thread.daemon = True
-    thread.start()
-
-
-def download_latest_version():
-    try:
-        import requests
-        from bs4 import BeautifulSoup
-
-        # Get SourceForge download page
-        url = "https://sourceforge.net/projects/khervefitting/files/latest/download"
-
-        # Open download URL in browser
-        webbrowser.open(url)
-
-        # Alternative direct download using requests:
-        # response = requests.get(url, allow_redirects=True)
-        # with open("KherveFitting_latest.exe", 'wb') as f:
-        #     f.write(response.content)
-
-    except Exception as e:
-        print(f"Download failed: {e}")
-
-def show_update_dialog(window, latest_version):
-    if wx.MessageBox(f"Version {latest_version} is available. Download now?",
-                    "Update Available",
-                    wx.YES_NO | wx.ICON_INFORMATION) == wx.YES:
-        download_latest_version()
-
 def set_high_priority():
     try:
         proc = psutil.Process(os.getpid())
@@ -3447,25 +3354,17 @@ if __name__ == '__main__':
     multiprocessing.freeze_support()
     set_high_priority()
 
-    import os
-    import webbrowser
-    import time
-
-    needs_update, latest_version = check_latest_version()
-
     app = wx.App(False)
     splash = show_splash(duration=3000, delay=0)
 
     frame = MyFrame(None, "KherveFitting - V1.4 - Feb 2025")
     frame.Show(True)
 
-
-
     if splash:
         splash.Destroy()
 
-    check_update_delayed(frame)
-
+    updater = UpdateChecker()
+    updater.check_update_delayed(frame)
 
     app.MainLoop()
     sys.exit(0)
