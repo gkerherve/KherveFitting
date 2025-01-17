@@ -8,9 +8,9 @@ class BackgroundWindow(wx.Frame):
         super(BackgroundWindow, self).__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent
         self.SetTitle("Measure Area between the range cursors")
-        self.SetSize((270, 300))
-        self.SetMinSize((270, 300))
-        self.SetMaxSize((270, 300))
+        self.SetSize((270, 450))
+        self.SetMinSize((270, 450))
+        self.SetMaxSize((270, 450))
 
         panel = wx.Panel(self)
         # panel.SetBackgroundColour(wx.Colour(245, 245, 245))
@@ -29,6 +29,34 @@ class BackgroundWindow(wx.Frame):
 
         self.offset_h_text.Bind(wx.EVT_TEXT, self.on_offset_changed)
         self.offset_l_text.Bind(wx.EVT_TEXT, self.on_offset_changed)
+
+        # Add averaging points control
+        averaging_points_label = wx.StaticText(panel, label="Averaging Points:")
+        self.averaging_points_text = wx.TextCtrl(panel, value="5")
+        self.averaging_points_text.Bind(wx.EVT_TEXT, self.on_averaging_points_change)
+
+        # Add Tougaard controls
+        self.cross_section_label = wx.StaticText(panel, label='Tougaard 1 / B,C,D,T0')
+        self.cross_section = wx.TextCtrl(panel, value="2866,1643,1,0")
+        self.cross_section.Bind(wx.EVT_TEXT, self.on_cross_section_change)
+
+        self.cross_section2_label = wx.StaticText(panel, label='Tougaard 2 / B,C,D,T0')
+        self.cross_section2 = wx.TextCtrl(panel, value="2866,1643,1,0")
+        self.cross_section2.Bind(wx.EVT_TEXT, self.on_cross_section2_change)
+
+        self.cross_section3_label = wx.StaticText(panel, label='Tougaard 3 / B,C,D,T0')
+        self.cross_section3 = wx.TextCtrl(panel, value="2866,1643,1,0")
+        self.cross_section3.Bind(wx.EVT_TEXT, self.on_cross_section3_change)
+
+        # Add Tougaard model button
+        self.tougaard_fit_btn = wx.Button(panel, label="Create Tougaard\nModel")
+        self.tougaard_fit_btn.SetMinSize((110, 40))
+        self.tougaard_fit_btn.Bind(wx.EVT_BUTTON, self.on_tougaard_model)
+
+        # Add remove last peak button
+        remove_peak_button = wx.Button(panel, label="Remove\nLast Peak")
+        remove_peak_button.SetMinSize((110, 40))
+        remove_peak_button.Bind(wx.EVT_BUTTON, self.on_remove_peak)
 
         background_button = wx.Button(panel, label="Background")
         background_button.SetMinSize((110, 40))
@@ -49,23 +77,93 @@ class BackgroundWindow(wx.Frame):
         sizer.Add(method_label, pos=(0, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
         sizer.Add(self.method_combobox, pos=(1, 0), span=(1, 2), flag=wx.ALL | wx.EXPAND, border=5)
 
-        # Second row: Offset (H) and Offset (L)
+
+
+        # second Third row: Offset (H) and Offset (L)
         sizer.Add(offset_h_label, pos=(2, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         sizer.Add(self.offset_h_text, pos=(2, 1), flag=wx.ALL | wx.EXPAND, border=5)
         sizer.Add(offset_l_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         sizer.Add(self.offset_l_text, pos=(3, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        # Third row: Background and Clear Background buttons
-        sizer.Add(background_button, pos=(4, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(clear_background_button, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        # Fourth row: Averaging Points
+        sizer.Add(averaging_points_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        sizer.Add(self.averaging_points_text, pos=(4, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        # Fourth row: Export buttons
-        sizer.Add(export_button, pos=(5, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        # Fourth row: Tougaard parameters
+        sizer.Add(self.cross_section_label, pos=(5, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(self.cross_section, pos=(5, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(self.cross_section2_label, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(self.cross_section2, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(self.cross_section3_label, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(self.cross_section3, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
+
+        # Fifth row: Tougaard model button
+        sizer.Add(self.tougaard_fit_btn, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
+
+        # Sixth row: Background and Clear Background buttons
+        sizer.Add(background_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(clear_background_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+
+        # Seventh row: Remove peak and Export buttons
+        sizer.Add(remove_peak_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(export_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
         panel.SetSizer(sizer)
+
+    def on_cross_section_change(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        values = self.cross_section.GetValue().split(',')
+        try:
+            self.parent.Data['Core levels'][sheet_name]['Background'].update({
+                'Tougaard_B': float(values[0]),
+                'Tougaard_C': float(values[1]),
+                'Tougaard_D': float(values[2]),
+                'Tougaard_T0': float(values[3])
+            })
+        except (ValueError, IndexError):
+            pass
+
+    def on_cross_section2_change(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        values = self.cross_section2.GetValue().split(',')
+        try:
+            self.parent.Data['Core levels'][sheet_name]['Background'].update({
+                'Tougaard_B2': float(values[0]),
+                'Tougaard_C2': float(values[1]),
+                'Tougaard_D2': float(values[2]),
+                'Tougaard_T02': float(values[3])
+            })
+        except (ValueError, IndexError):
+            pass
+
+    def on_cross_section3_change(self, event):
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        values = self.cross_section3.GetValue().split(',')
+        try:
+            self.parent.Data['Core levels'][sheet_name]['Background'].update({
+                'Tougaard_B3': float(values[0]),
+                'Tougaard_C3': float(values[1]),
+                'Tougaard_D3': float(values[2]),
+                'Tougaard_T03': float(values[3])
+            })
+        except (ValueError, IndexError):
+            pass
+
+    def on_remove_peak(self, event):
+        remove_peak(self.parent)
+
+    def on_averaging_points_change(self, event):
+        try:
+            self.parent.averaging_points = int(self.averaging_points_text.GetValue())
+        except ValueError:
+            pass
+
+    def on_tougaard_model(self, event):
+        from libraries.Fitting_Screen import TougaardFitWindow
+        TougaardFitWindow(self).Show()
 
     def on_close(self, event):
         self.parent.background_tab_selected = False
@@ -199,7 +297,9 @@ class BackgroundWindow(wx.Frame):
             print(f"Error calculating background: {str(e)}")
 
     def on_clear_background(self, event):
-        # Define the clear background behavior here
+        if hasattr(self, 'offset_h_text') and hasattr(self, 'offset_l_text'):
+            self.offset_h_text.SetValue('0')
+            self.offset_l_text.SetValue('0')
         self.parent.plot_manager.clear_background(self.parent)
         save_state(self.parent)
 

@@ -860,7 +860,7 @@ class ToggleToolbar(wx.Frame):
     def __init__(self, parent):
         super().__init__(parent, style=wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT)
 
-        self.toolbar = wx.ToolBar(self, style=wx.TB_HORIZONTAL | wx.TB_DOCKABLE) #wx.TB_FLAT | wx.TB_NODIVIDER)
+        self.toolbar = wx.ToolBar(self, style=wx.TB_HORIZONTAL | wx.TB_FLAT)
         self.toolbar.SetToolBitmapSize(wx.Size(25, 25))
 
         icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Icons")
