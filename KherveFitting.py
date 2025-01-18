@@ -2897,7 +2897,7 @@ class MyFrame(wx.Frame):
         if grid_fitting_method != "D-parameter":
             if hasattr(self, 'peak_params_grid') and self.peak_params_grid.GetNumberRows() > 0:
                 from Functions import fit_peaks
-                fit_result = fit_peaks(self, self.peak_params_grid)
+                fit_result = fit_peaks(self, self.peak_params_grid, evaluate=True)
 
                 if fit_result:
                     if hasattr(self, 'ax'):

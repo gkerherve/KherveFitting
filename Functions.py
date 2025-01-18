@@ -273,7 +273,7 @@ def calculate_chi_square(y_true, y_pred):
 from matplotlib.ticker import ScalarFormatter
 
 
-def fit_peaks(window, peak_params_grid):
+def fit_peaks(window, peak_params_grid, evaluate=False):
     """
     Perform peak fitting on the spectral data and update the peak parameters.
     """
@@ -618,27 +618,48 @@ def fit_peaks(window, peak_params_grid):
             else:
                 fit_kws = None  # Don't pass fit_kws for 'nelder', 'powell', or 'cobyla'
 
-            result = model.fit(
-                y_values_subtracted,
-                params,
-                x=x_values_filtered,
-                max_nfev=max_nfev,
-                method=optimization_method,
-                weights=np.ones(len(y_values_filtered)),
-                scale_covar=True,
-                nan_policy='omit',
-                verbose=True,
-                **({'fit_kws': fit_kws} if fit_kws else {})
-            )
+            if evaluate:
+                # Use eval()
+                result_eval = model.eval(params, x=x_values_filtered)
+                residuals = y_values_subtracted - result_eval
+                ss_res = np.sum(residuals ** 2)
+                ss_tot = np.sum((y_values_subtracted - np.mean(y_values_subtracted)) ** 2)
+                r_squared = 1 - (ss_res / ss_tot)
+                window.r_squared = r_squared
+                chi_square = ss_res
+                red_chi_square = ss_res / (len(y_values_subtracted) - len(params))
 
+                # Create a result object similar to fit() output
+                result = type('Result', (), {
+                    'best_fit': result_eval,
+                    'params': params,
+                    'chisqr': ss_res,
+                    'redchi': ss_res / (len(y_values_subtracted) - len(params)),
+                    'nfev': 1
+                })
 
-            residuals = y_values_subtracted - result.best_fit
-            ss_res = np.sum(residuals ** 2)
-            ss_tot = np.sum((y_values_subtracted - np.mean(y_values_subtracted)) ** 2)
-            r_squared = 1 - (ss_res / ss_tot)
-            window.r_squared = r_squared
-            chi_square = result.chisqr
-            red_chi_square = result.redchi
+            else:
+                # Use existing fit() code
+                result = model.fit(
+                    y_values_subtracted,
+                    params,
+                    x=x_values_filtered,
+                    max_nfev=max_nfev,
+                    method=optimization_method,
+                    weights=np.ones(len(y_values_filtered)),
+                    scale_covar=True,
+                    nan_policy='omit',
+                    verbose=True,
+                    **({'fit_kws': fit_kws} if fit_kws else {})
+                )
+                residuals = y_values_subtracted - result.best_fit
+                chi_square = result.chisqr
+                red_chi_square = result.redchi
+                ss_res = np.sum(residuals ** 2)
+                ss_tot = np.sum((y_values_subtracted - np.mean(y_values_subtracted)) ** 2)
+                r_squared = 1 - (ss_res / ss_tot)
+                window.r_squared = r_squared
+
 
             if 'Fitting' not in window.Data['Core levels'][sheet_name]:
                 window.Data['Core levels'][sheet_name]['Fitting'] = {}
