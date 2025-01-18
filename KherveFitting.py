@@ -2874,42 +2874,6 @@ class MyFrame(wx.Frame):
             self.offset_l = 0
 
 
-
-
-
-    # def get_data_for_save2(self):
-    #     data = {
-    #         'x_values': self.x_values,
-    #         'y_values': self.y_values,
-    #         'background': self.background if hasattr(self, 'background') else None,
-    #         'calculated_fit': None,
-    #         'individual_peak_fits': [],
-    #         'peak_params_grid': self.peak_params_grid if hasattr(self, 'peak_params_grid') else None,
-    #         'results_grid': self.results_grid if hasattr(self, 'results_grid') else None
-    #     }
-    #
-    #     # Use existing fit_peaks function to get the fit data
-    #     from Functions import fit_peaks
-    #     fit_result = fit_peaks(self, self.peak_params_grid)
-    #
-    #     if fit_result:
-    #         r_squared, chi_square, red_chi_square = fit_result
-    #
-    #         # The overall fit (envelope) is stored as 'fitted_peak' in fit_peaks
-    #         if hasattr(self, 'ax'):
-    #             for line in self.ax.lines:
-    #                 if line.get_label() == 'Envelope':
-    #                     data['calculated_fit'] = line.get_ydata()
-    #                     break
-    #
-    #         # Individual peaks are stored as fill_between plots
-    #         if hasattr(self, 'ax'):
-    #             for collection in self.ax.collections:
-    #                 if collection.get_label().startswith(self.sheet_combobox.GetValue()):
-    #                     data['individual_peak_fits'].append(collection.get_paths()[0].vertices[:, 1])
-    #
-    #     return data
-
     def get_data_for_save(self):
         data = {
             'x_values': self.x_values,
