@@ -470,6 +470,7 @@ def show_version_log(window):
 - Added KratosC1s and KratosF1s to the library
 - Added Settings Icon in the toolbar
 - Added Bugs report
+- Remove fitting when saving data
 - Improved Undo / Redo States 
 - Improved File checking before opening onto KherveFitting
 - Added Constant Multiplication in Mod window 
