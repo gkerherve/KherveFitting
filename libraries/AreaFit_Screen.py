@@ -8,17 +8,18 @@ class BackgroundWindow(wx.Frame):
     def __init__(self, parent, *args, **kw):
         super(BackgroundWindow, self).__init__(parent, *args, **kw, style=wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.SYSTEM_MENU) | wx.STAY_ON_TOP)
         self.parent = parent
-        self.SetTitle("Measure Area between the range cursors")
-        self.SetSize((290, 600))
-        self.SetMinSize((290, 600))
-        self.SetMaxSize((290, 600))
+        self.SetTitle("Measure Area")
+        self.SetSize((290, 540))
+        self.SetMinSize((290, 540))
+        self.SetMaxSize((290, 540))
 
         panel = wx.Panel(self)
         # panel.SetBackgroundColour(wx.Colour(245, 245, 245))
 
         # Create controls
         method_label = wx.StaticText(panel, label="Method:")
-        self.method_combobox = wx.ComboBox(panel, choices=["Multi-Regions Smart", "Smart", "Shirley", "Linear",
+        self.method_combobox = wx.ComboBox(panel, choices=["Multi-Regions Smart",
+                                                           # "Smart", "Shirley", "Linear",
                                                            '1x U4-Tougaard', '2x U4-Tougaard', '3x U4-Tougaard'],
                                            style=wx.CB_READONLY)
         self.method_combobox.SetSelection(0)  # Default to Shirley
@@ -68,20 +69,17 @@ class BackgroundWindow(wx.Frame):
         clear_background_button.SetMinSize((110, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
-        export_button = wx.Button(panel, label="Export to\nResults Grid")
-        export_button.SetMinSize((60, 40))
-        export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
+        # export_button = wx.Button(panel, label="Export to\nResults Grid")
+        # export_button.SetMinSize((60, 40))
+        # export_button.Bind(wx.EVT_BUTTON, self.on_export_results)
 
 
         reset_vlines_button = wx.Button(panel, label="Reset \nVertical Lines")
         reset_vlines_button.SetMinSize((110, 40))
         reset_vlines_button.Bind(wx.EVT_BUTTON, self.on_reset_vlines)
 
-        toggle_vlines_button = wx.Button(panel, label="Show/Hide\nVertical Lines")
-        toggle_vlines_button.SetMinSize((110, 40))
-        toggle_vlines_button.Bind(wx.EVT_BUTTON, self.on_toggle_vlines)
 
-        background_only_button = wx.Button(panel, label="Background\nOnly")
+        background_only_button = wx.Button(panel, label="Create\nBackground")
         background_only_button.SetMinSize((110, 40))
         background_only_button.Bind(wx.EVT_BUTTON, self.on_background_only)
 
@@ -125,30 +123,67 @@ class BackgroundWindow(wx.Frame):
         sizer.Add(peak_label_text_label, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
         sizer.Add(self.peak_label_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        # Fifth row: Tougaard model button
-        sizer.Add(self.tougaard_fit_btn, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(reset_vlines_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+
 
         # Row
-        sizer.Add(area_button, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(toggle_vlines_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(area_button, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(remove_peak_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         # Seventh row: Remove peak and Export buttons
-        sizer.Add(remove_peak_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(export_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(self.tougaard_fit_btn, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(reset_vlines_button, pos=(9, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        # sizer.Add(export_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
 
         # Sixth row: Background and Clear Background buttons
         # sizer.Add(background_button, pos=(12, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(clear_background_button, pos=(11, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(background_only_button, pos=(10, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        sizer.Add(clear_background_button, pos=(10, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        # Row
-        sizer.Add(background_only_button, pos=(11, 0), flag=wx.ALL | wx.EXPAND, border=5)
 
+        # Initially disable all Tougaard controls
+        self.cross_section.Enable(False)
+        self.cross_section_label.Enable(False)
+        self.cross_section2.Enable(False)
+        self.cross_section2_label.Enable(False)
+        self.cross_section3.Enable(False)
+        self.cross_section3_label.Enable(False)
+        self.tougaard_fit_btn.Enable(False)
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
+        self.method_combobox.Bind(wx.EVT_COMBOBOX, self.on_bkg_method_change)
+
         panel.SetSizer(sizer)
+
+    def update_tougaard_controls_visibility(self, new_method):
+        if "Tougaard" in new_method:
+            self.cross_section.Enable(True)
+            self.cross_section_label.Enable(True)
+            self.tougaard_fit_btn.Enable(True)
+            if "2x" in new_method:
+                self.cross_section2.Enable(True)
+                self.cross_section2_label.Enable(True)
+                self.cross_section3.Enable(False)
+                self.cross_section3_label.Enable(False)
+            elif "3x" in new_method:
+                self.cross_section2.Enable(True)
+                self.cross_section2_label.Enable(True)
+                self.cross_section3.Enable(True)
+                self.cross_section3_label.Enable(True)
+            else:
+                self.cross_section2.Enable(False)
+                self.cross_section2_label.Enable(False)
+                self.cross_section3.Enable(False)
+                self.cross_section3_label.Enable(False)
+        else:
+            self.cross_section.Enable(False)
+            self.cross_section_label.Enable(False)
+            self.tougaard_fit_btn.Enable(False)
+            self.cross_section2.Enable(False)
+            self.cross_section2_label.Enable(False)
+            self.cross_section3.Enable(False)
+            self.cross_section3_label.Enable(False)
 
     def on_area(self, event):
         sheet_name = self.parent.sheet_combobox.GetValue()
@@ -161,8 +196,8 @@ class BackgroundWindow(wx.Frame):
 
         vline1_x = self.parent.vline1.get_xdata()[0]
         vline2_x = self.parent.vline2.get_xdata()[0]
-        range_min = min(vline1_x, vline2_x)
-        range_max = max(vline1_x, vline2_x)
+        range_min = round(min(vline1_x, vline2_x),2)
+        range_max = round(max(vline1_x, vline2_x),2)
         mask = (x_values >= range_min) & (x_values <= range_max)
 
         x_range = x_values[mask]
@@ -204,7 +239,7 @@ class BackgroundWindow(wx.Frame):
         grid.SetCellValue(row, 16, f"{range_max}")
 
         for col in range(grid.GetNumberCols()):
-            grid.SetCellBackgroundColour(row + 1, col, wx.Colour(230, 230, 230))
+            grid.SetCellBackgroundColour(row + 1, col, wx.Colour(200,245,228))
 
         grid.SetCellValue(row + 1, 2, "0,1e3")
         grid.SetCellValue(row + 1, 3, "1,1e7")
@@ -248,7 +283,7 @@ class BackgroundWindow(wx.Frame):
 
         self.parent.ax.legend()
         self.parent.peak_params_grid.ForceRefresh()
-        self.parent.canvas.draw_idle()
+        self.on_reset_vlines(self)
         save_state(self.parent)
 
     def on_reset_vlines(self, event):
@@ -271,26 +306,29 @@ class BackgroundWindow(wx.Frame):
         self.parent.offset_h = float(self.offset_h_text.GetValue())
         self.parent.offset_l = float(self.offset_l_text.GetValue())
 
-        if self.parent.bg_min_energy is None or self.parent.bg_max_energy is None:
-            sheet_name = self.parent.sheet_combobox.GetValue()
-            x_values = self.parent.Data['Core levels'][sheet_name]['B.E.']
-            self.parent.bg_min_energy = min(x_values) + 0.2
-            self.parent.bg_max_energy = max(x_values) - 0.2
+        sheet_name = self.parent.sheet_combobox.GetValue()
+        x_values = np.array(self.parent.Data['Core levels'][sheet_name]['B.E.'])
+
+        if self.parent.vline1 is None or self.parent.vline2 is None:
+            min_x = min(x_values) + 0.2
+            max_x = max(x_values) - 0.2
+            self.parent.vline1 = self.parent.ax.axvline(min_x, color='r', linestyle='--')
+            self.parent.vline2 = self.parent.ax.axvline(max_x, color='r', linestyle='--')
+            self.parent.bg_min_energy = min_x
+            self.parent.bg_max_energy = max_x
 
             if 'Background' in self.parent.Data['Core levels'][sheet_name]:
-                self.parent.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = self.parent.bg_min_energy
-                self.parent.Data['Core levels'][sheet_name]['Background']['Bkg High'] = self.parent.bg_max_energy
+                self.parent.Data['Core levels'][sheet_name]['Background']['Bkg Low'] = min_x
+                self.parent.Data['Core levels'][sheet_name]['Background']['Bkg High'] = max_x
 
         self.parent.plot_manager.plot_background(self.parent)
-
-        sheet_name = self.parent.sheet_combobox.GetValue()
-        if sheet_name in self.parent.Data['Core levels']:
-            core_level_data = self.parent.Data['Core levels'][sheet_name]
-            if 'Background' in core_level_data:
-                self.parent.bg_min_energy = core_level_data['Background']['Bkg Low']
-                self.parent.bg_max_energy = core_level_data['Background']['Bkg High']
-
+        self.on_reset_vlines(self)
         save_state(self.parent)
+
+    def on_bkg_method_change(self, event):
+        new_method = self.method_combobox.GetValue()
+        self.parent.background_method = new_method
+        self.update_tougaard_controls_visibility(new_method)
 
     def on_cross_section_change(self, event):
         sheet_name = self.parent.sheet_combobox.GetValue()

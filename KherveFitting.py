@@ -1379,7 +1379,7 @@ class MyFrame(wx.Frame):
 
         return area
 
-    def show_hide_vlines(self):
+    def show_hide_vlines_OLD(self):
         background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected
         noise_lines_visible = self.noise_analysis_window is not None and self.noise_tab_selected
 
@@ -1388,6 +1388,34 @@ class MyFrame(wx.Frame):
         if self.vline2 is not None:
             self.vline2.set_visible(background_lines_visible)
 
+        if self.vline3 is not None:
+            self.vline3.set_visible(noise_lines_visible)
+        if self.vline4 is not None:
+            self.vline4.set_visible(noise_lines_visible)
+
+        self.canvas.draw_idle()
+
+    def show_hide_vlines(self):
+        # Hide vlines if zooming or dragging
+        if self.zoom_mode or self.drag_mode:
+            if self.vline1 is not None:
+                self.vline1.set_visible(False)
+            if self.vline2 is not None:
+                self.vline2.set_visible(False)
+            if self.vline3 is not None:
+                self.vline3.set_visible(False)
+            if self.vline4 is not None:
+                self.vline4.set_visible(False)
+            return
+
+        # Existing visibility logic
+        background_lines_visible = hasattr(self, 'fitting_window') and self.background_tab_selected
+        noise_lines_visible = self.noise_analysis_window is not None and self.noise_tab_selected
+
+        if self.vline1 is not None:
+            self.vline1.set_visible(background_lines_visible)
+        if self.vline2 is not None:
+            self.vline2.set_visible(background_lines_visible)
         if self.vline3 is not None:
             self.vline3.set_visible(noise_lines_visible)
         if self.vline4 is not None:

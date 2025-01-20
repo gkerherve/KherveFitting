@@ -381,8 +381,6 @@ class PlotManager:
             window.x_values = np.array(x_values)
             window.y_values = np.array(y_values)
 
-
-
             # Initialize background to raw data if not already present
             # if 'Bkg Y' not in window.Data['Core levels'][sheet_name]['Background'] or not \
             #         window.Data['Core levels'][sheet_name]['Background']['Bkg Y']:
@@ -512,6 +510,29 @@ class PlotManager:
             sheet_name_text.sheet_name_text = True  # Mark this text object
 
             self.apply_text_settings(window)
+
+            # Plot background only if it's different from raw data
+            if 'Background' in window.Data['Core levels'][sheet_name] and 'Bkg Y' in \
+                    window.Data['Core levels'][sheet_name]['Background']:
+                raw_data = np.array(window.Data['Core levels'][sheet_name]['Raw Data'])
+                background = np.array(window.Data['Core levels'][sheet_name]['Background']['Bkg Y'])
+
+                if not np.array_equal(raw_data, background):
+                    # if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
+                    #     pass
+                    # else:
+                    if window.energy_scale == 'KE':
+                        self.ax.plot(window.photons - x_values, window.background,
+                                     color=self.background_color,
+                                     linestyle=self.background_linestyle,
+                                     alpha=self.background_alpha,
+                                     label='Background')
+                    else:
+                        self.ax.plot(x_values, window.background,
+                                     color=self.background_color,
+                                     linestyle=self.background_linestyle,
+                                     alpha=self.background_alpha,
+                                     label='Background')
 
             self.canvas.draw()  # Update the plot
 
@@ -667,14 +688,34 @@ class PlotManager:
                         label_data['text']
                     )
             if fitting_model == "Unfitted":
-                # For unfitted peaks, fill between background and raw data
                 cst_unfit = "Unfitted"
+                XrangeMin = float(window.peak_params_grid.GetCellValue(row, 15))
+                XrangeMax = float(window.peak_params_grid.GetCellValue(row, 16))
+                color = self.peak_colors[i % len(self.peak_colors)]
+
                 if window.energy_scale == 'KE':
-                    self.ax.fill_between(window.photons - x_values, window.background, y_values,
-                                     facecolor='lightgreen', alpha=0.5, label=label)
+                    KErangeMin = window.photons - XrangeMax  # Convert BE range to KE range
+                    KErangeMax = window.photons - XrangeMin
+                    x_filtered = np.where((window.photons - x_values >= KErangeMin) &
+                                          (window.photons - x_values <= KErangeMax),
+                                          window.photons - x_values, np.nan)
+                    y_filtered = np.where((window.photons - x_values >= KErangeMin) &
+                                          (window.photons - x_values <= KErangeMax),
+                                          y_values, np.nan)
+                    background_filtered = np.where((window.photons - x_values >= KErangeMin) &
+                                                   (window.photons - x_values <= KErangeMax),
+                                                   window.background, np.nan)
                 else:
-                    self.ax.fill_between(x_values, window.background, y_values,
-                                         facecolor='lightgreen', alpha=0.5, label=label)
+                    x_filtered = np.where((x_values >= XrangeMin) & (x_values <= XrangeMax),
+                                          x_values, np.nan)
+                    y_filtered = np.where((x_values >= XrangeMin) & (x_values <= XrangeMax),
+                                          y_values, np.nan)
+                    background_filtered = np.where((x_values >= XrangeMin) & (x_values <= XrangeMax),
+                                                   window.background, np.nan)
+
+                self.ax.fill_between(x_filtered, background_filtered, y_filtered,
+                                     where=~np.isnan(x_filtered),
+                                     facecolor=color, alpha=0.5, label=label)
 
             else:
                 if i in doublets:
@@ -710,17 +751,17 @@ class PlotManager:
 
 
         # Plot the background if it exists
-        if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
-            if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
-                pass
-            else:
-                if window.energy_scale == 'KE':
-                    self.ax.plot(window.photons - x_values, core_level_data['Background']['Bkg Y'],
-                                 color=self.background_color,
-                            linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
-                else:
-                    self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
-                                 linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
+        # if 'Bkg Y' in core_level_data['Background'] and len(core_level_data['Background']['Bkg Y']) > 0:
+        #     if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
+        #         pass
+        #     else:
+        if window.energy_scale == 'KE':
+            self.ax.plot(window.photons - x_values, core_level_data['Background']['Bkg Y'],
+                         color=self.background_color,
+                    linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
+        else:
+            self.ax.plot(x_values, core_level_data['Background']['Bkg Y'], color=self.background_color,
+                         linestyle=self.background_linestyle, alpha=self.background_alpha, label='Background')
         # Update overall fit and residuals
         if cst_unfit in ["Unfitted","D-parameter","SurveyID"] or any(x in sheet_name.lower() for x in ["survey", "wide"]):
             pass
@@ -1101,18 +1142,23 @@ class PlotManager:
 
 
         # Plot the overall fit
-        good_indices = ~np.isnan(overall_fit)
-        x_plot = x_values[good_indices]
-        y_plot = overall_fit[good_indices]
-        if window.energy_scale == 'KE':
-            self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
-                         linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
-                         label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
-        else:
-            # self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
-            self.ax.plot(x_plot, y_plot, color=self.envelope_color,
-                         linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
-                         label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
+        try:
+            good_indices = ~np.isnan(overall_fit)
+            x_plot = x_values[good_indices]
+            y_plot = overall_fit[good_indices]
+            # x_plot = x_values
+            # y_plot = overall_fit
+            if window.energy_scale == 'KE':
+                self.ax.plot(window.photons - window.x_values, overall_fit, color=self.envelope_color,
+                             linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
+                             label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
+            else:
+                # self.ax.plot(window.x_values, overall_fit, color=self.envelope_color,
+                self.ax.plot(x_plot, y_plot, color=self.envelope_color,
+                             linestyle=self.envelope_linestyle, alpha=self.envelope_alpha,
+                             label='D-parameter' if fitting_model == "D-parameter" else 'Overall Fit')
+        except:
+            return
 
         # Handle residuals based on state
         if hasattr(self, 'residuals_state'):
@@ -1522,6 +1568,8 @@ class PlotManager:
 
             # Update the background data in the window.Data structure
             self._update_background_data(window, sheet_name, x_values, background_filtered, method, offset_h, offset_l)
+            window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = background_filtered.tolist()
+            window.background = background_filtered
 
             # Plot the calculated background
             self.ax.plot(x_values, window.background, color='grey', linestyle='--', label=label)
@@ -1624,6 +1672,7 @@ class PlotManager:
         window.Data['Core levels'][sheet_name]['Background']['Bkg Y'] = background.tolist()
         window.background = background
         window.Data['Core levels'][sheet_name]['Background'].update({
+            'Bkg Y': background.tolist(),
             'Bkg Type': method,
             'Bkg Low': min(x_values),
             'Bkg High': max(x_values),

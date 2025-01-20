@@ -35,11 +35,21 @@ def on_sheet_selected(window, event):
         if selected_sheet in window.Data['Core levels']:
             core_level_data = window.Data['Core levels'][selected_sheet]
 
-            if 'Background' in window.Data['Core levels'][selected_sheet] and 'Bkg Y' in \
-                    window.Data['Core levels'][selected_sheet]['Background']:
+            # if 'Background' in window.Data['Core levels'][selected_sheet] and 'Bkg Y' in \
+            #         window.Data['Core levels'][selected_sheet]['Background']:
+            #     window.background = np.array(window.Data['Core levels'][selected_sheet]['Background']['Bkg Y'])
+            # else:
+            #     window.background = np.zeros_like(window.Data['Core levels'][selected_sheet]['Raw Data'])
+
+            if 'Background' in window.Data['Core levels'][selected_sheet]:
+                if 'Bkg Y' not in window.Data['Core levels'][selected_sheet]['Background']:
+                    window.Data['Core levels'][selected_sheet]['Background']['Bkg Y'] = \
+                    window.Data['Core levels'][selected_sheet]['Raw Data']
                 window.background = np.array(window.Data['Core levels'][selected_sheet]['Background']['Bkg Y'])
             else:
-                window.background = np.zeros_like(window.Data['Core levels'][selected_sheet]['Raw Data'])
+                window.Data['Core levels'][selected_sheet]['Background'] = {
+                    'Bkg Y': window.Data['Core levels'][selected_sheet]['Raw Data']}
+                window.background = np.array(window.Data['Core levels'][selected_sheet]['Raw Data'])
 
             # Check if there's fitting data available
             if 'Fitting' in core_level_data and 'Peaks' in core_level_data['Fitting']:

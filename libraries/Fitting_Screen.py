@@ -32,6 +32,8 @@ class FittingWindow(wx.Frame):
         self.doublet_splittings = self.load_doublet_splittings(self.parent.library_data)
 
 
+
+
     def init_ui(self):
         panel = wx.Panel(self)
         # panel.SetBackgroundColour(wx.Colour(255, 255, 255))
