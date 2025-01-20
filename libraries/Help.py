@@ -468,9 +468,10 @@ def show_version_log(window):
     version_log = """Version 1.4 (February 2025) 
 - Added Automatic download of new KherveFitting version
 - Added KratosC1s and KratosF1s to the library
+- Added a Toggle menu icon on the left side in line with the MAC version
 - Added Settings Icon in the toolbar
 - Added Bugs report
-- Remove fitting when saving data
+- Removed the fitting of the data when saving data
 - Improved Undo / Redo States 
 - Improved File checking before opening onto KherveFitting
 - Added Constant Multiplication in Mod window 

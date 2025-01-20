@@ -68,7 +68,7 @@ class FittingWindow(wx.Frame):
 
         method_label = wx.StaticText(self.background_panel, label="Method:")
         self.method_combobox = wx.ComboBox(self.background_panel, choices=["Multi-Regions Smart", "Smart", "Shirley",
-                                            "Linear", 'U4-Tougaard', "Double U4-Tougaard", "Triple U4-Tougaard"],
+                                            "Linear", '1x U4-Tougaard', "2x U4-Tougaard", "3x U4-Tougaard"],
                                            style=wx.CB_READONLY)
         method_index = self.method_combobox.FindString(self.parent.background_method)
         self.method_combobox.SetSelection(method_index)
@@ -89,16 +89,16 @@ class FittingWindow(wx.Frame):
         self.averaging_points_text = wx.TextCtrl(self.background_panel, value="5")
         self.averaging_points_text.Bind(wx.EVT_TEXT, self.on_averaging_points_change)
 
-        self.cross_section_label = wx.StaticText(self.background_panel, label = 'Tougaard 1 / B,C,D,T0')
+        self.cross_section_label = wx.StaticText(self.background_panel, label = 'Tougaard1: B,C,D,T0')
         self.cross_section = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
         self.cross_section.Bind(wx.EVT_TEXT, self.on_cross_section_change)
 
         # Add two more labels and TextCtrls
-        self.cross_section2_label = wx.StaticText(self.background_panel, label='Tougaard 2 / B,C,D,T0')
+        self.cross_section2_label = wx.StaticText(self.background_panel, label='Tougaard2: B,C,D,T0')
         self.cross_section2 = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
         self.cross_section2.Bind(wx.EVT_TEXT, self.on_cross_section2_change)
 
-        self.cross_section3_label = wx.StaticText(self.background_panel, label='Tougaard 3 / B,C,D,T0')
+        self.cross_section3_label = wx.StaticText(self.background_panel, label='Tougaard3: B,C,D,T0')
         self.cross_section3 = wx.TextCtrl(self.background_panel, value="2866,1643,1,0")
         self.cross_section3.Bind(wx.EVT_TEXT, self.on_cross_section3_change)
 
@@ -131,7 +131,7 @@ class FittingWindow(wx.Frame):
         background_button.SetMinSize((125, 40))
         background_button.Bind(wx.EVT_BUTTON, self.on_background)
 
-        clear_background_button = wx.Button(self.background_panel, label="Clear\nBackground and Peaks")
+        clear_background_button = wx.Button(self.background_panel, label="Clear\nAll")
         clear_background_button.SetMinSize((125, 40))
         clear_background_button.Bind(wx.EVT_BUTTON, self.on_clear_background)
 
@@ -657,6 +657,7 @@ class FittingWindow(wx.Frame):
         self.parent.plot_manager.clear_background(self.parent)
         self.parent.bg_min_energy = None
         self.parent.bg_max_energy = None
+        self.parent.plot_data()
         save_state(self.parent)
 
     def on_offset_h_change(self, event):

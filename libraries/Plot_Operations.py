@@ -1590,19 +1590,19 @@ class PlotManager:
                                                                                     offset_l)
             label = 'Background (Smart)'
 
-        elif method == "U4-Tougaard":
+        elif method == "1x U4-Tougaard":
             background_filtered = BackgroundCalculations.calculate_tougaard_background(x_values_filtered,
                                                                                        y_values_filtered,
                                                                                        sheet_name,
                                                                                        window)
             label = 'Background (Tougaard)'
-        elif method == "Double U4-Tougaard":
+        elif method == "2x U4-Tougaard":
             background_filtered = BackgroundCalculations.calculate_double_tougaard_background(x_values_filtered,
                                                                                        y_values_filtered,
                                                                                        sheet_name,
                                                                                        window)
             label = 'Background (Tougaard)'
-        elif method == "Triple U4-Tougaard":
+        elif method == "3x U4-Tougaard":
             background_filtered = BackgroundCalculations.calculate_triple_tougaard_background(x_values_filtered,
                                                                                        y_values_filtered,
                                                                                        sheet_name,
@@ -1719,7 +1719,9 @@ class PlotManager:
             window.panel.Layout()
 
         except Exception as e:
-            wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
+            return
+            # wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
+
 
     def clear_background_only(self, window):
         sheet_name = window.sheet_combobox.GetValue()
