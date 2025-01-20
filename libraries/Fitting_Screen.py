@@ -38,11 +38,13 @@ class FittingWindow(wx.Frame):
         panel = wx.Panel(self)
         # panel.SetBackgroundColour(wx.Colour(255, 255, 255))
         # panel.SetBackgroundColour(wx.Colour(250, 250, 250))
+        panel.SetBackgroundColour(wx.Colour(230, 250, 250))
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
 
         notebook = wx.Notebook(panel)
+        notebook.SetBackgroundColour(wx.Colour(240, 250, 250))
         self.init_background_tab(notebook)
         self.init_fitting_tab(notebook)
 

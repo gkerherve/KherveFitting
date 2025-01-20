@@ -471,13 +471,15 @@ def show_version_log(window):
 - Added a Toggle menu icon on the left side in line with the MAC version
 - Added Settings Icon in the toolbar
 - Added Bugs report
-- Removed the fitting of the data when saving data
-- Improved Undo / Redo States 
-- Improved File checking before opening onto KherveFitting
 - Added Constant Multiplication in Mod window 
 - Added Version Log and Libraries Used in the About Menu
 - Added Photon source energy in Instrument settings
 - Added possibility of changing the reference peak for binding energy correction in Instrument settings
+- Removed the fitting of the data when saving data
+- Improved Measure Area window - more tools added
+- Improved Undo / Redo States 
+- Improved File checking before opening onto KherveFitting
+
 
 Version 1.3 (December 2024)
 - Added Tougaard background with fitting option

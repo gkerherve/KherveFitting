@@ -14,7 +14,7 @@ class BackgroundWindow(wx.Frame):
         self.SetMaxSize((290, 540))
 
         panel = wx.Panel(self)
-        # panel.SetBackgroundColour(wx.Colour(245, 245, 245))
+        panel.SetBackgroundColour(wx.Colour(250, 250, 230))
 
         # Create controls
         method_label = wx.StaticText(panel, label="Method:")
@@ -119,15 +119,28 @@ class BackgroundWindow(wx.Frame):
         sizer.Add(self.cross_section3_label, pos=(6, 0), flag=wx.ALL | wx.EXPAND, border=5)
         sizer.Add(self.cross_section3, pos=(6, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
-        # row
-        sizer.Add(peak_label_text_label, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(self.peak_label_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        # Area row
+        area_box = wx.StaticBox(panel, label="Area Calculation")
+        area_sizer = wx.StaticBoxSizer(area_box, wx.VERTICAL)
 
+        # sizer.Add(peak_label_text_label, pos=(7, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        # sizer.Add(self.peak_label_text, pos=(7, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
+        text_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        text_sizer.Add(peak_label_text_label, 0, wx.ALL | wx.EXPAND, 5) # | wx.ALIGN_CENTER_VERTICAL, 5)
+        text_sizer.Add(self.peak_label_text, 1, wx.ALL | wx.EXPAND, 5) #| wx.EXPAND, 5)
 
-        # Row
-        sizer.Add(area_button, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
-        sizer.Add(remove_peak_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.Add(area_button, 1, wx.ALL | wx.EXPAND, 5)
+        button_sizer.Add(remove_peak_button, 1, wx.ALL | wx.EXPAND, 5)
+
+        area_sizer.Add(text_sizer, 0, wx.EXPAND)
+        area_sizer.Add(button_sizer, 0, wx.EXPAND)
+
+        sizer.Add(area_sizer, pos=(7, 0), span=(2, 2), flag=wx.ALL | wx.EXPAND, border=5)
+
+        # sizer.Add(area_button, pos=(8, 0), flag=wx.ALL | wx.EXPAND, border=5)
+        # sizer.Add(remove_peak_button, pos=(8, 1), flag=wx.ALL | wx.EXPAND, border=5)
 
         # Seventh row: Remove peak and Export buttons
         sizer.Add(self.tougaard_fit_btn, pos=(9, 0), flag=wx.ALL | wx.EXPAND, border=5)
@@ -219,7 +232,8 @@ class BackgroundWindow(wx.Frame):
         grid = self.parent.peak_params_grid
         num_peaks = grid.GetNumberRows() // 2
         peak_letter = chr(65 + num_peaks)
-        peak_name = self.peak_label_text.GetValue() if self.peak_label_text.GetValue() else f"{sheet_name} p{num_peaks + 1}"
+        # peak_name = self.peak_label_text.GetValue() f"p{num_peaks + 1}" if self.peak_label_text.GetValue() else f"{sheet_name} p{num_peaks + 1}"
+        peak_name = f"{self.peak_label_text.GetValue()} p{num_peaks + 1}" if self.peak_label_text.GetValue() else f"{sheet_name} p{num_peaks + 1}"
 
         grid.AppendRows(2)
         row = num_peaks * 2

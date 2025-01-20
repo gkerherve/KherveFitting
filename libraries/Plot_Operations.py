@@ -1399,7 +1399,7 @@ class PlotManager:
             legend.set_visible(self.legend_visible)
         self.canvas.draw_idle()
 
-    def update_legend(self, window):
+    def update_legend_OLD(self, window):
         # Retrieve the current handles and labels
         handles, labels = self.ax.get_legend_handles_labels()
 
@@ -1457,7 +1457,68 @@ class PlotManager:
 
         self.canvas.draw_idle()
 
-    # Used by the defs above
+    def update_legend(self, window):
+        handles, labels = self.ax.get_legend_handles_labels()
+
+        has_overall_fit = "Overall Fit" in labels
+        has_raw_data = "Raw Data" in labels
+
+        if hasattr(self, 'residuals_state') and self.residuals_state == 2:
+            legend_order = []
+            legend_order2 = []
+            if has_raw_data:
+                legend_order.append("Raw Data")
+                legend_order2.append("Raw Data")
+            legend_order.append("Background")
+            legend_order2.append("Background")
+            if has_overall_fit:
+                legend_order.append("Overall Fit")
+                legend_order2.append("Overall Fit")
+        else:
+            legend_order = []
+            legend_order2 = []
+            if has_raw_data:
+                legend_order.append("Raw Data")
+                legend_order2.append("Raw Data")
+            legend_order.append("Background")
+            legend_order2.append("Background")
+            if has_overall_fit:
+                legend_order.extend(["Overall Fit", "Residuals"])
+                legend_order2.extend(["Overall Fit", "Residuals"])
+            elif "Residuals" in labels:
+                legend_order.append("Residuals")
+                legend_order2.append("Residuals")
+
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2
+        peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
+        formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
+
+        filtered_peak_labels = []
+        for label in formatted_peak_labels:
+            clean_label = re.sub(r'\$.*?\$', '', label)
+            split_label = clean_label.split()
+            if len(split_label) > 1:
+                if split_label[1].strip():
+                    filtered_peak_labels.append(label)
+
+        legend_order += peak_labels
+        legend_order2 += filtered_peak_labels
+
+        if legend_order and self.legend_visible:
+            ordered_handles = []
+            for l in legend_order:
+                for index, label in enumerate(labels):
+                    if label == l or label.startswith(l) or l.startswith(label):
+                        ordered_handles.append(handles[index])
+                        break
+
+            self.ax.legend(ordered_handles, legend_order2, loc='upper left')
+        else:
+            self.ax.legend().remove()
+            self.ax.legend().set_visible(False)
+
+        self.canvas.draw_idle()
+
     @staticmethod
     def format_sheet_name(sheet_name):
         import re
