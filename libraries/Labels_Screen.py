@@ -212,8 +212,7 @@ class LabelWindow(wx.Frame):
             sheet_name = self.parent.sheet_combobox.GetValue()
             label = self.parent.Data['Core levels'][sheet_name]['Labels'][selection]
 
-            dlg = wx.Dialog(self, title="Edit Label", size=(250, 200))
-            # dlg.SetBackgroundColour(wx.WHITE)
+            dlg = wx.Dialog(self, title="Edit Label", size=(250, 250))
             sizer = wx.BoxSizer(wx.VERTICAL)
 
             # Add text label and control
@@ -240,6 +239,15 @@ class LabelWindow(wx.Frame):
             y_sizer.Add(y_ctrl, 1, wx.EXPAND | wx.ALL, 5)
             sizer.Add(y_sizer, 0, wx.EXPAND)
 
+            # Add rotation control
+            rotation_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            rotation_label = wx.StaticText(dlg, label="Rotation:")
+            rotation_ctrl = wx.SpinCtrlDouble(dlg, value=str(label.get('rotation', 90)), min=-360, max=360,
+                                              size=(120, -1))
+            rotation_sizer.Add(rotation_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            rotation_sizer.Add(rotation_ctrl, 1, wx.EXPAND | wx.ALL, 5)
+            sizer.Add(rotation_sizer, 0, wx.EXPAND)
+
             # Add buttons
             btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
             ok_btn = wx.Button(dlg, wx.ID_OK, "OK", size=(60, 40))
@@ -255,6 +263,7 @@ class LabelWindow(wx.Frame):
                 label['text'] = text_ctrl.GetValue()
                 label['x'] = x_ctrl.GetValue()
                 label['y'] = y_ctrl.GetValue()
+                label['rotation'] = rotation_ctrl.GetValue()  # Save rotation value
 
                 # Clear all existing text annotations
                 for txt in self.parent.ax.texts[:]:
@@ -268,7 +277,7 @@ class LabelWindow(wx.Frame):
                         label_data['x'],
                         label_data['y'],
                         label_data['text'],
-                        rotation=90,
+                        rotation=label_data.get('rotation', 90),
                         va='bottom',
                         ha='center'
                     )

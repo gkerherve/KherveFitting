@@ -239,7 +239,8 @@ class PeriodicTableWindow(wx.Frame):
                 self.parent_window.Data['Core levels'][sheet_name]['Labels'].append({
                     'text': formatted_label,
                     'x':be,
-                    'y': local_max +0.05*maxY
+                    'y': local_max +0.05*maxY,
+                    'rotation': 90  # Force 90 degrees
                 })
 
     def add_peak_to_grid(self, peak_name):

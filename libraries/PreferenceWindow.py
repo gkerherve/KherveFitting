@@ -87,47 +87,53 @@ class PreferenceWindow(wx.Frame):
         text_sizer.Add(legend_size_label, pos=(2, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
         text_sizer.Add(self.legend_size_spin, pos=(2, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
+        label_size_label = wx.StaticText(self.text_tab, label="Label Font Size:")
+        self.label_size_spin = wx.SpinCtrl(self.text_tab, min=6, max=16, initial=8)
+        self.label_size_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
+        text_sizer.Add(label_size_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.label_size_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
         # Axis title font size
         axis_title_label = wx.StaticText(self.text_tab, label="Axis Title Font Size:")
         self.axis_title_spin = wx.SpinCtrl(self.text_tab, min=8, max=20, initial=12)
         self.axis_title_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
-        text_sizer.Add(axis_title_label, pos=(3, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.axis_title_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        text_sizer.Add(axis_title_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.axis_title_spin, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Axis numbers font size
         axis_num_label = wx.StaticText(self.text_tab, label="Axis Numbers Font Size:")
         self.axis_num_spin = wx.SpinCtrl(self.text_tab, min=8, max=20, initial=10)
         self.axis_num_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
-        text_sizer.Add(axis_num_label, pos=(4, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.axis_num_spin, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        text_sizer.Add(axis_num_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.axis_num_spin, pos=(5, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # X-axis sublines
         x_sublines_label = wx.StaticText(self.text_tab, label="Number of X-axis Sublines:")
         self.x_sublines_spin = wx.SpinCtrl(self.text_tab, min=0, max=10, initial=5)
         self.x_sublines_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
-        text_sizer.Add(x_sublines_label, pos=(5, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.x_sublines_spin, pos=(5, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        text_sizer.Add(x_sublines_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.x_sublines_spin, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Y-axis sublines
         y_sublines_label = wx.StaticText(self.text_tab, label="Number of Y-axis Sublines:")
         self.y_sublines_spin = wx.SpinCtrl(self.text_tab, min=0, max=10, initial=5)
         self.y_sublines_spin.Bind(wx.EVT_SPINCTRL, self.on_text_change)
-        text_sizer.Add(y_sublines_label, pos=(6, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.y_sublines_spin, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        text_sizer.Add(y_sublines_label, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.y_sublines_spin, pos=(7, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # X-axis label
         x_label_text = wx.StaticText(self.text_tab, label="X-axis Label:")
         self.x_label_ctrl = wx.TextCtrl(self.text_tab, value="Binding Energy (eV)")
         self.x_label_ctrl.Bind(wx.EVT_TEXT, self.on_text_change)
-        text_sizer.Add(x_label_text, pos=(7, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.x_label_ctrl, pos=(7, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        text_sizer.Add(x_label_text, pos=(8, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.x_label_ctrl, pos=(8, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Y-axis label
         y_label_text = wx.StaticText(self.text_tab, label="Y-axis Label:")
         self.y_label_ctrl = wx.TextCtrl(self.text_tab, value="Intensity (CPS)")
         self.y_label_ctrl.Bind(wx.EVT_TEXT, self.on_text_change)
-        text_sizer.Add(y_label_text, pos=(8, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
-        text_sizer.Add(self.y_label_ctrl, pos=(8, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        text_sizer.Add(y_label_text, pos=(9, 0), flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL, border=5)
+        text_sizer.Add(self.y_label_ctrl, pos=(9, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         self.text_tab.SetSizer(text_sizer)
 
@@ -140,6 +146,7 @@ class PreferenceWindow(wx.Frame):
         self.parent.y_sublines = self.y_sublines_spin.GetValue()
         self.parent.legend_font_size = self.legend_size_spin.GetValue()
         self.parent.core_level_text_size = self.core_level_spin.GetValue()
+        self.parent.label_font_size = self.label_size_spin.GetValue()
 
         # Update the plot
         self.parent.update_plot_preferences()
@@ -701,6 +708,7 @@ class PreferenceWindow(wx.Frame):
         self.y_sublines_spin.SetValue(self.parent.y_sublines)
         self.legend_size_spin.SetValue(self.parent.legend_font_size)
         self.core_level_spin.SetValue(self.parent.core_level_text_size)
+        self.label_size_spin.SetValue(self.parent.label_font_size)
         if hasattr(self.parent, 'x_axis_label'):
             self.x_label_ctrl.SetValue(self.parent.x_axis_label)
         if hasattr(self.parent, 'y_axis_label'):
@@ -850,6 +858,7 @@ class PreferenceWindow(wx.Frame):
         self.parent.legend_font_size = self.legend_size_spin.GetValue()
         self.parent.x_axis_label = self.x_label_ctrl.GetValue()
         self.parent.y_axis_label = self.y_label_ctrl.GetValue()
+        self.parent.label_font_size = self.label_size_spin.GetValue()
 
         # Update plot axis labels
         self.parent.ax.set_xlabel(self.parent.x_axis_label)

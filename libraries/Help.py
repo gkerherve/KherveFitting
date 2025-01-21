@@ -476,6 +476,7 @@ def show_version_log(window):
 - Added Photon source energy in Instrument settings
 - Added possibility of changing the reference peak for binding energy correction in Instrument settings
 - Removed the fitting of the data when saving data
+- Improved Legend filtering 
 - Improved Measure Area window - more tools added
 - Improved Undo / Redo States 
 - Improved File checking before opening onto KherveFitting

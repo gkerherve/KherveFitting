@@ -202,6 +202,7 @@ class MyFrame(wx.Frame):
         self.x_sublines = 5
         self.y_sublines = 5
         self.legend_font_size = 8
+        self.label_font_size = 8
         self.core_level_text_size = 15
         self.x_axis_label = "Binding Energy (eV)"
         self.y_axis_label = "Intensity (CPS)"
@@ -2980,6 +2981,7 @@ class MyFrame(wx.Frame):
                 self.y_sublines = config.get('y_sublines', 5)
                 self.legend_font_size = config.get('legend_font_size', 8)
                 self.core_level_text_size = config.get('core_level_text_size', 15)
+                self.label_font_size = config.get('label_font_size', 8)
                 self.excel_width = config.get('excel_width', 5.2)
                 self.excel_height = config.get('excel_height', 5.2)
                 self.excel_dpi = config.get('excel_dpi', 100)
@@ -3046,6 +3048,7 @@ class MyFrame(wx.Frame):
             'y_sublines': self.y_sublines,
             'legend_font_size': self.legend_font_size,
             'core_level_text_size': self.core_level_text_size,
+            'label_font_size': self.label_font_size,
 
             # Instruments settings
             'library_type': self.library_type,
@@ -3280,6 +3283,7 @@ class MyFrame(wx.Frame):
         self.axis_number_size += 1
         self.legend_font_size += 1
         self.core_level_text_size += 1
+        self.label_font_size += 1
 
         # Update the preference window if it's open
         for window in wx.GetTopLevelWindows():
@@ -3288,6 +3292,7 @@ class MyFrame(wx.Frame):
                 window.axis_num_spin.SetValue(self.axis_number_size)
                 window.legend_size_spin.SetValue(self.legend_font_size)
                 window.core_level_spin.SetValue(self.core_level_text_size)
+                window.label_size_spin.SetValue(self.label_font_size)
 
         # Update plot
         self.update_plot_preferences()
@@ -3304,6 +3309,8 @@ class MyFrame(wx.Frame):
             self.legend_font_size -= 1
         if self.core_level_text_size > 8:
             self.core_level_text_size -= 1
+        if self.core_level_text_size > 6:
+            self.label_font_size -= 1
 
         # Update the preference window if it's open
         for window in wx.GetTopLevelWindows():
@@ -3312,6 +3319,7 @@ class MyFrame(wx.Frame):
                 window.axis_num_spin.SetValue(self.axis_number_size)
                 window.legend_size_spin.SetValue(self.legend_font_size)
                 window.core_level_spin.SetValue(self.core_level_text_size)
+                window.label_size_spin.SetValue(self.label_font_size)
 
         # Update plot
         self.update_plot_preferences()
