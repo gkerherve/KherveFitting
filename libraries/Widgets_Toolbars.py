@@ -12,7 +12,7 @@ from libraries.Plot_Operations import PlotManager
 from Functions import toggle_Col_1
 from libraries.Save import update_undo_redo_state
 from libraries.Save import save_peaks_library, load_peaks_library
-from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog
+from libraries.Open import open_vamas_file_dialog, open_kal_file_dialog, import_mrs_file, open_spe_file_dialog, open_file_location
 from libraries.Export import export_word_report
 from libraries.Utilities import CropWindow, PlotModWindow, on_delete_sheet, copy_sheet, JoinSheetsWindow
 from libraries.Help import show_libraries_used, show_version_log, report_bug
@@ -306,6 +306,9 @@ def create_menu(window):
     # Recent files submenu
     window.recent_files_menu = wx.Menu()
     file_menu.AppendSubMenu(window.recent_files_menu, "Recent Files")
+
+    open_location_item = file_menu.Append(wx.NewId(), "Open File Location")
+    window.Bind(wx.EVT_MENU, lambda event: open_file_location(window), open_location_item)
 
     # Append submenus to file menu
     file_menu.AppendSubMenu(import_menu, "Import")

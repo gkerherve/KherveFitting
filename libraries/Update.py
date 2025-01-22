@@ -7,7 +7,7 @@ import time
 import re
 
 class UpdateChecker:
-    def __init__(self, current_version=1.3):
+    def __init__(self, current_version=1.4):
         self.current_version = float(current_version)
         self.url = "https://sourceforge.net/projects/khervefitting/files/"
         self.download_url = "https://sourceforge.net/projects/khervefitting/files/latest/download"

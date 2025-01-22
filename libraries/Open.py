@@ -4,6 +4,7 @@ import json
 import openpyxl
 import wx
 import re
+import sys
 import pandas as pd
 import struct
 from pathlib import Path
@@ -1170,6 +1171,19 @@ def open_kal_file(window, file_path):
         open_xlsx_file(window, output_excel)
     except Exception as e:
         wx.MessageBox(f"Error processing Kratos file: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+
+
+def open_file_location(window):
+    if 'FilePath' in window.Data:
+        file_path = window.Data['FilePath']
+        folder_path = os.path.dirname(file_path)
+        if os.path.exists(folder_path):
+            if sys.platform == 'win32':
+                os.startfile(folder_path)
+            elif sys.platform == 'darwin':
+                os.system(f'open "{folder_path}"')
+            else:
+                os.system(f'xdg-open "{folder_path}"')
 
 # ------------------ HISTORRY DEF ---------------------------------------------------
 # -----------------------------------------------------------------------------------
