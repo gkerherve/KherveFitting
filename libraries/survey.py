@@ -39,7 +39,7 @@ class PeriodicTableWindow(wx.Frame):
 
         # Left side: Periodic Table
         periodic_sizer = wx.BoxSizer(wx.VERTICAL)
-        grid = wx.GridSizer(10, 18, 2, 2)
+        grid = wx.GridSizer(10, 18, 0, 0)
 
         elements = [
             "H", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "He",
@@ -64,14 +64,14 @@ class PeriodicTableWindow(wx.Frame):
                 btn.Bind(wx.EVT_ENTER_WINDOW, self.OnElementHover)
                 btn.Bind(wx.EVT_LEAVE_WINDOW, self.OnElementLeave)
                 btn.Bind(wx.EVT_BUTTON, self.OnElementClick)
-                btn.SetBackgroundColour(wx.WHITE)
+                # btn.SetBackgroundColour(wx.WHITE)
                 self.button_states[element] = False
             else:
                 btn = wx.StaticText(panel, label="")
             grid.Add(btn, 0, wx.EXPAND)
 
-        periodic_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 5)
-        hsizer.Add(periodic_sizer, 0, wx.EXPAND)
+        periodic_sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 0)
+        hsizer.Add(periodic_sizer, 0, wx.EXPAND, 0)
 
         # Right side: Core Level List and Buttons
         right_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -109,7 +109,7 @@ class PeriodicTableWindow(wx.Frame):
 
         main_sizer.Add(hsizer, 1, wx.EXPAND)
         panel.SetSizer(main_sizer)
-        self.SetSize(815, 320)
+        self.SetSize(790, 320)
 
     def OnRemoveLastLabel(self, event):
         sheet_name = self.parent_window.sheet_combobox.GetValue()

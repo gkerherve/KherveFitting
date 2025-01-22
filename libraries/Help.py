@@ -477,6 +477,7 @@ def show_version_log(window):
 - Added possibility of changing the reference peak for binding energy correction in Instrument settings
 - Removed the fitting of the data when saving data
 - Improved Legend filtering 
+- Improved Check of the use of constraints in the peak fitting grid
 - Improved Measure Area window - more tools added
 - Improved Undo / Redo States 
 - Improved File checking before opening onto KherveFitting

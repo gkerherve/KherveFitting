@@ -2420,8 +2420,8 @@ class MyFrame(wx.Frame):
             4: '0.3:3.5',  # FWHM
             5: '5:80',  # L/G
             6: '1:1e7',  # Area
-            7: '0.01:3',  # Sigma
-            8: '0.01:3',  # Gamma
+            7: '0.3:3',  # Sigma
+            8: '0.3:3',  # Gamma
             9: '0.01:2' # Skew
         }
         if col == 1:  # Peak label column
@@ -2436,6 +2436,43 @@ class MyFrame(wx.Frame):
                               "Duplicate Peak Name", wx.OK | wx.ICON_ERROR)
                 event.Veto()
                 return
+        if col in [2, 3, 4, 5, 6, 7, 8, 9] and row % 2 == 1:  # Constraint rows
+            # Pattern to match all possible formats
+            pattern = r'^([A-P])([+\-*/])(\d+\.?\d*)(?:#(\d+\.?\d*))?$'
+            match = re.match(pattern, new_value)
+
+            if match:
+                referenced_peak = match.group(1)
+                letter_index = ord(referenced_peak) - 65
+                current_peak = row // 2
+
+                if letter_index == current_peak:
+                    wx.MessageBox(f"Cannot reference the same peak ({referenced_peak}).", "Invalid Self Reference",
+                                  wx.OK | wx.ICON_ERROR)
+                    event.Veto()
+                    return
+
+                if letter_index * 2 >= self.peak_params_grid.GetNumberRows():
+                    wx.MessageBox(f"Peak {referenced_peak} does not exist.", "Invalid Peak Reference",
+                                  wx.OK | wx.ICON_ERROR)
+                    event.Veto()
+                    return
+
+            elif new_value.upper() in 'ABCDEFGHIJKLMNOP':
+                letter_index = ord(new_value.upper()) - 65
+                current_peak = row // 2
+
+                if letter_index == current_peak:
+                    wx.MessageBox(f"Cannot reference the same peak ({new_value.upper()}).", "Invalid Self Reference",
+                                  wx.OK | wx.ICON_ERROR)
+                    event.Veto()
+                    return
+
+                if letter_index * 2 >= self.peak_params_grid.GetNumberRows():
+                    wx.MessageBox(f"Peak {new_value.upper()} does not exist.", "Invalid Peak Reference",
+                                  wx.OK | wx.ICON_ERROR)
+                    event.Veto()
+                    return
         if col in [0, 10, 11, 12]:
             event.Veto()
             return
