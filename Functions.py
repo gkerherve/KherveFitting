@@ -426,6 +426,63 @@ def fit_peaks(window, peak_params_grid, evaluate=False):
 
                     params.add(f'{prefix}amplitude', expr=f'{prefix}area')
 
+                elif peak_model_choice == "Voigt (Area, L/G, \u03c3, skew)":
+                    try:
+                        sigma = float(peak_params_grid.GetCellValue(row, 7)) / 2.355
+                        fraction = float(peak_params_grid.GetCellValue(row, 5))  # L/G ratio
+                        skew = float(peak_params_grid.GetCellValue(row, 9))
+                    except ValueError:
+                        sigma = fwhm / (2 * np.sqrt(2 * np.log(2)))
+                        fraction = lg_ratio
+                        skew = 0.0
+
+                    # Parse constraints for sigma, fraction and skew
+                    sigma_min, sigma_max, sigma_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 7),
+                                                                         sigma, peak_params_grid, i, "Sigma")
+                    fraction_min, fraction_max, fraction_vary = parse_constraints(
+                        peak_params_grid.GetCellValue(row + 1, 5),
+                        fraction, peak_params_grid, i, "lg_ratio")
+                    skew_min, skew_max, skew_vary = parse_constraints(peak_params_grid.GetCellValue(row + 1, 9),
+                                                                      skew, peak_params_grid, i, "Skew")
+
+                    # Evaluate constraints
+                    sigma_min = evaluate_constraint(sigma_min, peak_params_grid, 'sigma', sigma)
+                    sigma_max = evaluate_constraint(sigma_max, peak_params_grid, 'sigma', sigma)
+                    fraction_min = evaluate_constraint(fraction_min, peak_params_grid, 'lg_ratio', fraction)
+                    fraction_max = evaluate_constraint(fraction_max, peak_params_grid, 'lg_ratio', fraction)
+                    skew_min = evaluate_constraint(skew_min, peak_params_grid, 'skew', skew)
+                    skew_max = evaluate_constraint(skew_max, peak_params_grid, 'skew', skew)
+
+                    # Calculate gamma
+                    def calc_gamma(f, s):
+                        return (f * 2.355 * s) / (200 - 2 * f)
+
+                    GAMMA_TOLERANCE = 1e-6
+
+                    gamma = calc_gamma(fraction, sigma)
+                    gamma_min = calc_gamma(fraction_min, sigma)
+                    gamma_max = calc_gamma(fraction_max, sigma)
+
+                    if abs(gamma_max - gamma_min) < GAMMA_TOLERANCE:
+                        gamma_min = max(0, gamma - GAMMA_TOLERANCE)
+                        gamma_max = gamma + GAMMA_TOLERANCE
+
+                    gamma = max(gamma_min, min(gamma, gamma_max))
+
+                    peak_model = lmfit.models.SkewedVoigtModel(prefix=prefix)
+                    params.add(f'{prefix}area', value=area, min=area_min, max=area_max, vary=area_vary,
+                               brute_step=area * 0.01)
+                    params.add(f'{prefix}center', value=center, min=center_min, max=center_max, vary=center_vary,
+                               brute_step=0.1)
+                    params.add(f'{prefix}sigma', value=sigma, min=sigma_min / 2.355, max=sigma_max / 2.355,
+                               vary=sigma_vary / 2.355, brute_step=sigma * 0.01)
+                    params.add(f'{prefix}gamma', value=gamma, min=gamma_min, max=gamma_max, vary=fraction_vary,
+                               brute_step=gamma * 0.01)
+                    params.add(f'{prefix}skew', value=skew, min=skew_min, max=skew_max, vary=skew_vary,
+                               brute_step=skew * 0.01)
+
+                    params.add(f'{prefix}amplitude', expr=f'{prefix}area')
+
                 elif peak_model_choice == "Voigt (Area, \u03c3, \u03b3)":
                     try:
                         sigma = float(peak_params_grid.GetCellValue(row, 7)) / 2.355

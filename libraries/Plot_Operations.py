@@ -799,16 +799,16 @@ class PlotManager:
             spine.set_linewidth(1)  # Adjust this value to increase or decrease thickness
 
         # Update the legend
-        if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
-            self.ax.legend().remove()  # Remove the legend for survey or wide scans
-            pass
-        else:
+        # if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
+        #     # self.ax.legend().remove()  # Remove the legend for survey or wide scans
+        #     pass
+        # else:
             # Update the legend
-            if self.legend_visible:
-                self.ax.legend(loc='upper left')
-                self.update_legend(window)
-            else:
-                self.ax.legend().set_visible(False)
+        if self.legend_visible:
+            self.ax.legend(loc='upper left')
+            self.update_legend(window)
+        else:
+            self.ax.legend().set_visible(False)
 
 
         # Restore sheet name text or create new one if it doesn't exist
