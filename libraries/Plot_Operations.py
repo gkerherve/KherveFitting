@@ -1448,6 +1448,7 @@ class PlotManager:
 
 
     def update_legend(self, window):
+        sheet_name = window.sheet_combobox.GetValue()  # Add this line
         handles, labels = self.ax.get_legend_handles_labels()
 
         has_overall_fit = "Overall Fit" in labels
@@ -1479,21 +1480,6 @@ class PlotManager:
                 legend_order.append("Residuals")
                 legend_order2.append("Residuals")
 
-        # num_peaks = window.peak_params_grid.GetNumberRows() // 2
-        # peak_labels = [window.peak_params_grid.GetCellValue(i * 2, 1) for i in range(num_peaks)]
-        # formatted_peak_labels = [re.sub(r'(\d+/\d+)', r'$_{\1}$', label) for label in peak_labels]
-        #
-        # filtered_peak_labels = []
-        # for label in formatted_peak_labels:
-        #     clean_label = re.sub(r'\$.*?\$', '', label)
-        #     split_label = clean_label.split()
-        #     if len(split_label) > 1:
-        #         if split_label[1].strip():
-        #             filtered_peak_labels.append(label)
-        #
-        # legend_order += peak_labels
-        # legend_order2 += filtered_peak_labels
-
         num_peaks = window.peak_params_grid.GetNumberRows() // 2
         peak_labels = []
         filtered_peak_labels = []
@@ -1502,20 +1488,20 @@ class PlotManager:
             formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', label)
             clean_label = re.sub(r'\$.*?\$', '', formatted_label)
             split_label = clean_label.split()
-            if len(split_label) > 1 and split_label[1].strip():
+
+            if "survey" in sheet_name.lower() or "wide" in sheet_name.lower():
                 peak_labels.append(label)
                 filtered_peak_labels.append(formatted_label)
+            else:
+                if len(split_label) > 1 and split_label[1].strip():
+                    peak_labels.append(label)
+                    filtered_peak_labels.append(formatted_label)
 
         legend_order += peak_labels
         legend_order2 += filtered_peak_labels
 
         if legend_order and self.legend_visible:
             ordered_handles = []
-            # for l in legend_order:
-            #     for index, label in enumerate(labels):
-            #         if label == l or label.startswith(l) or l.startswith(label):
-            #             ordered_handles.append(handles[index])
-            #             break
             for l in legend_order:
                 for index, label in enumerate(labels):
                     if label == l:

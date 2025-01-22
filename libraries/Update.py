@@ -7,7 +7,7 @@ import time
 import re
 
 class UpdateChecker:
-    def __init__(self, current_version=1.4):
+    def __init__(self, current_version=1.3):
         self.current_version = float(current_version)
         self.url = "https://sourceforge.net/projects/khervefitting/files/"
         self.download_url = "https://sourceforge.net/projects/khervefitting/files/latest/download"
@@ -63,7 +63,16 @@ class UpdateChecker:
         thread.start()
 
     def show_update_dialog(self, window, latest_version):
-        if wx.MessageBox(f"Version {latest_version} is available. Download now?",
-                      "Update Available",
-                      wx.YES_NO | wx.ICON_INFORMATION) == wx.YES:
+        if wx.MessageBox(f"A new version ({latest_version}) is available. Would you like to download it now?\n\n"
+                         f"Instructions:\n"
+                         f"1. Download the new version.\n"
+                         f"2. Install it in a location where files can be modified (avoid installing in Program Files).\n"
+                         f"3. Copy your config file and saved peak files (from the Peak Library folder) to the "
+                         f"new KherveFitting folder.\n"
+                         f"4. Check the changes in the Help/About/Log menu.\n"
+                         f"5. Enjoy!",
+                         "Update Available",
+
+                         wx.YES_NO | wx.ICON_INFORMATION) == wx.YES:
             self.download_latest_version()
+
