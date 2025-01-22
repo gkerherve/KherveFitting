@@ -1168,27 +1168,27 @@ class MyFrame(wx.Frame):
         if not "LA" in fitting_model:
             self.recalculate_peak_area(peak_index)
 
-    def update_linked_peak_fwhm_OLD(self, peak_index, new_fwhm):
-        row = peak_index * 2
-        constraint_row = row + 1
-        fwhm_constraint = self.peak_params_grid.GetCellValue(constraint_row, 4)
-
-        if '*' in fwhm_constraint:
-            factor = float(fwhm_constraint.split('*')[1].split('#')[0])
-            new_linked_fwhm = new_fwhm * factor
-        else:
-            new_linked_fwhm = new_fwhm
-
-        self.peak_params_grid.SetCellValue(row, 4, f"{new_linked_fwhm:.2f}")
-        self.recalculate_peak_area(peak_index)
-
-        sheet_name = self.sheet_combobox.GetValue()
-        peak_label = self.peak_params_grid.GetCellValue(row, 1)
-        if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
-                self.Data['Core levels'][sheet_name]['Fitting']:
-            peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
-            if peak_label in peaks:
-                peaks[peak_label]['FWHM'] = new_linked_fwhm
+    # def update_linked_peak_fwhm_OLD(self, peak_index, new_fwhm):
+    #     row = peak_index * 2
+    #     constraint_row = row + 1
+    #     fwhm_constraint = self.peak_params_grid.GetCellValue(constraint_row, 4)
+    #
+    #     if '*' in fwhm_constraint:
+    #         factor = float(fwhm_constraint.split('*')[1].split('#')[0])
+    #         new_linked_fwhm = new_fwhm * factor
+    #     else:
+    #         new_linked_fwhm = new_fwhm
+    #
+    #     self.peak_params_grid.SetCellValue(row, 4, f"{new_linked_fwhm:.2f}")
+    #     self.recalculate_peak_area(peak_index)
+    #
+    #     sheet_name = self.sheet_combobox.GetValue()
+    #     peak_label = self.peak_params_grid.GetCellValue(row, 1)
+    #     if sheet_name in self.Data['Core levels'] and 'Fitting' in self.Data['Core levels'][sheet_name] and 'Peaks' in \
+    #             self.Data['Core levels'][sheet_name]['Fitting']:
+    #         peaks = self.Data['Core levels'][sheet_name]['Fitting']['Peaks']
+    #         if peak_label in peaks:
+    #             peaks[peak_label]['FWHM'] = new_linked_fwhm
 
     def update_linked_peak_fwhm(self, peak_index, new_fwhm):
         row = peak_index * 2
@@ -2441,6 +2441,26 @@ class MyFrame(wx.Frame):
             pattern = r'^([A-P])([+\-*/])(\d+\.?\d*)(?:#(\d+\.?\d*))?$'
             match = re.match(pattern, new_value)
 
+            if not new_value:  # If empty string
+                if col == 2:
+                    sheet_name = self.sheet_combobox.GetValue()
+                    x_values = self.Data['Core levels'][sheet_name]['B.E.']
+                    new_value = f"{min(x_values):.2f}:{max(x_values):.2f}"
+                elif col == 4:
+                    new_value = "0.3:35"
+                elif col == 5:
+                    new_value = "1:80"
+                elif col == 6:
+                    new_value = "1:1e7"
+                elif col == 7:
+                    new_value = "0.2:3"
+                elif col == 8:
+                    new_value = "0.2:3"
+                elif col == 9:
+                    new_value = "0.1:1"
+                self.peak_params_grid.SetCellValue(row, col, new_value)
+                return
+
             if match:
                 referenced_peak = match.group(1)
                 letter_index = ord(referenced_peak) - 65
@@ -2711,6 +2731,8 @@ class MyFrame(wx.Frame):
 
         # Replot the peaks with updated parameters
         self.clear_and_replot()
+
+        save_state(self)
 
     def update_ratios_OLD(self):
         num_peaks = self.peak_params_grid.GetNumberRows() // 2

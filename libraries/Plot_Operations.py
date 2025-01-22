@@ -1023,9 +1023,9 @@ class PlotManager:
                 if line.get_label() == peak_label:
                     line.set_ydata(peak_y)
                     break
-            else:
-                print("I AM NOT SURE WHAT THIS DO")
-                self.ax.plot(window.x_values, peak_y, label=peak_label)
+                else:
+                    print("I AM NOT SURE WHAT THIS DO")
+                    self.ax.plot(window.x_values, peak_y, label=peak_label)
 
             # Remove previous squares
             for line in self.ax.get_lines():

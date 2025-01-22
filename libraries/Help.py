@@ -465,7 +465,8 @@ def show_version_log(window):
     dlg = wx.Dialog(window, title="Version Log", size=(600, 400))
     text = wx.TextCtrl(dlg, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
 
-    version_log = """Version 1.4 (February 2025) 
+    version_log = """Version 1.4 (February 2025)
+- Progressing on the introduction of the MAC version 
 - Added Automatic download of new KherveFitting version
 - Added KratosC1s and KratosF1s to the library
 - Added a Toggle menu icon on the left side in line with the MAC version
