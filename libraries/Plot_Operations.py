@@ -1439,17 +1439,45 @@ class PlotManager:
         )
         self.fitting_results_text.set_visible(self.fitting_results_visible)
 
-    def toggle_legend(self):
+    def toggle_legend_OLD(self):
         self.legend_visible = not self.legend_visible
         legend = self.ax.get_legend()
         if legend:
             legend.set_visible(self.legend_visible)
         self.canvas.draw_idle()
 
+    def toggle_legend(self):
+        self.legend_visible = (self.legend_visible + 1) % 3
+        legend = self.ax.get_legend()
+        if legend:
+            if self.legend_visible == 0:
+                legend.set_visible(False)
+            elif self.legend_visible == 1:
+                legend.set_visible(True)
+            else:
+                handles, labels = self.ax.get_legend_handles_labels()
+                filtered_handles = []
+                filtered_labels = []
+                for h, l in zip(handles, labels):
+                    if l not in ["Raw Data", "Background", "Overall Fit"]:
+                        clean_label = re.sub(r'\$.*?\$', '', l)
+                        split_label = clean_label.split()
+                        if len(split_label) > 1 and split_label[1].strip():
+                            filtered_handles.append(h)
+                            filtered_labels.append(l)
+                self.ax.legend(filtered_handles, filtered_labels, loc='upper left')
+        self.canvas.draw_idle()
 
-    def update_legend(self, window):
+    def update_legend_OLD(self, window):
         sheet_name = window.sheet_combobox.GetValue()  # Add this line
         handles, labels = self.ax.get_legend_handles_labels()
+
+        if self.legend_visible == 2:
+            # Filter out Raw Data, Background, Overall Fit
+            handles = [h for h, l in zip(handles, labels)
+                       if l not in ["Raw Data", "Background", "Overall Fit"]]
+            labels = [l for l in labels
+                      if l not in ["Raw Data", "Background", "Overall Fit"]]
 
         has_overall_fit = "Overall Fit" in labels
         has_raw_data = "Raw Data" in labels
@@ -1513,6 +1541,67 @@ class PlotManager:
         else:
             self.ax.legend().remove()
             self.ax.legend().set_visible(False)
+
+        self.canvas.draw_idle()
+
+    def update_legend(self, window):
+        sheet_name = window.sheet_combobox.GetValue()
+        handles, labels = self.ax.get_legend_handles_labels()
+
+        num_peaks = window.peak_params_grid.GetNumberRows() // 2
+        peak_labels = []
+        filtered_peak_labels = []
+
+        for i in range(num_peaks):
+            label = window.peak_params_grid.GetCellValue(i * 2, 1)
+            formatted_label = re.sub(r'(\d+/\d+)', r'$_{\1}$', label)
+            clean_label = re.sub(r'\$.*?\$', '', formatted_label)
+            split_label = clean_label.split()
+            if len(split_label) > 1 and split_label[1].strip():
+                peak_labels.append(label)
+                filtered_peak_labels.append(formatted_label)
+
+        if self.legend_visible == 2:
+            ordered_handles = []
+            for l in peak_labels:
+                for index, label in enumerate(labels):
+                    if label == l:
+                        ordered_handles.append(handles[index])
+                        break
+            if ordered_handles and filtered_peak_labels:
+                self.ax.legend(ordered_handles, filtered_peak_labels, loc='upper left')
+            else:
+                self.ax.legend().set_visible(False)
+        else:
+            has_overall_fit = "Overall Fit" in labels
+            has_raw_data = "Raw Data" in labels
+
+            legend_order = []
+            legend_order2 = []
+
+            if has_raw_data:
+                legend_order.append("Raw Data")
+                legend_order2.append("Raw Data")
+            legend_order.append("Background")
+            legend_order2.append("Background")
+            if has_overall_fit:
+                legend_order.append("Overall Fit")
+                legend_order2.append("Overall Fit")
+
+            legend_order += peak_labels
+            legend_order2 += filtered_peak_labels
+
+            if legend_order and self.legend_visible:
+                ordered_handles = []
+                for l in legend_order:
+                    for index, label in enumerate(labels):
+                        if label == l:
+                            ordered_handles.append(handles[index])
+                            break
+                self.ax.legend(ordered_handles, legend_order2, loc='upper left')
+            else:
+                self.ax.legend().remove()
+                self.ax.legend().set_visible(False)
 
         self.canvas.draw_idle()
 

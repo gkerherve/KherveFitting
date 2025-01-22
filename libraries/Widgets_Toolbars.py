@@ -64,8 +64,9 @@ def create_widgets(window):
     window.update_plot_preferences()
 
     # Create a hidden NavigationToolbar
-    window.navigation_toolbar = NavigationToolbar(window.canvas)
-    window.navigation_toolbar.Hide()
+    # window.navigation_toolbar = NavigationToolbar(window.canvas)
+    # window.navigation_toolbar.Hide()
+    window.create_navigation_toolbar()
 
     window.right_frame.SetSizer(right_frame_sizer)
 

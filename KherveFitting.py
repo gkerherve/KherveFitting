@@ -13,6 +13,7 @@ os.environ['NUMEXPR_NUM_THREADS'] = str(multiprocessing.cpu_count())
 
 
 import matplotlib
+from matplotlib.backends.backend_wxagg import NavigationToolbar2WxAgg as NavigationToolbar
 
 import wx.grid
 import wx.adv
@@ -3408,6 +3409,12 @@ class MyFrame(wx.Frame):
             self.labels_window = LabelWindow(self)
         self.labels_window.Show()
         self.labels_window.Raise()
+
+    def create_navigation_toolbar(self):
+        if hasattr(self, 'navigation_toolbar') and self.navigation_toolbar:
+            self.navigation_toolbar.Destroy()
+        self.navigation_toolbar = NavigationToolbar(self.canvas)
+        self.navigation_toolbar.Hide()
 
 def set_high_priority():
     try:
