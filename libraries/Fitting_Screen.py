@@ -429,6 +429,9 @@ class FittingWindow(wx.Frame):
         remove_peak(self.parent)
 
     def on_fit_multi(self, event):
+        if self.parent.peak_params_grid.GetNumberRows() == 0:
+            wx.MessageBox("No peaks to fit. Add at least one peak first.", "Error", wx.OK | wx.ICON_ERROR)
+            return
         save_state(self.parent)
         iterations = self.fit_iterations_spin.GetValue()
         for i in range(1, iterations + 1):

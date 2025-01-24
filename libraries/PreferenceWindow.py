@@ -1,5 +1,7 @@
 import wx
 import json
+import os
+import openpyxl
 
 
 class PreferenceWindow(wx.Frame):
@@ -9,9 +11,9 @@ class PreferenceWindow(wx.Frame):
         self.parent = parent
 
         self.SetTitle("Preferences")
-        self.SetSize((520, 740))
-        self.SetMinSize((520, 740))
-        self.SetMaxSize((520, 740))
+        self.SetSize((520, 720))
+        self.SetMinSize((520, 720))
+        self.SetMaxSize((520, 720))
 
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -279,6 +281,20 @@ class PreferenceWindow(wx.Frame):
                   flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(self.instrument_combo, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
+        # Add buttons for library
+        open_lib_btn = wx.Button(self.instrument_tab, label="Open Library")
+        open_lib_btn.SetToolTip("You must convert the excel file to a .json after changing the library")
+        convert_lib_btn = wx.Button(self.instrument_tab, label="Library to JSON")
+        convert_lib_btn.SetToolTip("Convert Excel library file to a readable .json file")
+        open_lib_btn.SetMinSize((110, -1))
+        convert_lib_btn.SetMinSize((110, -1))
+
+        sizer.Add(open_lib_btn, pos=(0, 2), flag=wx.ALL, border=5)
+        sizer.Add(convert_lib_btn, pos=(1, 2), flag=wx.ALL, border=5)
+
+        open_lib_btn.Bind(wx.EVT_BUTTON, self.on_open_lib)
+        convert_lib_btn.Bind(wx.EVT_BUTTON, self.on_convert_lib)
+
         # Add ECF method selection
         self.library_type_label = wx.StaticText(self.instrument_tab, label="ECF Method:")
         self.library_type_combo = wx.ComboBox(self.instrument_tab,
@@ -290,17 +306,17 @@ class PreferenceWindow(wx.Frame):
             self.library_type_combo.SetSelection(selection_index)
         else:
             self.library_type_combo.SetSelection(2)  # TPP-2M as fallback
-        sizer.Add(self.library_type_label, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(self.library_type_combo, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.library_type_label, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.library_type_combo, pos=(2, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Add angular correction controls
         self.use_angular_correction = wx.CheckBox(self.instrument_tab, label="Use Angular Correction")
-        sizer.Add(self.use_angular_correction, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.use_angular_correction, pos=(3, 0), flag=wx.EXPAND | wx.ALL, border=5)
 
         angle_label = wx.StaticText(self.instrument_tab, label="Analysis Angle (°):")
         self.angle_spin = wx.SpinCtrlDouble(self.instrument_tab, value='54.7', min=0, max=90, inc=0.1)
-        sizer.Add(angle_label, pos=(3, 0), flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(self.angle_spin, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(angle_label, pos=(4, 0), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(self.angle_spin, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Add photon source selection
         photon_sources = ["Al Kα", "Mg Kα", "Custom"]
@@ -316,10 +332,12 @@ class PreferenceWindow(wx.Frame):
         self.ref_peak_value = wx.SpinCtrlDouble(self.instrument_tab, value='284.8', min=0, max=1200, inc=0.1)
 
         # Add to sizer
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Photon Source:"), pos=(5, 0), flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(self.photon_combo, pos=(5, 1), flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(wx.StaticText(self.instrument_tab, label="Custom Energy (eV):"), pos=(6, 0), flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(self.custom_photon, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Photon Source:"), pos=(6, 0), flag=wx.EXPAND | wx.ALL,
+                  border=5)
+        sizer.Add(self.photon_combo, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(wx.StaticText(self.instrument_tab, label="Custom Energy (eV):"), pos=(7, 0), flag=wx.EXPAND |
+                                                                                                    wx.ALL, border=5)
+        sizer.Add(self.custom_photon, pos=(7, 1), flag=wx.EXPAND | wx.ALL, border=5)
         sizer.Add(wx.StaticText(self.instrument_tab, label="Reference Peak:"), pos=(8, 0), flag=wx.EXPAND | wx.ALL,
                   border=5)
         sizer.Add(self.ref_peak_text, pos=(8, 1), flag=wx.EXPAND | wx.ALL, border=5)
@@ -917,4 +935,37 @@ class PreferenceWindow(wx.Frame):
             self.custom_photon.Enable(False)
         else:
             self.custom_photon.Enable(True)
+
+    # Add button handlers
+    def on_open_lib(self, evt):
+        os.startfile('KherveFitting_library.xlsx')
+
+    def on_convert_lib(self, evt):
+        wb = openpyxl.load_workbook('KherveFitting_library.xlsx')
+        sheet = wb['Library']
+        data = {}
+
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            element, orbital, full_name, auger, ke_be, position, ds, rsf, instrument = row
+            key = (element, orbital)
+            if key not in data:
+                data[key] = {}
+            data[key][instrument] = {
+                'position': position,
+                'ds': ds,
+                'rsf': rsf,
+                'row': row[0],
+                'full_name': full_name,
+                'auger': auger,
+                'ke_be': ke_be
+            }
+
+        json_data = {f"{k[0]}_{k[1]}": v for k, v in data.items()}
+
+        with open('KherveFitting_library.json', 'w') as f:
+            json.dump(json_data, f, indent=4, sort_keys=True)
+
+        wx.MessageBox("Library converted to JSON", "Success")
+
+
 

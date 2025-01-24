@@ -714,7 +714,6 @@ def open_xlsx_file(window, file_path=None):
             df = pd.read_excel(file_path, sheet_name=sheet_name, header=None)
             col1_value = str(df.iloc[0, 0]).strip().upper()
             col2_value = str(df.iloc[0, 1]).strip().upper()
-            print(f'HEADER: {df.iloc[0, 0]}')
             if (isinstance(df.iloc[0, 0], (int, float)) or isinstance(df.iloc[0, 1], (int, float)) or
                     not ('BE' in col1_value or 'BINDING' in col1_value) or
                     not ('RAW DATA' in col2_value or 'CORRECTED DATA' in col2_value or 'INTENSITY' in col2_value)):
