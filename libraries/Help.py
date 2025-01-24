@@ -476,7 +476,7 @@ def show_version_log(window):
 - Added Constant Multiplication in Mod window 
 - Added Version Log and Libraries Used in the About Menu
 - Added Photon source energy in Instrument settings
-- Added a View & and edit library in the preference window/instruments
+- Added a View & and edit library in the preference window/instruments.
 - Added possibility of changing the reference peak for binding energy correction in Instrument settings
 - Removed the fitting of the data when saving data
 - Improve Toggle by adding a third state. Removal of Raw Data, En
