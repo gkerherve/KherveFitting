@@ -282,7 +282,7 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(self.instrument_combo, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
         # Add buttons for library
-        open_lib_btn = wx.Button(self.instrument_tab, label="Open Library")
+        open_lib_btn = wx.Button(self.instrument_tab, label="Edit Library")
         open_lib_btn.SetToolTip("You must convert the excel file to a .json after changing the library")
         convert_lib_btn = wx.Button(self.instrument_tab, label="Library to JSON")
         convert_lib_btn.SetToolTip("Convert Excel library file to a readable .json file")
@@ -292,8 +292,17 @@ class PreferenceWindow(wx.Frame):
         sizer.Add(open_lib_btn, pos=(0, 2), flag=wx.ALL, border=5)
         sizer.Add(convert_lib_btn, pos=(1, 2), flag=wx.ALL, border=5)
 
+        lib_info_btn = wx.Button(self.instrument_tab, label="View Library Data")
+        lib_info_btn.SetToolTip("View (only) RSF and DS values for the current instrument")
+        lib_info_btn.SetMinSize((110, -1))
+
+        sizer.Add(lib_info_btn, pos=(1, 1), flag=wx.ALL, border=5)
+
         open_lib_btn.Bind(wx.EVT_BUTTON, self.on_open_lib)
         convert_lib_btn.Bind(wx.EVT_BUTTON, self.on_convert_lib)
+        lib_info_btn.Bind(wx.EVT_BUTTON, self.on_view_library)
+
+
 
         # Add ECF method selection
         self.library_type_label = wx.StaticText(self.instrument_tab, label="ECF Method:")
@@ -965,7 +974,48 @@ class PreferenceWindow(wx.Frame):
         with open('KherveFitting_library.json', 'w') as f:
             json.dump(json_data, f, indent=4, sort_keys=True)
 
+        self.parent.library_data = load_library_data()  # Reload library
+
         wx.MessageBox("Library converted to JSON", "Success")
+
+    def on_view_library(self, evt):
+        instrument = self.instrument_combo.GetValue()
+        ds_instrument = "C-Al1486"  # Fixed instrument for DS
+
+        dlg = wx.Dialog(self, title=f"Library Data for {instrument}. Read only version", size=(800, 600))
+        grid = wx.grid.Grid(dlg)
+        grid.CreateGrid(len(self.parent.library_data), 5)
+
+        grid.SetColLabelValue(0, "Element")
+        grid.SetColLabelValue(1, "RSF Library")
+        grid.SetColLabelValue(2, "RSF")
+        grid.SetColLabelValue(3, "DS Library")
+        grid.SetColLabelValue(4, "DS")
+
+        grid.SetColSize(0, 100)
+        grid.SetColSize(1, 150)
+        grid.SetColSize(2, 100)
+        grid.SetColSize(3, 150)
+        grid.SetColSize(4, 100)
+
+        row = 0
+        for element_orbital, data in sorted(self.parent.library_data.items()):
+            if instrument in data and ds_instrument in data:
+                element, orbital = element_orbital
+                values = data[instrument]
+                ds_values = data[ds_instrument]
+                grid.SetCellValue(row, 0, f"{element} {orbital}")
+                grid.SetCellValue(row, 1, instrument)
+                grid.SetCellValue(row, 2, str(values['rsf']))
+                grid.SetCellValue(row, 3, ds_instrument)
+                grid.SetCellValue(row, 4, "---" if ds_values['ds'] is None else str(ds_values['ds']))
+                row += 1
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(grid, 1, wx.EXPAND | wx.ALL, 5)
+        dlg.SetSizer(sizer)
+        dlg.ShowModal()
+        dlg.Destroy()
 
 
 
