@@ -959,6 +959,7 @@ class PreferenceWindow(wx.Frame):
             key = (element, orbital)
             if key not in data:
                 data[key] = {}
+
             data[key][instrument] = {
                 'position': position,
                 'ds': ds,
